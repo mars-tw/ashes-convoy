@@ -261,7 +261,7 @@
 
       .vehicle {
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: 52px 1fr auto;
         gap: 10px;
         align-items: center;
         min-height: 72px;
@@ -274,6 +274,14 @@
       .vehicle.is-selected {
         border-color: rgba(240, 182, 74, 0.82);
         background: rgba(240, 182, 74, 0.1);
+      }
+
+      .vehicle-thumb {
+        width: 44px;
+        height: 64px;
+        object-fit: contain;
+        image-rendering: pixelated;
+        filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.38));
       }
 
       .vehicle-name {

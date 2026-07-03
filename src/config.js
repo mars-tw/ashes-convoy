@@ -17,84 +17,146 @@ const LOGIC = {
 };
 
 const VEHICLES = {
-  iron_crow: {
-    id: "iron_crow",
-    name: "鐵鴉號",
-    kind: "train",
+  land_rig: {
+    id: "land_rig",
+    name: "壁爐裝甲車",
+    kind: "rig",
+    environment: "land",
+    environmentLabel: "陸地",
+    spriteImage: "assets/vehicles/land.png",
     sprite: "vehicle_iron_crow",
     unlock: { type: "default" },
-    hp: 420,
-    armor: 8,
-    turretSlots: 2,
-    weapon: "machine_cannon",
-    radius: 17,
+    hp: 520,
+    armor: 10,
+    weapon: "rig_cannon",
+    radius: 20,
+    visualWidth: 80,
     visualHalfWidth: 40,
-    moveResponsiveness: 0.16,
+    moveResponsiveness: 0.14,
     aimResponsiveness: 0.12,
     passive: { id: "revenge_fire", damageMul: 0.1, duration: 2 },
-    stage: 1
+    role: "高耐久坦克",
+    stage: 4
   },
-  dawn_skiff: {
-    id: "dawn_skiff",
-    name: "晨星艇",
-    kind: "ship",
+  sky_barge: {
+    id: "sky_barge",
+    name: "晨光飛船",
+    kind: "airship",
+    environment: "air",
+    environmentLabel: "天空",
+    spriteImage: "assets/vehicles/air.png",
     sprite: "vehicle_dawn_skiff",
     unlock: { type: "default" },
     hp: 300,
     armor: 3,
-    turretSlots: 3,
-    weapon: "pulse_burst",
-    radius: 15,
+    weapon: "sky_autocannon",
+    radius: 16,
+    visualWidth: 74,
+    visualHalfWidth: 37,
+    moveResponsiveness: 0.28,
+    aimResponsiveness: 0.22,
+    role: "高機動脆皮",
+    stage: 4
+  },
+  sea_ark: {
+    id: "sea_ark",
+    name: "潮汐方舟",
+    kind: "boat",
+    environment: "sea",
+    environmentLabel: "海面",
+    spriteImage: "assets/vehicles/sea.png",
+    sprite: "vehicle_iron_crow",
+    unlock: { type: "default" },
+    hp: 420,
+    armor: 6,
+    weapon: "ark_cannon",
+    radius: 19,
+    visualWidth: 86,
+    visualHalfWidth: 43,
+    moveResponsiveness: 0.18,
+    aimResponsiveness: 0.14,
+    role: "濺射清場",
+    stage: 4
+  },
+  void_runner: {
+    id: "void_runner",
+    name: "星窗穿梭艇",
+    kind: "spaceship",
+    environment: "space",
+    environmentLabel: "太空",
+    spriteImage: "assets/vehicles/space.png",
+    sprite: "vehicle_dawn_skiff",
+    unlock: { type: "default" },
+    hp: 360,
+    armor: 4,
+    weapon: "void_lance",
+    radius: 17,
+    visualWidth: 76,
     visualHalfWidth: 38,
-    moveResponsiveness: 0.24,
-    aimResponsiveness: 0.2,
-    passive: { id: "armor_break_focus", armorBreakPerHit: 0.03, maxStacks: 6 },
-    stage: 1
+    moveResponsiveness: 0.21,
+    aimResponsiveness: 0.24,
+    passive: { id: "armor_break_focus", armorBreakPerHit: 0.025, maxStacks: 6 },
+    role: "穿透精準輸出",
+    stage: 4
   }
 };
 
 const WEAPONS = {
-  machine_cannon: {
-    id: "machine_cannon",
-    name: "雙管機砲",
+  rig_cannon: {
+    id: "rig_cannon",
+    name: "壁爐機砲",
     bulletSprite: "bullet_machine",
-    damage: 18,
-    fireInterval: 0.22,
+    damage: 20,
+    fireInterval: 0.24,
     projectileSpeed: 330,
     pierce: 0,
     spread: 0.012,
     splash: 0,
     baseProjectiles: 1,
     sideDamageMul: 0.55,
-    muzzleOffset: 20
+    muzzleOffset: 62
   },
-  pulse_burst: {
-    id: "pulse_burst",
-    name: "脈衝速射",
-    bulletSprite: "bullet_pulse",
-    damage: 7.2,
-    fireInterval: 0.12,
-    projectileSpeed: 380,
+  sky_autocannon: {
+    id: "sky_autocannon",
+    name: "雲端速射砲",
+    bulletSprite: "bullet_machine",
+    damage: 12,
+    fireInterval: 0.17,
+    projectileSpeed: 390,
     pierce: 0,
-    spread: 0.055,
+    spread: 0.04,
     splash: 0,
-    baseProjectiles: 2,
-    sideDamageMul: 0.52,
-    muzzleOffset: 18
+    baseProjectiles: 1,
+    sideDamageMul: 0.55,
+    muzzleOffset: 58
   },
-  rocket_pod: {
-    id: "rocket_pod",
-    name: "火箭艙",
+  ark_cannon: {
+    id: "ark_cannon",
+    name: "甲板艦砲",
     bulletSprite: "bullet_rocket",
-    damage: 42,
-    fireInterval: 0.72,
-    projectileSpeed: 235,
+    damage: 34,
+    fireInterval: 0.48,
+    projectileSpeed: 250,
     pierce: 0,
-    spread: 0.03,
-    splash: 62,
+    spread: 0.02,
+    splash: 58,
     baseProjectiles: 1,
     sideDamageMul: 0.5,
-    muzzleOffset: 18
+    muzzleOffset: 70
+  },
+  void_lance: {
+    id: "void_lance",
+    name: "星核光矛",
+    bulletSprite: "bullet_pulse",
+    damage: 8.5,
+    fireInterval: 0.105,
+    projectileSpeed: 430,
+    pierce: 2,
+    spread: 0.018,
+    splash: 0,
+    baseProjectiles: 1,
+    sideDamageMul: 0.55,
+    muzzleOffset: 54
   }
 };
 
@@ -321,7 +383,8 @@ const META_DEFAULT = {
   version: META_VERSION,
   createdAt: null,
   updatedAt: null,
-  selectedVehicle: "iron_crow",
+  selectedVehicle: "land_rig",
+  shelterTheme: "snow",
   parts: 0,
   totalRuns: 0,
   totalKills: 0,
@@ -330,12 +393,16 @@ const META_DEFAULT = {
   bestScore: 0,
   bestByVehicle: {},
   unlockedVehicles: {
-    iron_crow: true,
-    dawn_skiff: true
+    land_rig: true,
+    sky_barge: true,
+    sea_ark: true,
+    void_runner: true
   },
   vehicleLevels: {
-    iron_crow: { hull: 0, weapon: 0, energy: 0, gate: 0 },
-    dawn_skiff: { hull: 0, weapon: 0, energy: 0, gate: 0 }
+    land_rig: { hull: 0, weapon: 0, energy: 0, gate: 0 },
+    sky_barge: { hull: 0, weapon: 0, energy: 0, gate: 0 },
+    sea_ark: { hull: 0, weapon: 0, energy: 0, gate: 0 },
+    void_runner: { hull: 0, weapon: 0, energy: 0, gate: 0 }
   },
   blueprints: {},
   bossBlueprintPity: 0,

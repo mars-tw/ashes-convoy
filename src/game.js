@@ -27,6 +27,7 @@
   let lastFrameMs = null;
   let boundInput = false;
   let renderDebug = { messagesDrawn: 0, gateLabelsDrawn: 0, tutorialDrawn: false };
+  const vehicleImages = {};
 
   function emitState() {
     if (callbacks.onState) callbacks.onState(getState());
@@ -65,6 +66,43 @@
     buffer.width = W;
     buffer.height = H;
     return buffer;
+  }
+
+  function defaultVehicleId() {
+    return config.META_DEFAULT && config.VEHICLES[config.META_DEFAULT.selectedVehicle]
+      ? config.META_DEFAULT.selectedVehicle
+      : Object.keys(config.VEHICLES)[0];
+  }
+
+  function getVehicleConfig(vehicleId) {
+    return config.VEHICLES[vehicleId] || config.VEHICLES[defaultVehicleId()];
+  }
+
+  function preloadVehicleImages() {
+    if (typeof root.Image !== "function") return;
+    Object.keys(config.VEHICLES).forEach((vehicleId) => {
+      const vehicle = config.VEHICLES[vehicleId];
+      if (!vehicle.spriteImage || vehicleImages[vehicleId]) return;
+      const record = { image: new root.Image(), status: "loading" };
+      record.image.onload = () => {
+        record.status = "loaded";
+        draw();
+      };
+      record.image.onerror = () => {
+        record.status = "failed";
+        draw();
+      };
+      record.image.decoding = "async";
+      record.image.src = vehicle.spriteImage;
+      vehicleImages[vehicleId] = record;
+    });
+  }
+
+  function vehicleImageStatus(vehicleId) {
+    const record = vehicleImages[vehicleId];
+    if (!record) return "none";
+    if (record.status === "loaded" && record.image.complete && record.image.naturalWidth > 0) return "loaded";
+    return record.status;
   }
 
   function addEffect(effect) {
@@ -169,7 +207,7 @@
   function makeInitialState(vehicleId, nextMeta, seed) {
     const safeMeta = rules.migrateMeta(nextMeta || meta, { config });
     const selectedVehicle = config.VEHICLES[vehicleId] ? vehicleId : safeMeta.selectedVehicle;
-    const vehicleConfig = config.VEHICLES[selectedVehicle];
+    const vehicleConfig = getVehicleConfig(selectedVehicle);
     const vehicleStats = rules.getVehicleStats(selectedVehicle, safeMeta, config);
     const rng = rules.createSeededRng(seed || `${selectedVehicle}-${safeMeta.totalRuns + 1}`);
 
@@ -384,7 +422,8 @@
     const result = rules.applyVehicleDamage(state.vehicle, amount, state.vehicle.armor);
     state.vehicle = result.vehicle;
     state.vehicle.recentHitUntil = state.time + 0.28;
-    if (state.vehicleId === "iron_crow") state.vehicle.recentHitUntil = state.time + config.VEHICLES.iron_crow.passive.duration;
+    const passive = getVehicleConfig(state.vehicleId).passive;
+    if (passive && passive.id === "revenge_fire") state.vehicle.recentHitUntil = state.time + passive.duration;
     pulseShake(1.2, 0.18);
     if (state.vehicle.hp <= 0) finishRun();
     emitState();
@@ -507,7 +546,7 @@
 
   function fireProjectiles(dt) {
     const vehicle = state.vehicle;
-    const vehicleConfig = config.VEHICLES[state.vehicleId];
+    const vehicleConfig = getVehicleConfig(state.vehicleId);
     const shot = rules.calculateShotStats({
       vehicleId: state.vehicleId,
       meta,
@@ -705,8 +744,9 @@
         if (enemy.dead) continue;
         if (distance(projectile, enemy) <= projectile.radius + enemy.radius) {
           let damage = projectile.damage;
-          if (projectile.vehicleId === "dawn_skiff") {
-            const passive = config.VEHICLES.dawn_skiff.passive;
+          const projectileVehicle = getVehicleConfig(projectile.vehicleId);
+          if (projectileVehicle.passive && projectileVehicle.passive.id === "armor_break_focus") {
+            const passive = projectileVehicle.passive;
             const stacks = Math.min(passive.maxStacks, enemy.armorBreakStacks || 0);
             damage *= 1 + stacks * passive.armorBreakPerHit;
             enemy.armorBreakStacks = Math.min(passive.maxStacks, stacks + 1);
@@ -715,7 +755,7 @@
           enemy.hitFlash = 0.12;
           state.stats.damageDealt += damage;
           addFloatingText(Math.round(damage).toString(), enemy.x + 3, enemy.y - enemy.radius - 2, {
-            color: projectile.vehicleId === "dawn_skiff" ? "#5ed4cb" : "#f4ead8",
+            color: projectileVehicle.environment === "space" ? "#5ed4cb" : "#f4ead8",
             size: 6,
             ttl: 0.42,
             vy: -12
@@ -781,7 +821,7 @@
   }
 
   function updateVehicleAim(dt) {
-    const vehicleConfig = config.VEHICLES[state.vehicleId];
+    const vehicleConfig = getVehicleConfig(state.vehicleId);
     const vehicle = state.vehicle;
     const half = vehicleConfig.visualHalfWidth || 24;
     const targetX = rules.clamp(vehicle.aimX, config.LOGIC.roadLeft + half, config.LOGIC.roadRight - half);
@@ -978,7 +1018,26 @@
     ctx.restore();
   }
 
+  function currentEnvironment() {
+    const vehicleId = state ? state.vehicleId : meta.selectedVehicle;
+    return getVehicleConfig(vehicleId).environment || "land";
+  }
+
   function drawBackground(timeMs) {
+    const environment = currentEnvironment();
+    renderDebug.environment = environment;
+    if (environment === "air") {
+      drawAirBackground(timeMs);
+    } else if (environment === "sea") {
+      drawSeaBackground(timeMs);
+    } else if (environment === "space") {
+      drawSpaceBackground(timeMs);
+    } else {
+      drawLandBackground(timeMs);
+    }
+  }
+
+  function drawLandBackground(timeMs) {
     const scroll = state ? state.scroll : (idleTime * 42) % 32;
     const sideScroll = (scroll * 1.32) % 32;
     const farScroll = (scroll * 0.24) % 32;
@@ -1031,11 +1090,176 @@
     });
   }
 
+  function drawAirBackground() {
+    const scroll = state ? state.scroll : (idleTime * 42) % 32;
+    const farScroll = (scroll * 0.18) % 64;
+    const cloudScroll = (scroll * 0.62) % 72;
+    const nearScroll = (scroll * 1.22) % 46;
+    const sky = ctx.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, "#496f94");
+    sky.addColorStop(0.55, "#78a8c6");
+    sky.addColorStop(1, "#d69a62");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.save();
+    ctx.globalAlpha = 0.28;
+    ctx.fillStyle = "#f4ead8";
+    for (let y = -64 + farScroll; y < H + 80; y += 76) {
+      for (let x = -42; x < W + 60; x += 84) {
+        ctx.beginPath();
+        ctx.ellipse(x, y, 34, 10, 0, 0, Math.PI * 2);
+        ctx.ellipse(x + 24, y + 3, 28, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 0.48;
+    for (let y = -46 + cloudScroll; y < H + 58; y += 72) {
+      for (let x = -26; x < W + 52; x += 78) {
+        ctx.beginPath();
+        ctx.ellipse(x, y, 25, 8, 0, 0, Math.PI * 2);
+        ctx.ellipse(x + 20, y + 2, 20, 7, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 0.2;
+    ctx.strokeStyle = "#f7d39b";
+    ctx.lineWidth = 1;
+    for (let y = -46 + nearScroll; y < H + 46; y += 46) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.bezierCurveTo(46, y + 12, 98, y - 12, W, y + 6);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawSeaBackground() {
+    const scroll = state ? state.scroll : (idleTime * 42) % 32;
+    const farScroll = (scroll * 0.22) % 48;
+    const waveScroll = (scroll * 0.82) % 32;
+    const foamScroll = (scroll * 1.34) % 52;
+    const water = ctx.createLinearGradient(0, 0, 0, H);
+    water.addColorStop(0, "#17495e");
+    water.addColorStop(0.54, "#126a7a");
+    water.addColorStop(1, "#0b354d");
+    ctx.fillStyle = water;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.save();
+    ctx.lineWidth = 1;
+    for (let y = -48 + farScroll; y < H + 54; y += 48) {
+      ctx.globalAlpha = 0.16;
+      ctx.strokeStyle = "#b9e7e1";
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      for (let x = 0; x <= W + 12; x += 18) ctx.lineTo(x, y + Math.sin((x + y) * 0.08) * 4);
+      ctx.stroke();
+    }
+    for (let y = -32 + waveScroll; y < H + 38; y += 32) {
+      ctx.globalAlpha = 0.24;
+      ctx.strokeStyle = "#82d4cb";
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      for (let x = 0; x <= W + 8; x += 14) ctx.lineTo(x, y + Math.sin((x * 0.17) + stateTime()) * 3);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 0.34;
+    ctx.fillStyle = "#e7fbf0";
+    for (let y = -52 + foamScroll; y < H + 52; y += 52) {
+      for (let x = 10; x < W; x += 46) {
+        ctx.fillRect(x + Math.sin((y + x) * 0.05) * 5, y, 10, 1);
+        ctx.fillRect(x + 18, y + 7, 6, 1);
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawSpaceBackground() {
+    const scroll = state ? state.scroll : (idleTime * 42) % 32;
+    const farScroll = (scroll * 0.18) % H;
+    const starScroll = (scroll * 0.68) % H;
+    const meteorScroll = (scroll * 1.4) % (H + 80);
+    const voidGradient = ctx.createLinearGradient(0, 0, 0, H);
+    voidGradient.addColorStop(0, "#070812");
+    voidGradient.addColorStop(0.52, "#14152f");
+    voidGradient.addColorStop(1, "#090a18");
+    ctx.fillStyle = voidGradient;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.save();
+    const nebula = ctx.createRadialGradient(W * 0.68, H * 0.24, 6, W * 0.68, H * 0.24, 92);
+    nebula.addColorStop(0, "rgba(94, 212, 203, 0.26)");
+    nebula.addColorStop(0.5, "rgba(112, 82, 176, 0.18)");
+    nebula.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = nebula;
+    ctx.fillRect(0, 0, W, H);
+
+    for (let i = 0; i < 70; i += 1) {
+      const x = (i * 37) % W;
+      const baseY = (i * 61) % H;
+      const y = (baseY + farScroll) % H;
+      ctx.globalAlpha = 0.32 + ((i % 5) * 0.11);
+      ctx.fillStyle = i % 7 === 0 ? "#5ed4cb" : "#f4ead8";
+      ctx.fillRect(x, y, i % 9 === 0 ? 2 : 1, 1);
+    }
+    for (let i = 0; i < 36; i += 1) {
+      const x = (i * 53 + 17) % W;
+      const y = ((i * 79) + starScroll) % H;
+      ctx.globalAlpha = 0.52;
+      ctx.fillStyle = "#f4ead8";
+      ctx.fillRect(x, y, 1, 1);
+    }
+    ctx.globalAlpha = 0.36;
+    ctx.strokeStyle = "#f0b64a";
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 3; i += 1) {
+      const y = (meteorScroll + i * 136) % (H + 80) - 40;
+      const x = 28 + i * 52;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + 28, y - 18);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function stateTime() {
+    return state ? state.time : idleTime;
+  }
+
+  function drawVehicle(vehicleConfig, vehicle, timeMs, options) {
+    const opts = options || {};
+    const record = vehicleConfig.spriteImage ? vehicleImages[vehicleConfig.id] : null;
+    if (record && vehicleImageStatus(vehicleConfig.id) === "loaded") {
+      const image = record.image;
+      const width = vehicleConfig.visualWidth || (vehicleConfig.visualHalfWidth || 36) * 2;
+      const height = width * (image.naturalHeight / image.naturalWidth);
+      const x = vehicle.x - width * 0.5;
+      const y = vehicle.y - height * 0.72;
+      ctx.save();
+      ctx.globalAlpha *= opts.alpha == null ? 1 : opts.alpha;
+      ctx.imageSmoothingEnabled = false;
+      if (opts.hitFlash) {
+        ctx.globalAlpha *= 0.76;
+      }
+      ctx.drawImage(image, x, y, width, height);
+      ctx.restore();
+      renderDebug.vehicleRasterDrawn = true;
+      renderDebug.vehicleImageStatus = "loaded";
+      return;
+    }
+
+    const sprite = vehicleConfig.sprite || "vehicle_iron_crow";
+    const fallbackScale = sprite === "vehicle_iron_crow" ? 1.25 : 1.55;
+    drawSprite(sprite, opts.anim || "move", timeMs, vehicle.x, vehicle.y, fallbackScale, { alpha: opts.alpha == null ? 1 : opts.alpha });
+    renderDebug.vehicleFallbackDrawn = true;
+    renderDebug.vehicleImageStatus = record ? record.status : "none";
+  }
+
   function drawIdlePreview(timeMs) {
-    const selected = config.VEHICLES[meta.selectedVehicle] || config.VEHICLES.iron_crow;
-    drawSprite(selected.sprite, "move", timeMs, W * 0.5, config.LOGIC.vehicleY, selected.kind === "train" ? 1.25 : 1.55, {
-      alpha: 0.92
-    });
+    const selected = getVehicleConfig(meta.selectedVehicle);
+    drawVehicle(selected, { x: W * 0.5, y: config.LOGIC.vehicleY }, timeMs, { alpha: 0.92, anim: "move" });
     drawSprite("zombie_shambler", "walk", timeMs, 64, 112 + Math.sin(idleTime * 2) * 4, 1.3, { alpha: 0.85 });
     drawSprite("zombie_runner", "walk", timeMs, 125, 88 + Math.cos(idleTime * 2) * 4, 1.25, { alpha: 0.85 });
     drawSprite("gate_damage", "idle", timeMs, 98, 178, 0.95, { alpha: 0.9 });
@@ -1080,10 +1304,13 @@
       }
     });
 
-    const vehicleConfig = config.VEHICLES[state.vehicleId];
+    const vehicleConfig = getVehicleConfig(state.vehicleId);
     const vehicleAnim = state.vehicle.hp <= 0 ? "wreck" : state.vehicle.recentHitUntil > state.time ? "damage" : "move";
-    const vehicleScale = vehicleConfig.kind === "train" ? 1.25 : 1.55;
-    drawSprite(vehicleConfig.sprite, vehicleAnim, timeMs, state.vehicle.x, state.vehicle.y, vehicleScale, { alpha: 1 });
+    drawVehicle(vehicleConfig, state.vehicle, timeMs, {
+      alpha: 1,
+      anim: vehicleAnim,
+      hitFlash: state.vehicle.recentHitUntil > state.time
+    });
     drawAimGuide();
     drawSprite("effect_muzzle", "burst", timeMs, state.vehicle.aimX, state.vehicle.aimY, 0.8, { alpha: state.input.dragging ? 0.62 : 0.35 });
     drawMessages();
@@ -1091,7 +1318,15 @@
 
   function draw() {
     if (!ctx || !displayCtx) return;
-    renderDebug = { messagesDrawn: 0, gateLabelsDrawn: 0, tutorialDrawn: false };
+    renderDebug = {
+      messagesDrawn: 0,
+      gateLabelsDrawn: 0,
+      tutorialDrawn: false,
+      environment: currentEnvironment(),
+      vehicleRasterDrawn: false,
+      vehicleFallbackDrawn: false,
+      vehicleImageStatus: "none"
+    };
     const timeMs = ((state ? state.time : idleTime) || 0) * 1000;
     ctx.clearRect(0, 0, W, H);
     if (state && state.shakeUntil > state.time && !(meta.settings && meta.settings.reducedFlash)) {
@@ -1152,6 +1387,7 @@
     ctx.imageSmoothingEnabled = false;
     if (callbacks.meta) meta = rules.migrateMeta(callbacks.meta, { config });
     renderer.preRenderSprites({ pixelRatio: 1, smoothing: false });
+    preloadVehicleImages();
     bindInput();
     draw();
     if (!rafStarted) {
@@ -1174,6 +1410,7 @@
   function spritesReady() {
     try {
       renderer.getSprite("vehicle_iron_crow");
+      renderer.getSprite("vehicle_dawn_skiff");
       renderer.getSprite("boss_hive_titan");
       renderer.getSprite("gate_damage");
       return true;

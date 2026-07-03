@@ -310,30 +310,100 @@ async function checkGarageUpgradeLines(page) {
   assert.deepStrictEqual(tracks.sort(), ["energy", "gate", "hull", "weapon"], "garage should show all four upgrade tracks");
 }
 
-async function checkDawnProjectileDamage(page) {
+async function checkVehicleFleetSelectionAndCombat(page) {
+  await page.evaluate(() => window.__test.showGarage());
+  await page.waitForSelector("#garagePanel:not([hidden])");
+  await page.click("#vehicleHotspotBtn");
+  await page.waitForSelector('#metaDrawer:not([hidden]) [data-meta-section="vehicle"]:not([hidden])');
+  const vehicles = await page.locator("[data-vehicle]").evaluateAll((nodes) => nodes.map((node) => node.dataset.vehicle).sort());
+  assert.deepStrictEqual(vehicles, ["land_rig", "sea_ark", "sky_barge", "void_runner"], "garage should expose all four fleet vehicles");
+  const thumbs = await page.locator(".vehicle-thumb").evaluateAll((nodes) =>
+    nodes.map((node) => ({
+      src: node.getAttribute("src"),
+      naturalWidth: node.naturalWidth,
+      naturalHeight: node.naturalHeight
+    }))
+  );
+  assert.strictEqual(thumbs.length, 4, "vehicle garage should show four raster thumbnails");
+  thumbs.forEach((thumb) => {
+    assert(thumb.src && thumb.src.includes("assets/vehicles/"), `thumbnail should use vehicle asset path: ${thumb.src}`);
+  });
+
+  for (const vehicleId of vehicles) {
+    await page.evaluate((id) => {
+      window.__test.startRun(id);
+      const state = window.__test.getState();
+      window.__test.setState({
+        enemies: [],
+        projectiles: [],
+        gates: [],
+        stats: { kills: 0 },
+        vehicle: { aimX: state.vehicle.x, aimY: state.vehicle.y - 180, weaponCooldown: 0 }
+      });
+      const aimed = window.__test.getState();
+      window.__test.spawnEnemy("shambler", {
+        x: aimed.vehicle.x,
+        y: aimed.vehicle.y - 170,
+        hp: 1,
+        speed: 0
+      });
+      window.__test.step(2200);
+    }, vehicleId);
+    const result = await page.evaluate((id) => {
+      const state = window.__test.getState();
+      const debug = window.__test.getRenderDebug();
+      return {
+        vehicleId: state.vehicleId,
+        kills: state.stats.kills,
+        environment: debug.environment,
+        expectedEnvironment: window.DSConfig.VEHICLES[id].environment,
+        raster: debug.vehicleRasterDrawn,
+        fallback: debug.vehicleFallbackDrawn,
+        imageStatus: debug.vehicleImageStatus
+      };
+    }, vehicleId);
+    assert.strictEqual(result.vehicleId, vehicleId, `${vehicleId} should be the active vehicle`);
+    assert.strictEqual(result.environment, result.expectedEnvironment, `${vehicleId} should draw its environment`);
+    assert(result.raster || result.fallback, `${vehicleId} should draw raster vehicle or fallback sprite`);
+    assert(result.kills >= 1, `${vehicleId} should be able to shoot and kill`);
+  }
+  await page.evaluate(() => window.__test.showGarage());
+  await page.waitForSelector("#garagePanel:not([hidden])");
+}
+
+async function checkFleetProjectileTraits(page) {
   await page.evaluate(() => {
-    window.__test.startRun("dawn_skiff");
+    window.__test.startRun("void_runner");
     window.__test.setState({ projectiles: [], vehicle: { weaponCooldown: 0 } });
-    window.__test.step(130);
+    window.__test.step(120);
   });
   const base = await page.evaluate(() => {
     const state = window.__test.getState();
-    return state.projectiles.map((projectile) => projectile.damage).slice(0, 2);
+    return state.projectiles.map((projectile) => ({ damage: projectile.damage, pierce: projectile.pierce })).slice(0, 1);
   });
-  assert.strictEqual(base.length, 2, "dawn skiff should fire two base projectiles");
-  base.forEach((damage) => assert(Math.abs(damage - 7.2) < 0.01, `base projectile should be full damage, got ${damage}`));
+  assert.strictEqual(base.length, 1, "void runner should fire one precise base projectile");
+  assert(Math.abs(base[0].damage - 8.5) < 0.01, `void runner base projectile should be full damage, got ${base[0].damage}`);
+  assert.strictEqual(base[0].pierce, 2, "void runner should fire piercing shots");
 
   await page.evaluate(() => {
     window.__test.grantGate("multishot_plus");
     window.__test.setState({ projectiles: [], vehicle: { weaponCooldown: 0 } });
-    window.__test.step(130);
+    window.__test.step(120);
   });
   const boosted = await page.evaluate(() => window.__test.getState().projectiles.map((projectile) => projectile.damage).slice(0, 3));
-  assert.strictEqual(boosted.length, 3, "multishot should add one projectile");
-  const full = boosted.filter((damage) => Math.abs(damage - 7.2) < 0.01).length;
-  const bonus = boosted.filter((damage) => Math.abs(damage - 7.2 * 0.55) < 0.01).length;
-  assert.strictEqual(full, 2, "two closest dawn projectiles should remain full damage");
+  assert.strictEqual(boosted.length, 2, "multishot should add one projectile");
+  const full = boosted.filter((damage) => Math.abs(damage - 8.5) < 0.01).length;
+  const bonus = boosted.filter((damage) => Math.abs(damage - 8.5 * 0.55) < 0.01).length;
+  assert.strictEqual(full, 1, "base projectile should remain full damage");
   assert.strictEqual(bonus, 1, "only the gate-added projectile should be discounted");
+
+  await page.evaluate(() => {
+    window.__test.startRun("sea_ark");
+    window.__test.setState({ projectiles: [], vehicle: { weaponCooldown: 0 } });
+    window.__test.step(500);
+  });
+  const seaProjectile = await page.evaluate(() => window.__test.getState().projectiles[0]);
+  assert(seaProjectile && seaProjectile.splash > 0, "sea ark should fire splash projectiles");
 }
 
 async function checkEmptySettlementCta(page) {
@@ -494,19 +564,19 @@ async function deathSettlementUpgradeAndReload(page) {
   await openUpgradePanel(page);
   await page.click('[data-upgrade="hull"]');
   meta = await page.evaluate(() => window.__test.getMeta());
-  assert.strictEqual(meta.vehicleLevels.iron_crow.hull, 1, "hull upgrade should be bought");
+  assert.strictEqual(meta.vehicleLevels.land_rig.hull, 1, "hull upgrade should be bought");
 
   await clickSortie(page);
   const upgradedRun = await page.evaluate(() => ({
     state: window.__test.getState(),
-    baseHp: window.DSConfig.VEHICLES.iron_crow.hp
+    baseHp: window.DSConfig.VEHICLES.land_rig.hp
   }));
   assert(upgradedRun.state.vehicle.maxHp > upgradedRun.baseHp, "new run should use upgraded hp");
 
   await page.reload({ waitUntil: "networkidle" });
   await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
   meta = await page.evaluate(() => window.__test.getMeta());
-  assert.strictEqual(meta.vehicleLevels.iron_crow.hull, 1, "reload should preserve upgrade level");
+  assert.strictEqual(meta.vehicleLevels.land_rig.hull, 1, "reload should preserve upgrade level");
 }
 
 async function runScenario(browser, baseUrl, viewport, full) {
@@ -523,7 +593,8 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await checkShelterMeta(page, full);
   await checkGarageUpgradeLines(page);
   if (full) {
-    await checkDawnProjectileDamage(page);
+    await checkFleetProjectileTraits(page);
+    await checkVehicleFleetSelectionAndCombat(page);
     await page.evaluate(() => window.__test.clearStorage());
     await checkShelterMeta(page, false);
     await checkGarageUpgradeLines(page);
@@ -577,6 +648,34 @@ async function runImageFallbackScenario(browser, baseUrl) {
   console.log("E2E image fallback PASS");
 }
 
+async function runVehicleImageFallbackScenario(browser, baseUrl) {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const errors = [];
+  page.on("console", (message) => {
+    if (message.type() === "error" && !isIgnorableConsoleError(message.text())) errors.push(message.text());
+  });
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.route("**/assets/vehicles/*.png", (route) => {
+    route.fulfill({ status: 404, contentType: "text/plain", body: "missing test vehicle" });
+  });
+
+  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
+  await page.evaluate(() => {
+    window.__test.clearStorage();
+    window.__test.startRun("land_rig");
+    window.__test.step(220);
+  });
+  await expectCanvasHasPixels(page);
+  const debug = await page.evaluate(() => window.__test.getRenderDebug());
+  assert.strictEqual(debug.environment, "land", "vehicle fallback run should still draw land environment");
+  assert.strictEqual(debug.vehicleFallbackDrawn, true, "missing vehicle image should draw sprite fallback");
+  assert.notStrictEqual(debug.vehicleRasterDrawn, true, "missing vehicle image should not report raster draw");
+  assert.deepStrictEqual(errors, [], "console/page errors during missing-vehicle fallback");
+  await page.close();
+  console.log("E2E vehicle image fallback PASS");
+}
+
 (async () => {
   const { server, url } = await startServer();
   const browser = await chromium.launch();
@@ -592,6 +691,7 @@ async function runImageFallbackScenario(browser, baseUrl) {
       console.log(`E2E viewport PASS ${viewports[i].width}x${viewports[i].height}`);
     }
     await runImageFallbackScenario(browser, url);
+    await runVehicleImageFallbackScenario(browser, url);
     console.log("E2E tests PASS");
   } finally {
     await browser.close();

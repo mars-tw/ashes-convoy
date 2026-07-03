@@ -17,23 +17,28 @@ assert.strictEqual(config.LOGIC.displayHeight, 844);
 assert.strictEqual(config.LOGIC.renderScale, 2);
 const roadRatio = (config.LOGIC.roadRight - config.LOGIC.roadLeft) / config.LOGIC.width;
 assert(roadRatio >= 0.55 && roadRatio <= 0.65, `road ratio should be 55-65%, got ${roadRatio}`);
-assert(config.VEHICLES.iron_crow.visualHalfWidth * 2 < config.LOGIC.roadRight - config.LOGIC.roadLeft, "iron_crow should fit inside road");
+const vehicleIds = ["land_rig", "sky_barge", "sea_ark", "void_runner"];
+assert.strictEqual(config.META_DEFAULT.selectedVehicle, "land_rig");
 
-["iron_crow", "dawn_skiff"].forEach((id) => {
+vehicleIds.forEach((id) => {
   const vehicle = config.VEHICLES[id];
   assert(vehicle, `missing vehicle ${id}`);
   assert.strictEqual(vehicle.id, id);
-  assert(["train", "ship"].includes(vehicle.kind), `${id} kind must be train or ship`);
+  assert(["land", "air", "sea", "space"].includes(vehicle.environment), `${id} needs a valid environment`);
+  assert(vehicle.environmentLabel, `${id} needs an environment label`);
   assert(vehicle.sprite.startsWith("vehicle_"), `${id} must bind a vehicle sprite`);
+  assert(vehicle.spriteImage && vehicle.spriteImage.endsWith(".png"), `${id} must bind a raster vehicle image`);
   assert(config.WEAPONS[vehicle.weapon], `${id} weapon must exist`);
   assertFinitePositive(vehicle.hp, `${id}.hp`);
   assert(Number.isFinite(vehicle.armor) && vehicle.armor >= 0, `${id}.armor must be non-negative`);
-  assertFinitePositive(vehicle.turretSlots, `${id}.turretSlots`);
-  assert.strictEqual(vehicle.stage, 1);
+  assertFinitePositive(vehicle.visualWidth, `${id}.visualWidth`);
+  assert(vehicle.visualWidth >= 70 && vehicle.visualWidth <= 90, `${id} raster width should be 70-90 world px`);
+  assert(vehicle.visualHalfWidth * 2 < config.LOGIC.roadRight - config.LOGIC.roadLeft, `${id} should fit inside road`);
+  assert.strictEqual(vehicle.stage, 4);
 });
 
-assert.notStrictEqual(config.VEHICLES.iron_crow.hp, config.VEHICLES.dawn_skiff.hp, "vehicles must differ in hp");
-assert.notStrictEqual(config.VEHICLES.iron_crow.weapon, config.VEHICLES.dawn_skiff.weapon, "vehicles must differ in weapon");
+assert.deepStrictEqual(vehicleIds.map((id) => config.VEHICLES[id].environment).sort(), ["air", "land", "sea", "space"]);
+assert.strictEqual(new Set(vehicleIds.map((id) => config.VEHICLES[id].weapon)).size, 4, "fleet weapons must differ");
 
 Object.entries(config.WEAPONS).forEach(([id, weapon]) => {
   assert.strictEqual(weapon.id, id);

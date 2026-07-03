@@ -332,7 +332,11 @@
       runMods: rules.defaultRunMods(),
       config
     });
-    return `${vehicle.kind === "train" ? "列車" : "飛船"} · HP ${stats.maxHp} · 傷害 ${Math.round(shot.damage)} · ${shot.projectiles} 彈道`;
+    const dps = Math.round((shot.damage * shot.projectiles * 10) / shot.fireInterval) / 10;
+    const extras = [];
+    if (shot.splash > 0) extras.push(`濺射 ${shot.splash}`);
+    if (shot.pierce > 0) extras.push(`穿透 ${shot.pierce}`);
+    return `${vehicle.environmentLabel || vehicle.environment} · HP ${stats.maxHp} · 護甲 ${stats.armor} · DPS ${dps}${extras.length ? ` · ${extras.join(" · ")}` : ""}`;
   }
 
   function renderVehicles() {
@@ -342,13 +346,22 @@
       const item = root.document.createElement("div");
       item.className = `vehicle${meta.selectedVehicle === vehicleId ? " is-selected" : ""}`;
 
+      if (vehicle.spriteImage) {
+        const thumb = root.document.createElement("img");
+        thumb.className = "vehicle-thumb";
+        thumb.src = vehicle.spriteImage;
+        thumb.alt = vehicle.name;
+        thumb.loading = "lazy";
+        thumb.decoding = "async";
+        item.appendChild(thumb);
+      }
+
       const text = root.document.createElement("div");
       const name = root.document.createElement("div");
       name.className = "vehicle-name";
       name.innerHTML = `<span>${vehicle.name}</span><small>${vehicleLine(vehicleId)}</small>`;
       const desc = root.document.createElement("small");
-      desc.textContent =
-        vehicleId === "iron_crow" ? "厚重耐打，穩定中速火力。" : "機動快速，脈衝彈幕較密。";
+      desc.textContent = vehicle.role || "艦隊載具";
       text.append(name, desc);
 
       const button = root.document.createElement("button");
@@ -584,7 +597,9 @@
     els.garageBtn.addEventListener("click", showGarage);
     els.resetBtn.addEventListener("click", clearStorage);
     els.selectSkiffBtn.addEventListener("click", () => {
-      const next = meta.selectedVehicle === "iron_crow" ? "dawn_skiff" : "iron_crow";
+      const ids = Object.keys(config.VEHICLES);
+      const index = Math.max(0, ids.indexOf(meta.selectedVehicle));
+      const next = ids[(index + 1) % ids.length];
       selectVehicle(next);
     });
   }

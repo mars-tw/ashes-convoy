@@ -77,6 +77,18 @@ function getConfig(config) {
   return Config;
 }
 
+function defaultVehicleId(config) {
+  const cfg = getConfig(config);
+  return cfg.META_DEFAULT && cfg.VEHICLES[cfg.META_DEFAULT.selectedVehicle]
+    ? cfg.META_DEFAULT.selectedVehicle
+    : Object.keys(cfg.VEHICLES)[0];
+}
+
+function normalizeShelterTheme(themeId, config) {
+  const cfg = getConfig(config);
+  return cfg.SHELTER_THEMES && cfg.SHELTER_THEMES[themeId] ? themeId : cfg.META_DEFAULT.shelterTheme || "snow";
+}
+
 function enemyHpScale(wave, config) {
   const cfg = getConfig(config);
   const safeWave = finiteNumber(wave, 1, { min: 1, integer: true });
@@ -330,7 +342,7 @@ function getVehicleLevels(meta, vehicleId, config) {
 
 function getVehicleStats(vehicleId, meta, config) {
   const cfg = getConfig(config);
-  const vehicle = cfg.VEHICLES[vehicleId] || cfg.VEHICLES.iron_crow;
+  const vehicle = cfg.VEHICLES[vehicleId] || cfg.VEHICLES[defaultVehicleId(cfg)];
   const levels = getVehicleLevels(meta, vehicle.id, cfg);
   const hull = cfg.ECONOMY.upgradeTracks.hull;
   const weapon = cfg.ECONOMY.upgradeTracks.weapon;
@@ -349,7 +361,7 @@ function getVehicleStats(vehicleId, meta, config) {
 function calculateShotStats(options) {
   const opts = options || {};
   const cfg = getConfig(opts.config);
-  const vehicle = cfg.VEHICLES[opts.vehicleId] || cfg.VEHICLES.iron_crow;
+  const vehicle = cfg.VEHICLES[opts.vehicleId] || cfg.VEHICLES[defaultVehicleId(cfg)];
   const weapon = cfg.WEAPONS[vehicle.weapon];
   const meta = opts.meta || cfg.META_DEFAULT;
   const levels = getVehicleLevels(meta, vehicle.id, cfg);
@@ -386,7 +398,7 @@ function applyGateEffect(options) {
   if (!gate) throw new Error(`Unknown gate "${opts.gateId}".`);
   const currentMods = Object.assign(defaultRunMods(), opts.runMods || {});
   const vehicle = opts.vehicle ? deepClone(opts.vehicle) : null;
-  const levels = sanitizeVehicleLevels(opts.vehicleLevels, opts.vehicleId || "iron_crow", cfg);
+  const levels = sanitizeVehicleLevels(opts.vehicleLevels, opts.vehicleId || defaultVehicleId(cfg), cfg);
   const gateMul = 1 + levels.gate * cfg.ECONOMY.upgradeTracks.gate.gateMulPerLevel;
   const effect = gate.effect;
   const runMods = deepClone(currentMods);
@@ -463,14 +475,16 @@ function migrateMeta(raw, options) {
   meta.version = cfg.META_VERSION;
   meta.createdAt = typeof input.createdAt === "string" || typeof input.createdAt === "number" ? input.createdAt : base.createdAt;
   meta.updatedAt = typeof input.updatedAt === "string" || typeof input.updatedAt === "number" ? input.updatedAt : base.updatedAt;
+  meta.shelterTheme = normalizeShelterTheme(input.shelterTheme, cfg);
 
   ["parts", "totalRuns", "totalKills", "totalBossKills", "bestWave", "bestScore", "bossBlueprintPity"].forEach((key) => {
     meta[key] = finiteNumber(input[key], base[key], { min: 0, integer: true });
   });
 
-  meta.unlockedVehicles = Object.assign({}, boolTrueMap(input.unlockedVehicles));
-  meta.unlockedVehicles.iron_crow = true;
-  meta.unlockedVehicles.dawn_skiff = true;
+  meta.unlockedVehicles = {};
+  Object.keys(cfg.VEHICLES).forEach((vehicleId) => {
+    meta.unlockedVehicles[vehicleId] = true;
+  });
 
   meta.selectedVehicle = cfg.VEHICLES[input.selectedVehicle] ? input.selectedVehicle : base.selectedVehicle;
   if (!meta.unlockedVehicles[meta.selectedVehicle]) meta.selectedVehicle = base.selectedVehicle;

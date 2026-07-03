@@ -22,10 +22,13 @@ const dirty = {
   totalBossKills: 2.9,
   bestWave: "7",
   bestScore: "-30",
-  unlockedVehicles: { iron_crow: false, dawn_skiff: true, ghost: true },
+  shelterTheme: "bunker",
+  unlockedVehicles: { iron_crow: false, dawn_skiff: true, ghost: true, sky_barge: false },
   vehicleLevels: {
     iron_crow: { hull: 3.8, weapon: 99, energy: -2, gate: "2" },
-    dawn_skiff: { hull: NaN, weapon: 1, energy: Infinity, gate: 1 }
+    dawn_skiff: { hull: NaN, weapon: 1, energy: Infinity, gate: 1 },
+    land_rig: { hull: 3.8, weapon: 99, energy: -2, gate: "2" },
+    void_runner: { hull: 2, weapon: 1, energy: 99, gate: 1 }
   },
   achievements: { first_boss: true, bogus: false },
   claimedMilestones: { a: true, b: "true" },
@@ -34,6 +37,7 @@ const dirty = {
   blueprints: { rift_hauler: 5.5, frost_wing: -2 },
   bestByVehicle: {
     iron_crow: { wave: 6, score: 4000, kills: 42, bosses: 1, at: "2026-07-03T00:00:00.000Z" },
+    sea_ark: { wave: 5, score: 3500, kills: 30, bosses: 1, at: "2026-07-03T00:00:00.000Z" },
     ghost: { wave: 99, score: 99, kills: 99, bosses: 99, at: "bad" }
   }
 };
@@ -52,20 +56,26 @@ assert.strictEqual(
   "migrateMeta must not mutate input objects"
 );
 assert.strictEqual(migrated.version, 1);
-assert.strictEqual(migrated.selectedVehicle, "iron_crow");
+assert.strictEqual(migrated.selectedVehicle, "land_rig");
+assert.strictEqual(migrated.shelterTheme, "bunker");
 assert.strictEqual(migrated.parts, 0);
 assert.strictEqual(migrated.totalRuns, 0);
 assert.strictEqual(migrated.totalKills, 0);
 assert.strictEqual(migrated.totalBossKills, 2);
 assert.strictEqual(migrated.bestWave, 7);
 assert.strictEqual(migrated.bestScore, 0);
-assert.strictEqual(migrated.unlockedVehicles.iron_crow, true);
-assert.strictEqual(migrated.unlockedVehicles.dawn_skiff, true);
-assert.strictEqual(migrated.vehicleLevels.iron_crow.hull, 3);
-assert.strictEqual(migrated.vehicleLevels.iron_crow.weapon, config.ECONOMY.upgradeTracks.weapon.maxLevel);
-assert.strictEqual(migrated.vehicleLevels.iron_crow.energy, 0);
-assert.strictEqual(migrated.vehicleLevels.iron_crow.gate, 2);
-assert.strictEqual(migrated.vehicleLevels.dawn_skiff.weapon, 1);
+["land_rig", "sky_barge", "sea_ark", "void_runner"].forEach((vehicleId) => {
+  assert.strictEqual(migrated.unlockedVehicles[vehicleId], true, `${vehicleId} should be unlocked`);
+  assert(migrated.vehicleLevels[vehicleId], `${vehicleId} levels should be present`);
+});
+assert.strictEqual(migrated.unlockedVehicles.iron_crow, undefined);
+assert.strictEqual(migrated.unlockedVehicles.dawn_skiff, undefined);
+assert.strictEqual(migrated.vehicleLevels.land_rig.hull, 3);
+assert.strictEqual(migrated.vehicleLevels.land_rig.weapon, config.ECONOMY.upgradeTracks.weapon.maxLevel);
+assert.strictEqual(migrated.vehicleLevels.land_rig.energy, 0);
+assert.strictEqual(migrated.vehicleLevels.land_rig.gate, 2);
+assert.strictEqual(migrated.vehicleLevels.void_runner.weapon, 1);
+assert.strictEqual(migrated.vehicleLevels.void_runner.energy, config.ECONOMY.upgradeTracks.energy.maxLevel);
 assert.strictEqual(migrated.achievements.first_boss, true);
 assert.strictEqual(migrated.achievements.bogus, undefined);
 assert.strictEqual(migrated.claimedMilestones.a, true);
@@ -77,21 +87,24 @@ assert.strictEqual(migrated.tutorial.seenIntro, true);
 assert.strictEqual(migrated.tutorial.seenGate, false);
 assert.strictEqual(migrated.blueprints.rift_hauler, 5);
 assert.strictEqual(migrated.blueprints.frost_wing, 0);
-assert.strictEqual(migrated.bestByVehicle.iron_crow.wave, 6);
+assert.strictEqual(migrated.bestByVehicle.iron_crow, undefined);
+assert.strictEqual(migrated.bestByVehicle.sea_ark.wave, 5);
 assert.strictEqual(migrated.bestByVehicle.ghost, undefined);
 
 const oldJson = JSON.stringify({
   selectedVehicle: "dawn_skiff",
+  shelterTheme: "not-a-theme",
   parts: 18,
   vehicleLevels: { dawn_skiff: { hull: 1, weapon: 2 } }
 });
 const old = rules.migrateMeta(oldJson, { config });
 assert.strictEqual(old.version, 1);
-assert.strictEqual(old.selectedVehicle, "dawn_skiff");
+assert.strictEqual(old.selectedVehicle, "land_rig");
+assert.strictEqual(old.shelterTheme, "snow");
 assert.strictEqual(old.parts, 18);
-assert.strictEqual(old.vehicleLevels.dawn_skiff.hull, 1);
-assert.strictEqual(old.vehicleLevels.dawn_skiff.weapon, 2);
-assert.strictEqual(old.unlockedVehicles.iron_crow, true);
-assert.strictEqual(old.unlockedVehicles.dawn_skiff, true);
+assert.strictEqual(old.vehicleLevels.land_rig.hull, 0);
+assert.strictEqual(old.vehicleLevels.land_rig.weapon, 0);
+assert.strictEqual(old.unlockedVehicles.land_rig, true);
+assert.strictEqual(old.unlockedVehicles.sky_barge, true);
 
 console.log("Storage tests PASS");

@@ -85,22 +85,28 @@ assert.strictEqual(damaged.hp, 0);
 assert.strictEqual(damaged.dead, true);
 
 const meta = rules.migrateMeta(null, { config });
-const baseShot = rules.calculateShotStats({ vehicleId: "iron_crow", meta, runMods: rules.defaultRunMods(), config });
-const boostedShot = rules.calculateShotStats({ vehicleId: "iron_crow", meta, runMods: damageGate.runMods, config });
+const baseShot = rules.calculateShotStats({ vehicleId: "land_rig", meta, runMods: rules.defaultRunMods(), config });
+const boostedShot = rules.calculateShotStats({ vehicleId: "land_rig", meta, runMods: damageGate.runMods, config });
 assert(boostedShot.damage > baseShot.damage, "damage gate should affect shot damage");
 assert(Number.isFinite(baseShot.muzzleOffset) && baseShot.muzzleOffset > 0, "shot stats should expose muzzle offset");
 
-const skiffShot = rules.calculateShotStats({ vehicleId: "dawn_skiff", meta, runMods: rules.defaultRunMods(), config });
-assert.notStrictEqual(baseShot.fireInterval, skiffShot.fireInterval, "vehicle weapons should feel different");
-assert.notStrictEqual(baseShot.projectiles, skiffShot.projectiles, "vehicle projectile patterns should differ");
-assert.strictEqual(skiffShot.baseProjectiles, 2, "dawn skiff should keep two full-damage base projectiles");
-const skiffRate = rules.calculateShotStats({
-  vehicleId: "dawn_skiff",
+const fleetShots = Object.keys(config.VEHICLES).map((vehicleId) => ({
+  vehicleId,
+  shot: rules.calculateShotStats({ vehicleId, meta, runMods: rules.defaultRunMods(), config })
+}));
+assert.strictEqual(fleetShots.length, 4, "four fleet vehicles should calculate shot stats");
+assert.strictEqual(new Set(fleetShots.map((entry) => entry.shot.weaponId)).size, 4, "fleet weapons should feel distinct");
+assert(fleetShots.find((entry) => entry.vehicleId === "sea_ark").shot.splash > 0, "sea ark should expose splash damage");
+assert(fleetShots.find((entry) => entry.vehicleId === "void_runner").shot.pierce > 0, "void runner should expose piercing shots");
+assert(fleetShots.find((entry) => entry.vehicleId === "sky_barge").shot.fireInterval < baseShot.fireInterval, "sky barge should fire faster than land rig");
+const voidRate = rules.calculateShotStats({
+  vehicleId: "void_runner",
   meta,
   runMods: rateGate.runMods,
   config
 });
-assert(skiffRate.fireInterval < skiffShot.fireInterval, "rate gate should affect dawn skiff");
-assert(skiffRate.fireInterval >= Math.max(0.08, config.WEAPONS.pulse_burst.fireInterval * 0.55), "rate gate should respect weapon-scaled floor");
+const voidShot = fleetShots.find((entry) => entry.vehicleId === "void_runner").shot;
+assert(voidRate.fireInterval < voidShot.fireInterval, "rate gate should affect void runner");
+assert(voidRate.fireInterval >= Math.max(0.08, config.WEAPONS.void_lance.fireInterval * 0.55), "rate gate should respect weapon-scaled floor");
 
 console.log("Rules tests PASS");
