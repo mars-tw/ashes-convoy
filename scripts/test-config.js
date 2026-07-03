@@ -73,7 +73,7 @@ assert(config.ENEMIES.boss_hive_titan.phases.length >= 2);
 });
 
 assert.strictEqual(config.WAVE.bossEvery, 5);
-assert(config.WAVE.firstGateMinTime >= 15 && config.WAVE.firstGateMaxTime <= 25, "first gate should appear in 15-25 seconds");
+assert(config.WAVE.firstGateMinTime >= 8 && config.WAVE.firstGateMaxTime <= 11, "first gate should appear in 8-11 seconds");
 assert(config.PERFORMANCE.maxEnemies >= 60, "enemy cap should support large hordes");
 assert.strictEqual(config.DIFFICULTIES.normal.locked, undefined);
 assert.strictEqual(config.ECONOMY.difficultyRewardMul.normal, 1);

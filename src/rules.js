@@ -241,7 +241,7 @@ function generateWave(options) {
         enemyId: enemy.id,
         x,
         y,
-        hp: stats.hp,
+        hp: firstWaveOpening && enemy.id === "shambler" ? Math.min(stats.hp, 18) : stats.hp,
         speed: stats.speed,
         laneOffset: x - cfg.LOGIC.width * 0.5,
         swayPhase: rng() * Math.PI * 2,
@@ -360,7 +360,8 @@ function calculateShotStats(options) {
   const energyMul = Math.pow(1 - energyTrack.fireRateMulPerLevel, levels.energy);
   const damageAdd = Math.min(runMods.damageAdd, 2.5);
   const projectiles = clamp(weapon.baseProjectiles + runMods.projectileAdd, 1, weapon.baseProjectiles + 4);
-  const interval = Math.max(0.12, weapon.fireInterval * runMods.fireIntervalMul * energyMul);
+  const minInterval = Math.max(0.08, weapon.fireInterval * 0.55);
+  const interval = Math.max(minInterval, weapon.fireInterval * runMods.fireIntervalMul * energyMul);
   return {
     weaponId: weapon.id,
     bulletSprite: weapon.bulletSprite,
@@ -371,6 +372,8 @@ function calculateShotStats(options) {
     spread: weapon.spread,
     splash: weapon.splash,
     muzzleOffset: weapon.muzzleOffset,
+    baseProjectiles: weapon.baseProjectiles,
+    bonusProjectiles: Math.max(0, projectiles - weapon.baseProjectiles),
     projectiles,
     sideDamageMul: weapon.sideDamageMul
   };
@@ -432,6 +435,7 @@ function rewardPartsForRun(run, config) {
   const wavesCleared = finiteNumber(run && run.wavesCleared, 0, { min: 0, integer: true });
   const kills = finiteNumber(run && run.kills, 0, { min: 0, integer: true });
   const bossesDefeated = finiteNumber(run && run.bossesDefeated, 0, { min: 0, integer: true });
+  if (wavesCleared === 0 && kills === 0 && bossesDefeated === 0) return 0;
   const difficultyId = run && cfg.ECONOMY.difficultyRewardMul[run.difficultyId] ? run.difficultyId : "normal";
   const baseParts = wavesCleared * cfg.ECONOMY.partsPerWave;
   const killParts = Math.floor(Math.min(kills, cfg.ECONOMY.killRewardCap) / cfg.ECONOMY.killDivisor);

@@ -183,7 +183,7 @@ const GATES = {
     shortLabel: "射速",
     sprite: "gate_rate",
     coreHp: 45,
-    effect: { type: "fireIntervalMul", mul: 0.8, minInterval: 0.12 },
+    effect: { type: "fireIntervalMul", mul: 0.8 },
     stage: 1
   },
   multishot_plus: {
@@ -221,8 +221,8 @@ const WAVE = {
   normalCountGrowth: 1.6,
   spawnStart: 0.8,
   spawnEndPadding: 3.2,
-  firstGateMinTime: 15,
-  firstGateMaxTime: 25,
+  firstGateMinTime: 8,
+  firstGateMaxTime: 11,
   gateIntervalMin: 20,
   gateIntervalMax: 30,
   gateSpeed: 22,
@@ -249,10 +249,10 @@ const DIFFICULTIES = {
 };
 
 const ECONOMY = {
-  partsPerWave: 3,
-  killDivisor: 8,
+  partsPerWave: 4,
+  killDivisor: 6,
   killRewardCap: 360,
-  bossParts: 12,
+  bossParts: 24,
   minRunParts: 2,
   difficultyRewardMul: {
     normal: 1,

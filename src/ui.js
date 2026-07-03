@@ -73,7 +73,7 @@
 
   function renderUpgrades() {
     els.upgradeList.textContent = "";
-    ["hull", "weapon"].forEach((track) => {
+    ["hull", "weapon", "energy", "gate"].forEach((track) => {
       const upgrade = config.ECONOMY.upgradeTracks[track];
       const levels = rules.getVehicleLevels(meta, meta.selectedVehicle, config);
       const cost = rules.getUpgradeCost(meta, meta.selectedVehicle, track, config);
@@ -84,7 +84,14 @@
       const title = root.document.createElement("strong");
       title.textContent = `${upgrade.label} Lv.${levels[track]} / ${upgrade.maxLevel}`;
       const detail = root.document.createElement("small");
-      detail.textContent = track === "hull" ? "每級 HP +8%" : "每級基礎傷害 +7%";
+      detail.textContent =
+        track === "hull"
+          ? "每級 HP +8%"
+          : track === "weapon"
+            ? "每級基礎傷害 +7%"
+            : track === "energy"
+              ? "每級射速 +5%"
+              : "每級增益門效果 +4%";
       text.append(title, root.document.createElement("br"), detail);
 
       const button = root.document.createElement("button");
@@ -159,6 +166,14 @@
     const run = result && result.meta ? result.meta.lastRun : meta.lastRun;
     if (!run) return;
     els.settlementSummary.textContent = `本局獲得 ${run.earnedParts} 廢土零件。`;
+    const affordableUpgrade = ["hull", "weapon", "energy", "gate"].some((track) => {
+      const cost = rules.getUpgradeCost(meta, meta.selectedVehicle, track, config);
+      return cost != null && meta.parts >= cost;
+    });
+    els.againBtn.textContent = affordableUpgrade ? "再跑一趟" : "再拚一局";
+    els.garageBtn.textContent = affordableUpgrade ? "進車庫升級" : "回車庫";
+    els.againBtn.className = affordableUpgrade ? "secondary" : "primary";
+    els.garageBtn.className = affordableUpgrade ? "primary" : "secondary";
     const rows = [
       ["波次", `第 ${run.wavesCleared} 波`],
       ["擊殺", `${run.kills}`],

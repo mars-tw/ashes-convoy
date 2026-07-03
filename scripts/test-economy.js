@@ -6,10 +6,11 @@ const rules = require("../src/rules.js");
 
 const fixedNow = () => "2026-07-03T00:00:00.000Z";
 
-assert.strictEqual(rules.rewardPartsForRun({ wavesCleared: 3, kills: 25, bossesDefeated: 0, difficultyId: "normal" }, config), 12);
-assert.strictEqual(rules.rewardPartsForRun({ wavesCleared: 5, kills: 55, bossesDefeated: 1, difficultyId: "normal" }, config), 33);
-assert.strictEqual(rules.rewardPartsForRun({ wavesCleared: 10, kills: 130, bossesDefeated: 2, difficultyId: "normal" }, config), 70);
-assert.strictEqual(rules.rewardPartsForRun({ wavesCleared: 15, kills: 205, bossesDefeated: 3, difficultyId: "normal" }, config), 106);
+assert.strictEqual(rules.rewardPartsForRun({ wavesCleared: 0, kills: 0, bossesDefeated: 0, difficultyId: "normal" }, config), 0);
+assert.strictEqual(rules.rewardPartsForRun({ wavesCleared: 3, kills: 25, bossesDefeated: 0, difficultyId: "normal" }, config), 16);
+assert.strictEqual(rules.rewardPartsForRun({ wavesCleared: 5, kills: 55, bossesDefeated: 1, difficultyId: "normal" }, config), 53);
+assert.strictEqual(rules.rewardPartsForRun({ wavesCleared: 10, kills: 130, bossesDefeated: 2, difficultyId: "normal" }, config), 109);
+assert.strictEqual(rules.rewardPartsForRun({ wavesCleared: 15, kills: 205, bossesDefeated: 3, difficultyId: "normal" }, config), 166);
 
 const meta = rules.migrateMeta(null, { config });
 const before = JSON.stringify(meta);
@@ -22,9 +23,9 @@ const result = rules.settleRunRewards({
 });
 
 assert.strictEqual(JSON.stringify(meta), before, "settleRunRewards must not mutate input meta");
-assert.strictEqual(result.reward.parts, 33);
+assert.strictEqual(result.reward.parts, 53);
 assert.strictEqual(result.reward.blueprints.parts, undefined, "blueprints must not convert to parts");
-assert.strictEqual(result.meta.parts, 33);
+assert.strictEqual(result.meta.parts, 53);
 assert.strictEqual(result.meta.totalRuns, 1);
 assert.strictEqual(result.meta.totalKills, 55);
 assert.strictEqual(result.meta.totalBossKills, 1);
@@ -39,7 +40,7 @@ const second = rules.settleRunRewards({
   config
 });
 assert(!second.reward.achievements.includes("first_boss"), "first boss achievement must not repeat");
-assert.strictEqual(second.reward.parts, 33, "main currency formula must not depend on rng");
+assert.strictEqual(second.reward.parts, 53, "main currency formula must not depend on rng");
 
 const enough = rules.migrateMeta(Object.assign({}, config.META_DEFAULT, { parts: 70 }), { config });
 const hullCost = rules.getUpgradeCost(enough, "iron_crow", "hull", config);

@@ -88,6 +88,58 @@ async function dragAim(page) {
   assert(after.projectile.vy < -40, "projectile should travel upward");
 }
 
+async function checkGarageUpgradeLines(page) {
+  const tracks = await page.locator("[data-upgrade]").evaluateAll((nodes) => nodes.map((node) => node.dataset.upgrade));
+  assert.deepStrictEqual(tracks.sort(), ["energy", "gate", "hull", "weapon"], "garage should show all four upgrade tracks");
+}
+
+async function checkDawnProjectileDamage(page) {
+  await page.evaluate(() => {
+    window.__test.startRun("dawn_skiff");
+    window.__test.setState({ projectiles: [], vehicle: { weaponCooldown: 0 } });
+    window.__test.step(130);
+  });
+  const base = await page.evaluate(() => {
+    const state = window.__test.getState();
+    return state.projectiles.map((projectile) => projectile.damage).slice(0, 2);
+  });
+  assert.strictEqual(base.length, 2, "dawn skiff should fire two base projectiles");
+  base.forEach((damage) => assert(Math.abs(damage - 7.2) < 0.01, `base projectile should be full damage, got ${damage}`));
+
+  await page.evaluate(() => {
+    window.__test.grantGate("multishot_plus");
+    window.__test.setState({ projectiles: [], vehicle: { weaponCooldown: 0 } });
+    window.__test.step(130);
+  });
+  const boosted = await page.evaluate(() => window.__test.getState().projectiles.map((projectile) => projectile.damage).slice(0, 3));
+  assert.strictEqual(boosted.length, 3, "multishot should add one projectile");
+  const full = boosted.filter((damage) => Math.abs(damage - 7.2) < 0.01).length;
+  const bonus = boosted.filter((damage) => Math.abs(damage - 7.2 * 0.55) < 0.01).length;
+  assert.strictEqual(full, 2, "two closest dawn projectiles should remain full damage");
+  assert.strictEqual(bonus, 1, "only the gate-added projectile should be discounted");
+}
+
+async function checkEmptySettlementCta(page) {
+  await page.click("#startBtn");
+  await page.waitForFunction(() => window.__test.getState().mode === "playing");
+  await page.evaluate(() => window.__test.finishRun({ wavesCleared: 0, kills: 0, bossesDefeated: 0, score: 0 }));
+  await page.waitForSelector("#settlementPanel:not([hidden])");
+  const summary = await page.locator("#settlementSummary").innerText();
+  assert(summary.includes("0"), `empty settlement should grant 0 parts: ${summary}`);
+  const again = await page.locator("#againBtn").evaluate((button) => ({ text: button.textContent, className: button.className }));
+  const garage = await page.locator("#garageBtn").evaluate((button) => ({ text: button.textContent, className: button.className }));
+  assert(again.text.includes("再拚一局") && again.className.includes("primary"), "empty settlement should make retry the primary CTA");
+  assert(garage.className.includes("secondary"), "garage should not be primary when no upgrade is affordable");
+  await page.click("#againBtn");
+  await page.waitForFunction(() => window.__test.getState().mode === "playing");
+}
+
+async function checkInitialPromptAndMessages(page) {
+  const debug = await page.evaluate(() => window.__test.getRenderDebug());
+  assert(debug.tutorialDrawn, "opening drag tutorial should be drawn");
+  assert(debug.messagesDrawn > 0, "opening message should be drawn");
+}
+
 async function sampleFps(page) {
   return page.evaluate(async () => {
     const stamps = [];
@@ -107,7 +159,11 @@ async function sampleFps(page) {
 }
 
 async function checkOpeningHordeGateAndFps(page) {
-  await page.evaluate(() => window.__test.step(8000));
+  await page.evaluate(() => window.__test.step(3000));
+  const firstKill = await page.evaluate(() => window.__test.getState().stats.kills);
+  assert(firstKill >= 1, `first kill should happen within 3 seconds, got ${firstKill}`);
+
+  await page.evaluate(() => window.__test.step(5000));
   const opening = await page.evaluate(() => window.__test.getState());
   assert(
     opening.enemies.length >= 8,
@@ -117,11 +173,11 @@ async function checkOpeningHordeGateAndFps(page) {
   const fps = await sampleFps(page);
   assert(fps >= windowlessFpsFloor(), `rough FPS should stay above floor, got ${fps.toFixed(1)}`);
 
-  await page.evaluate(() => window.__test.step(18000));
+  await page.evaluate(() => window.__test.step(3000));
   const gateState = await page.evaluate(() => window.__test.getState());
   assert(
     gateState.gates.length + gateState.stats.gatesTaken >= 1,
-    "a gate pair should appear or be collected within the opening 30 seconds"
+    "a gate pair should appear or be collected within the opening 11 seconds"
   );
 
   await page.evaluate(() => {
@@ -211,9 +267,11 @@ async function deathSettlementUpgradeAndReload(page) {
   });
   await page.waitForSelector("#settlementPanel:not([hidden])");
   const settlementText = await page.locator("#settlementSummary").innerText();
-  assert(settlementText.includes("70"), `settlement should show 70 earned parts: ${settlementText}`);
+  assert(settlementText.includes("109"), `settlement should show 109 earned parts: ${settlementText}`);
   let meta = await page.evaluate(() => window.__test.getMeta());
-  assert(meta.parts >= 70, "settlement should persist earned parts");
+  assert(meta.parts >= 109, "settlement should persist earned parts");
+  const garageCta = await page.locator("#garageBtn").evaluate((button) => ({ text: button.textContent, className: button.className }));
+  assert(garageCta.text.includes("進車庫升級") && garageCta.className.includes("primary"), "affordable settlement should make garage the primary CTA");
 
   await page.click("#garageBtn");
   await page.waitForSelector("#garagePanel:not([hidden])");
@@ -245,10 +303,19 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await page.goto(baseUrl, { waitUntil: "networkidle" });
   await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
   await page.evaluate(() => window.__test.clearStorage());
-  await page.click("#startBtn");
-  await page.waitForFunction(() => window.__test.getState().mode === "playing");
+  await checkGarageUpgradeLines(page);
+  if (full) {
+    await checkDawnProjectileDamage(page);
+    await page.evaluate(() => window.__test.clearStorage());
+    await checkGarageUpgradeLines(page);
+    await checkEmptySettlementCta(page);
+  } else {
+    await page.click("#startBtn");
+    await page.waitForFunction(() => window.__test.getState().mode === "playing");
+  }
   await page.evaluate(() => window.__test.step(180));
   await expectCanvasHasPixels(page);
+  await checkInitialPromptAndMessages(page);
   await checkOpeningHordeGateAndFps(page);
   await dragAim(page);
   await killEnemiesAndEarnPreviewParts(page);

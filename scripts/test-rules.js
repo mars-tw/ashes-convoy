@@ -28,7 +28,7 @@ assert(openingSpread >= 36, `opening horde should spread across multiple rows, g
 openingShamblers.forEach((spawn) => {
   assert(spawn.x >= config.LOGIC.roadLeft && spawn.x <= config.LOGIC.roadRight, "opening enemies should spawn on the road");
 });
-assert(openingWave.gates[0].time >= 15 && openingWave.gates[0].time <= 25, "first gate should be scheduled in the 15-25s window");
+assert(openingWave.gates[0].time >= 8 && openingWave.gates[0].time <= 11, "first gate should be scheduled in the 8-11s window");
 
 const bossWave = rules.generateWave({ wave: 5, rng: fixedRng([0.1, 0.2, 0.3, 0.4]), config });
 assert.strictEqual(bossWave.boss, true, "wave 5 should be a boss wave");
@@ -93,5 +93,14 @@ assert(Number.isFinite(baseShot.muzzleOffset) && baseShot.muzzleOffset > 0, "sho
 const skiffShot = rules.calculateShotStats({ vehicleId: "dawn_skiff", meta, runMods: rules.defaultRunMods(), config });
 assert.notStrictEqual(baseShot.fireInterval, skiffShot.fireInterval, "vehicle weapons should feel different");
 assert.notStrictEqual(baseShot.projectiles, skiffShot.projectiles, "vehicle projectile patterns should differ");
+assert.strictEqual(skiffShot.baseProjectiles, 2, "dawn skiff should keep two full-damage base projectiles");
+const skiffRate = rules.calculateShotStats({
+  vehicleId: "dawn_skiff",
+  meta,
+  runMods: rateGate.runMods,
+  config
+});
+assert(skiffRate.fireInterval < skiffShot.fireInterval, "rate gate should affect dawn skiff");
+assert(skiffRate.fireInterval >= Math.max(0.08, config.WEAPONS.pulse_burst.fireInterval * 0.55), "rate gate should respect weapon-scaled floor");
 
 console.log("Rules tests PASS");

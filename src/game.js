@@ -26,6 +26,7 @@
   let rafStarted = false;
   let lastFrameMs = null;
   let boundInput = false;
+  let renderDebug = { messagesDrawn: 0, gateLabelsDrawn: 0, tutorialDrawn: false };
 
   function emitState() {
     if (callbacks.onState) callbacks.onState(getState());
@@ -40,6 +41,18 @@
   function normalize(dx, dy) {
     const length = Math.sqrt(dx * dx + dy * dy) || 1;
     return { x: dx / length, y: dy / length };
+  }
+
+  function baseProjectileIndexSet(count, baseProjectiles) {
+    return new Set(
+      Array.from({ length: count }, (_, index) => ({
+        index,
+        distance: Math.abs(index - (count - 1) / 2)
+      }))
+        .sort((a, b) => a.distance - b.distance || a.index - b.index)
+        .slice(0, Math.min(count, baseProjectiles))
+        .map((item) => item.index)
+    );
   }
 
   function nextId(prefix) {
@@ -59,6 +72,30 @@
     if (state.effects.length > config.PERFORMANCE.maxEffects) {
       state.effects.splice(0, state.effects.length - config.PERFORMANCE.maxEffects);
     }
+  }
+
+  function addFloatingText(text, x, y, options) {
+    if (meta.settings && meta.settings.reducedFlash) return;
+    const opts = options || {};
+    addEffect({
+      id: nextId("text"),
+      kind: "text",
+      text,
+      x,
+      y,
+      vy: Number.isFinite(opts.vy) ? opts.vy : -18,
+      color: opts.color || "#f4ead8",
+      size: opts.size || 8,
+      ttl: opts.ttl || 0.55,
+      age: 0,
+      alpha: 1
+    });
+  }
+
+  function pulseShake(amount, duration) {
+    if (meta.settings && meta.settings.reducedFlash) return;
+    state.shakeAmp = Math.max(state.shakeAmp || 0, amount);
+    state.shakeUntil = Math.max(state.shakeUntil || 0, state.time + duration);
   }
 
   function publicEntity(entity) {
@@ -182,11 +219,14 @@
         lastPointer: null
       },
       scroll: 0,
+      shakeAmp: 0,
+      shakeUntil: 0,
       messages: []
     };
 
     state = initial;
     state.wavePlan = makeWavePlan(1);
+    state.messages.push({ text: "拖曳瞄準", time: 0, ttl: 2 });
     return state;
   }
 
@@ -291,8 +331,8 @@
     const pairId = nextId("gatepair");
     const ids = options && options.length ? options : ["damage_plus", "repair"];
     const gateHalf = 32 * 1.5 * 0.5;
-    const left = spawnGate(ids[0], { pairId, x: config.LOGIC.roadLeft + gateHalf, y: -24, silent: true });
-    const right = spawnGate(ids[1], { pairId, x: config.LOGIC.roadRight - gateHalf, y: -24, silent: true });
+    const left = spawnGate(ids[0], { pairId, x: config.LOGIC.roadLeft + gateHalf, y: 104, silent: true });
+    const right = spawnGate(ids[1], { pairId, x: config.LOGIC.roadRight - gateHalf, y: 104, silent: true });
     emitState();
     return [left, right];
   }
@@ -310,7 +350,13 @@
     state.runMods = result.runMods;
     state.vehicle = result.vehicle || state.vehicle;
     state.stats.gatesTaken += 1;
-    state.messages.push({ text: config.GATES[gateId].label, time: state.time, ttl: 1.3 });
+    state.messages.push({ text: config.GATES[gateId].label, time: state.time, ttl: 1.7 });
+    addFloatingText(config.GATES[gateId].shortLabel, state.vehicle.x, state.vehicle.y - 54, {
+      color: "#f0b64a",
+      size: 9,
+      ttl: 0.75,
+      vy: -14
+    });
     emitState();
     return rules.deepClone({ runMods: state.runMods, vehicle: state.vehicle });
   }
@@ -338,6 +384,8 @@
     const result = rules.applyVehicleDamage(state.vehicle, amount, state.vehicle.armor);
     state.vehicle = result.vehicle;
     state.vehicle.recentHitUntil = state.time + 0.28;
+    if (state.vehicleId === "iron_crow") state.vehicle.recentHitUntil = state.time + config.VEHICLES.iron_crow.passive.duration;
+    pulseShake(1.2, 0.18);
     if (state.vehicle.hp <= 0) finishRun();
     emitState();
     return result;
@@ -348,6 +396,8 @@
     enemy.dead = true;
     state.stats.kills += 1;
     state.stats.score += enemy.score + state.wave * 3;
+    addFloatingText("+1", enemy.x, enemy.y - enemy.radius, { color: "#f0b64a", size: 8, ttl: 0.5, vy: -14 });
+    pulseShake(enemy.boss ? 3 : 1.5, enemy.boss ? 0.35 : 0.16);
     if (enemy.boss) {
       state.stats.bossesDefeated += 1;
       state.stats.score += 900;
@@ -457,6 +507,7 @@
 
   function fireProjectiles(dt) {
     const vehicle = state.vehicle;
+    const vehicleConfig = config.VEHICLES[state.vehicleId];
     const shot = rules.calculateShotStats({
       vehicleId: state.vehicleId,
       meta,
@@ -470,6 +521,13 @@
     const direction = normalize(vehicle.aimX - vehicle.x, Math.min(vehicle.aimY, vehicle.y - 60) - vehicle.y);
     const centerAngle = Math.atan2(direction.y, direction.x);
     const count = shot.projectiles;
+    const fullDamageIndices = baseProjectileIndexSet(count, shot.baseProjectiles);
+    const passiveDamageMul =
+      vehicleConfig.passive &&
+      vehicleConfig.passive.id === "revenge_fire" &&
+      vehicle.recentHitUntil > state.time
+        ? 1 + vehicleConfig.passive.damageMul
+        : 1;
     const maxShotsThisFrame = 3;
     let shots = 0;
 
@@ -480,7 +538,7 @@
         const angle = centerAngle + offsetIndex * (0.11 + shot.spread);
         const vx = Math.cos(angle) * shot.projectileSpeed;
         const vy = Math.sin(angle) * shot.projectileSpeed;
-        const side = Math.abs(offsetIndex) > 0.01;
+        const bonusProjectile = !fullDamageIndices.has(i);
         state.projectiles.push({
           id: nextId("projectile"),
           sprite: shot.bulletSprite,
@@ -488,7 +546,9 @@
           y: vehicle.y + Math.sin(angle) * shot.muzzleOffset,
           vx,
           vy,
-          damage: side ? shot.damage * shot.sideDamageMul : shot.damage,
+          damage: shot.damage * (bonusProjectile ? 0.55 : 1) * passiveDamageMul,
+          bonusProjectile,
+          vehicleId: state.vehicleId,
           pierce: shot.pierce,
           radius: shot.bulletSprite === "bullet_rocket" ? 9 : 6,
           rotation: angle,
@@ -644,9 +704,22 @@
         const enemy = state.enemies[i];
         if (enemy.dead) continue;
         if (distance(projectile, enemy) <= projectile.radius + enemy.radius) {
-          enemy.hp -= projectile.damage;
+          let damage = projectile.damage;
+          if (projectile.vehicleId === "dawn_skiff") {
+            const passive = config.VEHICLES.dawn_skiff.passive;
+            const stacks = Math.min(passive.maxStacks, enemy.armorBreakStacks || 0);
+            damage *= 1 + stacks * passive.armorBreakPerHit;
+            enemy.armorBreakStacks = Math.min(passive.maxStacks, stacks + 1);
+          }
+          enemy.hp -= damage;
           enemy.hitFlash = 0.12;
-          state.stats.damageDealt += projectile.damage;
+          state.stats.damageDealt += damage;
+          addFloatingText(Math.round(damage).toString(), enemy.x + 3, enemy.y - enemy.radius - 2, {
+            color: projectile.vehicleId === "dawn_skiff" ? "#5ed4cb" : "#f4ead8",
+            size: 6,
+            ttl: 0.42,
+            vy: -12
+          });
           addEffect({
             id: nextId("effect"),
             sprite: "effect_hit",
@@ -683,6 +756,7 @@
     state.gates = state.gates.filter((gate) => gate.y < H + 70 && !gate.broken);
     state.effects.forEach((effect) => {
       effect.age += dt;
+      if (effect.kind === "text") effect.y += (effect.vy || 0) * dt;
       effect.alpha = Math.max(0, 1 - effect.age / effect.ttl);
     });
     state.effects = state.effects.filter((effect) => effect.age < effect.ttl);
@@ -813,6 +887,88 @@
     renderer.drawSpriteAnim(ctx, name, anim, timeMs, x, y, scale, options || {});
   }
 
+  function drawWorldText(text, x, y, options) {
+    const opts = options || {};
+    ctx.save();
+    ctx.globalAlpha *= opts.alpha == null ? 1 : opts.alpha;
+    ctx.font = `800 ${opts.size || 8}px system-ui, sans-serif`;
+    ctx.textAlign = opts.align || "center";
+    ctx.textBaseline = opts.baseline || "middle";
+    ctx.lineWidth = opts.strokeWidth || 2;
+    ctx.strokeStyle = opts.stroke || "rgba(0,0,0,0.78)";
+    ctx.fillStyle = opts.color || "#f4ead8";
+    ctx.strokeText(text, x, y);
+    ctx.fillText(text, x, y);
+    ctx.restore();
+  }
+
+  function drawGateLabel(gate) {
+    const gateConfig = config.GATES[gate.gateId];
+    if (!gateConfig) return;
+    drawWorldText(gateConfig.shortLabel, gate.x, gate.y - 16, { size: 7, color: "#f4ead8" });
+    const valueText =
+      gate.gateId === "damage_plus"
+        ? "+35%"
+        : gate.gateId === "rate_plus"
+          ? "+25%"
+          : gate.gateId === "multishot_plus"
+            ? "+1"
+            : "維修";
+    drawWorldText(valueText, gate.x, gate.y - 5, { size: 8, color: gate.gateId === "repair" ? "#87d27d" : "#f0b64a" });
+    renderDebug.gateLabelsDrawn += 1;
+  }
+
+  function drawMessages() {
+    if (!state) return;
+    state.messages.forEach((message, index) => {
+      const elapsed = state.time - message.time;
+      const ttl = message.ttl || 1;
+      const fade = Math.min(1, Math.max(0, Math.min(elapsed / 0.14, (ttl - elapsed) / 0.32)));
+      if (fade <= 0) return;
+      drawWorldText(message.text, W * 0.5, 74 + index * 13, {
+        size: 13,
+        alpha: fade,
+        color: "#f0b64a",
+        strokeWidth: 3
+      });
+      renderDebug.messagesDrawn += 1;
+    });
+  }
+
+  function drawAimGuide() {
+    if (!state || state.over) return;
+    const alpha = state.time < 2 ? 0.72 : 0.32;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = "#f0b64a";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(state.vehicle.x, state.vehicle.y - 18);
+    ctx.lineTo(state.vehicle.aimX, state.vehicle.aimY);
+    ctx.stroke();
+    ctx.strokeStyle = "#f4ead8";
+    ctx.beginPath();
+    ctx.arc(state.vehicle.aimX, state.vehicle.aimY, 8, 0, Math.PI * 2);
+    ctx.moveTo(state.vehicle.aimX - 12, state.vehicle.aimY);
+    ctx.lineTo(state.vehicle.aimX + 12, state.vehicle.aimY);
+    ctx.moveTo(state.vehicle.aimX, state.vehicle.aimY - 12);
+    ctx.lineTo(state.vehicle.aimX, state.vehicle.aimY + 12);
+    ctx.stroke();
+    if (state.time < 2) {
+      drawWorldText("拖曳瞄準", W * 0.5, 118, { size: 10, alpha: 0.92, color: "#f4ead8" });
+      ctx.strokeStyle = "#f4ead8";
+      ctx.beginPath();
+      ctx.moveTo(W * 0.5, 142);
+      ctx.lineTo(W * 0.68, 92);
+      ctx.lineTo(W * 0.64, 98);
+      ctx.moveTo(W * 0.68, 92);
+      ctx.lineTo(W * 0.69, 101);
+      ctx.stroke();
+      renderDebug.tutorialDrawn = true;
+    }
+    ctx.restore();
+  }
+
   function drawClipped(x, y, width, height, drawFn) {
     ctx.save();
     ctx.beginPath();
@@ -888,6 +1044,7 @@
   function drawGame(timeMs) {
     state.gates.forEach((gate) => {
       drawSprite(gate.sprite, "idle", timeMs, gate.x, gate.y, gate.scale, { alpha: 0.95 });
+      drawGateLabel(gate);
     });
     state.projectiles.forEach((projectile) => {
       drawSprite(projectile.sprite, "move", timeMs, projectile.x - projectile.vx * 0.034, projectile.y - projectile.vy * 0.034, projectile.scale, {
@@ -912,23 +1069,41 @@
       });
     });
     state.effects.forEach((effect) => {
-      drawSprite(effect.sprite, effect.anim, timeMs, effect.x, effect.y, effect.scale, { alpha: effect.alpha });
+      if (effect.kind === "text") {
+        drawWorldText(effect.text, effect.x, effect.y, {
+          size: effect.size,
+          alpha: effect.alpha,
+          color: effect.color
+        });
+      } else {
+        drawSprite(effect.sprite, effect.anim, timeMs, effect.x, effect.y, effect.scale, { alpha: effect.alpha });
+      }
     });
 
     const vehicleConfig = config.VEHICLES[state.vehicleId];
     const vehicleAnim = state.vehicle.hp <= 0 ? "wreck" : state.vehicle.recentHitUntil > state.time ? "damage" : "move";
     const vehicleScale = vehicleConfig.kind === "train" ? 1.25 : 1.55;
     drawSprite(vehicleConfig.sprite, vehicleAnim, timeMs, state.vehicle.x, state.vehicle.y, vehicleScale, { alpha: 1 });
+    drawAimGuide();
     drawSprite("effect_muzzle", "burst", timeMs, state.vehicle.aimX, state.vehicle.aimY, 0.8, { alpha: state.input.dragging ? 0.62 : 0.35 });
+    drawMessages();
   }
 
   function draw() {
     if (!ctx || !displayCtx) return;
+    renderDebug = { messagesDrawn: 0, gateLabelsDrawn: 0, tutorialDrawn: false };
     const timeMs = ((state ? state.time : idleTime) || 0) * 1000;
     ctx.clearRect(0, 0, W, H);
+    if (state && state.shakeUntil > state.time && !(meta.settings && meta.settings.reducedFlash)) {
+      const progress = Math.max(0, (state.shakeUntil - state.time) / Math.max(0.01, state.shakeUntil));
+      const amp = (state.shakeAmp || 0) * progress;
+      ctx.save();
+      ctx.translate(Math.sin(state.time * 91) * amp, Math.cos(state.time * 73) * amp);
+    }
     drawBackground(timeMs);
     if (state) drawGame(timeMs);
     else drawIdlePreview(timeMs);
+    if (state && state.shakeUntil > state.time && !(meta.settings && meta.settings.reducedFlash)) ctx.restore();
     displayCtx.clearRect(0, 0, DISPLAY_W, DISPLAY_H);
     displayCtx.imageSmoothingEnabled = false;
     displayCtx.drawImage(worldCanvas, 0, 0, W, H, 0, 0, DISPLAY_W, DISPLAY_H);
@@ -1020,6 +1195,7 @@
       finishRun,
       pushWave,
       clearStorage,
+      getRenderDebug: () => rules.deepClone(renderDebug),
       config,
       spritesReady
     });
