@@ -1,0 +1,23 @@
+{
+  "name": "ashes-convoy",
+  "version": "0.1.0",
+  "description": "灰燼護航：vanilla HTML/CSS/JS + Canvas 的像素風末日喪屍護航射擊網頁遊戲。",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node scripts/test-config.js && node scripts/test-rules.js && node scripts/test-economy.js && node scripts/test-storage.js && node scripts/test-sprites-contract.js",
+    "test:e2e": "node scripts/test-e2e.js",
+    "start": "python -m http.server 8000"
+  },
+  "keywords": [
+    "canvas-game",
+    "pixel-art",
+    "zombie-shooter",
+    "vanilla-js",
+    "github-pages"
+  ],
+  "author": "mars-tw",
+  "license": "MIT",
+  "devDependencies": {
+    "playwright": "^1.61.1"
+  }
+}
