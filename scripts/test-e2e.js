@@ -98,14 +98,14 @@ async function expectMetaBackground(page) {
   await page.waitForFunction(() => {
     if (!window.__test || !window.__test.getShelterState) return false;
     const state = window.__test.getShelterState();
-    if (state.backgroundMode === "image") return true;
-    // 圖片仍在載入時不要過早接受 scene fallback（避免 CI 上時序誤判）
-    const img = document.getElementById("shelterImage");
-    if (img && !img.hidden && !img.complete) return false;
-    return state.backgroundMode === "scene" && state.lastDrawMs > 0;
+    // 等圖片真的載入完成（image 模式）或確定失敗後才判定；不要接受「圖片載入中的過渡 scene 態」，
+    // 否則圖片載完隱藏 canvas 會與 canvas 斷言競態（CI 圖載較慢時必現）
+    if (state.backgroundMode === "image" && state.imageLoaded) return true;
+    if (state.imageFailed && state.backgroundMode === "scene" && state.lastDrawMs > 0) return true;
+    return false;
   });
   const state = await page.evaluate(() => window.__test.getShelterState());
-  if (state.backgroundMode === "image") {
+  if (state.backgroundMode === "image" && state.imageLoaded) {
     const image = await page.locator("#shelterImage").evaluate((node) => {
       const rect = node.getBoundingClientRect();
       const style = getComputedStyle(node);
