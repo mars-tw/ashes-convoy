@@ -15,6 +15,8 @@ assert.strictEqual(config.LOGIC.height, 422);
 assert.strictEqual(config.LOGIC.displayWidth, 390);
 assert.strictEqual(config.LOGIC.displayHeight, 844);
 assert.strictEqual(config.LOGIC.renderScale, 2);
+assert.strictEqual(config.START_SCREEN.image, "assets/ui/start.png");
+assert.deepStrictEqual(config.SHELTER_THEMES, {}, "shelter reference themes should not be used by the start screen");
 const roadRatio = (config.LOGIC.roadRight - config.LOGIC.roadLeft) / config.LOGIC.width;
 assert(roadRatio >= 0.55 && roadRatio <= 0.65, `road ratio should be 55-65%, got ${roadRatio}`);
 const vehicleIds = ["land_rig", "sky_barge", "sea_ark", "void_runner"];
@@ -60,6 +62,10 @@ Object.entries(config.WEAPONS).forEach(([id, weapon]) => {
   assertFinitePositive(enemy.score, `${id}.score`);
   assert.strictEqual(enemy.stage, 1);
 });
+assert(config.ENEMIES.shambler.scale >= 1.9 && config.ENEMIES.shambler.radius >= 10, "shambler should be visually enlarged");
+assert(config.ENEMIES.runner.scale >= 1.8 && config.ENEMIES.runner.radius >= 9, "runner should be visually enlarged");
+assert(config.ENEMIES.bloater.scale >= 1.5 && config.ENEMIES.bloater.radius >= 18, "bloater should be visually enlarged");
+assert(config.ENEMIES.boss_hive_titan.scale >= 1.8 && config.ENEMIES.boss_hive_titan.radius >= 40, "boss should be enlarged");
 
 assert.strictEqual(config.ENEMIES.boss_hive_titan.boss, true);
 assert.strictEqual(config.ENEMIES.boss_hive_titan.firstWave, 5);

@@ -206,7 +206,7 @@ function generateWave(options) {
   const clusterCount = Math.max(3, Math.ceil(targetCount / cfg.WAVE.clusterSizeMax));
   let spawnCount = 0;
   for (let cluster = 0; cluster < clusterCount && spawnCount < targetCount; cluster += 1) {
-    const firstWaveOpening = wave === 1 && cluster < 2;
+    const firstWaveOpening = wave === 1 && cluster < 3;
     const clusterSize = firstWaveOpening
       ? cluster === 0
         ? 9
@@ -220,7 +220,7 @@ function generateWave(options) {
     const laneWidth = cfg.LOGIC.roadRight - cfg.LOGIC.roadLeft;
     const centerRoll = rng();
     const centerX = firstWaveOpening
-      ? cfg.LOGIC.roadLeft + laneWidth * (cluster === 0 ? 0.34 : 0.66) + (rng() - 0.5) * 8
+      ? cfg.LOGIC.roadLeft + laneWidth * (cluster === 0 ? 0.34 : cluster === 1 ? 0.66 : 0.5) + (rng() - 0.5) * 8
       : centerRoll < 0.2
         ? cfg.LOGIC.roadLeft + laneWidth * (0.18 + rng() * 0.14)
         : centerRoll > 0.8

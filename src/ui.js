@@ -29,56 +29,25 @@
     lastOpts: null,
     lastDrawMs: 0
   };
-  const DEFAULT_SHELTER_THEME = "snow";
+  const START_BACKGROUND = Object.assign(
+    {
+      image: "assets/ui/start.png",
+      alt: "灰燼護航開始畫面"
+    },
+    config.START_SCREEN || {}
+  );
 
   function nowIso() {
     return new Date().toISOString();
   }
 
-  function shelterThemes() {
-    return config.SHELTER_THEMES || {};
-  }
-
-  function shelterThemeIds() {
-    const ids = Object.keys(shelterThemes());
-    return ids.length ? ids : [DEFAULT_SHELTER_THEME];
-  }
-
-  function normalizeShelterTheme(themeId) {
-    return shelterThemes()[themeId] ? themeId : DEFAULT_SHELTER_THEME;
-  }
-
-  function getThemeConfig(themeId) {
-    const id = normalizeShelterTheme(themeId);
-    return shelterThemes()[id] || {
-      id: DEFAULT_SHELTER_THEME,
-      label: "雪地車廂",
-      src: "assets/shelter/snow.png"
-    };
-  }
-
-  function parseMetaObject(raw) {
-    if (typeof raw === "string") {
-      try {
-        return JSON.parse(raw);
-      } catch (error) {
-        return null;
-      }
-    }
-    return raw && typeof raw === "object" && !Array.isArray(raw) ? raw : null;
-  }
-
-  function migrateUiMeta(raw, fallbackTheme) {
-    const input = parseMetaObject(raw);
-    const migrated = rules.migrateMeta(raw, { now: nowIso, config });
-    const themeSource = input && Object.prototype.hasOwnProperty.call(input, "shelterTheme") ? input.shelterTheme : fallbackTheme;
-    migrated.shelterTheme = normalizeShelterTheme(themeSource);
-    return migrated;
+  function migrateUiMeta(raw) {
+    return rules.migrateMeta(raw, { now: nowIso, config });
   }
 
   function loadMeta() {
     const raw = root.localStorage ? root.localStorage.getItem(config.STORAGE_KEY) : null;
-    meta = migrateUiMeta(raw, DEFAULT_SHELTER_THEME);
+    meta = migrateUiMeta(raw);
     return meta;
   }
 
@@ -152,7 +121,7 @@
   }
 
   function collectActionRects() {
-    const buttons = [els.sortieBtn, els.upgradeHotspotBtn, els.vehicleHotspotBtn, els.themeCycleBtn, els.seriesHotspotBtn, els.resetOverlayBtn];
+    const buttons = [els.sortieBtn, els.upgradeHotspotBtn, els.vehicleHotspotBtn, els.seriesHotspotBtn, els.resetOverlayBtn];
     const panelRect = els.garagePanel.getBoundingClientRect();
     shelter.hotspotRects = {};
     buttons.forEach((button) => {
@@ -240,23 +209,19 @@
     shelter.active = false;
   }
 
-  function updateThemeUi() {
-    const theme = getThemeConfig(meta.shelterTheme);
-    els.themeCycleBtn.textContent = "換車廂";
-    els.themeCycleBtn.setAttribute("aria-label", `換車廂，目前是${theme.label}`);
-    els.themeCycleBtn.title = theme.label;
-    els.shelterImage.alt = theme.label;
+  function updateStartImageUi() {
+    els.shelterImage.alt = START_BACKGROUND.alt || "灰燼護航開始畫面";
   }
 
-  function loadShelterImageForTheme() {
-    const theme = getThemeConfig(meta.shelterTheme);
-    updateThemeUi();
-    if (shelter.imageTheme === theme.id && shelter.imageLoaded && els.shelterImage.complete) {
+  function loadStartImage() {
+    const src = START_BACKGROUND.image || "assets/ui/start.png";
+    updateStartImageUi();
+    if (shelter.imageTheme === "start" && shelter.imageLoaded && els.shelterImage.complete && els.shelterImage.getAttribute("src") === src) {
       showIllustrationBackground();
       return;
     }
 
-    shelter.imageTheme = theme.id;
+    shelter.imageTheme = "start";
     shelter.imageLoaded = false;
     shelter.imageFailed = false;
     els.shelterImage.onload = showIllustrationBackground;
@@ -265,7 +230,7 @@
       shelter.imageFailed = true;
       startShelterLoop();
     };
-    els.shelterImage.src = theme.src;
+    els.shelterImage.src = src;
     if (els.shelterImage.complete && els.shelterImage.naturalWidth > 0) {
       showIllustrationBackground();
     } else {
@@ -274,25 +239,8 @@
   }
 
   function startMetaBackground() {
-    loadShelterImageForTheme();
+    loadStartImage();
     collectActionRects();
-  }
-
-  function setShelterTheme(themeId, shouldSave) {
-    const nextTheme = normalizeShelterTheme(themeId);
-    meta.shelterTheme = nextTheme;
-    if (shouldSave) saveMeta();
-    loadShelterImageForTheme();
-    setStatus(`${getThemeConfig(nextTheme).label} 已設為基地背景`);
-    return nextTheme;
-  }
-
-  function cycleShelterTheme() {
-    const ids = shelterThemeIds();
-    const currentIndex = Math.max(0, ids.indexOf(normalizeShelterTheme(meta.shelterTheme)));
-    const next = ids[(currentIndex + 1) % ids.length];
-    setShelterTheme(next, true);
-    renderGarage();
   }
 
   function getShelterState() {
@@ -303,8 +251,9 @@
       imageLoaded: shelter.imageLoaded,
       imageFailed: shelter.imageFailed,
       imageTheme: shelter.imageTheme,
+      imageSrc: els.shelterImage ? els.shelterImage.getAttribute("src") || "" : "",
+      expectedImage: START_BACKGROUND.image || "assets/ui/start.png",
       shelterTheme: meta.shelterTheme,
-      shelterThemeLabel: getThemeConfig(meta.shelterTheme).label,
       drawError: shelter.drawError,
       drawerKind: shelter.drawerKind,
       hotspotRects: rules.deepClone(shelter.hotspotRects),
@@ -410,7 +359,7 @@
 
   function renderGarage() {
     els.garageMeta.textContent = `廢土零件 ${meta.parts} · 最遠第 ${meta.bestWave} 波 · 擊殺 ${meta.totalKills}`;
-    updateThemeUi();
+    updateStartImageUi();
     renderVehicles();
     renderUpgrades();
     if (!hasFullMetaBackground()) {
@@ -511,7 +460,7 @@
 
   function selectVehicle(vehicleId) {
     if (!config.VEHICLES[vehicleId]) return;
-    meta = migrateUiMeta(Object.assign({}, meta, { selectedVehicle: vehicleId }), meta.shelterTheme);
+    meta = migrateUiMeta(Object.assign({}, meta, { selectedVehicle: vehicleId }));
     saveMeta();
     game.setMeta(meta);
     setStatus(`${config.VEHICLES[vehicleId].name} 已就緒`);
@@ -519,7 +468,6 @@
   }
 
   function buyUpgrade(track) {
-    const previousTheme = meta.shelterTheme;
     const result = rules.buyUpgrade({
       meta,
       vehicleId: meta.selectedVehicle,
@@ -527,7 +475,7 @@
       now: nowIso,
       config
     });
-    meta = migrateUiMeta(Object.assign({}, result.meta, { shelterTheme: previousTheme }), previousTheme);
+    meta = migrateUiMeta(result.meta);
     saveMeta();
     game.setMeta(meta);
     if (result.purchase.ok) {
@@ -550,7 +498,7 @@
 
   function clearStorage() {
     if (root.localStorage) root.localStorage.removeItem(config.STORAGE_KEY);
-    meta = migrateUiMeta(null, DEFAULT_SHELTER_THEME);
+    meta = migrateUiMeta(null);
     lastSettlement = null;
     game.setMeta(meta);
     game.clearStorage();
@@ -570,8 +518,7 @@
   }
 
   function onRunEnd(result) {
-    const previousTheme = meta.shelterTheme;
-    meta = migrateUiMeta(Object.assign({}, result.meta, { shelterTheme: previousTheme }), previousTheme);
+    meta = migrateUiMeta(result.meta);
     lastSettlement = Object.assign({}, result, { meta });
     saveMeta();
     game.setMeta(meta);
@@ -584,7 +531,6 @@
     els.upgradeHotspotBtn.addEventListener("click", () => openMetaDrawer("upgrades"));
     els.vehicleHotspotBtn.addEventListener("click", () => openMetaDrawer("vehicle"));
     els.seriesHotspotBtn.addEventListener("click", () => openMetaDrawer("series"));
-    els.themeCycleBtn.addEventListener("click", cycleShelterTheme);
     els.resetOverlayBtn.addEventListener("click", clearStorage);
     els.closeMetaDrawer.addEventListener("click", closeMetaDrawer);
     els.pauseBtn.addEventListener("click", () => game.togglePause());
@@ -608,7 +554,7 @@
     root.__test = Object.assign({}, root.__test || {}, {
       getMeta: () => rules.deepClone(meta),
       setMeta: (nextMeta) => {
-        meta = migrateUiMeta(nextMeta, meta.shelterTheme);
+        meta = migrateUiMeta(nextMeta);
         saveMeta();
         game.setMeta(meta);
         renderGarage();
@@ -633,11 +579,6 @@
       openMetaPanel: (kind) => {
         openMetaDrawer(kind);
         return getShelterState();
-      },
-      setShelterTheme: (themeId) => {
-        setShelterTheme(themeId, true);
-        renderGarage();
-        return rules.deepClone(meta);
       },
       getShelterState,
       getLastSettlement: () => rules.deepClone(lastSettlement)
@@ -665,7 +606,6 @@
       "sortieBtn",
       "upgradeHotspotBtn",
       "vehicleHotspotBtn",
-      "themeCycleBtn",
       "seriesHotspotBtn",
       "resetOverlayBtn",
       "metaDrawer",

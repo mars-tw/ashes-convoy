@@ -57,7 +57,7 @@ assert.strictEqual(
 );
 assert.strictEqual(migrated.version, 1);
 assert.strictEqual(migrated.selectedVehicle, "land_rig");
-assert.strictEqual(migrated.shelterTheme, "bunker");
+assert.strictEqual(migrated.shelterTheme, "snow");
 assert.strictEqual(migrated.parts, 0);
 assert.strictEqual(migrated.totalRuns, 0);
 assert.strictEqual(migrated.totalKills, 0);

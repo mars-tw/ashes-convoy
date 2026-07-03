@@ -170,8 +170,8 @@ const ENEMIES = {
     contactDamage: 8,
     budgetCost: 2,
     score: 10,
-    radius: 7,
-    scale: 1.3,
+    radius: 10,
+    scale: 2,
     firstWave: 1,
     tags: ["ground"],
     stage: 1
@@ -185,8 +185,8 @@ const ENEMIES = {
     contactDamage: 6,
     budgetCost: 2,
     score: 12,
-    radius: 6,
-    scale: 1.25,
+    radius: 9,
+    scale: 1.9,
     firstWave: 1,
     tags: ["ground", "fast"],
     stage: 1
@@ -200,8 +200,8 @@ const ENEMIES = {
     contactDamage: 16,
     budgetCost: 5,
     score: 28,
-    radius: 12,
-    scale: 1,
+    radius: 18,
+    scale: 1.55,
     firstWave: 2,
     deathBurst: { radius: 62, damage: 22 },
     tags: ["ground", "burst"],
@@ -216,8 +216,8 @@ const ENEMIES = {
     contactDamage: 35,
     budgetCost: 24,
     score: 480,
-    radius: 26,
-    scale: 1.25,
+    radius: 40,
+    scale: 1.9,
     firstWave: 5,
     boss: true,
     phases: [
@@ -290,7 +290,7 @@ const WAVE = {
   gateSpeed: 22,
   gateHpGrowth: 1.09,
   bossHpGrowth: 1.28,
-  openingClusterCount: 18,
+  openingClusterCount: 24,
   clusterSpawnWindow: 8.5,
   clusterSizeMin: 4,
   clusterSizeMax: 7
@@ -356,28 +356,12 @@ const ECONOMY = {
   }
 };
 
-const SHELTER_THEMES = {
-  snow: {
-    id: "snow",
-    label: "雪地車廂",
-    src: "assets/shelter/snow.png"
-  },
-  bunker: {
-    id: "bunker",
-    label: "軍事碉堡",
-    src: "assets/shelter/bunker.png"
-  },
-  greenhouse: {
-    id: "greenhouse",
-    label: "溫室生態站",
-    src: "assets/shelter/greenhouse.png"
-  },
-  workshop: {
-    id: "workshop",
-    label: "工作坊",
-    src: "assets/shelter/workshop.png"
-  }
+const START_SCREEN = {
+  image: "assets/ui/start.png",
+  alt: "灰燼護航開始畫面"
 };
+
+const SHELTER_THEMES = {};
 
 const META_DEFAULT = {
   version: META_VERSION,
@@ -433,6 +417,7 @@ const DSConfig = {
   PERFORMANCE,
   DIFFICULTIES,
   ECONOMY,
+  START_SCREEN,
   SHELTER_THEMES,
   META_DEFAULT
 };

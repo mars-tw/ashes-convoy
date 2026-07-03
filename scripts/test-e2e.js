@@ -117,14 +117,16 @@ async function expectMetaBackground(page) {
         width: rect.width,
         height: rect.height,
         objectFit: style.objectFit,
-        objectPosition: style.objectPosition
+        objectPosition: style.objectPosition,
+        src: node.getAttribute("src")
       };
     });
-    assert(!image.hidden, "shelter image should be visible when background mode is image");
-    assert(image.complete && image.naturalWidth > 0 && image.naturalHeight > 0, "shelter image should load successfully");
-    assert(image.width > 0 && image.height > 0, "shelter image should cover a visible area");
-    assert.strictEqual(image.objectFit, "cover", "shelter image should use cover-fit");
-    assert(image.objectPosition.includes("50%"), "shelter image should stay centered");
+    assert(!image.hidden, "start key art should be visible when background mode is image");
+    assert(image.complete && image.naturalWidth > 0 && image.naturalHeight > 0, "start key art should load successfully");
+    assert(image.width > 0 && image.height > 0, "start key art should cover a visible area");
+    assert(image.src && image.src.includes("assets/ui/start.png"), `meta background should use start.png, got ${image.src}`);
+    assert.strictEqual(image.objectFit, "cover", "start key art should use cover-fit");
+    assert(image.objectPosition.includes("50%"), "start key art should stay centered");
   } else {
     await expectShelterCanvasHasPixels(page);
   }
@@ -168,7 +170,12 @@ async function checkMetaHotspotsFit(page) {
       viewportOverflow: document.documentElement.scrollWidth - window.innerWidth
     };
   });
-  assert.strictEqual(result.buttons.length, 6, "meta screen should expose six overlay action buttons");
+  assert.strictEqual(result.buttons.length, 5, "meta screen should expose five overlay action buttons");
+  assert.deepStrictEqual(
+    result.buttons.map((button) => button.id).sort(),
+    ["resetOverlayBtn", "seriesHotspotBtn", "sortieBtn", "upgradeHotspotBtn", "vehicleHotspotBtn"],
+    "meta action buttons should match the key art controls"
+  );
   assert(result.layer.left >= result.layer.appLeft - 1, "meta action layer should not overflow left");
   assert(result.layer.right <= result.layer.appRight + 1, "meta action layer should not overflow right");
   assert(result.layer.bottom <= result.layer.appBottom + 1, "meta action layer should stay within app bottom");
@@ -216,58 +223,49 @@ async function clickSortie(page) {
   await page.waitForFunction(() => window.__test.getState().mode === "playing");
 }
 
-async function checkThemeSwitch(page, persistReload) {
-  const ids = await page.evaluate(() => Object.keys(window.DSConfig.SHELTER_THEMES));
-  assert.deepStrictEqual(ids.sort(), ["bunker", "greenhouse", "snow", "workshop"], "all four shelter themes should exist");
-  const seen = new Set([await page.evaluate(() => window.__test.getMeta().shelterTheme)]);
-  for (let i = 1; i < ids.length; i += 1) {
-    const before = await page.evaluate(() => window.__test.getMeta().shelterTheme);
-    await page.click("#themeCycleBtn");
-    await page.waitForFunction((previous) => window.__test.getMeta().shelterTheme !== previous, before);
-    await waitForMetaBackground(page);
-    seen.add(await page.evaluate(() => window.__test.getMeta().shelterTheme));
-  }
-  ids.forEach((id) => assert(seen.has(id), `theme cycle should reach ${id}`));
-
-  const invalid = await page.evaluate(() => {
-    const meta = window.__test.getMeta();
-    meta.shelterTheme = "not_a_theme";
-    return window.__test.setMeta(meta).shelterTheme;
+async function checkStartTitle(page) {
+  const title = await page.locator("#garagePanel .meta-summary h1").evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    const app = document.getElementById("app").getBoundingClientRect();
+    return {
+      text: node.textContent.trim(),
+      left: rect.left,
+      right: rect.right,
+      top: rect.top,
+      bottom: rect.bottom,
+      appLeft: app.left,
+      appRight: app.right,
+      appTop: app.top,
+      appBottom: app.bottom,
+      visible: getComputedStyle(node).display !== "none"
+    };
   });
-  assert.strictEqual(invalid, "snow", "invalid shelter theme should migrate back to snow");
-  await waitForMetaBackground(page);
-
-  await page.evaluate(() => window.__test.setShelterTheme("greenhouse"));
-  await waitForMetaBackground(page);
-  if (persistReload) {
-    await page.reload({ waitUntil: "networkidle" });
-    await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
-    await waitForMetaBackground(page);
-    const reloaded = await page.evaluate(() => window.__test.getMeta().shelterTheme);
-    assert.strictEqual(reloaded, "greenhouse", "selected shelter theme should persist after reload");
-  }
+  assert.strictEqual(title.text, "灰燼護航", "start screen should show the game title");
+  assert(title.visible, "start title should be visible");
+  assert(title.left >= title.appLeft - 1 && title.right <= title.appRight + 1, "start title should fit horizontally");
+  assert(title.top >= title.appTop - 1 && title.bottom <= title.appBottom + 1, "start title should stay inside the app");
 }
 
 async function checkClearStorageButton(page) {
   await page.evaluate(() => {
     const meta = window.__test.getMeta();
     meta.parts = 77;
-    meta.shelterTheme = "workshop";
+    meta.selectedVehicle = "void_runner";
     window.__test.setMeta(meta);
   });
   await waitForMetaBackground(page);
   await page.click("#resetOverlayBtn");
   await page.waitForFunction(() => {
     const meta = window.__test.getMeta();
-    return meta.parts === 0 && meta.shelterTheme === "snow";
+    return meta.parts === 0 && meta.selectedVehicle === "land_rig";
   });
 }
 
-async function checkShelterMeta(page, persistThemeReload) {
+async function checkShelterMeta(page) {
   await page.waitForSelector("#garagePanel:not([hidden])");
   await expectMetaBackground(page);
+  await checkStartTitle(page);
   await checkMetaHotspotsFit(page);
-  await checkThemeSwitch(page, persistThemeReload);
   await checkClearStorageButton(page);
   await expectMetaBackground(page);
   await openUpgradePanel(page);
@@ -369,6 +367,39 @@ async function checkVehicleFleetSelectionAndCombat(page) {
   }
   await page.evaluate(() => window.__test.showGarage());
   await page.waitForSelector("#garagePanel:not([hidden])");
+}
+
+async function checkWaveProgressionRegression(page) {
+  await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    const first = window.__test.getState();
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      spawnIndex: 999,
+      waveElapsed: 5,
+      vehicle: { hp: first.vehicle.maxHp }
+    });
+    window.__test.step(2500);
+  });
+  let state = await page.evaluate(() => window.__test.getState());
+  assert.strictEqual(state.wave, 2, "cleared wave 1 should advance to wave 2 without waiting full duration");
+
+  await page.evaluate(() => {
+    const second = window.__test.getState();
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      spawnIndex: 999,
+      waveElapsed: 5,
+      vehicle: { hp: second.vehicle.maxHp }
+    });
+    window.__test.step(2500);
+  });
+  state = await page.evaluate(() => window.__test.getState());
+  assert.strictEqual(state.wave, 3, "cleared wave 2 should continue advancing to wave 3");
 }
 
 async function checkFleetProjectileTraits(page) {
@@ -592,6 +623,10 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await page.evaluate(() => window.__test.clearStorage());
   await checkShelterMeta(page, full);
   await checkGarageUpgradeLines(page);
+  await checkWaveProgressionRegression(page);
+  await page.evaluate(() => window.__test.clearStorage());
+  await checkShelterMeta(page, false);
+  await checkGarageUpgradeLines(page);
   if (full) {
     await checkFleetProjectileTraits(page);
     await checkVehicleFleetSelectionAndCombat(page);
@@ -629,7 +664,7 @@ async function runImageFallbackScenario(browser, baseUrl) {
     if (message.type() === "error" && !isIgnorableConsoleError(message.text())) errors.push(message.text());
   });
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.route("**/assets/shelter/*.png", (route) => {
+  await page.route("**/assets/ui/start.png", (route) => {
     route.fulfill({ status: 404, contentType: "text/plain", body: "missing test image" });
   });
 

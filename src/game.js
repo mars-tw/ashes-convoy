@@ -807,8 +807,10 @@
     const plan = state.wavePlan;
     const spawnedAll = state.spawnIndex >= plan.spawns.length;
     const bossAlive = state.enemies.some((enemy) => enemy.boss);
-    const normalClear = state.enemies.length === 0 || state.waveElapsed > plan.duration + 8;
-    if (state.waveElapsed >= plan.duration && spawnedAll && !bossAlive && normalClear) {
+    const enemiesCleared = state.enemies.length === 0;
+    const timerExpired = state.waveElapsed >= plan.duration;
+    const staleWave = state.waveElapsed > plan.duration + 8;
+    if (spawnedAll && !bossAlive && (enemiesCleared || staleWave) && (timerExpired || enemiesCleared)) {
       state.stats.wavesCleared = Math.max(state.stats.wavesCleared, state.wave);
       state.wave += 1;
       state.waveElapsed = 0;
@@ -1041,6 +1043,13 @@
     const scroll = state ? state.scroll : (idleTime * 42) % 32;
     const sideScroll = (scroll * 1.32) % 32;
     const farScroll = (scroll * 0.24) % 32;
+    const roadWidth = config.LOGIC.roadRight - config.LOGIC.roadLeft;
+    const landGradient = ctx.createLinearGradient(0, 0, 0, H);
+    landGradient.addColorStop(0, "#544737");
+    landGradient.addColorStop(0.52, "#8a735d");
+    landGradient.addColorStop(1, "#3b332b");
+    ctx.fillStyle = landGradient;
+    ctx.fillRect(0, 0, W, H);
 
     for (let y = -32 + sideScroll; y < H + 32; y += 32) {
       for (let x = 16; x < W; x += 32) {
@@ -1049,17 +1058,42 @@
       }
     }
 
-    const roadWidth = config.LOGIC.roadRight - config.LOGIC.roadLeft;
     const laneCount = 4;
     const laneWidth = roadWidth / laneCount;
     const roadTileScale = laneWidth / 32;
     const roadStep = 32 * roadTileScale;
     drawClipped(config.LOGIC.roadLeft, 0, roadWidth, H, () => {
+      const roadShade = ctx.createLinearGradient(config.LOGIC.roadLeft, 0, config.LOGIC.roadRight, 0);
+      roadShade.addColorStop(0, "rgba(0,0,0,0.34)");
+      roadShade.addColorStop(0.5, "rgba(255,255,255,0.04)");
+      roadShade.addColorStop(1, "rgba(0,0,0,0.32)");
+      ctx.fillStyle = "#20262a";
+      ctx.fillRect(config.LOGIC.roadLeft, 0, roadWidth, H);
       for (let y = -roadStep + (scroll % roadStep); y < H + roadStep; y += roadStep) {
         for (let lane = 0; lane < laneCount; lane += 1) {
           const x = config.LOGIC.roadLeft + laneWidth * (lane + 0.5);
           drawSprite("tile_road", "idle", timeMs, x, y, roadTileScale, { origin: "center" });
         }
+      }
+      ctx.fillStyle = roadShade;
+      ctx.fillRect(config.LOGIC.roadLeft, 0, roadWidth, H);
+      ctx.strokeStyle = "rgba(238, 210, 132, 0.48)";
+      ctx.lineWidth = 1;
+      [config.LOGIC.roadLeft + 4, config.LOGIC.roadRight - 4].forEach((x) => {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H);
+        ctx.stroke();
+      });
+      ctx.strokeStyle = "rgba(12, 14, 16, 0.55)";
+      for (let y = -46 + (scroll * 1.15) % 46; y < H + 46; y += 46) {
+        const x = config.LOGIC.roadLeft + 12 + ((y * 13) % Math.max(20, roadWidth - 24));
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + 8, y + 8);
+        ctx.lineTo(x + 3, y + 19);
+        ctx.lineTo(x + 16, y + 30);
+        ctx.stroke();
       }
     });
 
@@ -1088,6 +1122,29 @@
         });
       }
     });
+    ctx.save();
+    ctx.globalAlpha = 0.72;
+    for (let y = -70 + (sideScroll * 1.35) % 96; y < H + 96; y += 96) {
+      const left = config.LOGIC.roadLeft - 30;
+      const right = config.LOGIC.roadRight + 14;
+      ctx.fillStyle = "#33251d";
+      ctx.fillRect(left, y + 8, 18, 7);
+      ctx.fillRect(right, y + 48, 20, 6);
+      ctx.fillStyle = "#d7b35f";
+      ctx.fillRect(left + 2, y + 10, 10, 2);
+      ctx.fillStyle = "#6f7a74";
+      ctx.fillRect(right + 5, y + 54, 2, 13);
+      ctx.fillStyle = "#a7b1aa";
+      ctx.fillRect(right + 1, y + 45, 14, 8);
+      ctx.strokeStyle = "rgba(25, 18, 14, 0.55)";
+      ctx.beginPath();
+      ctx.moveTo(left - 4, y + 34);
+      ctx.lineTo(left + 10, y + 44);
+      ctx.moveTo(left + 11, y + 34);
+      ctx.lineTo(left - 3, y + 44);
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   function drawAirBackground() {
@@ -1103,6 +1160,22 @@
     ctx.fillRect(0, 0, W, H);
 
     ctx.save();
+    const sun = ctx.createRadialGradient(W * 0.72, H * 0.18, 4, W * 0.72, H * 0.18, 86);
+    sun.addColorStop(0, "rgba(255, 223, 147, 0.48)");
+    sun.addColorStop(0.45, "rgba(255, 183, 100, 0.18)");
+    sun.addColorStop(1, "rgba(255, 183, 100, 0)");
+    ctx.fillStyle = sun;
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "rgba(39, 78, 102, 0.36)";
+    for (let x = -30; x < W + 42; x += 52) {
+      const y = 80 + Math.sin((x + farScroll) * 0.03) * 5 + farScroll * 0.08;
+      ctx.beginPath();
+      ctx.moveTo(x, y + 28);
+      ctx.lineTo(x + 26, y);
+      ctx.lineTo(x + 58, y + 30);
+      ctx.closePath();
+      ctx.fill();
+    }
     ctx.globalAlpha = 0.28;
     ctx.fillStyle = "#f4ead8";
     for (let y = -64 + farScroll; y < H + 80; y += 76) {
@@ -1131,6 +1204,16 @@
       ctx.bezierCurveTo(46, y + 12, 98, y - 12, W, y + 6);
       ctx.stroke();
     }
+    ctx.globalAlpha = 0.22;
+    ctx.strokeStyle = "#fff1c7";
+    for (let y = -30 + (nearScroll * 1.3) % 90; y < H + 90; y += 90) {
+      ctx.beginPath();
+      ctx.moveTo(W * 0.72, y);
+      ctx.lineTo(W * 0.54, y + 52);
+      ctx.moveTo(W * 0.72, y);
+      ctx.lineTo(W * 0.9, y + 46);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 
@@ -1147,6 +1230,14 @@
     ctx.fillRect(0, 0, W, H);
 
     ctx.save();
+    ctx.globalAlpha = 0.28;
+    ctx.fillStyle = "#082c39";
+    for (let x = -40; x < W + 50; x += 92) {
+      const y = 58 + farScroll * 0.35 + Math.sin(x * 0.04) * 5;
+      ctx.fillRect(x + 8, y, 34, 7);
+      ctx.fillRect(x + 19, y - 8, 5, 8);
+      ctx.fillRect(x + 43, y + 4, 18, 3);
+    }
     ctx.lineWidth = 1;
     for (let y = -48 + farScroll; y < H + 54; y += 48) {
       ctx.globalAlpha = 0.16;
@@ -1172,6 +1263,16 @@
         ctx.fillRect(x + 18, y + 7, 6, 1);
       }
     }
+    ctx.globalAlpha = 0.3;
+    ctx.strokeStyle = "#d9fff2";
+    for (let y = -26 + (foamScroll * 1.15) % 64; y < H + 64; y += 64) {
+      for (let x = 4; x < W; x += 34) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.quadraticCurveTo(x + 10, y + 5, x + 24, y);
+        ctx.stroke();
+      }
+    }
     ctx.restore();
   }
 
@@ -1194,6 +1295,19 @@
     nebula.addColorStop(1, "rgba(0, 0, 0, 0)");
     ctx.fillStyle = nebula;
     ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 0.34;
+    ctx.strokeStyle = "rgba(154, 96, 204, 0.45)";
+    ctx.lineWidth = 18;
+    ctx.beginPath();
+    ctx.moveTo(-20, 105 + farScroll * 0.1);
+    ctx.bezierCurveTo(42, 78, 95, 130, W + 22, 88);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(70, 198, 205, 0.28)";
+    ctx.lineWidth = 10;
+    ctx.beginPath();
+    ctx.moveTo(-16, 234 + farScroll * 0.16);
+    ctx.bezierCurveTo(48, 205, 112, 274, W + 20, 230);
+    ctx.stroke();
 
     for (let i = 0; i < 70; i += 1) {
       const x = (i * 37) % W;
