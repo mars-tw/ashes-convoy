@@ -12,7 +12,13 @@ const MIME = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8",
-  ".json": "application/json; charset=utf-8"
+  ".json": "application/json; charset=utf-8",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml"
 };
 
 function startServer() {
@@ -92,7 +98,11 @@ async function expectMetaBackground(page) {
   await page.waitForFunction(() => {
     if (!window.__test || !window.__test.getShelterState) return false;
     const state = window.__test.getShelterState();
-    return state.backgroundMode === "image" || (state.backgroundMode === "scene" && state.lastDrawMs > 0);
+    if (state.backgroundMode === "image") return true;
+    // 圖片仍在載入時不要過早接受 scene fallback（避免 CI 上時序誤判）
+    const img = document.getElementById("shelterImage");
+    if (img && !img.hidden && !img.complete) return false;
+    return state.backgroundMode === "scene" && state.lastDrawMs > 0;
   });
   const state = await page.evaluate(() => window.__test.getShelterState());
   if (state.backgroundMode === "image") {
