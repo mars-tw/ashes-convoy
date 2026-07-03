@@ -26,8 +26,18 @@
   let rafStarted = false;
   let lastFrameMs = null;
   let boundInput = false;
-  let renderDebug = { messagesDrawn: 0, gateLabelsDrawn: 0, tutorialDrawn: false };
+  let renderDebug = {
+    messagesDrawn: 0,
+    gateLabelsDrawn: 0,
+    tutorialDrawn: false,
+    enemyRasterDrawn: 0,
+    enemyFallbackDrawn: 0,
+    enemyShadowDrawn: 0,
+    enemyImageStatus: {}
+  };
   const vehicleImages = {};
+  const enemyImages = {};
+  const enemySpriteOptions = { flipX: false, alpha: 1 };
 
   function emitState() {
     if (callbacks.onState) callbacks.onState(getState());
@@ -100,6 +110,33 @@
 
   function vehicleImageStatus(vehicleId) {
     const record = vehicleImages[vehicleId];
+    if (!record) return "none";
+    if (record.status === "loaded" && record.image.complete && record.image.naturalWidth > 0) return "loaded";
+    return record.status;
+  }
+
+  function preloadEnemyImages() {
+    if (typeof root.Image !== "function") return;
+    Object.keys(config.ENEMIES).forEach((enemyId) => {
+      const enemy = config.ENEMIES[enemyId];
+      if (!enemy.spriteImage || enemyImages[enemyId]) return;
+      const record = { image: new root.Image(), status: "loading" };
+      record.image.onload = () => {
+        record.status = "loaded";
+        draw();
+      };
+      record.image.onerror = () => {
+        record.status = "failed";
+        draw();
+      };
+      record.image.decoding = "async";
+      record.image.src = enemy.spriteImage;
+      enemyImages[enemyId] = record;
+    });
+  }
+
+  function enemyImageStatus(enemyId) {
+    const record = enemyImages[enemyId];
     if (!record) return "none";
     if (record.status === "loaded" && record.image.complete && record.image.naturalWidth > 0) return "loaded";
     return record.status;
@@ -321,6 +358,16 @@
       swayPhase: Number.isFinite(opts.swayPhase) ? opts.swayPhase : state.rng() * Math.PI * 2,
       swayAmp: Number.isFinite(opts.swayAmp) ? opts.swayAmp : 4 + state.rng() * 3,
       swayFreq: Number.isFinite(opts.swayFreq) ? opts.swayFreq : 1.1 + state.rng() * 0.7,
+      animPhase: Number.isFinite(opts.animPhase) ? opts.animPhase : state.rng() * Math.PI * 2,
+      animFreq: Number.isFinite(opts.animFreq)
+        ? opts.animFreq
+        : enemyConfig.boss
+          ? 1.35
+          : enemyId === "runner"
+            ? 4.2
+            : enemyId === "bloater"
+              ? 1.85
+              : 2.75,
       hp: Number.isFinite(opts.hp) ? opts.hp : scaled.hp,
       maxHp: Number.isFinite(opts.hp) ? opts.hp : scaled.hp,
       speed: Number.isFinite(opts.speed) ? opts.speed : scaled.speed,
@@ -432,6 +479,7 @@
 
   function killEnemy(enemy, cause) {
     if (!enemy || enemy.dead) return;
+    const enemyConfig = config.ENEMIES[enemy.enemyId];
     enemy.dead = true;
     state.stats.kills += 1;
     state.stats.score += enemy.score + state.wave * 3;
@@ -445,10 +493,16 @@
     if (cause !== "burst") {
       addEffect({
         id: nextId("effect"),
+        kind: "enemy_corpse",
+        enemyId: enemy.enemyId,
         sprite: enemy.sprite,
         anim: "death",
         x: enemy.x,
         y: enemy.y,
+        radius: enemy.radius,
+        visualWidth: enemyVisualWidth(enemy, enemyConfig),
+        boss: enemy.boss,
+        rotation: Math.sin((enemy.animPhase || 0) + state.time) * (enemy.boss ? 0.08 : 0.18),
         scale: enemy.scale,
         ttl: config.PERFORMANCE.corpseFadeSeconds,
         age: 0,
@@ -466,8 +520,6 @@
         alpha: 0.95
       });
     }
-
-    const enemyConfig = config.ENEMIES[enemy.enemyId];
     if (enemyConfig && enemyConfig.deathBurst) {
       addEffect({
         id: nextId("effect"),
@@ -1371,11 +1423,142 @@
     renderDebug.vehicleImageStatus = record ? record.status : "none";
   }
 
+  function enemyVisualWidth(enemy, enemyConfig) {
+    if (Number.isFinite(enemy.visualWidth)) return enemy.visualWidth;
+    if (enemyConfig && Number.isFinite(enemyConfig.visualWidth)) return enemyConfig.visualWidth;
+    return Math.max(14, enemy.radius * 2);
+  }
+
+  function drawEnemyShadow(enemy, width, lift, alpha) {
+    const shadowScale = Math.max(0.74, 1 - Math.abs(lift) * 0.045);
+    ctx.save();
+    ctx.globalAlpha *= (enemy.boss ? 0.34 : 0.26) * (alpha == null ? 1 : alpha);
+    ctx.fillStyle = "#050607";
+    ctx.beginPath();
+    ctx.ellipse(
+      enemy.x,
+      enemy.y + enemy.radius * (enemy.boss ? 0.62 : 0.52),
+      Math.max(4, width * (enemy.boss ? 0.42 : 0.36) * shadowScale),
+      Math.max(2, enemy.radius * (enemy.boss ? 0.2 : 0.16) * shadowScale),
+      0,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    ctx.restore();
+    renderDebug.enemyShadowDrawn += 1;
+  }
+
+  function drawEnemyEntity(enemy, timeMs, alpha, anim) {
+    const enemyConfig = config.ENEMIES[enemy.enemyId] || null;
+    const record = enemyConfig && enemyConfig.spriteImage ? enemyImages[enemy.enemyId] : null;
+    const status = enemyImageStatus(enemy.enemyId);
+    const width = enemyVisualWidth(enemy, enemyConfig);
+    const phase = stateTime() * (enemy.animFreq || (enemy.boss ? 1.35 : 2.75)) + (enemy.animPhase || 0);
+    const bobAmp = enemy.boss ? 1.1 : enemy.enemyId === "runner" ? 2.6 : enemy.enemyId === "bloater" ? 1.25 : 2.0;
+    const lift = Math.sin(phase) * bobAmp;
+    const pulse = Math.sin(phase + Math.PI * 0.5);
+    const squashX = 1 + pulse * (enemy.boss ? 0.022 : 0.045);
+    const squashY = 1 - pulse * (enemy.boss ? 0.018 : 0.055);
+    const speedLean = rules.clamp((enemy.vx || 0) / Math.max(1, enemy.speed || 1), -1, 1) * 0.035;
+    const wobble = Math.sin(phase * 0.52) * (enemy.boss ? 0.022 : 0.075) + speedLean;
+    const drawAlpha = alpha == null ? 1 : alpha;
+    const flash = enemy.hitFlash > 0 && !(meta.settings && meta.settings.reducedFlash);
+
+    if (renderDebug.enemyImageStatus) renderDebug.enemyImageStatus[enemy.enemyId] = status;
+    drawEnemyShadow(enemy, width, lift, drawAlpha);
+
+    if (record && status === "loaded") {
+      const image = record.image;
+      const height = width * (image.naturalHeight / image.naturalWidth);
+      ctx.save();
+      ctx.translate(enemy.x, enemy.y + lift);
+      ctx.rotate(wobble);
+      ctx.scale(squashX, squashY);
+      ctx.globalAlpha *= flash ? drawAlpha * 0.82 : drawAlpha;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(image, -width * 0.5, -height * 0.5, width, height);
+      if (flash) {
+        ctx.globalCompositeOperation = "source-atop";
+        ctx.fillStyle = "rgba(255, 244, 214, 0.36)";
+        ctx.fillRect(-width * 0.5, -height * 0.5, width, height);
+      }
+      ctx.restore();
+      renderDebug.enemyRasterDrawn += 1;
+      return;
+    }
+
+    ctx.save();
+    ctx.translate(enemy.x, enemy.y + lift);
+    ctx.rotate(wobble);
+    enemySpriteOptions.flipX = enemy.vx < -8;
+    enemySpriteOptions.alpha = flash ? drawAlpha * 0.78 : drawAlpha;
+    drawSprite(enemy.sprite, anim || enemy.anim || "walk", timeMs, 0, 0, enemy.scale * Math.max(0.94, Math.min(1.08, squashY)), enemySpriteOptions);
+    ctx.restore();
+    renderDebug.enemyFallbackDrawn += 1;
+  }
+
+  function drawEnemyCorpse(effect, timeMs) {
+    const enemyConfig = config.ENEMIES[effect.enemyId] || null;
+    const record = enemyConfig && enemyConfig.spriteImage ? enemyImages[effect.enemyId] : null;
+    const status = enemyImageStatus(effect.enemyId);
+    const width = enemyVisualWidth(effect, enemyConfig);
+    if (record && status === "loaded") {
+      const image = record.image;
+      const height = width * (image.naturalHeight / image.naturalWidth);
+      drawEnemyShadow(effect, width, 0, effect.alpha * 0.55);
+      ctx.save();
+      ctx.translate(effect.x, effect.y + Math.min(7, effect.radius * 0.18));
+      ctx.rotate(effect.rotation || 0);
+      ctx.scale(1.08, 0.9);
+      ctx.globalAlpha *= effect.alpha * 0.78;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(image, -width * 0.5, -height * 0.5, width, height);
+      ctx.restore();
+      return;
+    }
+    drawSprite(effect.sprite, effect.anim, timeMs, effect.x, effect.y, effect.scale, { alpha: effect.alpha });
+  }
+
   function drawIdlePreview(timeMs) {
     const selected = getVehicleConfig(meta.selectedVehicle);
     drawVehicle(selected, { x: W * 0.5, y: config.LOGIC.vehicleY }, timeMs, { alpha: 0.92, anim: "move" });
-    drawSprite("zombie_shambler", "walk", timeMs, 64, 112 + Math.sin(idleTime * 2) * 4, 1.3, { alpha: 0.85 });
-    drawSprite("zombie_runner", "walk", timeMs, 125, 88 + Math.cos(idleTime * 2) * 4, 1.25, { alpha: 0.85 });
+    drawEnemyEntity(
+      {
+        enemyId: "shambler",
+        sprite: "zombie_shambler",
+        anim: "walk",
+        x: 64,
+        y: 112,
+        vx: 0,
+        speed: 24,
+        radius: config.ENEMIES.shambler.radius,
+        scale: 1.3,
+        animPhase: 0.4,
+        animFreq: 2.5,
+        hitFlash: 0
+      },
+      timeMs,
+      0.85
+    );
+    drawEnemyEntity(
+      {
+        enemyId: "runner",
+        sprite: "zombie_runner",
+        anim: "walk",
+        x: 125,
+        y: 88,
+        vx: 0,
+        speed: 42,
+        radius: config.ENEMIES.runner.radius,
+        scale: 1.25,
+        animPhase: 1.2,
+        animFreq: 4,
+        hitFlash: 0
+      },
+      timeMs,
+      0.85
+    );
     drawSprite("gate_damage", "idle", timeMs, 98, 178, 0.95, { alpha: 0.9 });
   }
 
@@ -1401,10 +1584,7 @@
     state.enemies.forEach((enemy) => {
       const alpha = enemy.hitFlash > 0 ? 0.7 : 1;
       const anim = enemy.boss && enemy.hp < enemy.maxHp * 0.33 ? "rage" : enemy.anim || "walk";
-      drawSprite(enemy.sprite, anim, timeMs, enemy.x, enemy.y, enemy.scale, {
-        flipX: enemy.vx < -8,
-        alpha
-      });
+      drawEnemyEntity(enemy, timeMs, alpha, anim);
     });
     state.effects.forEach((effect) => {
       if (effect.kind === "text") {
@@ -1413,6 +1593,8 @@
           alpha: effect.alpha,
           color: effect.color
         });
+      } else if (effect.kind === "enemy_corpse") {
+        drawEnemyCorpse(effect, timeMs);
       } else {
         drawSprite(effect.sprite, effect.anim, timeMs, effect.x, effect.y, effect.scale, { alpha: effect.alpha });
       }
@@ -1439,7 +1621,11 @@
       environment: currentEnvironment(),
       vehicleRasterDrawn: false,
       vehicleFallbackDrawn: false,
-      vehicleImageStatus: "none"
+      vehicleImageStatus: "none",
+      enemyRasterDrawn: 0,
+      enemyFallbackDrawn: 0,
+      enemyShadowDrawn: 0,
+      enemyImageStatus: {}
     };
     const timeMs = ((state ? state.time : idleTime) || 0) * 1000;
     ctx.clearRect(0, 0, W, H);
@@ -1502,6 +1688,7 @@
     if (callbacks.meta) meta = rules.migrateMeta(callbacks.meta, { config });
     renderer.preRenderSprites({ pixelRatio: 1, smoothing: false });
     preloadVehicleImages();
+    preloadEnemyImages();
     bindInput();
     draw();
     if (!rafStarted) {

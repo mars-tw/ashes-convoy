@@ -164,6 +164,7 @@ const ENEMIES = {
   shambler: {
     id: "shambler",
     name: "遊蕩屍",
+    spriteImage: "assets/zombies/shambler.png",
     sprite: "zombie_shambler",
     hp: 30,
     speed: 24,
@@ -172,6 +173,7 @@ const ENEMIES = {
     score: 10,
     radius: 10,
     scale: 2,
+    visualWidth: 20,
     firstWave: 1,
     tags: ["ground"],
     stage: 1
@@ -179,6 +181,7 @@ const ENEMIES = {
   runner: {
     id: "runner",
     name: "疾奔屍",
+    spriteImage: "assets/zombies/runner.png",
     sprite: "zombie_runner",
     hp: 18,
     speed: 42,
@@ -187,6 +190,7 @@ const ENEMIES = {
     score: 12,
     radius: 9,
     scale: 1.9,
+    visualWidth: 18,
     firstWave: 1,
     tags: ["ground", "fast"],
     stage: 1
@@ -194,6 +198,7 @@ const ENEMIES = {
   bloater: {
     id: "bloater",
     name: "腫囊屍",
+    spriteImage: "assets/zombies/bloater.png",
     sprite: "zombie_bloater",
     hp: 95,
     speed: 16,
@@ -202,6 +207,7 @@ const ENEMIES = {
     score: 28,
     radius: 18,
     scale: 1.55,
+    visualWidth: 34,
     firstWave: 2,
     deathBurst: { radius: 62, damage: 22 },
     tags: ["ground", "burst"],
@@ -210,6 +216,7 @@ const ENEMIES = {
   boss_hive_titan: {
     id: "boss_hive_titan",
     name: "母巢巨屍",
+    spriteImage: "assets/zombies/titan.png",
     sprite: "boss_hive_titan",
     hp: 850,
     speed: 9,
@@ -218,6 +225,7 @@ const ENEMIES = {
     score: 480,
     radius: 40,
     scale: 1.9,
+    visualWidth: 82,
     firstWave: 5,
     boss: true,
     phases: [

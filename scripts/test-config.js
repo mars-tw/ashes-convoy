@@ -60,6 +60,9 @@ Object.entries(config.WEAPONS).forEach(([id, weapon]) => {
   assertFinitePositive(enemy.contactDamage, `${id}.contactDamage`);
   assertFinitePositive(enemy.budgetCost, `${id}.budgetCost`);
   assertFinitePositive(enemy.score, `${id}.score`);
+  assert(enemy.spriteImage && enemy.spriteImage.startsWith("assets/zombies/") && enemy.spriteImage.endsWith(".png"), `${id} must bind a raster zombie image`);
+  assertFinitePositive(enemy.visualWidth, `${id}.visualWidth`);
+  assert(enemy.visualWidth >= enemy.radius * 1.8 && enemy.visualWidth <= enemy.radius * 2.2, `${id} visual width should align with collision radius`);
   assert.strictEqual(enemy.stage, 1);
 });
 assert(config.ENEMIES.shambler.scale >= 1.9 && config.ENEMIES.shambler.radius >= 10, "shambler should be visually enlarged");

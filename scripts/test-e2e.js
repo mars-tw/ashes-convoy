@@ -486,6 +486,16 @@ async function checkOpeningHordeGateAndFps(page) {
     opening.enemies.length >= 8,
     `opening horde should have at least 8 enemies on screen, got ${opening.enemies.length}`
   );
+  const enemyDebug = await page.evaluate(() => window.__test.getRenderDebug());
+  assert(
+    enemyDebug.enemyRasterDrawn + enemyDebug.enemyFallbackDrawn > 0,
+    "zombie horde should draw raster zombies or code-sprite fallback"
+  );
+  assert(enemyDebug.enemyShadowDrawn > 0, "zombie movement rendering should draw ground shadows");
+  assert(
+    ["loaded", "loading", "failed"].includes(enemyDebug.enemyImageStatus.shambler),
+    `shambler raster status should be tracked, got ${enemyDebug.enemyImageStatus.shambler}`
+  );
 
   const fps = await sampleFps(page);
   assert(fps >= windowlessFpsFloor(), `rough FPS should stay above floor, got ${fps.toFixed(1)}`);
@@ -711,6 +721,40 @@ async function runVehicleImageFallbackScenario(browser, baseUrl) {
   console.log("E2E vehicle image fallback PASS");
 }
 
+async function runZombieImageFallbackScenario(browser, baseUrl) {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const errors = [];
+  page.on("console", (message) => {
+    if (message.type() === "error" && !isIgnorableConsoleError(message.text())) errors.push(message.text());
+  });
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.route("**/assets/zombies/*.png", (route) => {
+    route.fulfill({ status: 404, contentType: "text/plain", body: "missing test zombie" });
+  });
+
+  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
+  await page.evaluate(() => {
+    window.__test.clearStorage();
+    window.__test.startRun("land_rig");
+    window.__test.setState({ enemies: [], projectiles: [], gates: [] });
+    window.__test.spawnEnemy("shambler", { x: 92, y: 110, speed: 0, hp: 30 });
+    window.__test.spawnEnemy("runner", { x: 112, y: 128, speed: 0, hp: 18 });
+    window.__test.spawnEnemy("bloater", { x: 78, y: 146, speed: 0, hp: 95 });
+    window.__test.step(220);
+  });
+  await expectCanvasHasPixels(page);
+  await page.waitForFunction(() => window.__test.getRenderDebug().enemyImageStatus.shambler === "failed");
+  const debug = await page.evaluate(() => window.__test.getRenderDebug());
+  assert.strictEqual(debug.enemyRasterDrawn, 0, "missing zombie images should not report raster draw");
+  assert(debug.enemyFallbackDrawn >= 3, "missing zombie images should draw code sprite fallback");
+  assert(debug.enemyShadowDrawn >= 3, "fallback zombies should still draw animated shadows");
+  assert.strictEqual(debug.enemyImageStatus.shambler, "failed", "missing shambler image should be marked failed");
+  assert.deepStrictEqual(errors, [], "console/page errors during missing-zombie fallback");
+  await page.close();
+  console.log("E2E zombie image fallback PASS");
+}
+
 (async () => {
   const { server, url } = await startServer();
   const browser = await chromium.launch();
@@ -727,6 +771,7 @@ async function runVehicleImageFallbackScenario(browser, baseUrl) {
     }
     await runImageFallbackScenario(browser, url);
     await runVehicleImageFallbackScenario(browser, url);
+    await runZombieImageFallbackScenario(browser, url);
     console.log("E2E tests PASS");
   } finally {
     await browser.close();
