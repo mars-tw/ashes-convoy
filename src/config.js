@@ -294,6 +294,29 @@ const ECONOMY = {
   }
 };
 
+const SHELTER_THEMES = {
+  snow: {
+    id: "snow",
+    label: "雪地車廂",
+    src: "assets/shelter/snow.png"
+  },
+  bunker: {
+    id: "bunker",
+    label: "軍事碉堡",
+    src: "assets/shelter/bunker.png"
+  },
+  greenhouse: {
+    id: "greenhouse",
+    label: "溫室生態站",
+    src: "assets/shelter/greenhouse.png"
+  },
+  workshop: {
+    id: "workshop",
+    label: "工作坊",
+    src: "assets/shelter/workshop.png"
+  }
+};
+
 const META_DEFAULT = {
   version: META_VERSION,
   createdAt: null,
@@ -343,6 +366,7 @@ const DSConfig = {
   PERFORMANCE,
   DIFFICULTIES,
   ECONOMY,
+  SHELTER_THEMES,
   META_DEFAULT
 };
 

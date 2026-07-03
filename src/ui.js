@@ -17,6 +17,10 @@
   const shelter = {
     active: false,
     sceneReady: false,
+    backgroundMode: "none",
+    imageLoaded: false,
+    imageFailed: false,
+    imageTheme: "",
     rafId: 0,
     drawError: "",
     drawerKind: "garage",
@@ -25,14 +29,56 @@
     lastOpts: null,
     lastDrawMs: 0
   };
+  const DEFAULT_SHELTER_THEME = "snow";
 
   function nowIso() {
     return new Date().toISOString();
   }
 
+  function shelterThemes() {
+    return config.SHELTER_THEMES || {};
+  }
+
+  function shelterThemeIds() {
+    const ids = Object.keys(shelterThemes());
+    return ids.length ? ids : [DEFAULT_SHELTER_THEME];
+  }
+
+  function normalizeShelterTheme(themeId) {
+    return shelterThemes()[themeId] ? themeId : DEFAULT_SHELTER_THEME;
+  }
+
+  function getThemeConfig(themeId) {
+    const id = normalizeShelterTheme(themeId);
+    return shelterThemes()[id] || {
+      id: DEFAULT_SHELTER_THEME,
+      label: "雪地車廂",
+      src: "assets/shelter/snow.png"
+    };
+  }
+
+  function parseMetaObject(raw) {
+    if (typeof raw === "string") {
+      try {
+        return JSON.parse(raw);
+      } catch (error) {
+        return null;
+      }
+    }
+    return raw && typeof raw === "object" && !Array.isArray(raw) ? raw : null;
+  }
+
+  function migrateUiMeta(raw, fallbackTheme) {
+    const input = parseMetaObject(raw);
+    const migrated = rules.migrateMeta(raw, { now: nowIso, config });
+    const themeSource = input && Object.prototype.hasOwnProperty.call(input, "shelterTheme") ? input.shelterTheme : fallbackTheme;
+    migrated.shelterTheme = normalizeShelterTheme(themeSource);
+    return migrated;
+  }
+
   function loadMeta() {
     const raw = root.localStorage ? root.localStorage.getItem(config.STORAGE_KEY) : null;
-    meta = rules.migrateMeta(raw, { now: nowIso, config });
+    meta = migrateUiMeta(raw, DEFAULT_SHELTER_THEME);
     return meta;
   }
 
@@ -58,11 +104,15 @@
     );
   }
 
+  function hasFullMetaBackground() {
+    return shelter.backgroundMode === "image" || shelter.backgroundMode === "scene";
+  }
+
   function setSectionVisibility(kind) {
-    const shelterMode = shelter.sceneReady;
+    const compactMode = hasFullMetaBackground();
     els.metaSections.forEach((section) => {
       const sectionKind = section.dataset.metaSection;
-      section.hidden = shelterMode && sectionKind !== kind;
+      section.hidden = compactMode && sectionKind !== kind;
     });
     if (els.metaDrawerTitle) {
       els.metaDrawerTitle.textContent =
@@ -77,7 +127,7 @@
   }
 
   function closeMetaDrawer() {
-    if (!shelter.sceneReady) {
+    if (!hasFullMetaBackground()) {
       openMetaDrawer("garage");
       return;
     }
@@ -85,57 +135,52 @@
     shelter.drawerKind = "";
   }
 
-  function applyShelterMode() {
-    shelter.sceneReady = isShelterSceneAvailable();
-    els.garagePanel.classList.toggle("is-shelter", shelter.sceneReady);
-    els.garagePanel.classList.toggle("is-fallback", !shelter.sceneReady);
-    els.shelterCanvas.hidden = !shelter.sceneReady;
-    els.hotspotLayer.hidden = !shelter.sceneReady;
-    if (shelter.sceneReady) {
+  function applyMetaBackgroundMode(mode) {
+    shelter.backgroundMode = mode;
+    shelter.sceneReady = mode === "scene";
+    els.garagePanel.classList.toggle("is-illustration", mode === "image");
+    els.garagePanel.classList.toggle("is-shelter", mode === "scene");
+    els.garagePanel.classList.toggle("is-fallback", mode === "none");
+    els.shelterImage.hidden = mode !== "image";
+    els.shelterCanvas.hidden = mode !== "scene";
+    els.hotspotLayer.hidden = false;
+    if (hasFullMetaBackground()) {
       closeMetaDrawer();
     } else {
-      stopShelterLoop();
       openMetaDrawer("garage");
     }
   }
 
-  function clamp(value, min, max) {
-    return Math.max(min, Math.min(max, value));
+  function collectActionRects() {
+    const buttons = [els.sortieBtn, els.upgradeHotspotBtn, els.vehicleHotspotBtn, els.themeCycleBtn, els.seriesHotspotBtn, els.resetOverlayBtn];
+    const panelRect = els.garagePanel.getBoundingClientRect();
+    shelter.hotspotRects = {};
+    buttons.forEach((button) => {
+      if (!button) return;
+      const rect = button.getBoundingClientRect();
+      shelter.hotspotRects[button.id] = {
+        left: rect.left - panelRect.left,
+        top: rect.top - panelRect.top,
+        width: rect.width,
+        height: rect.height
+      };
+    });
   }
 
-  function positionShelterHotspots(metrics) {
-    if (!shelter.sceneReady || !metrics) return;
-    const api = getShelterApi();
-    const hotspots = metrics.hotspots || (api && api.SHELTER_HOTSPOTS) || {};
-    const rect = metrics.contentRect || { x: 0, y: 0, w: els.shelterCanvas.width, h: els.shelterCanvas.height };
-    const dpr = shelter.lastOpts ? shelter.lastOpts.pixelRatio || 1 : 1;
-    const panelRect = els.garagePanel.getBoundingClientRect();
-    const mapping = {
-      sortie: els.sortieBtn,
-      upgrades: els.upgradeHotspotBtn,
-      vehicle: els.vehicleHotspotBtn,
-      radio: els.seriesHotspotBtn
-    };
+  function showIllustrationBackground() {
+    shelter.imageLoaded = true;
+    shelter.imageFailed = false;
+    shelter.drawError = "";
+    stopShelterLoop();
+    applyMetaBackgroundMode("image");
+    collectActionRects();
+  }
 
-    shelter.hotspotRects = {};
-    Object.keys(mapping).forEach((key) => {
-      const button = mapping[key];
-      const hotspot = hotspots[key];
-      if (!button || !hotspot) return;
-      const x = (rect.x + hotspot.x * rect.w) / dpr;
-      const y = (rect.y + hotspot.y * rect.h) / dpr;
-      const w = (hotspot.w * rect.w) / dpr;
-      const h = (hotspot.h * rect.h) / dpr;
-      const width = clamp(w, 56, Math.max(56, panelRect.width - 16));
-      const height = clamp(h, 40, Math.max(40, panelRect.height - 16));
-      const left = clamp(x, 8, Math.max(8, panelRect.width - width - 8));
-      const top = clamp(y, 8, Math.max(8, panelRect.height - height - 8));
-      button.style.left = `${left}px`;
-      button.style.top = `${top}px`;
-      button.style.width = `${width}px`;
-      button.style.height = `${height}px`;
-      shelter.hotspotRects[key] = { left, top, width, height };
-    });
+  function showNoBackgroundFallback(message) {
+    stopShelterLoop();
+    applyMetaBackgroundMode("none");
+    if (message) setStatus(message);
+    collectActionRects();
   }
 
   function drawShelterFrame(timeMs) {
@@ -168,24 +213,23 @@
       shelter.metrics = getShelterApi().drawShelterScene(ctx, opts);
       shelter.drawError = "";
       shelter.lastDrawMs = timeMs;
-      positionShelterHotspots(shelter.metrics);
+      collectActionRects();
       shelter.rafId = root.requestAnimationFrame(drawShelterFrame);
     } catch (error) {
       shelter.drawError = error && error.message ? error.message : String(error);
       shelter.active = false;
       shelter.sceneReady = false;
-      els.garagePanel.classList.remove("is-shelter");
-      els.garagePanel.classList.add("is-fallback");
-      els.shelterCanvas.hidden = true;
-      els.hotspotLayer.hidden = true;
-      openMetaDrawer("garage");
-      setStatus("避難所場景暫不可用，已切回車庫面板。");
+      showNoBackgroundFallback("避難所背景暫不可用，已切回車庫面板。");
     }
   }
 
   function startShelterLoop() {
-    applyShelterMode();
-    if (!shelter.sceneReady || shelter.active) return;
+    if (!isShelterSceneAvailable()) {
+      showNoBackgroundFallback("避難所背景暫不可用，已切回車庫面板。");
+      return;
+    }
+    applyMetaBackgroundMode("scene");
+    if (shelter.active) return;
     shelter.active = true;
     shelter.rafId = root.requestAnimationFrame(drawShelterFrame);
   }
@@ -196,10 +240,71 @@
     shelter.active = false;
   }
 
+  function updateThemeUi() {
+    const theme = getThemeConfig(meta.shelterTheme);
+    els.themeCycleBtn.textContent = "換車廂";
+    els.themeCycleBtn.setAttribute("aria-label", `換車廂，目前是${theme.label}`);
+    els.themeCycleBtn.title = theme.label;
+    els.shelterImage.alt = theme.label;
+  }
+
+  function loadShelterImageForTheme() {
+    const theme = getThemeConfig(meta.shelterTheme);
+    updateThemeUi();
+    if (shelter.imageTheme === theme.id && shelter.imageLoaded && els.shelterImage.complete) {
+      showIllustrationBackground();
+      return;
+    }
+
+    shelter.imageTheme = theme.id;
+    shelter.imageLoaded = false;
+    shelter.imageFailed = false;
+    els.shelterImage.onload = showIllustrationBackground;
+    els.shelterImage.onerror = () => {
+      shelter.imageLoaded = false;
+      shelter.imageFailed = true;
+      startShelterLoop();
+    };
+    els.shelterImage.src = theme.src;
+    if (els.shelterImage.complete && els.shelterImage.naturalWidth > 0) {
+      showIllustrationBackground();
+    } else {
+      startShelterLoop();
+    }
+  }
+
+  function startMetaBackground() {
+    loadShelterImageForTheme();
+    collectActionRects();
+  }
+
+  function setShelterTheme(themeId, shouldSave) {
+    const nextTheme = normalizeShelterTheme(themeId);
+    meta.shelterTheme = nextTheme;
+    if (shouldSave) saveMeta();
+    loadShelterImageForTheme();
+    setStatus(`${getThemeConfig(nextTheme).label} 已設為基地背景`);
+    return nextTheme;
+  }
+
+  function cycleShelterTheme() {
+    const ids = shelterThemeIds();
+    const currentIndex = Math.max(0, ids.indexOf(normalizeShelterTheme(meta.shelterTheme)));
+    const next = ids[(currentIndex + 1) % ids.length];
+    setShelterTheme(next, true);
+    renderGarage();
+  }
+
   function getShelterState() {
     return {
       active: shelter.active,
       sceneReady: shelter.sceneReady,
+      backgroundMode: shelter.backgroundMode,
+      imageLoaded: shelter.imageLoaded,
+      imageFailed: shelter.imageFailed,
+      imageTheme: shelter.imageTheme,
+      shelterTheme: meta.shelterTheme,
+      shelterThemeLabel: getThemeConfig(meta.shelterTheme).label,
       drawError: shelter.drawError,
       drawerKind: shelter.drawerKind,
       hotspotRects: rules.deepClone(shelter.hotspotRects),
@@ -292,9 +397,10 @@
 
   function renderGarage() {
     els.garageMeta.textContent = `廢土零件 ${meta.parts} · 最遠第 ${meta.bestWave} 波 · 擊殺 ${meta.totalKills}`;
+    updateThemeUi();
     renderVehicles();
     renderUpgrades();
-    if (!shelter.sceneReady) {
+    if (!hasFullMetaBackground()) {
       setSectionVisibility("garage");
     } else if (!els.metaDrawer.hidden && shelter.drawerKind) {
       setSectionVisibility(shelter.drawerKind);
@@ -339,7 +445,7 @@
     els.settlementPanel.hidden = true;
     renderHud(null);
     renderGarage();
-    startShelterLoop();
+    startMetaBackground();
   }
 
   function showPlaying() {
@@ -392,7 +498,7 @@
 
   function selectVehicle(vehicleId) {
     if (!config.VEHICLES[vehicleId]) return;
-    meta = rules.migrateMeta(Object.assign({}, meta, { selectedVehicle: vehicleId }), { config });
+    meta = migrateUiMeta(Object.assign({}, meta, { selectedVehicle: vehicleId }), meta.shelterTheme);
     saveMeta();
     game.setMeta(meta);
     setStatus(`${config.VEHICLES[vehicleId].name} 已就緒`);
@@ -400,6 +506,7 @@
   }
 
   function buyUpgrade(track) {
+    const previousTheme = meta.shelterTheme;
     const result = rules.buyUpgrade({
       meta,
       vehicleId: meta.selectedVehicle,
@@ -407,7 +514,7 @@
       now: nowIso,
       config
     });
-    meta = result.meta;
+    meta = migrateUiMeta(Object.assign({}, result.meta, { shelterTheme: previousTheme }), previousTheme);
     saveMeta();
     game.setMeta(meta);
     if (result.purchase.ok) {
@@ -430,7 +537,7 @@
 
   function clearStorage() {
     if (root.localStorage) root.localStorage.removeItem(config.STORAGE_KEY);
-    meta = rules.migrateMeta(null, { config });
+    meta = migrateUiMeta(null, DEFAULT_SHELTER_THEME);
     lastSettlement = null;
     game.setMeta(meta);
     game.clearStorage();
@@ -450,11 +557,12 @@
   }
 
   function onRunEnd(result) {
-    lastSettlement = result;
-    meta = result.meta;
+    const previousTheme = meta.shelterTheme;
+    meta = migrateUiMeta(Object.assign({}, result.meta, { shelterTheme: previousTheme }), previousTheme);
+    lastSettlement = Object.assign({}, result, { meta });
     saveMeta();
     game.setMeta(meta);
-    showSettlement(result);
+    showSettlement(lastSettlement);
   }
 
   function bindEvents() {
@@ -463,6 +571,8 @@
     els.upgradeHotspotBtn.addEventListener("click", () => openMetaDrawer("upgrades"));
     els.vehicleHotspotBtn.addEventListener("click", () => openMetaDrawer("vehicle"));
     els.seriesHotspotBtn.addEventListener("click", () => openMetaDrawer("series"));
+    els.themeCycleBtn.addEventListener("click", cycleShelterTheme);
+    els.resetOverlayBtn.addEventListener("click", clearStorage);
     els.closeMetaDrawer.addEventListener("click", closeMetaDrawer);
     els.pauseBtn.addEventListener("click", () => game.togglePause());
     els.resumeBtn.addEventListener("click", () => {
@@ -483,10 +593,11 @@
     root.__test = Object.assign({}, root.__test || {}, {
       getMeta: () => rules.deepClone(meta),
       setMeta: (nextMeta) => {
-        meta = rules.migrateMeta(nextMeta, { config });
+        meta = migrateUiMeta(nextMeta, meta.shelterTheme);
         saveMeta();
         game.setMeta(meta);
         renderGarage();
+        startMetaBackground();
         return rules.deepClone(meta);
       },
       buyUpgrade: (vehicleId, track) => {
@@ -507,6 +618,11 @@
       openMetaPanel: (kind) => {
         openMetaDrawer(kind);
         return getShelterState();
+      },
+      setShelterTheme: (themeId) => {
+        setShelterTheme(themeId, true);
+        renderGarage();
+        return rules.deepClone(meta);
       },
       getShelterState,
       getLastSettlement: () => rules.deepClone(lastSettlement)
@@ -529,11 +645,14 @@
       "pauseBtn",
       "garagePanel",
       "shelterCanvas",
+      "shelterImage",
       "hotspotLayer",
       "sortieBtn",
       "upgradeHotspotBtn",
       "vehicleHotspotBtn",
+      "themeCycleBtn",
       "seriesHotspotBtn",
+      "resetOverlayBtn",
       "metaDrawer",
       "metaDrawerTitle",
       "closeMetaDrawer",

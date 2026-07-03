@@ -384,6 +384,7 @@
         white-space: nowrap;
       }
 
+      .meta-panel.is-illustration,
       .meta-panel.is-shelter {
         inset: 0;
         max-height: none;
@@ -396,15 +397,37 @@
         touch-action: none;
       }
 
+      .meta-panel.is-illustration::after,
+      .meta-panel.is-shelter::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(180deg, rgba(0, 0, 0, 0.54), rgba(0, 0, 0, 0.06) 24%, rgba(0, 0, 0, 0.42) 100%),
+          radial-gradient(circle at 50% 44%, rgba(255, 218, 150, 0.08), rgba(0, 0, 0, 0) 52%);
+        pointer-events: none;
+      }
+
+      .shelter-image,
       .shelter-canvas {
         position: absolute;
         inset: 0;
         width: 100%;
         height: 100%;
         display: block;
+      }
+
+      .shelter-image {
+        object-fit: cover;
+        object-position: center center;
+        background: #07090d;
+      }
+
+      .shelter-canvas {
         image-rendering: pixelated;
       }
 
+      .shelter-image[hidden],
       .shelter-canvas[hidden],
       .hotspot-layer[hidden] {
         display: none;
@@ -415,6 +438,7 @@
         z-index: 2;
       }
 
+      .is-illustration .meta-summary,
       .is-shelter .meta-summary {
         position: absolute;
         top: max(12px, env(safe-area-inset-top));
@@ -423,15 +447,18 @@
         padding: 10px 12px;
         border: 1px solid rgba(244, 234, 216, 0.18);
         border-radius: 8px;
-        background: rgba(7, 9, 13, 0.68);
+        background: rgba(7, 9, 13, 0.72);
         box-shadow: 0 10px 26px rgba(0, 0, 0, 0.26);
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.72);
         pointer-events: none;
       }
 
+      .is-illustration .meta-summary h1,
       .is-shelter .meta-summary h1 {
         font-size: 22px;
       }
 
+      .is-illustration .meta-summary .status,
       .is-shelter .meta-summary .status {
         min-height: 18px;
         margin-top: 4px;
@@ -439,26 +466,45 @@
 
       .hotspot-layer {
         position: absolute;
-        inset: 0;
+        left: 10px;
+        right: 10px;
+        bottom: max(10px, env(safe-area-inset-bottom));
         z-index: 3;
-        pointer-events: none;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        padding: 10px;
+        border: 1px solid rgba(244, 234, 216, 0.18);
+        border-radius: 8px;
+        background: rgba(7, 9, 13, 0.68);
+        box-shadow: 0 16px 34px rgba(0, 0, 0, 0.34);
+        pointer-events: auto;
       }
 
       .hotspot-btn {
-        position: absolute;
-        min-height: 40px;
+        position: static;
+        min-width: 0;
+        min-height: 42px;
         padding: 8px 10px;
         border-color: rgba(244, 234, 216, 0.34);
         background: rgba(9, 12, 16, 0.72);
         box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
         color: var(--text);
         pointer-events: auto;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.72);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .hotspot-primary {
+        grid-column: 1 / -1;
+        min-height: 50px;
         background: rgba(213, 147, 47, 0.88);
         border-color: rgba(243, 207, 112, 0.92);
         color: #17110a;
+        font-size: 18px;
+        text-shadow: none;
       }
 
       .meta-drawer {
@@ -466,17 +512,18 @@
         z-index: 4;
       }
 
+      .is-illustration .meta-drawer,
       .is-shelter .meta-drawer {
         position: absolute;
         left: 10px;
         right: 10px;
-        bottom: max(10px, env(safe-area-inset-bottom));
-        max-height: min(58%, 520px);
+        bottom: calc(max(10px, env(safe-area-inset-bottom)) + 154px);
+        max-height: min(50%, 480px);
         padding: 12px;
         overflow: auto;
         border: 1px solid rgba(244, 234, 216, 0.22);
         border-radius: 8px;
-        background: rgba(9, 12, 16, 0.9);
+        background: rgba(9, 12, 16, 0.92);
         box-shadow: 0 18px 44px rgba(0, 0, 0, 0.44);
         touch-action: pan-y;
       }
@@ -502,9 +549,17 @@
         display: none;
       }
 
-      .is-fallback .shelter-canvas,
-      .is-fallback .hotspot-layer {
+      .is-fallback .shelter-image,
+      .is-fallback .shelter-canvas {
         display: none;
+      }
+
+      .is-fallback .hotspot-layer {
+        position: relative;
+        left: auto;
+        right: auto;
+        bottom: auto;
+        margin: 10px 0;
       }
 
       .is-fallback .meta-drawer {
@@ -519,6 +574,7 @@
         display: block;
       }
 
+      .is-illustration #startBtn,
       .is-shelter #startBtn {
         display: none;
       }
@@ -546,10 +602,17 @@
           gap: 12px;
         }
 
-        .is-shelter .meta-drawer {
+        .hotspot-layer {
           left: 18px;
           right: 18px;
           bottom: 18px;
+        }
+
+        .is-illustration .meta-drawer,
+        .is-shelter .meta-drawer {
+          left: 18px;
+          right: 18px;
+          bottom: 172px;
           padding: 16px;
         }
       }
@@ -586,6 +649,7 @@
       </section>
 
       <section class="panel meta-panel is-fallback" id="garagePanel">
+        <img id="shelterImage" class="shelter-image" alt="" decoding="async" draggable="false" hidden />
         <canvas id="shelterCanvas" class="shelter-canvas" width="390" height="844" aria-label="避難所基地場景" hidden></canvas>
 
         <div class="meta-summary panel-head">
@@ -595,10 +659,12 @@
         </div>
 
         <div class="hotspot-layer" id="hotspotLayer" aria-label="避難所互動" hidden>
-          <button class="hotspot-btn hotspot-primary" id="sortieBtn" type="button" data-hotspot="sortie">出勤</button>
-          <button class="hotspot-btn" id="upgradeHotspotBtn" type="button" data-hotspot="upgrades">升級</button>
-          <button class="hotspot-btn" id="vehicleHotspotBtn" type="button" data-hotspot="vehicle">載具</button>
-          <button class="hotspot-btn" id="seriesHotspotBtn" type="button" data-hotspot="radio">系列</button>
+          <button class="hotspot-btn hotspot-primary" id="sortieBtn" type="button">出勤</button>
+          <button class="hotspot-btn" id="upgradeHotspotBtn" type="button">升級</button>
+          <button class="hotspot-btn" id="vehicleHotspotBtn" type="button">載具</button>
+          <button class="hotspot-btn" id="themeCycleBtn" type="button">換車廂</button>
+          <button class="hotspot-btn" id="seriesHotspotBtn" type="button">系列</button>
+          <button class="hotspot-btn danger" id="resetOverlayBtn" type="button">清存檔</button>
         </div>
 
         <div class="meta-drawer" id="metaDrawer">

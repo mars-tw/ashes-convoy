@@ -45,6 +45,10 @@ function startServer() {
   });
 }
 
+function isIgnorableConsoleError(text) {
+  return /Failed to load resource/i.test(text);
+}
+
 async function expectCanvasHasPixels(page) {
   const result = await page.evaluate(() => {
     const canvas = document.getElementById("gameCanvas");
@@ -84,9 +88,42 @@ async function expectShelterCanvasHasPixels(page) {
   assert(result.lit > 1000, `shelter canvas should contain non-empty pixels, got ${result.lit}`);
 }
 
+async function expectMetaBackground(page) {
+  await page.waitForFunction(() => {
+    if (!window.__test || !window.__test.getShelterState) return false;
+    const state = window.__test.getShelterState();
+    return state.backgroundMode === "image" || (state.backgroundMode === "scene" && state.lastDrawMs > 0);
+  });
+  const state = await page.evaluate(() => window.__test.getShelterState());
+  if (state.backgroundMode === "image") {
+    const image = await page.locator("#shelterImage").evaluate((node) => {
+      const rect = node.getBoundingClientRect();
+      const style = getComputedStyle(node);
+      return {
+        hidden: node.hidden,
+        complete: node.complete,
+        naturalWidth: node.naturalWidth,
+        naturalHeight: node.naturalHeight,
+        width: rect.width,
+        height: rect.height,
+        objectFit: style.objectFit,
+        objectPosition: style.objectPosition
+      };
+    });
+    assert(!image.hidden, "shelter image should be visible when background mode is image");
+    assert(image.complete && image.naturalWidth > 0 && image.naturalHeight > 0, "shelter image should load successfully");
+    assert(image.width > 0 && image.height > 0, "shelter image should cover a visible area");
+    assert.strictEqual(image.objectFit, "cover", "shelter image should use cover-fit");
+    assert(image.objectPosition.includes("50%"), "shelter image should stay centered");
+  } else {
+    await expectShelterCanvasHasPixels(page);
+  }
+}
+
 async function checkMetaHotspotsFit(page) {
   const result = await page.evaluate(() => {
     const app = document.getElementById("app").getBoundingClientRect();
+    const layer = document.getElementById("hotspotLayer").getBoundingClientRect();
     const buttons = Array.from(document.querySelectorAll(".hotspot-btn")).map((button) => {
       const rect = button.getBoundingClientRect();
       return {
@@ -106,9 +143,26 @@ async function checkMetaHotspotsFit(page) {
         clientWidth: button.clientWidth
       };
     });
-    return { buttons };
+    return {
+      buttons,
+      layer: {
+        left: layer.left,
+        right: layer.right,
+        top: layer.top,
+        bottom: layer.bottom,
+        appLeft: app.left,
+        appRight: app.right,
+        appTop: app.top,
+        appBottom: app.bottom
+      },
+      viewportOverflow: document.documentElement.scrollWidth - window.innerWidth
+    };
   });
-  assert.strictEqual(result.buttons.length, 4, "meta screen should expose four hotspot buttons");
+  assert.strictEqual(result.buttons.length, 6, "meta screen should expose six overlay action buttons");
+  assert(result.layer.left >= result.layer.appLeft - 1, "meta action layer should not overflow left");
+  assert(result.layer.right <= result.layer.appRight + 1, "meta action layer should not overflow right");
+  assert(result.layer.bottom <= result.layer.appBottom + 1, "meta action layer should stay within app bottom");
+  assert(result.viewportOverflow <= 1, "meta overlay should not create horizontal page overflow");
   result.buttons.forEach((button) => {
     assert(button.width >= 44 && button.height >= 40, `${button.id} should be a touchable size`);
     assert(button.left >= button.appLeft - 1, `${button.id} should not overflow left`);
@@ -119,30 +173,19 @@ async function checkMetaHotspotsFit(page) {
   });
 }
 
-async function checkReducedFlashSetting(page) {
-  await page.evaluate(() => {
-    const meta = window.__test.getMeta();
-    meta.settings = Object.assign({}, meta.settings, { reducedFlash: true });
-    window.__test.setMeta(meta);
-  });
+async function waitForMetaBackground(page) {
   await page.waitForFunction(() => {
     const state = window.__test.getShelterState();
-    return state.lastOpts && state.lastOpts.reducedFlash === true;
-  });
-  await page.evaluate(() => {
-    const meta = window.__test.getMeta();
-    meta.settings = Object.assign({}, meta.settings, { reducedFlash: false });
-    window.__test.setMeta(meta);
-  });
-  await page.waitForFunction(() => {
-    const state = window.__test.getShelterState();
-    return state.lastOpts && state.lastOpts.reducedFlash === false;
+    return state.backgroundMode === "image" || state.backgroundMode === "scene" || state.backgroundMode === "none";
   });
 }
 
 async function openUpgradePanel(page) {
-  const sceneReady = await page.evaluate(() => window.__test.getShelterState().sceneReady);
-  if (sceneReady) {
+  const fullBackground = await page.evaluate(() => {
+    const mode = window.__test.getShelterState().backgroundMode;
+    return mode === "image" || mode === "scene";
+  });
+  if (fullBackground) {
     const alreadyOpen = await page.locator('#metaDrawer:not([hidden]) [data-meta-section="upgrades"]:not([hidden])').count();
     if (alreadyOpen) return;
     await page.click("#upgradeHotspotBtn");
@@ -151,22 +194,72 @@ async function openUpgradePanel(page) {
 }
 
 async function clickSortie(page) {
-  const sceneReady = await page.evaluate(() => window.__test.getShelterState().sceneReady);
-  if (sceneReady) {
+  const fullBackground = await page.evaluate(() => {
+    const mode = window.__test.getShelterState().backgroundMode;
+    return mode === "image" || mode === "scene";
+  });
+  if (fullBackground) {
     const drawerOpen = await page.locator("#metaDrawer:not([hidden])").count();
     if (drawerOpen) await page.click("#closeMetaDrawer");
-    await page.click("#sortieBtn");
-  } else {
-    await page.click("#startBtn");
   }
+  await page.click("#sortieBtn");
   await page.waitForFunction(() => window.__test.getState().mode === "playing");
 }
 
-async function checkShelterMeta(page) {
+async function checkThemeSwitch(page, persistReload) {
+  const ids = await page.evaluate(() => Object.keys(window.DSConfig.SHELTER_THEMES));
+  assert.deepStrictEqual(ids.sort(), ["bunker", "greenhouse", "snow", "workshop"], "all four shelter themes should exist");
+  const seen = new Set([await page.evaluate(() => window.__test.getMeta().shelterTheme)]);
+  for (let i = 1; i < ids.length; i += 1) {
+    const before = await page.evaluate(() => window.__test.getMeta().shelterTheme);
+    await page.click("#themeCycleBtn");
+    await page.waitForFunction((previous) => window.__test.getMeta().shelterTheme !== previous, before);
+    await waitForMetaBackground(page);
+    seen.add(await page.evaluate(() => window.__test.getMeta().shelterTheme));
+  }
+  ids.forEach((id) => assert(seen.has(id), `theme cycle should reach ${id}`));
+
+  const invalid = await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.shelterTheme = "not_a_theme";
+    return window.__test.setMeta(meta).shelterTheme;
+  });
+  assert.strictEqual(invalid, "snow", "invalid shelter theme should migrate back to snow");
+  await waitForMetaBackground(page);
+
+  await page.evaluate(() => window.__test.setShelterTheme("greenhouse"));
+  await waitForMetaBackground(page);
+  if (persistReload) {
+    await page.reload({ waitUntil: "networkidle" });
+    await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
+    await waitForMetaBackground(page);
+    const reloaded = await page.evaluate(() => window.__test.getMeta().shelterTheme);
+    assert.strictEqual(reloaded, "greenhouse", "selected shelter theme should persist after reload");
+  }
+}
+
+async function checkClearStorageButton(page) {
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.parts = 77;
+    meta.shelterTheme = "workshop";
+    window.__test.setMeta(meta);
+  });
+  await waitForMetaBackground(page);
+  await page.click("#resetOverlayBtn");
+  await page.waitForFunction(() => {
+    const meta = window.__test.getMeta();
+    return meta.parts === 0 && meta.shelterTheme === "snow";
+  });
+}
+
+async function checkShelterMeta(page, persistThemeReload) {
   await page.waitForSelector("#garagePanel:not([hidden])");
-  await expectShelterCanvasHasPixels(page);
+  await expectMetaBackground(page);
   await checkMetaHotspotsFit(page);
-  await checkReducedFlashSetting(page);
+  await checkThemeSwitch(page, persistThemeReload);
+  await checkClearStorageButton(page);
+  await expectMetaBackground(page);
   await openUpgradePanel(page);
   const drawer = await page.locator("#metaDrawer").evaluate((node) => ({
     hidden: node.hidden,
@@ -410,19 +503,19 @@ async function runScenario(browser, baseUrl, viewport, full) {
   const page = await browser.newPage({ viewport });
   const errors = [];
   page.on("console", (message) => {
-    if (message.type() === "error") errors.push(message.text());
+    if (message.type() === "error" && !isIgnorableConsoleError(message.text())) errors.push(message.text());
   });
   page.on("pageerror", (error) => errors.push(error.message));
 
   await page.goto(baseUrl, { waitUntil: "networkidle" });
   await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
   await page.evaluate(() => window.__test.clearStorage());
-  await checkShelterMeta(page);
+  await checkShelterMeta(page, full);
   await checkGarageUpgradeLines(page);
   if (full) {
     await checkDawnProjectileDamage(page);
     await page.evaluate(() => window.__test.clearStorage());
-    await checkShelterMeta(page);
+    await checkShelterMeta(page, false);
     await checkGarageUpgradeLines(page);
     await checkEmptySettlementCta(page);
   } else {
@@ -448,6 +541,32 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await page.close();
 }
 
+async function runImageFallbackScenario(browser, baseUrl) {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const errors = [];
+  page.on("console", (message) => {
+    if (message.type() === "error" && !isIgnorableConsoleError(message.text())) errors.push(message.text());
+  });
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.route("**/assets/shelter/*.png", (route) => {
+    route.fulfill({ status: 404, contentType: "text/plain", body: "missing test image" });
+  });
+
+  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
+  await page.evaluate(() => window.__test.clearStorage());
+  await page.waitForFunction(() => {
+    const state = window.__test.getShelterState();
+    return state.backgroundMode === "scene" && state.imageFailed && state.lastDrawMs > 0;
+  });
+  await expectShelterCanvasHasPixels(page);
+  await checkMetaHotspotsFit(page);
+  await clickSortie(page);
+  assert.deepStrictEqual(errors, [], "console/page errors during missing-image fallback");
+  await page.close();
+  console.log("E2E image fallback PASS");
+}
+
 (async () => {
   const { server, url } = await startServer();
   const browser = await chromium.launch();
@@ -462,6 +581,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
       await runScenario(browser, url, viewports[i], i === 0);
       console.log(`E2E viewport PASS ${viewports[i].width}x${viewports[i].height}`);
     }
+    await runImageFallbackScenario(browser, url);
     console.log("E2E tests PASS");
   } finally {
     await browser.close();
