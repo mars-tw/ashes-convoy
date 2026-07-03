@@ -384,6 +384,149 @@
         white-space: nowrap;
       }
 
+      .meta-panel.is-shelter {
+        inset: 0;
+        max-height: none;
+        padding: 0;
+        overflow: hidden;
+        border: 0;
+        border-radius: 0;
+        background: #07090d;
+        box-shadow: none;
+        touch-action: none;
+      }
+
+      .shelter-canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        image-rendering: pixelated;
+      }
+
+      .shelter-canvas[hidden],
+      .hotspot-layer[hidden] {
+        display: none;
+      }
+
+      .meta-summary {
+        position: relative;
+        z-index: 2;
+      }
+
+      .is-shelter .meta-summary {
+        position: absolute;
+        top: max(12px, env(safe-area-inset-top));
+        left: 12px;
+        right: 12px;
+        padding: 10px 12px;
+        border: 1px solid rgba(244, 234, 216, 0.18);
+        border-radius: 8px;
+        background: rgba(7, 9, 13, 0.68);
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.26);
+        pointer-events: none;
+      }
+
+      .is-shelter .meta-summary h1 {
+        font-size: 22px;
+      }
+
+      .is-shelter .meta-summary .status {
+        min-height: 18px;
+        margin-top: 4px;
+      }
+
+      .hotspot-layer {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        pointer-events: none;
+      }
+
+      .hotspot-btn {
+        position: absolute;
+        min-height: 40px;
+        padding: 8px 10px;
+        border-color: rgba(244, 234, 216, 0.34);
+        background: rgba(9, 12, 16, 0.72);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+        color: var(--text);
+        pointer-events: auto;
+      }
+
+      .hotspot-primary {
+        background: rgba(213, 147, 47, 0.88);
+        border-color: rgba(243, 207, 112, 0.92);
+        color: #17110a;
+      }
+
+      .meta-drawer {
+        position: relative;
+        z-index: 4;
+      }
+
+      .is-shelter .meta-drawer {
+        position: absolute;
+        left: 10px;
+        right: 10px;
+        bottom: max(10px, env(safe-area-inset-bottom));
+        max-height: min(58%, 520px);
+        padding: 12px;
+        overflow: auto;
+        border: 1px solid rgba(244, 234, 216, 0.22);
+        border-radius: 8px;
+        background: rgba(9, 12, 16, 0.9);
+        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.44);
+        touch-action: pan-y;
+      }
+
+      .meta-drawer[hidden] {
+        display: none;
+      }
+
+      .meta-drawer-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .meta-drawer-head button {
+        min-height: 36px;
+        padding: 0 10px;
+      }
+
+      .meta-section[hidden] {
+        display: none;
+      }
+
+      .is-fallback .shelter-canvas,
+      .is-fallback .hotspot-layer {
+        display: none;
+      }
+
+      .is-fallback .meta-drawer {
+        display: block;
+      }
+
+      .is-fallback .meta-drawer-head {
+        display: none;
+      }
+
+      .is-fallback .meta-section {
+        display: block;
+      }
+
+      .is-shelter #startBtn {
+        display: none;
+      }
+
+      .meta-actions {
+        margin-top: 10px;
+      }
+
       .pause-panel {
         inset: 50% 18px auto 18px;
         transform: translateY(-50%);
@@ -401,6 +544,13 @@
         .garage-grid {
           grid-template-columns: 1.1fr 0.9fr;
           gap: 12px;
+        }
+
+        .is-shelter .meta-drawer {
+          left: 18px;
+          right: 18px;
+          bottom: 18px;
+          padding: 16px;
         }
       }
     </style>
@@ -435,35 +585,53 @@
         </div>
       </section>
 
-      <section class="panel" id="garagePanel">
-        <div class="panel-head">
+      <section class="panel meta-panel is-fallback" id="garagePanel">
+        <canvas id="shelterCanvas" class="shelter-canvas" width="390" height="844" aria-label="避難所基地場景" hidden></canvas>
+
+        <div class="meta-summary panel-head">
           <h1>灰燼護航</h1>
           <p class="subtle" id="garageMeta">廢土零件 0</p>
+          <div class="status" id="garageStatus"></div>
         </div>
-        <div class="garage-grid">
-          <div>
-            <h2>載具</h2>
-            <div class="vehicle-list" id="vehicleList"></div>
+
+        <div class="hotspot-layer" id="hotspotLayer" aria-label="避難所互動" hidden>
+          <button class="hotspot-btn hotspot-primary" id="sortieBtn" type="button" data-hotspot="sortie">出勤</button>
+          <button class="hotspot-btn" id="upgradeHotspotBtn" type="button" data-hotspot="upgrades">升級</button>
+          <button class="hotspot-btn" id="vehicleHotspotBtn" type="button" data-hotspot="vehicle">載具</button>
+          <button class="hotspot-btn" id="seriesHotspotBtn" type="button" data-hotspot="radio">系列</button>
+        </div>
+
+        <div class="meta-drawer" id="metaDrawer">
+          <div class="meta-drawer-head">
+            <h2 id="metaDrawerTitle">基地管理</h2>
+            <button id="closeMetaDrawer" type="button" aria-label="關閉基地面板">關閉</button>
           </div>
-          <div>
-            <h2>升級</h2>
-            <div class="upgrade-list" id="upgradeList"></div>
+          <div class="garage-grid">
+            <section class="meta-section" data-meta-section="vehicle">
+              <h2>載具</h2>
+              <div class="vehicle-list" id="vehicleList"></div>
+            </section>
+            <section class="meta-section" data-meta-section="upgrades">
+              <h2>升級</h2>
+              <div class="upgrade-list" id="upgradeList"></div>
+            </section>
+            <section class="meta-section" data-meta-section="series">
+              <footer class="series-footer" aria-label="阿軒的小遊戲系列">
+                <div class="series-title">🎮 阿軒的小遊戲系列</div>
+                <nav class="series-links" aria-label="姊妹作連結">
+                  <a href="https://mars-tw.github.io/web-card-game-skill/templates/card-battle/" target="_blank" rel="noopener">卡牌對戰</a>
+                  <a href="https://mars-tw.github.io/tower-defense-skill/" target="_blank" rel="noopener">無盡塔防</a>
+                  <a href="https://mars-tw.github.io/pixel-idle-farm-skill/" target="_blank" rel="noopener">像素農場</a>
+                </nav>
+              </footer>
+            </section>
+          </div>
+          <div class="actions meta-actions">
+            <button class="primary wide" id="startBtn" type="button">出勤</button>
+            <button id="resetBtn" type="button">清除存檔</button>
+            <button class="secondary" id="selectSkiffBtn" type="button">切換載具</button>
           </div>
         </div>
-        <div class="actions">
-          <button class="primary wide" id="startBtn" type="button">出發</button>
-          <button id="resetBtn" type="button">清除存檔</button>
-          <button class="secondary" id="selectSkiffBtn" type="button">切換載具</button>
-        </div>
-        <div class="status" id="garageStatus"></div>
-        <footer class="series-footer" aria-label="阿軒的小遊戲系列">
-          <div class="series-title">🎮 阿軒的小遊戲系列</div>
-          <nav class="series-links" aria-label="姊妹作連結">
-            <a href="https://mars-tw.github.io/web-card-game-skill/templates/card-battle/" target="_blank" rel="noopener">卡牌對戰</a>
-            <a href="https://mars-tw.github.io/tower-defense-skill/" target="_blank" rel="noopener">無盡塔防</a>
-            <a href="https://mars-tw.github.io/pixel-idle-farm-skill/" target="_blank" rel="noopener">像素農場</a>
-          </nav>
-        </footer>
       </section>
 
       <section class="panel pause-panel" id="pausePanel" hidden>
@@ -492,6 +660,7 @@
 
     <script src="src/sprites.js"></script>
     <script src="src/sprite-renderer.js"></script>
+    <script src="src/shelter-scene.js"></script>
     <script src="src/config.js"></script>
     <script src="src/rules.js"></script>
     <script src="src/game.js"></script>

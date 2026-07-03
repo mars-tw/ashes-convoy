@@ -14,6 +14,17 @@
   let lastSettlement = null;
 
   const els = {};
+  const shelter = {
+    active: false,
+    sceneReady: false,
+    rafId: 0,
+    drawError: "",
+    drawerKind: "garage",
+    hotspotRects: {},
+    metrics: null,
+    lastOpts: null,
+    lastDrawMs: 0
+  };
 
   function nowIso() {
     return new Date().toISOString();
@@ -31,6 +42,180 @@
 
   function setStatus(text) {
     els.garageStatus.textContent = text || "";
+  }
+
+  function getShelterApi() {
+    return root.DSShelterScene;
+  }
+
+  function isShelterSceneAvailable() {
+    const api = getShelterApi();
+    return !!(
+      api &&
+      typeof api.drawShelterScene === "function" &&
+      api.SHELTER_HOTSPOTS &&
+      typeof api.SHELTER_HOTSPOTS === "object"
+    );
+  }
+
+  function setSectionVisibility(kind) {
+    const shelterMode = shelter.sceneReady;
+    els.metaSections.forEach((section) => {
+      const sectionKind = section.dataset.metaSection;
+      section.hidden = shelterMode && sectionKind !== kind;
+    });
+    if (els.metaDrawerTitle) {
+      els.metaDrawerTitle.textContent =
+        kind === "upgrades" ? "升級工坊" : kind === "vehicle" ? "載具棚" : kind === "series" ? "系列電台" : "基地管理";
+    }
+  }
+
+  function openMetaDrawer(kind) {
+    shelter.drawerKind = kind || "garage";
+    setSectionVisibility(shelter.drawerKind);
+    els.metaDrawer.hidden = false;
+  }
+
+  function closeMetaDrawer() {
+    if (!shelter.sceneReady) {
+      openMetaDrawer("garage");
+      return;
+    }
+    els.metaDrawer.hidden = true;
+    shelter.drawerKind = "";
+  }
+
+  function applyShelterMode() {
+    shelter.sceneReady = isShelterSceneAvailable();
+    els.garagePanel.classList.toggle("is-shelter", shelter.sceneReady);
+    els.garagePanel.classList.toggle("is-fallback", !shelter.sceneReady);
+    els.shelterCanvas.hidden = !shelter.sceneReady;
+    els.hotspotLayer.hidden = !shelter.sceneReady;
+    if (shelter.sceneReady) {
+      closeMetaDrawer();
+    } else {
+      stopShelterLoop();
+      openMetaDrawer("garage");
+    }
+  }
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function positionShelterHotspots(metrics) {
+    if (!shelter.sceneReady || !metrics) return;
+    const api = getShelterApi();
+    const hotspots = metrics.hotspots || (api && api.SHELTER_HOTSPOTS) || {};
+    const rect = metrics.contentRect || { x: 0, y: 0, w: els.shelterCanvas.width, h: els.shelterCanvas.height };
+    const dpr = shelter.lastOpts ? shelter.lastOpts.pixelRatio || 1 : 1;
+    const panelRect = els.garagePanel.getBoundingClientRect();
+    const mapping = {
+      sortie: els.sortieBtn,
+      upgrades: els.upgradeHotspotBtn,
+      vehicle: els.vehicleHotspotBtn,
+      radio: els.seriesHotspotBtn
+    };
+
+    shelter.hotspotRects = {};
+    Object.keys(mapping).forEach((key) => {
+      const button = mapping[key];
+      const hotspot = hotspots[key];
+      if (!button || !hotspot) return;
+      const x = (rect.x + hotspot.x * rect.w) / dpr;
+      const y = (rect.y + hotspot.y * rect.h) / dpr;
+      const w = (hotspot.w * rect.w) / dpr;
+      const h = (hotspot.h * rect.h) / dpr;
+      const width = clamp(w, 56, Math.max(56, panelRect.width - 16));
+      const height = clamp(h, 40, Math.max(40, panelRect.height - 16));
+      const left = clamp(x, 8, Math.max(8, panelRect.width - width - 8));
+      const top = clamp(y, 8, Math.max(8, panelRect.height - height - 8));
+      button.style.left = `${left}px`;
+      button.style.top = `${top}px`;
+      button.style.width = `${width}px`;
+      button.style.height = `${height}px`;
+      shelter.hotspotRects[key] = { left, top, width, height };
+    });
+  }
+
+  function drawShelterFrame(timeMs) {
+    if (!shelter.active || !shelter.sceneReady) return;
+    const canvas = els.shelterCanvas;
+    const ctx = canvas.getContext("2d");
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.max(1, Math.min(2, root.devicePixelRatio || 1));
+    const width = Math.max(1, Math.round(rect.width * dpr));
+    const height = Math.max(1, Math.round(rect.height * dpr));
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+    }
+    ctx.imageSmoothingEnabled = false;
+
+    const opts = {
+      timeMs,
+      width,
+      height,
+      pixelRatio: dpr,
+      warmth: 1,
+      theme: "shelter",
+      reducedFlash: !!(meta.settings && meta.settings.reducedFlash),
+      renderer: root.DSSpriteRenderer
+    };
+
+    try {
+      shelter.lastOpts = opts;
+      shelter.metrics = getShelterApi().drawShelterScene(ctx, opts);
+      shelter.drawError = "";
+      shelter.lastDrawMs = timeMs;
+      positionShelterHotspots(shelter.metrics);
+      shelter.rafId = root.requestAnimationFrame(drawShelterFrame);
+    } catch (error) {
+      shelter.drawError = error && error.message ? error.message : String(error);
+      shelter.active = false;
+      shelter.sceneReady = false;
+      els.garagePanel.classList.remove("is-shelter");
+      els.garagePanel.classList.add("is-fallback");
+      els.shelterCanvas.hidden = true;
+      els.hotspotLayer.hidden = true;
+      openMetaDrawer("garage");
+      setStatus("避難所場景暫不可用，已切回車庫面板。");
+    }
+  }
+
+  function startShelterLoop() {
+    applyShelterMode();
+    if (!shelter.sceneReady || shelter.active) return;
+    shelter.active = true;
+    shelter.rafId = root.requestAnimationFrame(drawShelterFrame);
+  }
+
+  function stopShelterLoop() {
+    if (shelter.rafId) root.cancelAnimationFrame(shelter.rafId);
+    shelter.rafId = 0;
+    shelter.active = false;
+  }
+
+  function getShelterState() {
+    return {
+      active: shelter.active,
+      sceneReady: shelter.sceneReady,
+      drawError: shelter.drawError,
+      drawerKind: shelter.drawerKind,
+      hotspotRects: rules.deepClone(shelter.hotspotRects),
+      metrics: shelter.metrics ? rules.deepClone(shelter.metrics) : null,
+      lastOpts: shelter.lastOpts
+        ? {
+            width: shelter.lastOpts.width,
+            height: shelter.lastOpts.height,
+            pixelRatio: shelter.lastOpts.pixelRatio,
+            warmth: shelter.lastOpts.warmth,
+            theme: shelter.lastOpts.theme,
+            reducedFlash: shelter.lastOpts.reducedFlash
+          }
+        : null,
+      lastDrawMs: shelter.lastDrawMs
+    };
   }
 
   function vehicleLine(vehicleId) {
@@ -109,6 +294,11 @@
     els.garageMeta.textContent = `廢土零件 ${meta.parts} · 最遠第 ${meta.bestWave} 波 · 擊殺 ${meta.totalKills}`;
     renderVehicles();
     renderUpgrades();
+    if (!shelter.sceneReady) {
+      setSectionVisibility("garage");
+    } else if (!els.metaDrawer.hidden && shelter.drawerKind) {
+      setSectionVisibility(shelter.drawerKind);
+    }
   }
 
   function renderHud(state) {
@@ -149,9 +339,11 @@
     els.settlementPanel.hidden = true;
     renderHud(null);
     renderGarage();
+    startShelterLoop();
   }
 
   function showPlaying() {
+    stopShelterLoop();
     els.garagePanel.hidden = true;
     els.pausePanel.hidden = true;
     els.settlementPanel.hidden = true;
@@ -190,6 +382,7 @@
   }
 
   function showSettlement(result) {
+    stopShelterLoop();
     els.garagePanel.hidden = true;
     els.pausePanel.hidden = true;
     els.settlementPanel.hidden = false;
@@ -230,6 +423,7 @@
 
   function startSelectedRun() {
     setStatus("");
+    stopShelterLoop();
     latestState = game.startRun(meta.selectedVehicle, meta);
     showPlaying();
   }
@@ -265,6 +459,11 @@
 
   function bindEvents() {
     els.startBtn.addEventListener("click", startSelectedRun);
+    els.sortieBtn.addEventListener("click", startSelectedRun);
+    els.upgradeHotspotBtn.addEventListener("click", () => openMetaDrawer("upgrades"));
+    els.vehicleHotspotBtn.addEventListener("click", () => openMetaDrawer("vehicle"));
+    els.seriesHotspotBtn.addEventListener("click", () => openMetaDrawer("series"));
+    els.closeMetaDrawer.addEventListener("click", closeMetaDrawer);
     els.pauseBtn.addEventListener("click", () => game.togglePause());
     els.resumeBtn.addEventListener("click", () => {
       game.resume();
@@ -297,9 +496,19 @@
       },
       startRun: (vehicleId) => {
         if (vehicleId && config.VEHICLES[vehicleId]) selectVehicle(vehicleId);
-        return game.startRun(meta.selectedVehicle, meta);
+        startSelectedRun();
+        return game.getState();
       },
       clearStorage,
+      showGarage: () => {
+        showGarage();
+        return getShelterState();
+      },
+      openMetaPanel: (kind) => {
+        openMetaDrawer(kind);
+        return getShelterState();
+      },
+      getShelterState,
       getLastSettlement: () => rules.deepClone(lastSettlement)
     });
   }
@@ -319,6 +528,15 @@
       "bossBar",
       "pauseBtn",
       "garagePanel",
+      "shelterCanvas",
+      "hotspotLayer",
+      "sortieBtn",
+      "upgradeHotspotBtn",
+      "vehicleHotspotBtn",
+      "seriesHotspotBtn",
+      "metaDrawer",
+      "metaDrawerTitle",
+      "closeMetaDrawer",
       "garageMeta",
       "vehicleList",
       "upgradeList",
@@ -337,6 +555,7 @@
     ].forEach((id) => {
       els[id] = root.document.getElementById(id);
     });
+    els.metaSections = Array.from(root.document.querySelectorAll("[data-meta-section]"));
   }
 
   function init() {

@@ -76,6 +76,45 @@ const PALETTES = {
     H: "#35404a",
     I: "#91613c",
     J: "#d08b39"
+  },
+  shelter: {
+    ".": null,
+    A: "#0b0e12",
+    B: "#1f1716",
+    C: "#3b261f",
+    D: "#6b3d24",
+    E: "#a96b35",
+    F: "#f0c887",
+    G: "#ffd86a",
+    H: "#ff9438",
+    I: "#cbd5d8",
+    J: "#8b9298",
+    K: "#172b3a",
+    L: "#4d8fb0",
+    M: "#8fd6e8",
+    N: "#34524b",
+    O: "#78b86b",
+    P: "#f3dcc2",
+    Q: "#d89a75",
+    R: "#5a2d25",
+    S: "#f5e7b8",
+    T: "#b33f33",
+    U: "#6a4b35",
+    V: "#b9e8dc",
+    W: "#ffffff",
+    X: "#1a2428",
+    Y: "#2f574f",
+    Z: "#9e7a55",
+    0: "#263445",
+    1: "#5f6f7a",
+    2: "#d7eff2",
+    3: "#442c1d",
+    4: "#c6a36a",
+    5: "#5d4032",
+    6: "#2a6f62",
+    7: "#c9a050",
+    8: "#82d1ff",
+    9: "#203a4c"
   }
 };
 
@@ -99,7 +138,17 @@ const SPRITE_SPECS = {
   gate_repair: { stage: 1, type: "gate", w: 32, h: 48, anims: { idle: 4, break: 4 } },
   tile_road: { stage: 1, type: "terrain", w: 32, h: 32, anims: { idle: 1 } },
   tile_wasteland: { stage: 1, type: "terrain", w: 32, h: 32, anims: { idle: 1 } },
-  bg_ruins_strip: { stage: 1, type: "background", w: 128, h: 32, anims: { scroll: 1 } }
+  bg_ruins_strip: { stage: 1, type: "background", w: 128, h: 32, anims: { scroll: 1 } },
+  scene_bed_sleeper: { stage: 3, type: "scene", w: 112, h: 72, anims: { idle: 1, breathe: 3 } },
+  scene_window_frame: { stage: 3, type: "scene", w: 96, h: 80, anims: { idle: 1 } },
+  scene_zombie_silhouette: { stage: 3, type: "scene", w: 32, h: 56, anims: { idle: 1, walk: 4 } },
+  scene_shelf_supplies: { stage: 3, type: "scene", w: 80, h: 88, anims: { idle: 1 } },
+  scene_lamp_bulb: { stage: 3, type: "scene", w: 32, h: 48, anims: { idle: 1, glow: 3 } },
+  scene_string_lights: { stage: 3, type: "scene", w: 128, h: 24, anims: { idle: 1, twinkle: 4 } },
+  scene_teddy: { stage: 3, type: "scene", w: 24, h: 28, anims: { idle: 1 } },
+  scene_radio: { stage: 3, type: "scene", w: 32, h: 24, anims: { idle: 1, blink: 2 } },
+  scene_plant_shelf: { stage: 3, type: "scene", w: 72, h: 72, anims: { idle: 1, sway: 3 } },
+  scene_props: { stage: 3, type: "scene", w: 96, h: 48, anims: { idle: 1 } }
 };
 
 function grid(w, h) {
@@ -185,6 +234,7 @@ function sequence(prefix, count) {
 
 function makeSprite(id, type, palette, pivot, hitbox, frames, anims, extraTags) {
   const spec = SPRITE_SPECS[id];
+  const stageTag = `stage${spec.stage}`;
   return {
     id,
     type,
@@ -195,7 +245,7 @@ function makeSprite(id, type, palette, pivot, hitbox, frames, anims, extraTags) 
     hitbox,
     frames,
     anims,
-    tags: ["stage1", type].concat(extraTags || [])
+    tags: [stageTag, type].concat(extraTags || [])
   };
 }
 
@@ -647,6 +697,247 @@ function ruinsStripFrame() {
   });
 }
 
+function makeSceneSprite(id, pivot, hitbox, frames, anims, extraTags) {
+  return makeSprite(id, "scene", "shelter", pivot, hitbox, frames, anims, ["shelter"].concat(extraTags || []));
+}
+
+function sceneBedSleeperFrame(step) {
+  return makeFrame(112, 72, (g) => {
+    const rise = step === 1 ? -1 : step === 2 ? 1 : 0;
+    outlineRect(g, 5, 42, 102, 21, "B", "D");
+    rect(g, 8, 62, 96, 4, "B");
+    rect(g, 13, 33, 89, 14, "P");
+    rect(g, 16, 36, 82, 4, "S");
+    outlineRect(g, 9, 26, 26, 19, "B", "U");
+    rect(g, 12, 29, 20, 11, "P");
+    rect(g, 13, 30, 18, 3, "S");
+    ellipse(g, 74, 31, 7, 7, "R", "Q", "R");
+    ellipse(g, 70, 28, 8, 5, "R", "R", "3");
+    paint(g, 69, 31, ["RRRRRR", "R.A..R", "R..RR."]);
+    paint(g, 76, 32, ["R"]);
+    paint(g, 82, 35, ["PQP", ".P."]);
+    ellipse(g, 53, 43 + rise, 40, 14, "B", "E", "D");
+    ellipse(g, 62, 41 + rise, 28, 10, "D", "F", "E");
+    drawLine(g, 22, 36 + rise, 36, 52 + rise, "F");
+    drawLine(g, 39, 34 + rise, 51, 55 + rise, "D");
+    drawLine(g, 59, 34 + rise, 70, 55 + rise, "F");
+    drawLine(g, 78, 35 + rise, 89, 51 + rise, "D");
+    drawLine(g, 27, 51 + rise, 82, 45 + rise, "4");
+    drawLine(g, 24, 56 + rise, 87, 52 + rise, "D");
+    drawLine(g, 31, 41 + rise, 45, 59 + rise, "F");
+    drawLine(g, 67, 33 + rise, 93, 49 + rise, "S");
+    paint(g, 20, 45 + rise, ["G.G.G.G.G.G.G", ".F.F.F.F.F.F."]);
+    paint(g, 37, 39 + rise, ["F..F..F..F..F", ".4..4..4..4."]);
+    paint(g, 91, 44 + rise, ["BB", "B.", "BB"]);
+    rect(g, 10, 65, 5, 5, "C");
+    rect(g, 92, 64, 5, 6, "C");
+    paint(g, 6, 39, ["GGGGGGGGGGGG"]);
+    if (step === 2) paint(g, 45, 38, ["F.F.F.F"]);
+  });
+}
+
+function sceneWindowFrameFrame() {
+  return makeFrame(96, 80, (g) => {
+    rect(g, 3, 3, 90, 6, "A");
+    rect(g, 3, 71, 90, 6, "A");
+    rect(g, 3, 3, 6, 74, "A");
+    rect(g, 87, 3, 6, 74, "A");
+    rect(g, 7, 7, 82, 3, "J");
+    rect(g, 7, 67, 82, 4, "B");
+    rect(g, 7, 7, 4, 64, "B");
+    rect(g, 85, 7, 4, 64, "J");
+    rect(g, 7, 37, 82, 5, "B");
+    rect(g, 45, 7, 6, 66, "B");
+    rect(g, 13, 14, 28, 3, "L");
+    rect(g, 55, 14, 25, 3, "L");
+    rect(g, 14, 60, 27, 3, "9");
+    rect(g, 55, 60, 25, 3, "9");
+    paint(g, 20, 24, ["2..2.....2....2", ".2....2.....2.."]);
+    paint(g, 56, 47, ["2....2....2", "...2....2.."]);
+    drawLine(g, 15, 18, 37, 59, "2");
+    drawLine(g, 58, 16, 78, 48, "2");
+    drawLine(g, 16, 52, 32, 52, "M");
+    drawLine(g, 59, 28, 75, 28, "M");
+    for (let x = 8; x <= 84; x += 12) {
+      setPixel(g, x, 8, "4");
+      setPixel(g, x, 72, "4");
+    }
+  });
+}
+
+function sceneZombieSilhouetteFrame(kind, step) {
+  return makeFrame(32, 56, (g) => {
+    const sway = kind === "walk" ? step % 2 : 0;
+    const arm = kind === "walk" ? step - 1 : 0;
+    ellipse(g, 16 + sway, 9, 6, 7, "A", "X", "K");
+    rect(g, 12 + sway, 16, 9, 19, "X");
+    rect(g, 13 + sway, 18, 7, 14, "K");
+    paint(g, 13 + sway, 9, ["Y.Y", ".N."]);
+    drawLine(g, 12 + sway, 19, 4 + arm, 30, "X");
+    drawLine(g, 21 + sway, 19, 28 - arm, 31, "X");
+    drawLine(g, 14 + sway, 34, 9 - (step % 2), 52, "X");
+    drawLine(g, 19 + sway, 34, 24 + (step % 2), 52, "X");
+    drawLine(g, 15 + sway, 34, 12, 51, "K");
+    drawLine(g, 20 + sway, 34, 21, 51, "K");
+    if (kind === "walk" && step === 2) paint(g, 10, 22, ["N", ".N"]);
+    if (kind === "walk" && step === 3) paint(g, 21, 23, ["N", "N."]);
+  });
+}
+
+function sceneShelfSuppliesFrame() {
+  return makeFrame(80, 88, (g) => {
+    outlineRect(g, 3, 5, 74, 78, "A", "C");
+    rect(g, 6, 14, 68, 4, "B");
+    rect(g, 6, 38, 68, 4, "B");
+    rect(g, 6, 63, 68, 4, "B");
+    rect(g, 8, 8, 4, 73, "B");
+    rect(g, 68, 8, 4, 73, "B");
+    for (let x = 14; x < 64; x += 13) {
+      outlineRect(g, x, 22, 8, 15, "A", "J");
+      rect(g, x + 2, 27, 4, 4, x % 2 ? "S" : "T");
+      rect(g, x + 1, 23, 6, 2, "I");
+    }
+    for (let x = 13; x < 55; x += 16) {
+      outlineRect(g, x, 44, 7, 18, "A", "L");
+      rect(g, x + 2, 41, 3, 4, "M");
+      rect(g, x + 1, 50, 5, 4, "2");
+    }
+    for (let x = 40; x < 67; x += 12) {
+      outlineRect(g, x, 45, 9, 16, "A", "V");
+      rect(g, x + 2, 48, 5, 3, "S");
+      rect(g, x + 1, 42, 7, 3, "J");
+    }
+    paint(g, 14, 70, ["SSSSS", "S...S", "SSSSS"]);
+    paint(g, 25, 72, ["TTTT", "T..T"]);
+    outlineRect(g, 42, 69, 21, 10, "A", "D");
+    paint(g, 47, 71, ["POTS", ".44."]);
+    paint(g, 12, 11, ["G.G.G.G.G.G.G.G.G"]);
+  });
+}
+
+function sceneLampBulbFrame(kind, step) {
+  return makeFrame(32, 48, (g) => {
+    const hot = kind === "glow" ? step : 0;
+    rect(g, 14, 20, 4, 20, "J");
+    rect(g, 9, 40, 14, 4, "B");
+    rect(g, 7, 44, 18, 3, "A");
+    outlineRect(g, 8, 14, 16, 8, "B", hot === 1 ? "G" : "F");
+    ellipse(g, 16, 11, 6, 8, "B", hot === 0 ? "F" : hot === 1 ? "G" : "W", "H");
+    paint(g, 13, 5, hot === 2 ? ["G.W.G", ".WWW.", "G.W.G"] : [".G.G.", "..W..", ".G.G."]);
+    drawLine(g, 5, 22, 16, 2, "J");
+    setPixel(g, 5, 22, "A");
+    setPixel(g, 26, 22, "A");
+    if (kind === "glow") {
+      paint(g, 6 + step, 8, ["G", ".G"]);
+      paint(g, 24 - step, 8, ["G", "G."]);
+    }
+  });
+}
+
+function sceneStringLightsFrame(kind, step) {
+  return makeFrame(128, 24, (g) => {
+    const points = [
+      [2, 8],
+      [18, 13],
+      [34, 15],
+      [50, 10],
+      [66, 8],
+      [82, 12],
+      [99, 15],
+      [116, 10],
+      [127, 9]
+    ];
+    for (let i = 0; i < points.length - 1; i += 1) drawLine(g, points[i][0], points[i][1], points[i + 1][0], points[i + 1][1], "J");
+    points.slice(1, -1).forEach(([x, y], index) => {
+      const bright = kind === "twinkle" ? (index + step) % 4 : index % 3;
+      rect(g, x - 1, y + 1, 3, 2, "B");
+      setPixel(g, x, y + 3, bright === 0 ? "W" : bright === 1 ? "G" : bright === 2 ? "H" : "F");
+      if (bright === 0 || bright === 1) {
+        setPixel(g, x - 2, y + 3, "G");
+        setPixel(g, x + 2, y + 3, "G");
+      }
+    });
+    paint(g, 5, 2, ["4...4...4"]);
+  });
+}
+
+function sceneTeddyFrame() {
+  return makeFrame(24, 28, (g) => {
+    ellipse(g, 7, 8, 4, 4, "B", "Z", "U");
+    ellipse(g, 17, 8, 4, 4, "B", "Z", "U");
+    ellipse(g, 12, 11, 7, 8, "B", "Z", "U");
+    ellipse(g, 12, 19, 8, 7, "B", "Z", "U");
+    ellipse(g, 12, 18, 4, 4, "U", "4", "Z");
+    paint(g, 9, 10, ["A...A", "..R..", ".AAA."]);
+    drawLine(g, 5, 17, 1, 23, "B");
+    drawLine(g, 19, 17, 23, 23, "B");
+    drawLine(g, 8, 23, 5, 27, "B");
+    drawLine(g, 16, 23, 19, 27, "B");
+  });
+}
+
+function sceneRadioFrame(kind, step) {
+  return makeFrame(32, 24, (g) => {
+    drawLine(g, 6, 5, 2, 0, "J");
+    outlineRect(g, 3, 7, 26, 14, "A", "C");
+    rect(g, 6, 10, 9, 7, "K");
+    rect(g, 7, 11, 7, 5, "L");
+    for (let x = 17; x <= 25; x += 2) drawLine(g, x, 10, x, 17, "J");
+    ellipse(g, 24, 17, 3, 3, "A", "J", "1");
+    setPixel(g, 27, 9, kind === "blink" && step === 1 ? "T" : "G");
+    if (kind === "blink" && step === 1) paint(g, 25, 7, ["T.T", ".T."]);
+    rect(g, 5, 21, 4, 2, "B");
+    rect(g, 23, 21, 4, 2, "B");
+  });
+}
+
+function scenePlantShelfFrame(kind, step) {
+  return makeFrame(72, 72, (g) => {
+    const sway = kind === "sway" ? step - 1 : 0;
+    outlineRect(g, 4, 8, 64, 55, "A", "C");
+    rect(g, 8, 21, 56, 4, "B");
+    rect(g, 8, 44, 56, 4, "B");
+    rect(g, 10, 12, 15, 7, "0");
+    rect(g, 12, 14, 11, 3, "8");
+    rect(g, 45, 11, 15, 8, "B");
+    rect(g, 47, 13, 11, 4, "G");
+    for (let x = 13; x <= 53; x += 13) {
+      outlineRect(g, x, 49, 10, 9, "A", "5");
+      drawLine(g, x + 5, 48, x + 3 + sway, 37, "O");
+      drawLine(g, x + 5, 48, x + 8 + sway, 38, "O");
+      drawLine(g, x + 5, 47, x + 5 + sway, 34, "6");
+      ellipse(g, x + 2 + sway, 39, 4, 2, "Y", "O", "6");
+      ellipse(g, x + 8 + sway, 39, 4, 2, "Y", "O", "6");
+      ellipse(g, x + 5 + sway, 34, 3, 4, "Y", "O", "6");
+    }
+    drawLine(g, 17, 26, 55, 26, "G");
+    for (let x = 19; x < 55; x += 8) setPixel(g, x, 27, "H");
+    rect(g, 5, 63, 62, 4, "B");
+  });
+}
+
+function scenePropsFrame() {
+  return makeFrame(96, 48, (g) => {
+    rect(g, 0, 37, 96, 6, "B");
+    rect(g, 0, 34, 96, 4, "D");
+    outlineRect(g, 7, 13, 18, 20, "A", "S");
+    paint(g, 10, 17, ["T.T.T", ".TT..", "T...T"]);
+    outlineRect(g, 29, 20, 22, 12, "A", "J");
+    rect(g, 31, 17, 18, 5, "B");
+    paint(g, 34, 23, ["4.4.4", ".4.4."]);
+    outlineRect(g, 59, 18, 13, 16, "A", "P");
+    rect(g, 61, 16, 9, 3, "I");
+    rect(g, 62, 24, 7, 4, "L");
+    outlineRect(g, 76, 22, 12, 12, "A", "F");
+    rect(g, 88, 25, 4, 5, "A");
+    paint(g, 12, 5, ["SSSSSSSSSS", "S.T..T..S", "SSSSSSSSSS"]);
+    drawLine(g, 52, 31, 62, 23, "J");
+    drawLine(g, 53, 31, 63, 23, "J");
+    paint(g, 5, 39, ["FDFDFDFDFDFDFDF"]);
+    paint(g, 68, 39, ["EEEEFFFFEEE"]);
+  });
+}
+
 const SPRITES = {
   zombie_shambler: makeSprite(
     "zombie_shambler",
@@ -995,6 +1286,135 @@ const SPRITES = {
     { x: 0, y: 0, w: 128, h: 32 },
     { scroll_0: ruinsStripFrame() },
     { scroll: { frames: ["scroll_0"], fps: 1, loop: true } }
+  ),
+  scene_bed_sleeper: makeSceneSprite(
+    "scene_bed_sleeper",
+    { x: 56, y: 64 },
+    { x: 5, y: 24, w: 102, h: 46 },
+    {
+      idle_0: sceneBedSleeperFrame(0),
+      breathe_0: sceneBedSleeperFrame(1),
+      breathe_1: sceneBedSleeperFrame(2),
+      breathe_2: sceneBedSleeperFrame(3)
+    },
+    {
+      idle: { frames: ["idle_0"], fps: 1, loop: true },
+      breathe: { frames: sequence("breathe", 3), fps: 1.4, loop: true }
+    },
+    ["bed", "sleeper"]
+  ),
+  scene_window_frame: makeSceneSprite(
+    "scene_window_frame",
+    { x: 48, y: 78 },
+    { x: 5, y: 5, w: 86, h: 70 },
+    { idle_0: sceneWindowFrameFrame() },
+    { idle: { frames: ["idle_0"], fps: 1, loop: true } },
+    ["window"]
+  ),
+  scene_zombie_silhouette: makeSceneSprite(
+    "scene_zombie_silhouette",
+    { x: 16, y: 54 },
+    { x: 3, y: 2, w: 26, h: 53 },
+    {
+      idle_0: sceneZombieSilhouetteFrame("idle", 0),
+      walk_0: sceneZombieSilhouetteFrame("walk", 0),
+      walk_1: sceneZombieSilhouetteFrame("walk", 1),
+      walk_2: sceneZombieSilhouetteFrame("walk", 2),
+      walk_3: sceneZombieSilhouetteFrame("walk", 3)
+    },
+    {
+      idle: { frames: ["idle_0"], fps: 1, loop: true },
+      walk: { frames: sequence("walk", 4), fps: 1.2, loop: true }
+    },
+    ["window", "zombie"]
+  ),
+  scene_shelf_supplies: makeSceneSprite(
+    "scene_shelf_supplies",
+    { x: 40, y: 84 },
+    { x: 3, y: 5, w: 74, h: 78 },
+    { idle_0: sceneShelfSuppliesFrame() },
+    { idle: { frames: ["idle_0"], fps: 1, loop: true } },
+    ["supplies"]
+  ),
+  scene_lamp_bulb: makeSceneSprite(
+    "scene_lamp_bulb",
+    { x: 16, y: 46 },
+    { x: 5, y: 2, w: 22, h: 45 },
+    {
+      idle_0: sceneLampBulbFrame("idle", 0),
+      glow_0: sceneLampBulbFrame("glow", 0),
+      glow_1: sceneLampBulbFrame("glow", 1),
+      glow_2: sceneLampBulbFrame("glow", 2)
+    },
+    {
+      idle: { frames: ["idle_0"], fps: 1, loop: true },
+      glow: { frames: sequence("glow", 3), fps: 2, loop: true }
+    },
+    ["lamp"]
+  ),
+  scene_string_lights: makeSceneSprite(
+    "scene_string_lights",
+    { x: 64, y: 12 },
+    { x: 1, y: 2, w: 126, h: 20 },
+    {
+      idle_0: sceneStringLightsFrame("idle", 0),
+      twinkle_0: sceneStringLightsFrame("twinkle", 0),
+      twinkle_1: sceneStringLightsFrame("twinkle", 1),
+      twinkle_2: sceneStringLightsFrame("twinkle", 2),
+      twinkle_3: sceneStringLightsFrame("twinkle", 3)
+    },
+    {
+      idle: { frames: ["idle_0"], fps: 1, loop: true },
+      twinkle: { frames: sequence("twinkle", 4), fps: 3, loop: true }
+    },
+    ["lights"]
+  ),
+  scene_teddy: makeSceneSprite(
+    "scene_teddy",
+    { x: 12, y: 27 },
+    { x: 0, y: 4, w: 24, h: 24 },
+    { idle_0: sceneTeddyFrame() },
+    { idle: { frames: ["idle_0"], fps: 1, loop: true } },
+    ["bed", "prop"]
+  ),
+  scene_radio: makeSceneSprite(
+    "scene_radio",
+    { x: 16, y: 22 },
+    { x: 2, y: 0, w: 28, h: 23 },
+    {
+      idle_0: sceneRadioFrame("idle", 0),
+      blink_0: sceneRadioFrame("blink", 0),
+      blink_1: sceneRadioFrame("blink", 1)
+    },
+    {
+      idle: { frames: ["idle_0"], fps: 1, loop: true },
+      blink: { frames: sequence("blink", 2), fps: 1.5, loop: true }
+    },
+    ["radio"]
+  ),
+  scene_plant_shelf: makeSceneSprite(
+    "scene_plant_shelf",
+    { x: 36, y: 68 },
+    { x: 4, y: 8, w: 64, h: 60 },
+    {
+      idle_0: scenePlantShelfFrame("idle", 0),
+      sway_0: scenePlantShelfFrame("sway", 0),
+      sway_1: scenePlantShelfFrame("sway", 1),
+      sway_2: scenePlantShelfFrame("sway", 2)
+    },
+    {
+      idle: { frames: ["idle_0"], fps: 1, loop: true },
+      sway: { frames: sequence("sway", 3), fps: 1.6, loop: true }
+    },
+    ["plant"]
+  ),
+  scene_props: makeSceneSprite(
+    "scene_props",
+    { x: 48, y: 44 },
+    { x: 0, y: 5, w: 96, h: 39 },
+    { idle_0: scenePropsFrame() },
+    { idle: { frames: ["idle_0"], fps: 1, loop: true } },
+    ["props"]
   )
 };
 

@@ -62,6 +62,119 @@ async function expectCanvasHasPixels(page) {
   assert(result.lit > 1000, `canvas should contain non-empty pixels, got ${result.lit}`);
 }
 
+async function expectShelterCanvasHasPixels(page) {
+  await page.waitForFunction(() => {
+    if (!window.__test || !window.__test.getShelterState) return false;
+    const state = window.__test.getShelterState();
+    return state.sceneReady && state.active && state.lastDrawMs > 0;
+  });
+  const result = await page.evaluate(() => {
+    const canvas = document.getElementById("shelterCanvas");
+    const ctx = canvas.getContext("2d");
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let lit = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] > 0 && (data[i] || data[i + 1] || data[i + 2])) lit += 1;
+      if (lit > 1000) break;
+    }
+    return { lit, width: canvas.width, height: canvas.height, hidden: canvas.hidden };
+  });
+  assert(!result.hidden, "shelter canvas should be visible on meta screen");
+  assert(result.width > 0 && result.height > 0, "shelter canvas should have a drawable size");
+  assert(result.lit > 1000, `shelter canvas should contain non-empty pixels, got ${result.lit}`);
+}
+
+async function checkMetaHotspotsFit(page) {
+  const result = await page.evaluate(() => {
+    const app = document.getElementById("app").getBoundingClientRect();
+    const buttons = Array.from(document.querySelectorAll(".hotspot-btn")).map((button) => {
+      const rect = button.getBoundingClientRect();
+      return {
+        id: button.id,
+        text: button.textContent.trim(),
+        left: rect.left,
+        right: rect.right,
+        top: rect.top,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        appLeft: app.left,
+        appRight: app.right,
+        appTop: app.top,
+        appBottom: app.bottom,
+        scrollWidth: button.scrollWidth,
+        clientWidth: button.clientWidth
+      };
+    });
+    return { buttons };
+  });
+  assert.strictEqual(result.buttons.length, 4, "meta screen should expose four hotspot buttons");
+  result.buttons.forEach((button) => {
+    assert(button.width >= 44 && button.height >= 40, `${button.id} should be a touchable size`);
+    assert(button.left >= button.appLeft - 1, `${button.id} should not overflow left`);
+    assert(button.right <= button.appRight + 1, `${button.id} should not overflow right`);
+    assert(button.top >= button.appTop - 1, `${button.id} should not overflow top`);
+    assert(button.bottom <= button.appBottom + 1, `${button.id} should not overflow bottom`);
+    assert(button.scrollWidth <= button.clientWidth + 2, `${button.id} label should fit without horizontal overflow`);
+  });
+}
+
+async function checkReducedFlashSetting(page) {
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.settings = Object.assign({}, meta.settings, { reducedFlash: true });
+    window.__test.setMeta(meta);
+  });
+  await page.waitForFunction(() => {
+    const state = window.__test.getShelterState();
+    return state.lastOpts && state.lastOpts.reducedFlash === true;
+  });
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.settings = Object.assign({}, meta.settings, { reducedFlash: false });
+    window.__test.setMeta(meta);
+  });
+  await page.waitForFunction(() => {
+    const state = window.__test.getShelterState();
+    return state.lastOpts && state.lastOpts.reducedFlash === false;
+  });
+}
+
+async function openUpgradePanel(page) {
+  const sceneReady = await page.evaluate(() => window.__test.getShelterState().sceneReady);
+  if (sceneReady) {
+    const alreadyOpen = await page.locator('#metaDrawer:not([hidden]) [data-meta-section="upgrades"]:not([hidden])').count();
+    if (alreadyOpen) return;
+    await page.click("#upgradeHotspotBtn");
+    await page.waitForSelector('#metaDrawer:not([hidden]) [data-meta-section="upgrades"]:not([hidden])');
+  }
+}
+
+async function clickSortie(page) {
+  const sceneReady = await page.evaluate(() => window.__test.getShelterState().sceneReady);
+  if (sceneReady) {
+    const drawerOpen = await page.locator("#metaDrawer:not([hidden])").count();
+    if (drawerOpen) await page.click("#closeMetaDrawer");
+    await page.click("#sortieBtn");
+  } else {
+    await page.click("#startBtn");
+  }
+  await page.waitForFunction(() => window.__test.getState().mode === "playing");
+}
+
+async function checkShelterMeta(page) {
+  await page.waitForSelector("#garagePanel:not([hidden])");
+  await expectShelterCanvasHasPixels(page);
+  await checkMetaHotspotsFit(page);
+  await checkReducedFlashSetting(page);
+  await openUpgradePanel(page);
+  const drawer = await page.locator("#metaDrawer").evaluate((node) => ({
+    hidden: node.hidden,
+    title: document.getElementById("metaDrawerTitle").textContent
+  }));
+  assert(!drawer.hidden && drawer.title.includes("升級"), "upgrade hotspot should open the upgrade drawer");
+}
+
 async function dragAim(page) {
   const box = await page.locator("#gameCanvas").boundingBox();
   assert(box, "canvas bounding box should exist");
@@ -89,6 +202,7 @@ async function dragAim(page) {
 }
 
 async function checkGarageUpgradeLines(page) {
+  await openUpgradePanel(page);
   const tracks = await page.locator("[data-upgrade]").evaluateAll((nodes) => nodes.map((node) => node.dataset.upgrade));
   assert.deepStrictEqual(tracks.sort(), ["energy", "gate", "hull", "weapon"], "garage should show all four upgrade tracks");
 }
@@ -120,8 +234,7 @@ async function checkDawnProjectileDamage(page) {
 }
 
 async function checkEmptySettlementCta(page) {
-  await page.click("#startBtn");
-  await page.waitForFunction(() => window.__test.getState().mode === "playing");
+  await clickSortie(page);
   await page.evaluate(() => window.__test.finishRun({ wavesCleared: 0, kills: 0, bossesDefeated: 0, score: 0 }));
   await page.waitForSelector("#settlementPanel:not([hidden])");
   const summary = await page.locator("#settlementSummary").innerText();
@@ -275,11 +388,12 @@ async function deathSettlementUpgradeAndReload(page) {
 
   await page.click("#garageBtn");
   await page.waitForSelector("#garagePanel:not([hidden])");
+  await openUpgradePanel(page);
   await page.click('[data-upgrade="hull"]');
   meta = await page.evaluate(() => window.__test.getMeta());
   assert.strictEqual(meta.vehicleLevels.iron_crow.hull, 1, "hull upgrade should be bought");
 
-  await page.click("#startBtn");
+  await clickSortie(page);
   const upgradedRun = await page.evaluate(() => ({
     state: window.__test.getState(),
     baseHp: window.DSConfig.VEHICLES.iron_crow.hp
@@ -303,15 +417,16 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await page.goto(baseUrl, { waitUntil: "networkidle" });
   await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
   await page.evaluate(() => window.__test.clearStorage());
+  await checkShelterMeta(page);
   await checkGarageUpgradeLines(page);
   if (full) {
     await checkDawnProjectileDamage(page);
     await page.evaluate(() => window.__test.clearStorage());
+    await checkShelterMeta(page);
     await checkGarageUpgradeLines(page);
     await checkEmptySettlementCta(page);
   } else {
-    await page.click("#startBtn");
-    await page.waitForFunction(() => window.__test.getState().mode === "playing");
+    await clickSortie(page);
   }
   await page.evaluate(() => window.__test.step(180));
   await expectCanvasHasPixels(page);

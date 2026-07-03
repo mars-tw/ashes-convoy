@@ -16,6 +16,7 @@
 |---|---|---|
 | `src/sprites.js` | 美術 Codex | 定義 `PALETTES`、`SPRITES`、`SPRITE_SPECS`，不得包含遊戲規則。 |
 | `src/sprite-renderer.js` | 美術 Codex | 提供預渲染快取與 `drawSprite` 類 API。 |
+| `src/shelter-scene.js` | 美術 Codex | Stage 3 避難所基地場景合成，提供 `drawShelterScene` 與 `SHELTER_HOTSPOTS`。 |
 | `scripts/test-sprites-contract.js` | 美術 Codex | 驗證 matrix 尺寸、palette key、動畫幀命名。 |
 | `src/config.js` | 遊戲 Codex | 數值表、載具、敵人、增益門、波次設定。 |
 | `src/rules.js` | 遊戲 Codex | 純函式規則、傷害、波次、結算、存檔遷移。 |
@@ -266,6 +267,156 @@ drawSpriteAnim(ctx, name, anim, timeMs, x, y, scale = 1, options = {}) => frameN
 | `bg_ruins_strip` | 128 x 32 | scroll | 1 | 1 |
 | `bg_cloud_strip` | 128 x 32 | scroll | 2 | 2 |
 
+## Stage 3 避難所場景
+
+Stage 3 將 meta 主畫面從平淡車庫升級為「溫馨避難所基地場景」（cozy shelter home-base）。視角是第一人稱平視的末日列車車廂內部：室內以暖橘燈光、床鋪、補給、生活小物建立安全感；車廂盡頭窗外以冷藍霧氣、雪或灰塵、喪屍剪影建立危險感。核心情緒是「屋內暖橘安全 vs 窗外冷藍危險」。
+
+### 工程現實與美術界線
+
+本專案鐵則仍是程式定義 pixel matrix + Canvas 繪製、零外部圖檔。手刻 pixel matrix 不可能 1:1 複製 AI 生成廣告圖的細膩筆觸、照片式材質或完整透視細節。Stage 3 的正確目標是用分層氛圍場景神似構圖與情緒，而不是像素級複製。
+
+允許做法：
+
+- 使用較大的場景 sprite，尺寸可從數十 px 到上百 px，不受 Stage 1 小角色 16 px 限制。
+- 用 pixel sprite 描繪主體元素：床與熟睡少女、窗框、補給層架、燈、泰迪熊、收音機、植物層架、喪屍剪影。
+- 用 Canvas 徑向漸層、線性漸層與半透明矩形做燈泡暖光、串燈輝光、窗外冷藍霧氣、雪霧層。
+- 用圖層合成建立第一人稱車廂內裝深度。
+
+禁止做法：
+
+- 不使用 AI 生成圖、照片、外部 PNG/JPG/WebP/SVG。
+- 不把廣告圖描圖成二進位背景。
+- 不追求像素級複製特定廣告素材。
+- 遊戲端不得直接讀取避難所 sprite matrix 來定位 DOM 或判斷互動。
+
+### 避難所 Sprite 規格表
+
+| sprite | 邏輯尺寸 | 必要動畫 | 幀數 | Stage |
+|---|---:|---|---:|---:|
+| `scene_bed_sleeper` | 112 x 72 | idle、breathe | 1、3 | 3 |
+| `scene_window_frame` | 96 x 80 | idle | 1 | 3 |
+| `scene_zombie_silhouette` | 32 x 56 | idle、walk | 1、4 | 3 |
+| `scene_shelf_supplies` | 80 x 88 | idle | 1 | 3 |
+| `scene_lamp_bulb` | 32 x 48 | idle、glow | 1、3 | 3 |
+| `scene_string_lights` | 128 x 24 | idle、twinkle | 1、4 | 3 |
+| `scene_teddy` | 24 x 28 | idle | 1 | 3 |
+| `scene_radio` | 32 x 24 | idle、blink | 1、2 | 3 |
+| `scene_plant_shelf` | 72 x 72 | idle、sway | 1、3 | 3 |
+| `scene_props` | 96 x 48 | idle | 1 | 3 |
+
+補充規格：
+
+- `scene_bed_sleeper` 包含床架、枕頭、熟睡少女與細膩毛毯；`breathe` 只做 1 至 2 px 的被子起伏，不做誇張角色動作。
+- `scene_window_frame` 是車廂盡頭窗框，需保留窗外冷藍區域給霧氣與喪屍剪影合成。
+- `scene_zombie_silhouette` 只做窗外剪影，可有 2 至 3 個縮放變體由合成模組安排遠近。
+- `scene_shelf_supplies` 必須可讀出罐頭、水瓶、玻璃罐與簡單標籤。
+- `scene_lamp_bulb` 的 sprite 畫燈座與燈泡；實際暖光 halo 由 `src/shelter-scene.js` 用 Canvas gradient 合成。
+- `scene_string_lights` 的 sprite 畫電線與小燈泡；閃爍亮度由合成模組控制，並受 `reducedFlash` 關閉。
+- `scene_plant_shelf` 可依主題顯示太陽能板小控制器、水耕蔬菜或育苗燈。
+- `scene_props` 放便利貼清單、工具盒、杯子、毯子邊角等小物，不承載互動規則。
+
+### 場景合成模組
+
+Stage 3 新增 `src/shelter-scene.js`，由美術線擁有。它負責將避難所 sprite、Canvas 光效、霧氣、窗外喪屍剪影合成為完整 full-bleed 場景。
+
+匯出 API：
+
+```js
+function drawShelterScene(ctx, opts = {}) => sceneMetrics
+```
+
+`opts`：
+
+```js
+{
+  timeMs: 0,
+  width: ctx.canvas.width,
+  height: ctx.canvas.height,
+  pixelRatio: 1,
+  warmth: 1,
+  theme: "winter",
+  reducedFlash: false,
+  renderer: null,
+  debugHotspots: false
+}
+```
+
+`sceneMetrics`：
+
+```js
+{
+  contentRect: { x, y, w, h },
+  scale,
+  hotspots: SHELTER_HOTSPOTS
+}
+```
+
+熱區資料：
+
+```js
+const SHELTER_HOTSPOTS = {
+  sortie: { x: 0.70, y: 0.66, w: 0.22, h: 0.16, label: "出勤" },
+  bed: { x: 0.08, y: 0.54, w: 0.34, h: 0.24, label: "休息區" },
+  upgrades: { x: 0.08, y: 0.18, w: 0.26, h: 0.24, label: "升級" },
+  vehicle: { x: 0.40, y: 0.70, w: 0.20, h: 0.14, label: "載具" },
+  radio: { x: 0.52, y: 0.48, w: 0.16, h: 0.12, label: "收音機" },
+  supplies: { x: 0.06, y: 0.32, w: 0.24, h: 0.20, label: "補給" },
+  window: { x: 0.62, y: 0.16, w: 0.28, h: 0.30, label: "窗外" }
+};
+```
+
+座標規則：
+
+- `SHELTER_HOTSPOTS` 使用 0 至 1 的相對座標，以合成後的 `contentRect` 為基準。
+- 遊戲端將 DOM 按鈕疊在 hotspot 上，但不可修改 hotspot 常數。
+- `drawShelterScene` 可在 `debugHotspots` 時畫出半透明熱區框，正式 UI 必須關閉。
+- 手機 390 x 844 是基準構圖；平板與桌機以 cover/contain 混合策略維持床、窗、出勤口都在可見安全區內。
+
+瀏覽器與 Node 安全匯出：
+
+```js
+const DSShelterScene = {
+  drawShelterScene,
+  SHELTER_HOTSPOTS
+};
+
+if (typeof window !== "undefined") window.DSShelterScene = DSShelterScene;
+if (typeof module !== "undefined" && module.exports) module.exports = DSShelterScene;
+```
+
+### 場景圖層順序
+
+`drawShelterScene` 建議使用下列順序：
+
+1. 車廂牆面、地板與暗角底色。
+2. 窗外冷藍背景、霧氣、雪粒或灰塵。
+3. `scene_zombie_silhouette`，依 timeMs 慢速 walk 或漂移。
+4. `scene_window_frame`。
+5. 後景層架與植物：`scene_shelf_supplies`、`scene_plant_shelf`。
+6. 中景小物：`scene_radio`、`scene_props`。
+7. 主體床鋪與熟睡少女：`scene_bed_sleeper`。
+8. 前景泰迪熊：`scene_teddy`。
+9. 燈與串燈 sprite：`scene_lamp_bulb`、`scene_string_lights`。
+10. Canvas 暖光輝光、桌燈 halo、串燈小光暈。
+11. 冷暖色調整與 vignette。
+12. `debugHotspots` overlay。
+
+### reducedFlash 規則
+
+- `reducedFlash: true` 時，串燈與收音機不得閃爍，只保留穩定亮度。
+- `scene_bed_sleeper` 的呼吸動畫可保留，但位移不超過 1 px。
+- 窗外喪屍 walk 可保留慢速動畫，不得快速閃切。
+- Canvas 光效不得使用高頻 alpha 抖動。
+
+### 美術/遊戲交界
+
+- 美術線畫 full-bleed 場景到 canvas。
+- 遊戲線將 meta 主畫面背景改為避難所場景 canvas。
+- 遊戲線在 `SHELTER_HOTSPOTS` 上疊 DOM 按鈕，例如出勤、升級、切換載具、系列或圖鑑。
+- 遊戲端只能透過 `window.DSShelterScene.drawShelterScene(ctx, opts)` 與 `window.DSShelterScene.SHELTER_HOTSPOTS` 取用場景。
+- 遊戲端不得直接讀取 `SPRITES.scene_*`、不得用 matrix 推導按鈕位置、不得把 DOM 文字畫進場景 sprite。
+- 場景可提供氛圍與入口，不改變載具數值、少女狀態或戰鬥規則。
+
 ## 遊戲端取用方式
 
 遊戲 Codex 在 `src/game.js` 中只能透過 renderer API 取用 sprite。
@@ -315,6 +466,7 @@ Playwright E2E 至少驗證：
 
 - `src/sprites.js`
 - `src/sprite-renderer.js`
+- `src/shelter-scene.js`
 - `scripts/test-sprites-contract.js`
 - 後續若需要：`references/art-notes.md`
 
@@ -325,11 +477,7 @@ Playwright E2E 至少驗證：
 - `src/rules.js`
 - `src/game.js`
 - `src/ui.js`
-- `scripts/test-config.js`
-- `scripts/test-rules.js`
-- `scripts/test-economy.js`
-- `scripts/test-storage.js`
-- `scripts/test-e2e.js`
+- `scripts/test-*.js`，但不含 `scripts/test-sprites-contract.js`
 
 ### 不可同時碰的檔案
 

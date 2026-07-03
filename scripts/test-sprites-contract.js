@@ -1,6 +1,7 @@
 "use strict";
 
 const { PALETTES, SPRITES, SPRITE_SPECS } = require("../src/sprites.js");
+const { SHELTER_HOTSPOTS } = require("../src/shelter-scene.js");
 
 const errors = [];
 
@@ -86,12 +87,33 @@ function checkAnimations(spriteName, sprite, spec) {
 
 Object.entries(PALETTES).forEach(([name, palette]) => checkPalette(name, palette));
 
+["sortie", "upgrades", "vehicle", "series"].forEach((name) => {
+  const hotspot = SHELTER_HOTSPOTS[name];
+  check(isObject(hotspot), `SHELTER_HOTSPOTS must include ${name}`);
+  if (!hotspot) return;
+  ["x", "y", "w", "h"].forEach((key) => check(Number.isFinite(hotspot[key]), `SHELTER_HOTSPOTS.${name}.${key} must be finite`));
+  check(hotspot.x >= 0 && hotspot.x <= 1, `SHELTER_HOTSPOTS.${name}.x must be 0..1`);
+  check(hotspot.y >= 0 && hotspot.y <= 1, `SHELTER_HOTSPOTS.${name}.y must be 0..1`);
+  check(hotspot.w > 0 && hotspot.w <= 1, `SHELTER_HOTSPOTS.${name}.w must be 0..1`);
+  check(hotspot.h > 0 && hotspot.h <= 1, `SHELTER_HOTSPOTS.${name}.h must be 0..1`);
+  check(hotspot.x + hotspot.w <= 1, `SHELTER_HOTSPOTS.${name} must fit horizontally`);
+  check(hotspot.y + hotspot.h <= 1, `SHELTER_HOTSPOTS.${name} must fit vertically`);
+});
+
 const requiredStage1 = Object.entries(SPRITE_SPECS)
   .filter(([, spec]) => spec.stage === 1)
   .map(([name]) => name);
 
+const requiredStage3 = Object.entries(SPRITE_SPECS)
+  .filter(([, spec]) => spec.stage === 3)
+  .map(([name]) => name);
+
 requiredStage1.forEach((name) => {
   check(Object.prototype.hasOwnProperty.call(SPRITES, name), `missing Stage 1 sprite "${name}"`);
+});
+
+requiredStage3.forEach((name) => {
+  check(Object.prototype.hasOwnProperty.call(SPRITES, name), `missing Stage 3 sprite "${name}"`);
 });
 
 let frameCount = 0;
@@ -105,7 +127,7 @@ Object.entries(SPRITES).forEach(([spriteName, sprite]) => {
   check(sprite.type === spec.type, `${spriteName} type must be ${spec.type}`);
   check(sprite.w === spec.w && sprite.h === spec.h, `${spriteName} size must be ${spec.w}x${spec.h}`);
   check(Object.prototype.hasOwnProperty.call(PALETTES, sprite.palette), `${spriteName} palette "${sprite.palette}" must exist`);
-  check(Array.isArray(sprite.tags) && sprite.tags.includes("stage1"), `${spriteName} must include stage1 tag`);
+  check(Array.isArray(sprite.tags) && sprite.tags.includes(`stage${spec.stage}`), `${spriteName} must include stage${spec.stage} tag`);
   checkBounds(spriteName, sprite);
 
   const palette = PALETTES[sprite.palette];
@@ -118,11 +140,10 @@ Object.entries(SPRITES).forEach(([spriteName, sprite]) => {
 });
 
 const expectedFrameCount = Object.values(SPRITE_SPECS)
-  .filter((spec) => spec.stage === 1)
   .reduce((sum, spec) => sum + Object.values(spec.anims).reduce((inner, count) => inner + count, 0), 0);
 
-check(Object.keys(SPRITES).length === requiredStage1.length, `SPRITES must contain exactly ${requiredStage1.length} Stage 1 sprites, got ${Object.keys(SPRITES).length}`);
-check(frameCount === expectedFrameCount, `Stage 1 frame count must be ${expectedFrameCount}, got ${frameCount}`);
+check(Object.keys(SPRITES).length === Object.keys(SPRITE_SPECS).length, `SPRITES must contain exactly ${Object.keys(SPRITE_SPECS).length} spec sprites, got ${Object.keys(SPRITES).length}`);
+check(frameCount === expectedFrameCount, `frame count must be ${expectedFrameCount}, got ${frameCount}`);
 
 if (errors.length > 0) {
   console.error("Sprite contract FAIL");
@@ -133,3 +154,4 @@ if (errors.length > 0) {
 console.log("Sprite contract PASS");
 console.log(`Sprites checked: ${Object.keys(SPRITES).length}`);
 console.log(`Frames checked: ${frameCount}`);
+console.log(`Stage 3 sprites checked: ${requiredStage3.length}`);
