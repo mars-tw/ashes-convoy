@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>灰燼護航</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #111317;
+        --panel: rgba(18, 22, 27, 0.92);
+        --panel-strong: rgba(9, 12, 16, 0.96);
+        --line: rgba(221, 211, 178, 0.26);
+        --text: #f4ead8;
+        --muted: #b8b0a3;
+        --accent: #f0b64a;
+        --accent-2: #5ed4cb;
+        --danger: #e15f4f;
+        --ok: #87d27d;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        overscroll-behavior: none;
+      }
+
+      body {
+        min-height: 100vh;
+        min-height: 100svh;
+        display: grid;
+        place-items: center;
+      }
+
+      button {
+        min-height: 44px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #232a31;
+        color: var(--text);
+        font: inherit;
+        font-weight: 700;
+        letter-spacing: 0;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.48;
+      }
+
+      .app {
+        position: relative;
+        width: min(100vw, calc(100svh * 390 / 844));
+        max-width: 820px;
+        height: min(100svh, calc(100vw * 844 / 390));
+        max-height: 1180px;
+        aspect-ratio: 390 / 844;
+        overflow: hidden;
+        background: #0a0c0f;
+      }
+
+      @media (min-width: 860px) {
+        .app {
+          width: min(46vw, 520px);
+          height: min(96vh, 1125px);
+          border: 1px solid rgba(244, 234, 216, 0.16);
+        }
+      }
+
+      #gameCanvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        image-rendering: pixelated;
+        touch-action: none;
+      }
+
+      .hud {
+        position: absolute;
+        inset: max(10px, env(safe-area-inset-top)) 10px auto 10px;
+        display: none;
+        gap: 8px;
+        pointer-events: none;
+      }
+
+      .hud.is-visible {
+        display: grid;
+      }
+
+      .hud-row {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .stat,
+      .boss,
+      .mods {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(10, 13, 16, 0.74);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+      }
+
+      .stat {
+        min-height: 44px;
+        padding: 7px 9px;
+        display: grid;
+        gap: 4px;
+      }
+
+      .stat-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .bar {
+        position: relative;
+        height: 7px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.14);
+      }
+
+      .bar > i {
+        display: block;
+        height: 100%;
+        width: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--danger), var(--accent));
+      }
+
+      .pill {
+        min-height: 44px;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(10, 13, 16, 0.74);
+        display: grid;
+        place-items: center;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .hud button {
+        pointer-events: auto;
+        min-width: 44px;
+        padding: 0 10px;
+        background: rgba(35, 42, 49, 0.9);
+      }
+
+      .mods {
+        min-height: 30px;
+        padding: 6px 9px;
+        color: var(--muted);
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .boss {
+        display: none;
+        min-height: 38px;
+        padding: 7px 9px;
+      }
+
+      .boss.is-visible {
+        display: grid;
+        gap: 5px;
+      }
+
+      .boss-title {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .panel {
+        position: absolute;
+        inset: auto 10px max(10px, env(safe-area-inset-bottom)) 10px;
+        max-height: calc(100% - 24px);
+        padding: 12px;
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
+        touch-action: pan-y;
+      }
+
+      .panel[hidden] {
+        display: none;
+      }
+
+      .panel h1,
+      .panel h2 {
+        margin: 0;
+        letter-spacing: 0;
+      }
+
+      .panel h1 {
+        font-size: 28px;
+        line-height: 1.05;
+      }
+
+      .panel h2 {
+        font-size: 18px;
+      }
+
+      .panel-head {
+        display: grid;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+
+      .subtle {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .garage-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .vehicle-list,
+      .upgrade-list,
+      .settlement-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .vehicle {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: center;
+        min-height: 72px;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      .vehicle.is-selected {
+        border-color: rgba(240, 182, 74, 0.82);
+        background: rgba(240, 182, 74, 0.1);
+      }
+
+      .vehicle-name {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 8px;
+        font-weight: 900;
+      }
+
+      .vehicle small,
+      .upgrade small {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .upgrade {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: center;
+        min-height: 64px;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .actions .wide {
+        grid-column: 1 / -1;
+      }
+
+      .primary {
+        background: #d5932f;
+        border-color: #f3cf70;
+        color: #17110a;
+      }
+
+      .secondary {
+        background: #17454a;
+        border-color: rgba(94, 212, 203, 0.62);
+      }
+
+      .danger {
+        background: #5a201d;
+        border-color: rgba(225, 95, 79, 0.62);
+      }
+
+      .settlement-list {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .settlement-item {
+        min-height: 58px;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      .settlement-item b {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 18px;
+      }
+
+      .status {
+        min-height: 22px;
+        margin-top: 8px;
+        color: var(--accent-2);
+        font-size: 12px;
+      }
+
+      .pause-panel {
+        inset: 50% 18px auto 18px;
+        transform: translateY(-50%);
+        background: var(--panel-strong);
+      }
+
+      @media (min-width: 700px) {
+        .panel {
+          left: 18px;
+          right: 18px;
+          bottom: 18px;
+          padding: 16px;
+        }
+
+        .garage-grid {
+          grid-template-columns: 1.1fr 0.9fr;
+          gap: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app" id="app">
+      <canvas id="gameCanvas" width="390" height="844" aria-label="灰燼護航戰場"></canvas>
+
+      <section class="hud" id="hud" aria-live="polite">
+        <div class="hud-row">
+          <div class="stat">
+            <div class="stat-line">
+              <span id="hudVehicle">鐵鴉號</span>
+              <span id="hudHpText">HP 0 / 0</span>
+            </div>
+            <div class="bar"><i id="hpBar"></i></div>
+          </div>
+          <div class="pill" id="hudWave">第 1 波</div>
+          <button id="pauseBtn" type="button" aria-label="暫停">暫停</button>
+        </div>
+        <div class="hud-row">
+          <div class="mods" id="hudMods">增益：無</div>
+          <div class="pill" id="hudKills">擊殺 0</div>
+          <div class="pill" id="hudParts">零件 0</div>
+        </div>
+        <div class="boss" id="bossHud">
+          <div class="boss-title">
+            <span>母巢巨屍</span>
+            <span id="bossHpText">0%</span>
+          </div>
+          <div class="bar"><i id="bossBar"></i></div>
+        </div>
+      </section>
+
+      <section class="panel" id="garagePanel">
+        <div class="panel-head">
+          <h1>灰燼護航</h1>
+          <p class="subtle" id="garageMeta">廢土零件 0</p>
+        </div>
+        <div class="garage-grid">
+          <div>
+            <h2>載具</h2>
+            <div class="vehicle-list" id="vehicleList"></div>
+          </div>
+          <div>
+            <h2>升級</h2>
+            <div class="upgrade-list" id="upgradeList"></div>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="primary wide" id="startBtn" type="button">出發</button>
+          <button id="resetBtn" type="button">清除存檔</button>
+          <button class="secondary" id="selectSkiffBtn" type="button">切換載具</button>
+        </div>
+        <div class="status" id="garageStatus"></div>
+      </section>
+
+      <section class="panel pause-panel" id="pausePanel" hidden>
+        <div class="panel-head">
+          <h2>暫停</h2>
+          <p class="subtle">目前進度會保留在本局中。</p>
+        </div>
+        <div class="actions">
+          <button class="primary" id="resumeBtn" type="button">繼續</button>
+          <button class="danger" id="quitBtn" type="button">結束本局</button>
+        </div>
+      </section>
+
+      <section class="panel" id="settlementPanel" hidden>
+        <div class="panel-head">
+          <h2>護航結算</h2>
+          <p class="subtle" id="settlementSummary">本局獲得 0 廢土零件。</p>
+        </div>
+        <div class="settlement-list" id="settlementList"></div>
+        <div class="actions">
+          <button class="primary" id="againBtn" type="button">再跑一趟</button>
+          <button class="secondary" id="garageBtn" type="button">回車庫升級</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="src/sprites.js"></script>
+    <script src="src/sprite-renderer.js"></script>
+    <script src="src/config.js"></script>
+    <script src="src/rules.js"></script>
+    <script src="src/game.js"></script>
+    <script src="src/ui.js"></script>
+  </body>
+</html>

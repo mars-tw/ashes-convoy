@@ -1,0 +1,97 @@
+"use strict";
+
+const assert = require("assert");
+const config = require("../src/config.js");
+const rules = require("../src/rules.js");
+
+const fresh = rules.migrateMeta(null, { now: () => "2026-07-03T00:00:00.000Z", config });
+assert.deepStrictEqual(fresh, config.META_DEFAULT, "null migration should return the default shape");
+fresh.parts = 999;
+const freshAgain = rules.migrateMeta(null, { config });
+assert.strictEqual(freshAgain.parts, 0, "default migration must be a deep copy");
+
+const invalid = rules.migrateMeta("{not-json", { config });
+assert.deepStrictEqual(invalid, config.META_DEFAULT, "invalid JSON should fall back to default");
+
+const dirty = {
+  version: 0,
+  selectedVehicle: "unknown_vehicle",
+  parts: Infinity,
+  totalRuns: -4,
+  totalKills: NaN,
+  totalBossKills: 2.9,
+  bestWave: "7",
+  bestScore: "-30",
+  unlockedVehicles: { iron_crow: false, dawn_skiff: true, ghost: true },
+  vehicleLevels: {
+    iron_crow: { hull: 3.8, weapon: 99, energy: -2, gate: "2" },
+    dawn_skiff: { hull: NaN, weapon: 1, energy: Infinity, gate: 1 }
+  },
+  achievements: { first_boss: true, bogus: false },
+  claimedMilestones: { a: true, b: "true" },
+  settings: { aimAssist: false, reducedFlash: true, sound: "yes" },
+  tutorial: { seenIntro: true, seenGate: "yes", seenGarage: false },
+  blueprints: { rift_hauler: 5.5, frost_wing: -2 },
+  bestByVehicle: {
+    iron_crow: { wave: 6, score: 4000, kills: 42, bosses: 1, at: "2026-07-03T00:00:00.000Z" },
+    ghost: { wave: 99, score: 99, kills: 99, bosses: 99, at: "bad" }
+  }
+};
+const dirtyBefore = JSON.stringify(dirty, (key, value) => {
+  if (typeof value === "number" && !Number.isFinite(value)) return String(value);
+  return value;
+});
+const migrated = rules.migrateMeta(dirty, { config });
+
+assert.strictEqual(
+  JSON.stringify(dirty, (key, value) => {
+    if (typeof value === "number" && !Number.isFinite(value)) return String(value);
+    return value;
+  }),
+  dirtyBefore,
+  "migrateMeta must not mutate input objects"
+);
+assert.strictEqual(migrated.version, 1);
+assert.strictEqual(migrated.selectedVehicle, "iron_crow");
+assert.strictEqual(migrated.parts, 0);
+assert.strictEqual(migrated.totalRuns, 0);
+assert.strictEqual(migrated.totalKills, 0);
+assert.strictEqual(migrated.totalBossKills, 2);
+assert.strictEqual(migrated.bestWave, 7);
+assert.strictEqual(migrated.bestScore, 0);
+assert.strictEqual(migrated.unlockedVehicles.iron_crow, true);
+assert.strictEqual(migrated.unlockedVehicles.dawn_skiff, true);
+assert.strictEqual(migrated.vehicleLevels.iron_crow.hull, 3);
+assert.strictEqual(migrated.vehicleLevels.iron_crow.weapon, config.ECONOMY.upgradeTracks.weapon.maxLevel);
+assert.strictEqual(migrated.vehicleLevels.iron_crow.energy, 0);
+assert.strictEqual(migrated.vehicleLevels.iron_crow.gate, 2);
+assert.strictEqual(migrated.vehicleLevels.dawn_skiff.weapon, 1);
+assert.strictEqual(migrated.achievements.first_boss, true);
+assert.strictEqual(migrated.achievements.bogus, undefined);
+assert.strictEqual(migrated.claimedMilestones.a, true);
+assert.strictEqual(migrated.claimedMilestones.b, undefined);
+assert.strictEqual(migrated.settings.aimAssist, false);
+assert.strictEqual(migrated.settings.reducedFlash, true);
+assert.strictEqual(migrated.settings.sound, true);
+assert.strictEqual(migrated.tutorial.seenIntro, true);
+assert.strictEqual(migrated.tutorial.seenGate, false);
+assert.strictEqual(migrated.blueprints.rift_hauler, 5);
+assert.strictEqual(migrated.blueprints.frost_wing, 0);
+assert.strictEqual(migrated.bestByVehicle.iron_crow.wave, 6);
+assert.strictEqual(migrated.bestByVehicle.ghost, undefined);
+
+const oldJson = JSON.stringify({
+  selectedVehicle: "dawn_skiff",
+  parts: 18,
+  vehicleLevels: { dawn_skiff: { hull: 1, weapon: 2 } }
+});
+const old = rules.migrateMeta(oldJson, { config });
+assert.strictEqual(old.version, 1);
+assert.strictEqual(old.selectedVehicle, "dawn_skiff");
+assert.strictEqual(old.parts, 18);
+assert.strictEqual(old.vehicleLevels.dawn_skiff.hull, 1);
+assert.strictEqual(old.vehicleLevels.dawn_skiff.weapon, 2);
+assert.strictEqual(old.unlockedVehicles.iron_crow, true);
+assert.strictEqual(old.unlockedVehicles.dawn_skiff, true);
+
+console.log("Storage tests PASS");
