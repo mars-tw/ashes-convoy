@@ -87,7 +87,13 @@
     });
     if (els.metaDrawerTitle) {
       els.metaDrawerTitle.textContent =
-        kind === "upgrades" ? "升級工坊" : kind === "vehicle" ? "載具棚" : kind === "series" ? "系列電台" : "基地管理";
+        kind === "upgrades"
+          ? "升級工坊"
+          : kind === "vehicle"
+            ? "載具棚"
+            : kind === "achievements"
+              ? "成就牆"
+              : "基地管理";
     }
   }
 
@@ -298,12 +304,18 @@
   }
 
   function achievementLabel(id) {
-    const labels = {
-      first_kill: "首次擊殺",
-      first_boss: "首殺 Boss",
-      wave_5: "突破第 5 波"
-    };
-    return labels[id] || id;
+    return (config.ACHIEVEMENTS[id] && config.ACHIEVEMENTS[id].label) || id;
+  }
+
+  function isUnlocked(vehicleId) {
+    return rules.isVehicleUnlocked(meta, vehicleId, config);
+  }
+
+  function blueprintLine(vehicleId) {
+    const required = rules.blueprintRequiredForVehicle(vehicleId, config);
+    if (required <= 0) return "";
+    const count = Math.min(required, meta.blueprints[vehicleId] || 0);
+    return `藍圖 ${count} / ${required} · 擊敗 Boss 取得碎片`;
   }
 
   function previewUpgradeDelta(vehicleId, track, sourceMeta) {
@@ -319,7 +331,7 @@
     const levels = rules.getVehicleLevels(afterMeta, vehicleId, config);
     if (!afterMeta.vehicleLevels[vehicleId]) afterMeta.vehicleLevels[vehicleId] = levels;
     afterMeta.vehicleLevels[vehicleId][track] = Math.min(
-      config.ECONOMY.upgradeTracks[track].maxLevel,
+      rules.getUpgradeDefinition(vehicleId, track, config).maxLevel,
       (levels[track] || 0) + 1
     );
     const afterStats = rules.getVehicleStats(vehicleId, afterMeta, config);
@@ -337,21 +349,34 @@
       const beforeLevel = levels.gate || 0;
       return `增益效果 +${beforeLevel * 4}% → +${(beforeLevel + 1) * 4}%`;
     }
+    if (track.indexOf("armor") >= 0) return `護甲 ${beforeStats.armor} → ${afterStats.armor}`;
+    if (track.indexOf("resist") >= 0 || track.indexOf("evasion") >= 0) {
+      return `承傷 ${Math.round(beforeStats.damageTakenMul * 100)}% → ${Math.round(afterStats.damageTakenMul * 100)}%`;
+    }
+    if (track.indexOf("splash") >= 0) return `濺射 ${beforeShot.splash} → ${afterShot.splash}`;
+    if (track.indexOf("pierce") >= 0) return `穿透 ${beforeShot.pierce} → ${afterShot.pierce}`;
+    if (track.indexOf("overload") >= 0 || track.indexOf("overclock") >= 0 || track.indexOf("depth") >= 0) {
+      const beforeDps = Math.round((beforeShot.damage * beforeShot.projectiles * 10) / beforeShot.fireInterval) / 10;
+      const afterDps = Math.round((afterShot.damage * afterShot.projectiles * 10) / afterShot.fireInterval) / 10;
+      return `DPS ${beforeDps} → ${afterDps}`;
+    }
     return "";
   }
 
   function recommendedUpgradeForRun(run) {
     const vehicleId = run && config.VEHICLES[run.vehicleId] ? run.vehicleId : meta.selectedVehicle;
-    const priority = ["hull", "weapon", "energy", "gate"];
+    const specialTracks = Object.keys((config.ECONOMY.vehicleUpgradeTracks && config.ECONOMY.vehicleUpgradeTracks[vehicleId]) || {});
+    const priority = ["hull", "weapon", "energy", "gate"].concat(specialTracks);
     for (let i = 0; i < priority.length; i += 1) {
       const track = priority[i];
       const cost = rules.getUpgradeCost(meta, vehicleId, track, config);
       if (cost != null && meta.parts >= cost) {
+        const def = rules.getUpgradeDefinition(vehicleId, track, config);
         return {
           vehicleId,
           track,
           cost,
-          label: config.ECONOMY.upgradeTracks[track].label,
+          label: def.label,
           delta: previewUpgradeDelta(vehicleId, track, meta)
         };
       }
@@ -363,8 +388,9 @@
     els.vehicleList.textContent = "";
     Object.keys(config.VEHICLES).forEach((vehicleId) => {
       const vehicle = config.VEHICLES[vehicleId];
+      const unlocked = isUnlocked(vehicleId);
       const item = root.document.createElement("div");
-      item.className = `vehicle${meta.selectedVehicle === vehicleId ? " is-selected" : ""}`;
+      item.className = `vehicle${meta.selectedVehicle === vehicleId ? " is-selected" : ""}${unlocked ? "" : " is-locked"}`;
 
       if (vehicle.spriteImage) {
         const thumb = root.document.createElement("img");
@@ -379,14 +405,15 @@
       const text = root.document.createElement("div");
       const name = root.document.createElement("div");
       name.className = "vehicle-name";
-      name.innerHTML = `<span>${vehicle.name}</span><small>${vehicleLine(vehicleId)}</small>`;
+      name.innerHTML = `<span>${vehicle.name}</span><small>${unlocked ? vehicleLine(vehicleId) : blueprintLine(vehicleId)}</small>`;
       const desc = root.document.createElement("small");
-      desc.textContent = vehicle.role || "艦隊載具";
+      desc.textContent = unlocked ? vehicle.role || "艦隊載具" : "未解鎖：Boss 掉落藍圖碎片，集滿 3 片啟用。";
       text.append(name, desc);
 
       const button = root.document.createElement("button");
       button.type = "button";
-      button.textContent = meta.selectedVehicle === vehicleId ? "已選" : "選擇";
+      button.textContent = unlocked ? (meta.selectedVehicle === vehicleId ? "已選" : "選擇") : "未解鎖";
+      button.disabled = !unlocked;
       button.dataset.vehicle = vehicleId;
       button.addEventListener("click", () => selectVehicle(vehicleId));
       item.append(text, button);
@@ -396,12 +423,15 @@
 
   function renderUpgrades() {
     els.upgradeList.textContent = "";
-    ["hull", "weapon", "energy", "gate"].forEach((track) => {
-      const upgrade = config.ECONOMY.upgradeTracks[track];
+    const tracks = ["hull", "weapon", "energy", "gate"].concat(
+      Object.keys((config.ECONOMY.vehicleUpgradeTracks && config.ECONOMY.vehicleUpgradeTracks[meta.selectedVehicle]) || {})
+    );
+    tracks.forEach((track) => {
+      const upgrade = rules.getUpgradeDefinition(meta.selectedVehicle, track, config);
       const levels = rules.getVehicleLevels(meta, meta.selectedVehicle, config);
       const cost = rules.getUpgradeCost(meta, meta.selectedVehicle, track, config);
       const item = root.document.createElement("div");
-      item.className = "upgrade";
+      item.className = `upgrade${upgrade.scope === "vehicle" ? " is-special" : ""}`;
 
       const text = root.document.createElement("div");
       const title = root.document.createElement("strong");
@@ -414,7 +444,9 @@
             ? "每級基礎傷害 +7%"
             : track === "energy"
               ? "每級射速 +5%"
-              : "每級增益門效果 +4%";
+              : track === "gate"
+                ? "每級增益門效果 +4%"
+                : upgrade.description || "載具專屬改裝";
       text.append(title, root.document.createElement("br"), detail);
 
       const button = root.document.createElement("button");
@@ -428,11 +460,28 @@
     });
   }
 
+  function renderAchievements() {
+    if (!els.achievementList) return;
+    const progress = rules.getAchievementProgress(meta, config);
+    els.achievementList.textContent = "";
+    progress.forEach((entry) => {
+      const item = root.document.createElement("div");
+      item.className = `achievement${entry.done ? " is-done" : ""}`;
+      const title = root.document.createElement("strong");
+      title.innerHTML = `<span>${entry.label}</span><span>${entry.done ? "完成" : `${entry.value}/${entry.target}`}</span>`;
+      const desc = root.document.createElement("small");
+      desc.textContent = `${entry.description} · 獎勵 ${entry.rewardParts} 零件`;
+      item.append(title, desc);
+      els.achievementList.appendChild(item);
+    });
+  }
+
   function renderGarage() {
     els.garageMeta.textContent = `廢土零件 ${meta.parts} · 最遠第 ${meta.bestWave} 波 · 擊殺 ${meta.totalKills}`;
     updateStartImageUi();
     renderVehicles();
     renderUpgrades();
+    renderAchievements();
     if (!hasFullMetaBackground()) {
       setSectionVisibility("garage");
     } else if (!els.metaDrawer.hidden && shelter.drawerKind) {
@@ -569,6 +618,8 @@
       ["擊殺", `${run.kills}`],
       ["Boss", `${run.bossesDefeated}`],
       ["零件", `${run.earnedParts}`],
+      ["行動零件", `+${run.runParts == null ? breakdown.total : run.runParts}`],
+      ["成就零件", `+${run.achievementParts || 0}`],
       ["波次零件", `+${breakdown.waveParts}`],
       ["擊殺零件", `+${breakdown.killParts}`],
       ["Boss 零件", `+${breakdown.bossParts}`],
@@ -584,13 +635,37 @@
 
     const achievements = run.unlockedAchievements || (reward && reward.achievements) || [];
     els.settlementBadges.textContent = "";
+    const blueprintDrops = run.blueprintDrops || (reward && reward.blueprints) || {};
+    Object.keys(blueprintDrops).forEach((vehicleId) => {
+      if (!blueprintDrops[vehicleId]) return;
+      const badge = root.document.createElement("div");
+      badge.className = "settlement-badge";
+      badge.textContent = `藍圖取得：${config.VEHICLES[vehicleId].name} +${blueprintDrops[vehicleId]}（${meta.blueprints[vehicleId] || 0}/${rules.blueprintRequiredForVehicle(vehicleId, config)}）`;
+      els.settlementBadges.appendChild(badge);
+    });
+    const unlockedVehicles = run.unlockedVehicles || (reward && reward.unlockedVehicles) || [];
+    unlockedVehicles.forEach((vehicleId) => {
+      const badge = root.document.createElement("div");
+      badge.className = "settlement-badge";
+      badge.textContent = `載具解鎖：${config.VEHICLES[vehicleId].name}`;
+      els.settlementBadges.appendChild(badge);
+    });
     if (achievements.length) {
       achievements.forEach((id) => {
         const badge = root.document.createElement("div");
         badge.className = "settlement-badge";
-        badge.textContent = `成就解鎖：${achievementLabel(id)}`;
+        badge.textContent = `成就解鎖：${achievementLabel(id)}（+${config.ACHIEVEMENTS[id].rewardParts} 零件）`;
         els.settlementBadges.appendChild(badge);
       });
+    }
+    const nextProgress = rules.getAchievementProgress(meta, config).find((entry) => !entry.done);
+    if (nextProgress) {
+      const badge = root.document.createElement("div");
+      badge.className = "settlement-badge";
+      badge.textContent = `下一成就：${nextProgress.label} ${nextProgress.value}/${nextProgress.target}`;
+      els.settlementBadges.appendChild(badge);
+    }
+    if (els.settlementBadges.childElementCount > 0) {
       els.settlementBadges.hidden = false;
     } else {
       els.settlementBadges.hidden = true;
@@ -621,6 +696,10 @@
 
   function selectVehicle(vehicleId) {
     if (!config.VEHICLES[vehicleId]) return;
+    if (!isUnlocked(vehicleId)) {
+      setStatus(`${config.VEHICLES[vehicleId].name} 尚未解鎖`);
+      return;
+    }
     meta = migrateUiMeta(Object.assign({}, meta, { selectedVehicle: vehicleId }));
     saveMeta();
     game.setMeta(meta);
@@ -642,7 +721,7 @@
     saveMeta();
     game.setMeta(meta);
     if (result.purchase.ok) {
-      const label = config.ECONOMY.upgradeTracks[track].label;
+      const label = rules.getUpgradeDefinition(vehicleId, track, config).label;
       const delta = previewUpgradeDelta(vehicleId, track, beforeMeta);
       setStatus(`${label} 升到 Lv.${result.purchase.level}${delta ? `（${delta}）` : ""}`);
     } else if (result.purchase.reason === "parts") {
@@ -703,7 +782,7 @@
     els.sortieBtn.addEventListener("click", startSelectedRun);
     els.upgradeHotspotBtn.addEventListener("click", () => openMetaDrawer("upgrades"));
     els.vehicleHotspotBtn.addEventListener("click", () => openMetaDrawer("vehicle"));
-    els.seriesHotspotBtn.addEventListener("click", () => openMetaDrawer("series"));
+    els.seriesHotspotBtn.addEventListener("click", () => openMetaDrawer("achievements"));
     els.resetOverlayBtn.addEventListener("click", clearStorage);
     els.closeMetaDrawer.addEventListener("click", closeMetaDrawer);
     els.pauseBtn.addEventListener("click", () => game.togglePause());
@@ -717,7 +796,7 @@
     els.recommendedUpgradeBtn.addEventListener("click", openRecommendedUpgrade);
     els.resetBtn.addEventListener("click", clearStorage);
     els.selectSkiffBtn.addEventListener("click", () => {
-      const ids = Object.keys(config.VEHICLES);
+      const ids = Object.keys(config.VEHICLES).filter((vehicleId) => isUnlocked(vehicleId));
       const index = Math.max(0, ids.indexOf(meta.selectedVehicle));
       const next = ids[(index + 1) % ids.length];
       selectVehicle(next);
@@ -794,6 +873,7 @@
       "garageMeta",
       "vehicleList",
       "upgradeList",
+      "achievementList",
       "startBtn",
       "resetBtn",
       "selectSkiffBtn",

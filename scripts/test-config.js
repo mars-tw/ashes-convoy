@@ -9,7 +9,7 @@ function assertFinitePositive(value, label) {
 }
 
 assert.strictEqual(config.STORAGE_KEY, "ashes_convoy_meta_v1");
-assert.strictEqual(config.META_VERSION, 1);
+assert.strictEqual(config.META_VERSION, 2);
 assert.strictEqual(config.LOGIC.width, 195);
 assert.strictEqual(config.LOGIC.height, 422);
 assert.strictEqual(config.LOGIC.displayWidth, 390);
@@ -91,6 +91,16 @@ assert(config.WAVE.firstGateMinTime >= 8 && config.WAVE.firstGateMaxTime <= 11, 
 assert(config.PERFORMANCE.maxEnemies >= 60, "enemy cap should support large hordes");
 assert.strictEqual(config.DIFFICULTIES.normal.locked, undefined);
 assert.strictEqual(config.ECONOMY.difficultyRewardMul.normal, 1);
+assert.strictEqual(config.ECONOMY.blueprintBundle, 1);
+assert.strictEqual(config.ECONOMY.blueprintPityAfterBosses, 3);
+assert.strictEqual(config.META_DEFAULT.unlockedVehicles.land_rig, true);
+assert.strictEqual(config.META_DEFAULT.unlockedVehicles.sky_barge, false);
+assert.strictEqual(config.META_DEFAULT.unlockedVehicles.sea_ark, false);
+assert.strictEqual(config.META_DEFAULT.unlockedVehicles.void_runner, false);
+["sky_barge", "sea_ark", "void_runner"].forEach((vehicleId) => {
+  assert.strictEqual(config.VEHICLES[vehicleId].unlock.type, "blueprint", `${vehicleId} should use blueprint unlock`);
+  assert.strictEqual(config.VEHICLES[vehicleId].unlock.blueprintsRequired, 3, `${vehicleId} should need 3 blueprints`);
+});
 
 ["hull", "weapon"].forEach((trackId) => {
   const track = config.ECONOMY.upgradeTracks[trackId];
@@ -101,5 +111,19 @@ assert.strictEqual(config.ECONOMY.difficultyRewardMul.normal, 1);
     if (index > 0) assert(cost > track.costs[index - 1], `${trackId} costs must increase`);
   });
 });
+
+Object.keys(config.VEHICLES).forEach((vehicleId) => {
+  const tracks = config.ECONOMY.vehicleUpgradeTracks[vehicleId];
+  assert(tracks, `${vehicleId} should define vehicle-specific upgrade tracks`);
+  assert.strictEqual(Object.keys(tracks).length, 2, `${vehicleId} should have two vehicle-specific nodes`);
+  Object.values(tracks).forEach((track) => {
+    assert.strictEqual(track.costs.length, track.maxLevel, `${track.id} costs should match max level`);
+    track.costs.forEach((cost) => assert(Number.isInteger(cost) && cost > 0, `${track.id} cost should be positive`));
+  });
+});
+
+const achievementRewardTotal = Object.values(config.ACHIEVEMENTS).reduce((sum, achievement) => sum + achievement.rewardParts, 0);
+assert.strictEqual(Object.keys(config.ACHIEVEMENTS).length, 10, "R12 should define ten achievements");
+assert.strictEqual(achievementRewardTotal, 60, "achievement rewards should cap at two Lv1 hull upgrades");
 
 console.log("Config tests PASS");

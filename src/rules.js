@@ -330,7 +330,15 @@ function sanitizeVehicleLevels(levels, vehicleId, config) {
     const max = upgrade ? upgrade.maxLevel : 0;
     output[track] = finiteNumber(input[track], 0, { min: 0, max, integer: true });
   });
-  if (!cfg.VEHICLES[vehicleId]) return { hull: 0, weapon: 0, energy: 0, gate: 0 };
+  if (!cfg.VEHICLES[vehicleId]) return output;
+  const vehicleTracks = (cfg.ECONOMY.vehicleUpgradeTracks && cfg.ECONOMY.vehicleUpgradeTracks[vehicleId]) || {};
+  Object.keys(vehicleTracks).forEach((track) => {
+    output[track] = finiteNumber(input[track], 0, {
+      min: 0,
+      max: vehicleTracks[track].maxLevel,
+      integer: true
+    });
+  });
   return output;
 }
 
@@ -340,20 +348,55 @@ function getVehicleLevels(meta, vehicleId, config) {
   return sanitizeVehicleLevels(stored, vehicleId, cfg);
 }
 
+function getUpgradeDefinition(vehicleId, track, config) {
+  const cfg = getConfig(config);
+  if (cfg.ECONOMY.upgradeTracks[track]) return Object.assign({ scope: "common" }, cfg.ECONOMY.upgradeTracks[track]);
+  const vehicleTracks = (cfg.ECONOMY.vehicleUpgradeTracks && cfg.ECONOMY.vehicleUpgradeTracks[vehicleId]) || {};
+  if (vehicleTracks[track]) return Object.assign({ scope: "vehicle" }, vehicleTracks[track]);
+  return null;
+}
+
+function collectVehicleUpgradeEffects(vehicleId, levels, config) {
+  const cfg = getConfig(config);
+  const tracks = (cfg.ECONOMY.vehicleUpgradeTracks && cfg.ECONOMY.vehicleUpgradeTracks[vehicleId]) || {};
+  const effects = {
+    armorAdd: 0,
+    damageTakenMul: 1,
+    damageMul: 1,
+    fireIntervalMul: 1,
+    splashAdd: 0,
+    pierceAdd: 0
+  };
+  Object.keys(tracks).forEach((track) => {
+    const level = finiteNumber(levels && levels[track], 0, { min: 0, max: tracks[track].maxLevel, integer: true });
+    if (level <= 0) return;
+    const def = tracks[track];
+    effects.armorAdd += (def.armorAddPerLevel || 0) * level;
+    effects.damageTakenMul *= Math.max(0.65, 1 - (def.damageTakenMulPerLevel || 0) * level);
+    effects.damageMul *= 1 + (def.damageMulPerLevel || 0) * level;
+    effects.fireIntervalMul *= Math.max(0.55, 1 - (def.fireRateMulPerLevel || 0) * level);
+    effects.splashAdd += (def.splashAddPerLevel || 0) * level;
+    effects.pierceAdd += (def.pierceAddPerLevel || 0) * level;
+  });
+  return effects;
+}
+
 function getVehicleStats(vehicleId, meta, config) {
   const cfg = getConfig(config);
   const vehicle = cfg.VEHICLES[vehicleId] || cfg.VEHICLES[defaultVehicleId(cfg)];
   const levels = getVehicleLevels(meta, vehicle.id, cfg);
   const hull = cfg.ECONOMY.upgradeTracks.hull;
   const weapon = cfg.ECONOMY.upgradeTracks.weapon;
+  const special = collectVehicleUpgradeEffects(vehicle.id, levels, cfg);
   const maxHp = Math.round(vehicle.hp * (1 + levels.hull * hull.hpMulPerLevel));
   const damageMul = 1 + levels.weapon * weapon.damageMulPerLevel;
   return {
     id: vehicle.id,
     maxHp,
     hp: maxHp,
-    armor: vehicle.armor,
-    damageMul,
+    armor: vehicle.armor + special.armorAdd,
+    damageTakenMul: special.damageTakenMul,
+    damageMul: damageMul * special.damageMul,
     levels
   };
 }
@@ -368,21 +411,22 @@ function calculateShotStats(options) {
   const runMods = Object.assign(defaultRunMods(), opts.runMods || {});
   const weaponTrack = cfg.ECONOMY.upgradeTracks.weapon;
   const energyTrack = cfg.ECONOMY.upgradeTracks.energy;
-  const damageMul = 1 + levels.weapon * weaponTrack.damageMulPerLevel;
+  const special = collectVehicleUpgradeEffects(vehicle.id, levels, cfg);
+  const damageMul = (1 + levels.weapon * weaponTrack.damageMulPerLevel) * special.damageMul;
   const energyMul = Math.pow(1 - energyTrack.fireRateMulPerLevel, levels.energy);
   const damageAdd = Math.min(runMods.damageAdd, 2.5);
   const projectiles = clamp(weapon.baseProjectiles + runMods.projectileAdd, 1, weapon.baseProjectiles + 4);
   const minInterval = Math.max(0.08, weapon.fireInterval * 0.55);
-  const interval = Math.max(minInterval, weapon.fireInterval * runMods.fireIntervalMul * energyMul);
+  const interval = Math.max(minInterval, weapon.fireInterval * runMods.fireIntervalMul * energyMul * special.fireIntervalMul);
   return {
     weaponId: weapon.id,
     bulletSprite: weapon.bulletSprite,
     damage: weapon.damage * damageMul * (1 + damageAdd),
     fireInterval: interval,
     projectileSpeed: weapon.projectileSpeed,
-    pierce: weapon.pierce,
+    pierce: weapon.pierce + special.pierceAdd,
     spread: weapon.spread,
-    splash: weapon.splash,
+    splash: weapon.splash + special.splashAdd,
     muzzleOffset: weapon.muzzleOffset,
     baseProjectiles: weapon.baseProjectiles,
     bonusProjectiles: Math.max(0, projectiles - weapon.baseProjectiles),
@@ -430,7 +474,8 @@ function applyVehicleDamage(vehicle, incoming, armor) {
   const next = deepClone(vehicle);
   const rawDamage = finiteNumber(incoming, 0, { min: 0 });
   const reduction = finiteNumber(armor, 0, { min: 0 });
-  const damage = Math.max(1, Math.round(rawDamage - reduction));
+  const takenMul = finiteNumber(next.damageTakenMul, 1, { min: 0.45, max: 1.5 });
+  const damage = Math.max(1, Math.round(rawDamage * takenMul - reduction));
   const shield = finiteNumber(next.shield, 0, { min: 0 });
   if (shield > 0) {
     const used = Math.min(shield, damage);
@@ -473,6 +518,143 @@ function rewardPartsForRun(run, config) {
   return rewardPartsBreakdownForRun(run, config).total;
 }
 
+function blueprintRequiredForVehicle(vehicleId, config) {
+  const cfg = getConfig(config);
+  const vehicle = cfg.VEHICLES[vehicleId];
+  if (!vehicle || !vehicle.unlock || vehicle.unlock.type !== "blueprint") return 0;
+  return finiteNumber(vehicle.unlock.blueprintsRequired, 3, { min: 1, integer: true });
+}
+
+function isVehicleUnlocked(meta, vehicleId, config) {
+  const cfg = getConfig(config);
+  if (!cfg.VEHICLES[vehicleId]) return false;
+  const migrated = meta && meta.version === cfg.META_VERSION ? meta : migrateMeta(meta || cfg.META_DEFAULT, { config: cfg });
+  return migrated.unlockedVehicles && migrated.unlockedVehicles[vehicleId] === true;
+}
+
+function firstLockedBlueprintVehicle(meta, config) {
+  const cfg = getConfig(config);
+  const migrated = meta && meta.version === cfg.META_VERSION ? meta : migrateMeta(meta || cfg.META_DEFAULT, { config: cfg });
+  return Object.keys(cfg.VEHICLES).find((vehicleId) => {
+    const vehicle = cfg.VEHICLES[vehicleId];
+    return vehicle.unlock && vehicle.unlock.type === "blueprint" && migrated.unlockedVehicles[vehicleId] !== true;
+  });
+}
+
+function hasVehicleUseSignal(input, vehicleId, config) {
+  const cfg = getConfig(config);
+  const legacyMap = {
+    iron_crow: "land_rig",
+    dawn_skiff: "sky_barge",
+    rift_hauler: "sea_ark",
+    frost_wing: "void_runner"
+  };
+  const aliases = [vehicleId].concat(
+    Object.keys(legacyMap).filter((legacyId) => legacyMap[legacyId] === vehicleId)
+  );
+  return aliases.some((id) => {
+    if (input.selectedVehicle === id) return true;
+    if (input.lastRun && input.lastRun.vehicleId === id) return true;
+    if (input.unlockedVehicles && input.unlockedVehicles[id] === true) return true;
+    if (input.bestByVehicle && input.bestByVehicle[id]) return true;
+    const rawLevels = input.vehicleLevels && input.vehicleLevels[id];
+    if (rawLevels && typeof rawLevels === "object") {
+      return Object.keys(rawLevels).some((track) => finiteNumber(rawLevels[track], 0, { min: 0, integer: true }) > 0);
+    }
+    return false;
+  });
+}
+
+function applyBlueprintDrops(meta, bossesDefeated, rng, config) {
+  const cfg = getConfig(config);
+  const next = deepClone(meta);
+  const drops = {};
+  const unlocked = [];
+  const bossCount = finiteNumber(bossesDefeated, 0, { min: 0, integer: true });
+  const roll = typeof rng === "function" ? rng : Math.random;
+
+  for (let i = 0; i < bossCount; i += 1) {
+    const target = firstLockedBlueprintVehicle(next, cfg);
+    if (!target) {
+      next.bossBlueprintPity = 0;
+      break;
+    }
+    next.bossBlueprintPity += 1;
+    const guaranteed = next.bossBlueprintPity >= cfg.ECONOMY.blueprintPityAfterBosses;
+    const shouldDrop = guaranteed || roll() < cfg.ECONOMY.blueprintDropChance;
+    if (!shouldDrop) continue;
+
+    const required = blueprintRequiredForVehicle(target, cfg);
+    const before = finiteNumber(next.blueprints[target], 0, { min: 0, integer: true });
+    const after = Math.min(required, before + cfg.ECONOMY.blueprintBundle);
+    next.blueprints[target] = after;
+    drops[target] = (drops[target] || 0) + (after - before);
+    next.bossBlueprintPity = 0;
+    if (after >= required && next.unlockedVehicles[target] !== true) {
+      next.unlockedVehicles[target] = true;
+      unlocked.push(target);
+    }
+  }
+
+  return { meta: next, drops, unlocked };
+}
+
+function achievementMetricValue(meta, achievement, config) {
+  const cfg = getConfig(config);
+  const metric = achievement.metric || "";
+  if (metric === "kills") return Math.min(achievement.target, meta.totalKills > 0 ? 1 : 0);
+  if (metric === "bosses") return Math.min(achievement.target, meta.totalBossKills);
+  if (metric === "bestWave") return Math.min(achievement.target, meta.bestWave);
+  if (metric === "totalKills") return Math.min(achievement.target, meta.totalKills);
+  if (metric === "unlockedVehicles") {
+    return Object.keys(cfg.VEHICLES).filter((vehicleId) => meta.unlockedVehicles[vehicleId] === true).length;
+  }
+  if (metric.indexOf("environment:") === 0) {
+    const env = metric.split(":")[1];
+    return Object.keys(meta.bestByVehicle || {}).some((vehicleId) => {
+      return cfg.VEHICLES[vehicleId] && cfg.VEHICLES[vehicleId].environment === env;
+    })
+      ? 1
+      : 0;
+  }
+  return 0;
+}
+
+function getAchievementProgress(meta, config) {
+  const cfg = getConfig(config);
+  const migrated = migrateMeta(meta || cfg.META_DEFAULT, { config: cfg });
+  return Object.keys(cfg.ACHIEVEMENTS).map((id) => {
+    const achievement = cfg.ACHIEVEMENTS[id];
+    const value = achievementMetricValue(migrated, achievement, cfg);
+    const done = migrated.achievements[id] === true || value >= achievement.target;
+    return {
+      id,
+      label: achievement.label,
+      description: achievement.description,
+      rewardParts: achievement.rewardParts,
+      value: done ? achievement.target : value,
+      target: achievement.target,
+      done
+    };
+  });
+}
+
+function applyAchievementRewards(meta, config) {
+  const cfg = getConfig(config);
+  const next = deepClone(meta);
+  const progress = getAchievementProgress(next, cfg);
+  const unlocked = [];
+  let parts = 0;
+  progress.forEach((entry) => {
+    if (entry.done && next.achievements[entry.id] !== true) {
+      next.achievements[entry.id] = true;
+      unlocked.push(entry.id);
+      parts += cfg.ACHIEVEMENTS[entry.id].rewardParts;
+    }
+  });
+  return { meta: next, achievements: unlocked, parts };
+}
+
 function migrateMeta(raw, options) {
   const cfg = getConfig(options && options.config);
   let parsed = raw;
@@ -498,14 +680,6 @@ function migrateMeta(raw, options) {
     meta[key] = finiteNumber(input[key], base[key], { min: 0, integer: true });
   });
 
-  meta.unlockedVehicles = {};
-  Object.keys(cfg.VEHICLES).forEach((vehicleId) => {
-    meta.unlockedVehicles[vehicleId] = true;
-  });
-
-  meta.selectedVehicle = cfg.VEHICLES[input.selectedVehicle] ? input.selectedVehicle : base.selectedVehicle;
-  if (!meta.unlockedVehicles[meta.selectedVehicle]) meta.selectedVehicle = base.selectedVehicle;
-
   meta.vehicleLevels = {};
   Object.keys(cfg.VEHICLES).forEach((vehicleId) => {
     const rawLevels = input.vehicleLevels && input.vehicleLevels[vehicleId];
@@ -528,11 +702,27 @@ function migrateMeta(raw, options) {
   }
 
   meta.blueprints = {};
-  if (input.blueprints && typeof input.blueprints === "object" && !Array.isArray(input.blueprints)) {
-    Object.keys(input.blueprints).forEach((key) => {
-      meta.blueprints[key] = finiteNumber(input.blueprints[key], 0, { min: 0, integer: true });
-    });
-  }
+  Object.keys(cfg.VEHICLES).forEach((vehicleId) => {
+    const required = blueprintRequiredForVehicle(vehicleId, cfg);
+    if (required <= 0) return;
+    const raw = input.blueprints && input.blueprints[vehicleId];
+    meta.blueprints[vehicleId] = finiteNumber(raw, 0, { min: 0, max: required, integer: true });
+  });
+
+  meta.unlockedVehicles = {};
+  const oldPlayer = input.version !== cfg.META_VERSION && meta.totalRuns > 0;
+  Object.keys(cfg.VEHICLES).forEach((vehicleId) => {
+    const vehicle = cfg.VEHICLES[vehicleId];
+    const defaultUnlocked = vehicle.unlock && vehicle.unlock.type === "default";
+    const usedBefore = hasVehicleUseSignal(input, vehicleId, cfg);
+    const required = blueprintRequiredForVehicle(vehicleId, cfg);
+    const hasBlueprints = required > 0 && meta.blueprints[vehicleId] >= required;
+    meta.unlockedVehicles[vehicleId] = defaultUnlocked || oldPlayer || usedBefore || hasBlueprints;
+    if (meta.unlockedVehicles[vehicleId] && required > 0) meta.blueprints[vehicleId] = required;
+  });
+
+  meta.selectedVehicle = cfg.VEHICLES[input.selectedVehicle] ? input.selectedVehicle : base.selectedVehicle;
+  if (!meta.unlockedVehicles[meta.selectedVehicle]) meta.selectedVehicle = base.selectedVehicle;
 
   meta.achievements = boolTrueMap(input.achievements);
   meta.claimedMilestones = boolTrueMap(input.claimedMilestones);
@@ -569,22 +759,12 @@ function settleRunRewards(options) {
   const normalizedRun = { wavesCleared, kills, bossesDefeated, score, vehicleId, difficultyId };
   const partsBreakdown = rewardPartsBreakdownForRun(normalizedRun, cfg);
   const parts = partsBreakdown.total;
-  const achievements = [];
 
-  if (kills > 0 && meta.achievements.first_kill !== true) {
-    meta.achievements.first_kill = true;
-    achievements.push("first_kill");
-  }
-  if (bossesDefeated > 0 && meta.achievements.first_boss !== true) {
-    meta.achievements.first_boss = true;
-    achievements.push("first_boss");
-  }
-  if (wavesCleared >= 5 && meta.achievements.wave_5 !== true) {
-    meta.achievements.wave_5 = true;
-    achievements.push("wave_5");
-  }
+  const blueprintResult = applyBlueprintDrops(meta, bossesDefeated, opts.rng, cfg);
+  meta.blueprints = blueprintResult.meta.blueprints;
+  meta.unlockedVehicles = blueprintResult.meta.unlockedVehicles;
+  meta.bossBlueprintPity = blueprintResult.meta.bossBlueprintPity;
 
-  meta.parts += parts;
   meta.totalRuns += 1;
   meta.totalKills += kills;
   meta.totalBossKills += bossesDefeated;
@@ -594,8 +774,9 @@ function settleRunRewards(options) {
   meta.updatedAt = at;
   if (!meta.createdAt) meta.createdAt = at;
 
+  const hasProgress = wavesCleared > 0 || kills > 0 || bossesDefeated > 0 || score > 0;
   const currentBest = meta.bestByVehicle[vehicleId];
-  const isBest = !currentBest || score > currentBest.score || wavesCleared > currentBest.wave;
+  const isBest = hasProgress && (!currentBest || score > currentBest.score || wavesCleared > currentBest.wave);
   if (isBest) {
     meta.bestByVehicle[vehicleId] = {
       wave: wavesCleared,
@@ -606,15 +787,25 @@ function settleRunRewards(options) {
     };
   }
 
+  const achievementResult = applyAchievementRewards(meta, cfg);
+  meta.achievements = achievementResult.meta.achievements;
+  const achievementParts = achievementResult.parts;
+  const totalParts = parts + achievementParts;
+  meta.parts += totalParts;
+
   meta.lastRun = {
     vehicleId,
     wavesCleared,
     kills,
     bossesDefeated,
     score,
-    earnedParts: parts,
+    earnedParts: totalParts,
+    runParts: parts,
+    achievementParts,
     partsBreakdown,
-    unlockedAchievements: achievements.slice(),
+    blueprintDrops: deepClone(blueprintResult.drops),
+    unlockedVehicles: blueprintResult.unlocked.slice(),
+    unlockedAchievements: achievementResult.achievements.slice(),
     at
   };
 
@@ -622,9 +813,12 @@ function settleRunRewards(options) {
     meta,
     reward: {
       parts,
+      totalParts,
+      achievementParts,
       partsBreakdown,
-      blueprints: {},
-      achievements,
+      blueprints: deepClone(blueprintResult.drops),
+      unlockedVehicles: blueprintResult.unlocked.slice(),
+      achievements: achievementResult.achievements,
       isBest
     }
   };
@@ -632,7 +826,7 @@ function settleRunRewards(options) {
 
 function getUpgradeCost(meta, vehicleId, track, config) {
   const cfg = getConfig(config);
-  const upgrade = cfg.ECONOMY.upgradeTracks[track];
+  const upgrade = getUpgradeDefinition(vehicleId, track, cfg);
   if (!upgrade || !cfg.VEHICLES[vehicleId]) return null;
   const levels = getVehicleLevels(meta, vehicleId, cfg);
   const level = levels[track] || 0;
@@ -661,6 +855,8 @@ function buyUpgrade(options) {
 
   const next = deepClone(meta);
   next.parts -= cost;
+  if (!next.vehicleLevels[vehicleId]) next.vehicleLevels[vehicleId] = sanitizeVehicleLevels(null, vehicleId, cfg);
+  if (!Number.isFinite(next.vehicleLevels[vehicleId][track])) next.vehicleLevels[vehicleId][track] = 0;
   next.vehicleLevels[vehicleId][track] += 1;
   next.selectedVehicle = vehicleId;
   next.updatedAt = at;
@@ -691,6 +887,11 @@ const DSRules = {
   scaledEnemyStats,
   generateWave,
   defaultRunMods,
+  blueprintRequiredForVehicle,
+  isVehicleUnlocked,
+  firstLockedBlueprintVehicle,
+  applyBlueprintDrops,
+  getUpgradeDefinition,
   getVehicleLevels,
   getVehicleStats,
   calculateShotStats,
@@ -699,6 +900,7 @@ const DSRules = {
   applyVehicleDamage,
   rewardPartsBreakdownForRun,
   rewardPartsForRun,
+  getAchievementProgress,
   migrateMeta,
   settleRunRewards,
   getUpgradeCost,

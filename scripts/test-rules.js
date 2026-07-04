@@ -109,4 +109,28 @@ const voidShot = fleetShots.find((entry) => entry.vehicleId === "void_runner").s
 assert(voidRate.fireInterval < voidShot.fireInterval, "rate gate should affect void runner");
 assert(voidRate.fireInterval >= Math.max(0.08, config.WEAPONS.void_lance.fireInterval * 0.55), "rate gate should respect weapon-scaled floor");
 
+const specialMeta = rules.migrateMeta(
+  {
+    version: config.META_VERSION,
+    unlockedVehicles: { land_rig: true, sky_barge: true, sea_ark: true, void_runner: true },
+    vehicleLevels: {
+      sky_barge: { sky_overclock: 2 },
+      sea_ark: { sea_splash: 2 },
+      void_runner: { void_pierce: 1 },
+      land_rig: { land_resist: 2 }
+    }
+  },
+  { config }
+);
+const skySpecial = rules.calculateShotStats({ vehicleId: "sky_barge", meta: specialMeta, runMods: rules.defaultRunMods(), config });
+const skyBase = fleetShots.find((entry) => entry.vehicleId === "sky_barge").shot;
+assert(skySpecial.fireInterval < skyBase.fireInterval, "sky overclock should reduce fire interval");
+const seaSpecial = rules.calculateShotStats({ vehicleId: "sea_ark", meta: specialMeta, runMods: rules.defaultRunMods(), config });
+const seaBase = fleetShots.find((entry) => entry.vehicleId === "sea_ark").shot;
+assert.strictEqual(seaSpecial.splash, seaBase.splash + 16, "sea splash node should add splash radius");
+const voidSpecial = rules.calculateShotStats({ vehicleId: "void_runner", meta: specialMeta, runMods: rules.defaultRunMods(), config });
+assert.strictEqual(voidSpecial.pierce, voidShot.pierce + 1, "void pierce node should add one pierce");
+const landSpecial = rules.getVehicleStats("land_rig", specialMeta, config);
+assert(landSpecial.damageTakenMul < 1, "land resist node should reduce incoming damage multiplier");
+
 console.log("Rules tests PASS");

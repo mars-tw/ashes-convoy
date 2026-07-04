@@ -373,12 +373,22 @@
         background: rgba(240, 182, 74, 0.1);
       }
 
+      .vehicle.is-locked {
+        border-color: rgba(184, 176, 163, 0.18);
+        background: rgba(255, 255, 255, 0.028);
+      }
+
       .vehicle-thumb {
         width: 44px;
         height: 64px;
         object-fit: contain;
         image-rendering: pixelated;
         filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.38));
+      }
+
+      .vehicle.is-locked .vehicle-thumb {
+        opacity: 0.82;
+        filter: grayscale(1) brightness(0.18) contrast(1.45) drop-shadow(0 5px 8px rgba(0, 0, 0, 0.38));
       }
 
       .vehicle-name {
@@ -405,6 +415,43 @@
         border: 1px solid var(--line);
         border-radius: 8px;
         background: rgba(255, 255, 255, 0.045);
+      }
+
+      .upgrade.is-special {
+        border-color: rgba(94, 212, 203, 0.28);
+        background: rgba(94, 212, 203, 0.06);
+      }
+
+      .achievement-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .achievement {
+        display: grid;
+        gap: 4px;
+        min-height: 66px;
+        padding: 9px 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      .achievement.is-done {
+        border-color: rgba(135, 210, 125, 0.45);
+        background: rgba(135, 210, 125, 0.08);
+      }
+
+      .achievement strong {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 13px;
+      }
+
+      .achievement small {
+        color: var(--muted);
+        line-height: 1.35;
       }
 
       .actions {
@@ -816,7 +863,7 @@
           <button class="hotspot-btn hotspot-primary" id="sortieBtn" type="button">出勤</button>
           <button class="hotspot-btn" id="upgradeHotspotBtn" type="button">升級</button>
           <button class="hotspot-btn" id="vehicleHotspotBtn" type="button">載具</button>
-          <button class="hotspot-btn" id="seriesHotspotBtn" type="button">系列</button>
+          <button class="hotspot-btn" id="seriesHotspotBtn" type="button">成就</button>
           <button class="hotspot-btn danger" id="resetOverlayBtn" type="button">清存檔</button>
         </div>
 
@@ -834,7 +881,9 @@
               <h2>升級</h2>
               <div class="upgrade-list" id="upgradeList"></div>
             </section>
-            <section class="meta-section" data-meta-section="series">
+            <section class="meta-section" data-meta-section="achievements">
+              <h2>成就牆</h2>
+              <div class="achievement-list" id="achievementList"></div>
               <footer class="series-footer" aria-label="阿軒的小遊戲系列">
                 <div class="series-title">🎮 阿軒的小遊戲系列</div>
                 <nav class="series-links" aria-label="姊妹作連結">

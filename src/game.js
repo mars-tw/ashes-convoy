@@ -258,7 +258,8 @@
 
   function makeInitialState(vehicleId, nextMeta, seed) {
     const safeMeta = rules.migrateMeta(nextMeta || meta, { config });
-    const selectedVehicle = config.VEHICLES[vehicleId] ? vehicleId : safeMeta.selectedVehicle;
+    const requestedVehicle = config.VEHICLES[vehicleId] ? vehicleId : safeMeta.selectedVehicle;
+    const selectedVehicle = rules.isVehicleUnlocked(safeMeta, requestedVehicle, config) ? requestedVehicle : safeMeta.selectedVehicle;
     const vehicleConfig = getVehicleConfig(selectedVehicle);
     const vehicleStats = rules.getVehicleStats(selectedVehicle, safeMeta, config);
     const rng = rules.createSeededRng(seed || `${selectedVehicle}-${safeMeta.totalRuns + 1}`);
@@ -282,6 +283,7 @@
         maxHp: vehicleStats.maxHp,
         shield: 0,
         armor: vehicleStats.armor,
+        damageTakenMul: vehicleStats.damageTakenMul,
         radius: vehicleConfig.radius,
         x: W * 0.5,
         y: config.LOGIC.vehicleY,

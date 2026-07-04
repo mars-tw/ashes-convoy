@@ -311,7 +311,73 @@ async function dragAim(page) {
 async function checkGarageUpgradeLines(page) {
   await openUpgradePanel(page);
   const tracks = await page.locator("[data-upgrade]").evaluateAll((nodes) => nodes.map((node) => node.dataset.upgrade));
-  assert.deepStrictEqual(tracks.sort(), ["energy", "gate", "hull", "weapon"], "garage should show all four upgrade tracks");
+  assert.deepStrictEqual(
+    tracks.sort(),
+    ["energy", "gate", "hull", "land_armor", "land_resist", "weapon"],
+    "land garage should show common tracks plus two vehicle-specific nodes"
+  );
+}
+
+async function unlockFleet(page) {
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    Object.keys(window.DSConfig.VEHICLES).forEach((vehicleId) => {
+      meta.unlockedVehicles[vehicleId] = true;
+      const required = window.DSRules.blueprintRequiredForVehicle(vehicleId, window.DSConfig);
+      if (required > 0) meta.blueprints[vehicleId] = required;
+    });
+    window.__test.setMeta(meta);
+  });
+}
+
+async function checkNewSaveVehicleLocks(page) {
+  await page.evaluate(() => {
+    window.__test.clearStorage();
+    window.__test.showGarage();
+  });
+  await page.waitForSelector("#garagePanel:not([hidden])");
+  await page.click("#vehicleHotspotBtn");
+  await page.waitForSelector('#metaDrawer:not([hidden]) [data-meta-section="vehicle"]:not([hidden])');
+  const meta = await page.evaluate(() => window.__test.getMeta());
+  assert.strictEqual(meta.unlockedVehicles.land_rig, true, "new save should unlock land rig");
+  assert.strictEqual(meta.unlockedVehicles.sky_barge, false, "new save should lock sky barge");
+  assert.strictEqual(meta.unlockedVehicles.sea_ark, false, "new save should lock sea ark");
+  assert.strictEqual(meta.unlockedVehicles.void_runner, false, "new save should lock void runner");
+  const locked = await page.locator(".vehicle.is-locked").evaluateAll((nodes) =>
+    nodes.map((node) => ({
+      text: node.innerText,
+      disabled: node.querySelector("button").disabled
+    }))
+  );
+  assert.strictEqual(locked.length, 3, "new save should show three locked vehicle cards");
+  locked.forEach((card) => {
+    assert(card.disabled, "locked vehicle buttons should be disabled");
+    assert(card.text.includes("藍圖 0 / 3"), `locked vehicle should show blueprint progress: ${card.text}`);
+  });
+  await page.evaluate(() => window.__test.startRun("sky_barge"));
+  const state = await page.evaluate(() => window.__test.getState());
+  assert.strictEqual(state.vehicleId, "land_rig", "starting a locked vehicle should fall back to the unlocked land rig");
+  await page.evaluate(() => window.__test.showGarage());
+}
+
+async function checkOldSaveRetention(page) {
+  await page.evaluate(() => {
+    window.__test.setMeta({
+      version: 1,
+      totalRuns: 1,
+      selectedVehicle: "void_runner",
+      unlockedVehicles: { land_rig: true, sky_barge: true, sea_ark: true, void_runner: true },
+      vehicleLevels: { void_runner: { weapon: 1 } }
+    });
+  });
+  const meta = await page.evaluate(() => window.__test.getMeta());
+  assert.deepStrictEqual(
+    ["land_rig", "sky_barge", "sea_ark", "void_runner"].map((vehicleId) => meta.unlockedVehicles[vehicleId]),
+    [true, true, true, true],
+    "old active saves should retain all four vehicles"
+  );
+  assert.strictEqual(meta.selectedVehicle, "void_runner", "old selected vehicle should be retained when unlocked");
+  await page.evaluate(() => window.__test.clearStorage());
 }
 
 async function checkVehicleFleetSelectionAndCombat(page) {
@@ -625,6 +691,104 @@ async function tapGateChoice(page) {
   assert(state.lastGateChoice && state.lastGateChoice.gateId === "rate_plus", "chosen gate should be recorded for feedback");
 }
 
+async function checkBlueprintAchievementsAndUnlock(page) {
+  await page.evaluate(() => {
+    window.__test.clearStorage();
+    window.__test.startRun("land_rig");
+    window.__test.setState({
+      rng: () => 0,
+      stats: {
+        wavesCleared: 15,
+        kills: 1,
+        bossesDefeated: 3,
+        score: 1500
+      }
+    });
+    window.__test.damageVehicle(99999);
+  });
+  await page.waitForSelector("#settlementPanel:not([hidden])");
+  let meta = await page.evaluate(() => window.__test.getMeta());
+  assert.strictEqual(meta.blueprints.sky_barge, 3, "three low-roll boss drops should grant three sky blueprints");
+  assert.strictEqual(meta.unlockedVehicles.sky_barge, true, "three sky blueprints should unlock the sky barge");
+  const badges = await page.locator("#settlementBadges .settlement-badge").evaluateAll((nodes) => nodes.map((node) => node.innerText));
+  assert(badges.some((text) => text.includes("藍圖取得") && text.includes("晨光飛船")), `settlement should show sky blueprint drop: ${badges.join(" | ")}`);
+  assert(badges.some((text) => text.includes("載具解鎖") && text.includes("晨光飛船")), `settlement should show sky unlock: ${badges.join(" | ")}`);
+  assert(badges.some((text) => text.includes("首殺 Boss")), `settlement should show first boss achievement path: ${badges.join(" | ")}`);
+
+  await page.click("#garageBtn");
+  await page.waitForSelector("#garagePanel:not([hidden])");
+  await page.click("#vehicleHotspotBtn");
+  await page.waitForSelector('#metaDrawer:not([hidden]) [data-meta-section="vehicle"]:not([hidden])');
+  const skyButton = await page.locator('[data-vehicle="sky_barge"]').evaluate((button) => ({
+    disabled: button.disabled,
+    text: button.textContent
+  }));
+  assert(!skyButton.disabled && !skyButton.text.includes("未解鎖"), "unlocked sky barge should become selectable in garage");
+  await page.click('[data-vehicle="sky_barge"]');
+  await clickSortie(page);
+  await page.evaluate(() => {
+    window.__test.setState({
+      stats: {
+        wavesCleared: 1,
+        kills: 1,
+        bossesDefeated: 0,
+        score: 200
+      }
+    });
+    window.__test.damageVehicle(99999);
+  });
+  await page.waitForSelector("#settlementPanel:not([hidden])");
+  const airBadges = await page.locator("#settlementBadges .settlement-badge").evaluateAll((nodes) => nodes.map((node) => node.innerText));
+  assert(airBadges.some((text) => text.includes("天空出勤")), `settlement should show air sortie achievement path: ${airBadges.join(" | ")}`);
+  meta = await page.evaluate(() => window.__test.getMeta());
+  assert.strictEqual(meta.achievements.sortie_air, true, "air sortie achievement should be one-time recorded");
+}
+
+async function checkVehicleSpecificUpgradePurchase(page) {
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.parts = 200;
+    meta.selectedVehicle = "sky_barge";
+    Object.keys(window.DSConfig.VEHICLES).forEach((vehicleId) => {
+      meta.unlockedVehicles[vehicleId] = true;
+      const required = window.DSRules.blueprintRequiredForVehicle(vehicleId, window.DSConfig);
+      if (required > 0) meta.blueprints[vehicleId] = required;
+    });
+    window.__test.setMeta(meta);
+    window.__test.showGarage();
+  });
+  await page.waitForSelector("#garagePanel:not([hidden])");
+  await openUpgradePanel(page);
+  await page.waitForSelector('[data-upgrade="sky_overclock"]');
+  const before = await page.evaluate(() =>
+    window.DSRules.calculateShotStats({
+      vehicleId: "sky_barge",
+      meta: window.__test.getMeta(),
+      runMods: window.DSRules.defaultRunMods(),
+      config: window.DSConfig
+    }).fireInterval
+  );
+  await page.click('[data-upgrade="sky_overclock"]');
+  const result = await page.evaluate((beforeInterval) => {
+    const meta = window.__test.getMeta();
+    const after = window.DSRules.calculateShotStats({
+      vehicleId: "sky_barge",
+      meta,
+      runMods: window.DSRules.defaultRunMods(),
+      config: window.DSConfig
+    }).fireInterval;
+    return {
+      level: meta.vehicleLevels.sky_barge.sky_overclock,
+      before: beforeInterval,
+      after,
+      status: document.getElementById("garageStatus").textContent
+    };
+  }, before);
+  assert.strictEqual(result.level, 1, "sky overclock level should be purchased");
+  assert(result.after < result.before, `sky overclock should reduce fire interval from ${result.before} to ${result.after}`);
+  assert(result.status.includes("DPS"), `specific upgrade feedback should show DPS delta: ${result.status}`);
+}
+
 async function spawnBoss(page) {
   await page.evaluate(() => {
     window.__test.setState({ enemies: [], projectiles: [], gates: [] });
@@ -675,7 +839,7 @@ async function deathSettlementUpgradeAndReload(page) {
   });
   await page.waitForSelector("#settlementPanel:not([hidden])");
   const settlementText = await page.locator("#settlementSummary").innerText();
-  assert(settlementText.includes("109"), `settlement should show 109 earned parts: ${settlementText}`);
+  assert(settlementText.includes("149"), `settlement should show 149 total parts after achievement bonuses: ${settlementText}`);
   assert(settlementText.includes("新紀錄"), `settlement should call out new records: ${settlementText}`);
   const settlementRows = await page.locator("#settlementList .settlement-item").evaluateAll((nodes) =>
     nodes.map((node) => node.innerText.replace(/\s+/g, " ").trim())
@@ -729,14 +893,19 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
   await page.evaluate(() => window.__test.clearStorage());
   await checkShelterMeta(page, full);
+  await checkNewSaveVehicleLocks(page);
+  await checkOldSaveRetention(page);
   await checkGarageUpgradeLines(page);
   await checkWaveProgressionRegression(page);
   await page.evaluate(() => window.__test.clearStorage());
   await checkShelterMeta(page, false);
   await checkGarageUpgradeLines(page);
   if (full) {
+    await unlockFleet(page);
     await checkFleetProjectileTraits(page);
     await checkVehicleFleetSelectionAndCombat(page);
+    await checkBlueprintAchievementsAndUnlock(page);
+    await checkVehicleSpecificUpgradePurchase(page);
     await page.evaluate(() => window.__test.clearStorage());
     await checkShelterMeta(page, false);
     await checkGarageUpgradeLines(page);

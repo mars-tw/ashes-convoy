@@ -1,7 +1,7 @@
 "use strict";
 
 const STORAGE_KEY = "ashes_convoy_meta_v1";
-const META_VERSION = 1;
+const META_VERSION = 2;
 
 const LOGIC = {
   width: 195,
@@ -46,7 +46,7 @@ const VEHICLES = {
     environmentLabel: "天空",
     spriteImage: "assets/vehicles/air.png",
     sprite: "vehicle_dawn_skiff",
-    unlock: { type: "default" },
+    unlock: { type: "blueprint", blueprintsRequired: 3 },
     hp: 300,
     armor: 3,
     weapon: "sky_autocannon",
@@ -66,7 +66,7 @@ const VEHICLES = {
     environmentLabel: "海面",
     spriteImage: "assets/vehicles/sea.png",
     sprite: "vehicle_iron_crow",
-    unlock: { type: "default" },
+    unlock: { type: "blueprint", blueprintsRequired: 3 },
     hp: 420,
     armor: 6,
     weapon: "ark_cannon",
@@ -86,7 +86,7 @@ const VEHICLES = {
     environmentLabel: "太空",
     spriteImage: "assets/vehicles/space.png",
     sprite: "vehicle_dawn_skiff",
-    unlock: { type: "default" },
+    unlock: { type: "blueprint", blueprintsRequired: 3 },
     hp: 360,
     armor: 4,
     weapon: "void_lance",
@@ -329,8 +329,8 @@ const ECONOMY = {
     hard: 1.15,
     endless: 1.1
   },
-  blueprintDropChance: 0.3,
-  blueprintBundle: 5,
+  blueprintDropChance: 0.35,
+  blueprintBundle: 1,
   blueprintPityAfterBosses: 3,
   upgradeTracks: {
     hull: {
@@ -361,6 +361,163 @@ const ECONOMY = {
       gateMulPerLevel: 0.04,
       costs: [90, 160, 280, 490, 860]
     }
+  },
+  vehicleUpgradeTracks: {
+    land_rig: {
+      land_armor: {
+        id: "land_armor",
+        label: "裝甲強化",
+        maxLevel: 2,
+        costs: [45, 90],
+        armorAddPerLevel: 2,
+        description: "每級護甲 +2"
+      },
+      land_resist: {
+        id: "land_resist",
+        label: "毒抗隔艙",
+        maxLevel: 2,
+        costs: [50, 100],
+        damageTakenMulPerLevel: 0.04,
+        description: "每級承傷 -4%"
+      }
+    },
+    sky_barge: {
+      sky_overclock: {
+        id: "sky_overclock",
+        label: "引擎超頻",
+        maxLevel: 2,
+        costs: [45, 90],
+        fireRateMulPerLevel: 0.04,
+        description: "每級射速 +4%"
+      },
+      sky_evasion: {
+        id: "sky_evasion",
+        label: "迴避航線",
+        maxLevel: 2,
+        costs: [50, 100],
+        damageTakenMulPerLevel: 0.05,
+        description: "每級承傷 -5%"
+      }
+    },
+    sea_ark: {
+      sea_depth: {
+        id: "sea_depth",
+        label: "深水炸彈",
+        maxLevel: 2,
+        costs: [45, 90],
+        damageMulPerLevel: 0.05,
+        description: "每級砲擊傷害 +5%"
+      },
+      sea_splash: {
+        id: "sea_splash",
+        label: "濺射半徑",
+        maxLevel: 2,
+        costs: [50, 100],
+        splashAddPerLevel: 8,
+        description: "每級濺射 +8"
+      }
+    },
+    void_runner: {
+      void_overload: {
+        id: "void_overload",
+        label: "過載射速",
+        maxLevel: 2,
+        costs: [45, 90],
+        fireRateMulPerLevel: 0.04,
+        description: "每級射速 +4%"
+      },
+      void_pierce: {
+        id: "void_pierce",
+        label: "穿透校準",
+        maxLevel: 1,
+        costs: [80],
+        pierceAddPerLevel: 1,
+        description: "滿級穿透 +1"
+      }
+    }
+  }
+};
+
+const ACHIEVEMENTS = {
+  first_kill: {
+    id: "first_kill",
+    label: "第一滴黑血",
+    description: "首次擊殺任一喪屍。",
+    rewardParts: 4,
+    target: 1,
+    metric: "kills"
+  },
+  first_boss: {
+    id: "first_boss",
+    label: "首殺 Boss",
+    description: "首次擊破母巢巨屍。",
+    rewardParts: 8,
+    target: 1,
+    metric: "bosses"
+  },
+  wave_5: {
+    id: "wave_5",
+    label: "第 5 波突破",
+    description: "抵達並結算第 5 波。",
+    rewardParts: 8,
+    target: 5,
+    metric: "bestWave"
+  },
+  wave_10: {
+    id: "wave_10",
+    label: "第 10 波突破",
+    description: "抵達並結算第 10 波。",
+    rewardParts: 8,
+    target: 10,
+    metric: "bestWave"
+  },
+  sortie_land: {
+    id: "sortie_land",
+    label: "陸地出勤",
+    description: "用陸地載具完成一次有效出勤。",
+    rewardParts: 4,
+    target: 1,
+    metric: "environment:land"
+  },
+  sortie_air: {
+    id: "sortie_air",
+    label: "天空出勤",
+    description: "用天空載具完成一次有效出勤。",
+    rewardParts: 4,
+    target: 1,
+    metric: "environment:air"
+  },
+  sortie_sea: {
+    id: "sortie_sea",
+    label: "海面出勤",
+    description: "用海面載具完成一次有效出勤。",
+    rewardParts: 4,
+    target: 1,
+    metric: "environment:sea"
+  },
+  sortie_space: {
+    id: "sortie_space",
+    label: "太空出勤",
+    description: "用太空載具完成一次有效出勤。",
+    rewardParts: 4,
+    target: 1,
+    metric: "environment:space"
+  },
+  total_kills_100: {
+    id: "total_kills_100",
+    label: "百屍清道夫",
+    description: "累積擊殺 100 名喪屍。",
+    rewardParts: 8,
+    target: 100,
+    metric: "totalKills"
+  },
+  unlock_all_vehicles: {
+    id: "unlock_all_vehicles",
+    label: "四域車隊",
+    description: "解鎖四台載具。",
+    rewardParts: 8,
+    target: 4,
+    metric: "unlockedVehicles"
   }
 };
 
@@ -386,9 +543,9 @@ const META_DEFAULT = {
   bestByVehicle: {},
   unlockedVehicles: {
     land_rig: true,
-    sky_barge: true,
-    sea_ark: true,
-    void_runner: true
+    sky_barge: false,
+    sea_ark: false,
+    void_runner: false
   },
   vehicleLevels: {
     land_rig: { hull: 0, weapon: 0, energy: 0, gate: 0 },
@@ -396,7 +553,11 @@ const META_DEFAULT = {
     sea_ark: { hull: 0, weapon: 0, energy: 0, gate: 0 },
     void_runner: { hull: 0, weapon: 0, energy: 0, gate: 0 }
   },
-  blueprints: {},
+  blueprints: {
+    sky_barge: 0,
+    sea_ark: 0,
+    void_runner: 0
+  },
   bossBlueprintPity: 0,
   achievements: {},
   claimedMilestones: {},
@@ -425,6 +586,7 @@ const DSConfig = {
   PERFORMANCE,
   DIFFICULTIES,
   ECONOMY,
+  ACHIEVEMENTS,
   START_SCREEN,
   SHELTER_THEMES,
   META_DEFAULT

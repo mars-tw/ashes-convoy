@@ -9,6 +9,10 @@ assert.deepStrictEqual(fresh, config.META_DEFAULT, "null migration should return
 fresh.parts = 999;
 const freshAgain = rules.migrateMeta(null, { config });
 assert.strictEqual(freshAgain.parts, 0, "default migration must be a deep copy");
+assert.strictEqual(freshAgain.unlockedVehicles.land_rig, true);
+assert.strictEqual(freshAgain.unlockedVehicles.sky_barge, false);
+assert.strictEqual(freshAgain.unlockedVehicles.sea_ark, false);
+assert.strictEqual(freshAgain.unlockedVehicles.void_runner, false);
 
 const invalid = rules.migrateMeta("{not-json", { config });
 assert.deepStrictEqual(invalid, config.META_DEFAULT, "invalid JSON should fall back to default");
@@ -55,7 +59,7 @@ assert.strictEqual(
   dirtyBefore,
   "migrateMeta must not mutate input objects"
 );
-assert.strictEqual(migrated.version, 1);
+assert.strictEqual(migrated.version, 2);
 assert.strictEqual(migrated.selectedVehicle, "land_rig");
 assert.strictEqual(migrated.shelterTheme, "snow");
 assert.strictEqual(migrated.parts, 0);
@@ -85,8 +89,11 @@ assert.strictEqual(migrated.settings.reducedFlash, true);
 assert.strictEqual(migrated.settings.sound, true);
 assert.strictEqual(migrated.tutorial.seenIntro, true);
 assert.strictEqual(migrated.tutorial.seenGate, false);
-assert.strictEqual(migrated.blueprints.rift_hauler, 5);
-assert.strictEqual(migrated.blueprints.frost_wing, 0);
+assert.strictEqual(migrated.blueprints.sky_barge, 3);
+assert.strictEqual(migrated.blueprints.sea_ark, 3);
+assert.strictEqual(migrated.blueprints.void_runner, 3);
+assert.strictEqual(migrated.blueprints.rift_hauler, undefined);
+assert.strictEqual(migrated.blueprints.frost_wing, undefined);
 assert.strictEqual(migrated.bestByVehicle.iron_crow, undefined);
 assert.strictEqual(migrated.bestByVehicle.sea_ark.wave, 5);
 assert.strictEqual(migrated.bestByVehicle.ghost, undefined);
@@ -98,7 +105,7 @@ const oldJson = JSON.stringify({
   vehicleLevels: { dawn_skiff: { hull: 1, weapon: 2 } }
 });
 const old = rules.migrateMeta(oldJson, { config });
-assert.strictEqual(old.version, 1);
+assert.strictEqual(old.version, 2);
 assert.strictEqual(old.selectedVehicle, "land_rig");
 assert.strictEqual(old.shelterTheme, "snow");
 assert.strictEqual(old.parts, 18);
@@ -106,5 +113,21 @@ assert.strictEqual(old.vehicleLevels.land_rig.hull, 0);
 assert.strictEqual(old.vehicleLevels.land_rig.weapon, 0);
 assert.strictEqual(old.unlockedVehicles.land_rig, true);
 assert.strictEqual(old.unlockedVehicles.sky_barge, true);
+assert.strictEqual(old.unlockedVehicles.sea_ark, false);
+assert.strictEqual(old.unlockedVehicles.void_runner, false);
+
+const oldRunner = rules.migrateMeta(
+  {
+    version: 1,
+    totalRuns: 1,
+    selectedVehicle: "void_runner",
+    vehicleLevels: { void_runner: { weapon: 1 } }
+  },
+  { config }
+);
+["land_rig", "sky_barge", "sea_ark", "void_runner"].forEach((vehicleId) => {
+  assert.strictEqual(oldRunner.unlockedVehicles[vehicleId], true, `${vehicleId} should be retained for an old active player`);
+});
+assert.strictEqual(oldRunner.selectedVehicle, "void_runner");
 
 console.log("Storage tests PASS");
