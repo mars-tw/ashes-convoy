@@ -1,31 +1,53 @@
 # 灰燼護航（ashes-convoy）
 
-手機直式優先的像素風末日喪屍護航射擊網頁遊戲。玩家選擇列車或飛船等載具出發，拖曳瞄準自動射擊，擊破增益門強化火力，撐過喪屍波次與 Boss，死亡後用廢土零件進行 meta 養成。
+阿軒小遊戲系列的末日護航小品。玩家從避難所出車，操控載具沿路線推進，拆增益門、清殭屍群、撐過每 5 波出現的 Boss，並把零件、藍圖與成就進度帶回車庫。
 
-目前 repo 是製作規格與 Stage Gate 骨架，尚未開始遊戲程式與 sprite 實作。
+## 現況重點
 
-## 技術約束
+- Vanilla HTML/CSS/JS + Canvas，手機優先，邏輯畫布 195 x 422，顯示尺寸 390 x 844。
+- 四台載具、四種出擊環境：陸地重裝車、空艇、海上方舟、虛空穿梭機。
+- AI key art 已接入：開始畫面、四台載具、四張避難所背景、四種殭屍圖像。
+- 增益門 2.0：傷害、射速、多重射擊、維修四類門，門核心有 HP 且隨波次成長。
+- Boss 事件化：每 5 波一隻 `boss_hive_titan`，血量階段會觸發召喚與衝鋒。
+- 觸控分離：移動與瞄準分離處理，手機拖曳不依賴 hover。
+- 車庫 meta v2：藍圖解鎖、成就牆、通用升級與載具專屬分支都會保存。
 
-- vanilla HTML/CSS/JS + Canvas。
-- 零執行期依賴。
-- `devDependencies` 只允許 Playwright 供 E2E。
-- 所有正式美術必須由 pixel matrix + palette 在 offscreen canvas 繪製。
-- localStorage 存檔必須版本化遷移。
-- GitHub Pages 部署。
-- 遊戲內可見文字使用繁體中文。
+## 玩法
 
-## 主要文件
+1. 在避難所選擇「出擊」或進車庫調整載具。
+2. 戰鬥中拖曳控制載具與瞄準線，優先打破想要的增益門核心。
+3. 一般波次結束取得零件；擊敗 Boss 有機率取得下一台鎖定載具的藍圖。
+4. 回到車庫使用零件升級 `hull`、`weapon`、`energy`、`gate`，或投資載具專屬節點。
+5. 透過成就牆領取一次性零件獎勵，推進全載具解鎖。
+
+## 主要數值
+
+| 載具 | 解鎖 | 環境 | HP | 護甲 | 武器 | 定位 |
+|---|---|---|---:|---:|---|---|
+| `land_rig` | 預設 | land | 520 | 10 | `rig_cannon` | 高耐久、復仇火力 |
+| `sky_barge` | 3 藍圖 | air | 300 | 3 | `sky_autocannon` | 高射速、低防禦 |
+| `sea_ark` | 3 藍圖 | sea | 420 | 6 | `ark_cannon` | 低射速、範圍爆風 |
+| `void_runner` | 3 藍圖 | space | 360 | 4 | `void_lance` | 高頻穿透、破甲疊層 |
+
+| 系統 | 數值 |
+|---|---|
+| 波次 | 基礎 30 秒，每波 +1 秒，上限 45 秒；Boss 每 5 波 |
+| 敵人成長 | HP x1.13/波，速度每波 +1.5%，速度成長上限 +45% |
+| 門出現 | 首門 8-11 秒，之後每 20-30 秒，門速 22，HP x1.09/波 |
+| 零件 | 每波 4、擊殺 `floor(min(kills, 360) / 6)`、Boss 每隻 24，最低有效場次 2 |
+| 藍圖 | Boss 後 35% 掉 1 張，連 3 隻 Boss 未掉則保底，鎖定下一台未解鎖載具 |
+| 成就 | 首殺、首 Boss、5/10 波、四環境出擊、累計 100 殺、全載具解鎖 |
+
+## 文件
 
 | 文件 | 用途 |
 |---|---|
-| `docs/gdd.md` | 遊戲設計文件。 |
-| `docs/stage-plan.md` | Stage 1 到 Stage 3 的 Gate 與驗收清單。 |
-| `docs/art-contract.md` | 美術與遊戲 Codex 的 sprite API 與檔案分工契約。 |
-| `references/data-model.md` | 存檔、config、runtime state 與測試掛鉤資料模型骨架。 |
+| `docs/gdd.md` | 現行遊戲設計、核心循環、R8/R12 系統狀態 |
+| `docs/stage-plan.md` | 已完成里程碑、測試 Gate、後續文件維護規則 |
+| `docs/art-contract.md` | AI 圖像與 pixel matrix fallback 的美術/工程契約 |
+| `references/data-model.md` | meta v2、config、rules、經濟與測試契約 |
 
-## 開發指令
-
-Stage 1 實作後使用：
+## 開發與驗證
 
 ```bash
 npm test
@@ -33,34 +55,14 @@ npm run test:e2e
 npm start
 ```
 
-本地預覽預計使用：
+若只要靜態預覽：
 
 ```bash
 python -m http.server 8000
 ```
 
-然後開啟：
+## 📋 更新日誌
 
-```text
-http://localhost:8000/
-```
-
-## Stage 1 範圍
-
-- 1 台列車與 1 台飛船可選。
-- 至少 3 種喪屍與 1 種 Boss。
-- 增益門系統。
-- 完整死亡結算與廢土零件。
-- 車庫永久升級。
-- 手機、平板、桌機可玩。
-- Node 單元測試、Playwright E2E、GitHub Pages CI。
-
-詳細驗收見 `docs/stage-plan.md`。
-
-## 分工原則
-
-- 美術 Codex 負責 `src/sprites.js` 與 `src/sprite-renderer.js`。
-- 遊戲 Codex 負責 `src/config.js`、`src/rules.js`、`src/game.js`、`src/ui.js` 與測試。
-- 製作人 Codex 維護 GDD、Stage Gate、art contract 與跨線規格。
-
-任何正式 sprite 或 gameplay 實作前，先確認 `docs/art-contract.md` 與 `references/data-model.md`。
+- R12：加入載具藍圖解鎖、成就牆、四載具專屬升級分支，meta 升級到 v2。
+- R8：增益門 2.0、觸控分離、Boss 事件化，讓中後段出擊有明確決策節奏。
+- 早期更新：接入 AI key art、四載具四環境、AI 殭屍圖像與動畫 fallback，補齊車庫/避難所流程。

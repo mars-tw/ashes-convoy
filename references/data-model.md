@@ -1,23 +1,20 @@
-# 資料模型骨架
+# 灰燼護航資料模型
 
-本文件定義未來 `src/config.js`、`src/rules.js`、localStorage 與測試需要遵守的資料形狀。Stage 1 實作時可微調數值，但欄位語意不可任意改名。
+本文件對齊目前 `src/config.js` 與 `src/rules.js`。文件更新只能描述現況，不應推測未實作系統。
 
-## 命名與版本
+## 儲存契約
 
 - localStorage key：`ashes_convoy_meta_v1`
-- schema 常數：`META_VERSION = 1`
-- 儲存格式：JSON
-- 時間欄位：使用 `now()` 注入後的 ISO 字串或 epoch ms，不能在純規則函式內直接呼叫 `Date.now()`
-- 隨機：所有會影響結果的函式都要傳入 `rng`
-
-## Meta 存檔
+- schema version：`META_VERSION = 2`
+- 格式：JSON
+- 時間：`createdAt`、`updatedAt` 與紀錄欄位使用 ISO 字串或可被遷移的既有值。
+- 遷移入口：`migrateMeta(raw, { config })`
 
 ```js
 const META_DEFAULT = {
-  version: 1,
-  createdAt: null,
-  updatedAt: null,
-  selectedVehicle: "iron_crow",
+  version: 2,
+  selectedVehicle: "land_rig",
+  shelterTheme: "snow",
   parts: 0,
   totalRuns: 0,
   totalKills: 0,
@@ -26,14 +23,22 @@ const META_DEFAULT = {
   bestScore: 0,
   bestByVehicle: {},
   unlockedVehicles: {
-    iron_crow: true,
-    dawn_skiff: true
+    land_rig: true,
+    sky_barge: false,
+    sea_ark: false,
+    void_runner: false
   },
   vehicleLevels: {
-    iron_crow: { hull: 0, weapon: 0, energy: 0, gate: 0 },
-    dawn_skiff: { hull: 0, weapon: 0, energy: 0, gate: 0 }
+    land_rig: { hull: 0, weapon: 0, energy: 0, gate: 0 },
+    sky_barge: { hull: 0, weapon: 0, energy: 0, gate: 0 },
+    sea_ark: { hull: 0, weapon: 0, energy: 0, gate: 0 },
+    void_runner: { hull: 0, weapon: 0, energy: 0, gate: 0 }
   },
-  blueprints: {},
+  blueprints: {
+    sky_barge: 0,
+    sea_ark: 0,
+    void_runner: 0
+  },
   bossBlueprintPity: 0,
   achievements: {},
   claimedMilestones: {},
@@ -51,309 +56,98 @@ const META_DEFAULT = {
 };
 ```
 
-### `bestByVehicle`
+## Meta 欄位
+
+| 欄位 | 說明 |
+|---|---|
+| `selectedVehicle` | 目前選用載具；若未解鎖會遷回 `land_rig` |
+| `shelterTheme` | 避難所背景，目前預設 `snow` |
+| `parts` | 可花費零件，結算與成就會增加 |
+| `bestByVehicle` | 各載具最佳波次、分數、擊殺、Boss 與時間 |
+| `unlockedVehicles` | 載具解鎖狀態，`land_rig` 永遠預設解鎖 |
+| `vehicleLevels` | 通用節點與專屬節點等級都放在各載具 id 底下 |
+| `blueprints` | 藍圖載具目前張數，最大值等於該載具需求 |
+| `bossBlueprintPity` | Boss 藍圖掉落保底計數 |
+| `achievements` | 已領取或已標記完成的成就 true map |
+| `lastRun` | 最近一次結算摘要，含零件拆分、藍圖掉落、成就與解鎖 |
+
+## 載具與武器
+
+| id | 解鎖 | HP | 護甲 | 武器 | 特色 |
+|---|---|---:|---:|---|---|
+| `land_rig` | 預設 | 520 | 10 | `rig_cannon` | 受壓後復仇火力，穩定推線 |
+| `sky_barge` | 3 藍圖 | 300 | 3 | `sky_autocannon` | 高射速、低裝甲 |
+| `sea_ark` | 3 藍圖 | 420 | 6 | `ark_cannon` | 爆風半徑 58，處理群聚 |
+| `void_runner` | 3 藍圖 | 360 | 4 | `void_lance` | 基礎穿透 2，破甲疊到 6 層 |
+
+| 武器 | 傷害 | 射擊間隔 | 彈速 | 穿透 | 散射 | 爆風 |
+|---|---:|---:|---:|---:|---:|---:|
+| `rig_cannon` | 20 | 0.24 | 330 | 0 | 0.012 | 0 |
+| `sky_autocannon` | 12 | 0.17 | 390 | 0 | 0.04 | 0 |
+| `ark_cannon` | 34 | 0.48 | 250 | 0 | 0.02 | 58 |
+| `void_lance` | 8.5 | 0.105 | 430 | 2 | 0.018 | 0 |
+
+## 敵人、波次與門
+
+| 敵人 | HP | 速度 | 接觸傷害 | 預算 | 分數 | 首波 | 特性 |
+|---|---:|---:|---:|---:|---:|---:|---|
+| `shambler` | 30 | 24 | 8 | 2 | 10 | 1 | 基礎屍群 |
+| `runner` | 18 | 42 | 6 | 2 | 12 | 1 | 快速接近 |
+| `bloater` | 95 | 16 | 16 | 5 | 28 | 2 | 死亡爆裂半徑 62、傷害 22 |
+| `boss_hive_titan` | 850 | 9 | 35 | 24 | 480 | 5 | Boss，66% 召喚、33% 衝鋒 |
+
+| 增益門 | 核心 HP | 效果 |
+|---|---:|---|
+| `damage_plus` | 45 | 傷害 +35%，總傷害倍率上限 x3.5 |
+| `rate_plus` | 45 | 射擊間隔 x0.8 |
+| `multishot_plus` | 55 | 投射物 +1，上限 +4，側彈傷害 55% |
+| `repair` | 40 | 回復最大 HP 18% |
+
+波次參數：基礎 30 秒、每波 +1 秒、上限 45 秒；Boss 每 5 波；HP 成長 x1.13；速度每波 +1.5%，最高 +45%；開場屍群 24 隻，群聚大小 4-7。
+
+## 經濟與解鎖
 
 ```js
-bestByVehicle: {
-  [vehicleId]: {
-    wave: 10,
-    score: 12340,
-    kills: 130,
-    bosses: 2,
-    at: "2026-07-03T00:00:00.000Z"
-  }
-}
+earnedParts = max(2, round((waves * 4 + floor(min(kills, 360) / 6) + bosses * 24) * difficultyMul))
 ```
 
-### `blueprints`
+- 難度獎勵倍率：normal x1、hard x1.15、endless x1.1。
+- 藍圖掉落：每擊敗一隻 Boss 判定一次，35% 掉 1 張；連 3 隻 Boss 未掉則保底。
+- 藍圖目標：依載具順序鎖定第一台未解鎖藍圖載具；藍圖集滿 3 張立即解鎖。
+- 藍圖不折算零件；沒有未解鎖載具時保底計數歸零。
 
-```js
-blueprints: {
-  rift_hauler: 5,
-  frost_wing: 0
-}
-```
+## 升級表
 
-藍圖只用於解鎖載具，不得轉換為廢土零件。
+| 通用節點 | 上限 | 效果 | 成本 |
+|---|---:|---|---|
+| `hull` | 8 | HP +8%/級 | 30, 55, 90, 150, 245, 400, 650, 1050 |
+| `weapon` | 8 | 傷害 +7%/級 | 40, 70, 115, 190, 310, 500, 810, 1300 |
+| `energy` | 6 | 射速 +5%/級 | 80, 130, 210, 340, 550, 880 |
+| `gate` | 5 | 門效果 +4%/級 | 90, 160, 280, 490, 860 |
 
-### `lastRun`
+| 載具 | 專屬節點 |
+|---|---|
+| `land_rig` | `land_armor` 上限 2，護甲 +2/級；`land_resist` 上限 2，受傷 -4%/級 |
+| `sky_barge` | `sky_overclock` 上限 2，射速 +4%/級；`sky_evasion` 上限 2，受傷 -5%/級 |
+| `sea_ark` | `sea_depth` 上限 2，傷害 +5%/級；`sea_splash` 上限 2，爆風 +8/級 |
+| `void_runner` | `void_overload` 上限 2，射速 +4%/級；`void_pierce` 上限 1，穿透 +1 |
 
-```js
-lastRun: {
-  vehicleId: "iron_crow",
-  wavesCleared: 5,
-  kills: 55,
-  bossesDefeated: 1,
-  score: 6400,
-  earnedParts: 33,
-  unlockedAchievements: ["first_boss"],
-  at: "2026-07-03T00:00:00.000Z"
-}
-```
+## 成就牆
 
-## 遷移規則
+| id | 條件 | 零件 |
+|---|---|---:|
+| `first_kill` | 首次擊殺 | 4 |
+| `first_boss` | 擊敗 1 隻 Boss | 8 |
+| `wave_5` | 最佳波次達 5 | 8 |
+| `wave_10` | 最佳波次達 10 | 8 |
+| `sortie_land` / `sortie_air` / `sortie_sea` / `sortie_space` | 對應環境完成出擊紀錄 | 4 |
+| `total_kills_100` | 累計 100 殺 | 8 |
+| `unlock_all_vehicles` | 4 台載具全解鎖 | 8 |
 
-```js
-function migrateMeta(raw, { now }) => meta
-```
+## Rules 契約
 
-要求：
-
-- `raw == null` 時回傳深拷貝的 `META_DEFAULT`。
-- 無效 JSON 回傳預設值，不拋到 UI。
-- `version` 缺失或小於目前版本時逐版遷移。
-- 數字欄位需清洗 NaN、Infinity、負值。
-- 未知載具從 `selectedVehicle` 移除並回到 `iron_crow`。
-- `unlockedVehicles` 至少保證 `iron_crow` 與 `dawn_skiff` 為 true。
-- `vehicleLevels` 缺失時補預設，不可覆蓋既有合法等級。
-- `achievements` 與 `claimedMilestones` 只接受布林 true。
-- 遷移函式不得突變輸入物件。
-
-## Config 骨架
-
-### 載具 `VEHICLES`
-
-```js
-const VEHICLES = {
-  iron_crow: {
-    id: "iron_crow",
-    name: "鐵鴉號",
-    kind: "train",
-    sprite: "vehicle_iron_crow",
-    unlock: { type: "default" },
-    hp: 420,
-    armor: 8,
-    turretSlots: 2,
-    weapon: "machine_cannon",
-    passive: { id: "revenge_fire", damageMul: 0.10, duration: 2 },
-    stage: 1
-  }
-};
-```
-
-必要欄位：
-
-- `id`
-- `name`
-- `kind`: `train` 或 `ship`
-- `sprite`
-- `unlock`
-- `hp`
-- `armor`
-- `turretSlots`
-- `weapon`
-- `passive`
-- `stage`
-
-### 武器 `WEAPONS`
-
-```js
-const WEAPONS = {
-  machine_cannon: {
-    id: "machine_cannon",
-    name: "機砲",
-    bulletSprite: "bullet_machine",
-    damage: 8,
-    fireInterval: 0.22,
-    projectileSpeed: 620,
-    pierce: 0,
-    spread: 0,
-    splash: 0
-  }
-};
-```
-
-### 敵人 `ENEMIES`
-
-```js
-const ENEMIES = {
-  shambler: {
-    id: "shambler",
-    name: "遊蕩屍",
-    sprite: "zombie_shambler",
-    hp: 30,
-    speed: 38,
-    contactDamage: 8,
-    budgetCost: 2,
-    score: 10,
-    tags: ["ground"],
-    stage: 1
-  }
-};
-```
-
-Boss 也放在 `ENEMIES`，並加上：
-
-```js
-boss: true,
-phases: [
-  { hpPct: 0.66, action: "summon" },
-  { hpPct: 0.33, action: "charge" }
-]
-```
-
-### 增益門 `GATES`
-
-```js
-const GATES = {
-  damage_plus: {
-    id: "damage_plus",
-    label: "火力 +35%",
-    sprite: "gate_damage",
-    coreHp: 45,
-    effect: { type: "damageMul", add: 0.35 },
-    stage: 1
-  }
-};
-```
-
-必要規則：
-
-- `coreHp` 隨波次可用倍率成長。
-- gate 效果只作用於本局。
-- gate 不得直接給 `parts`。
-
-### 波次 `WAVE`
-
-```js
-const WAVE = {
-  baseDuration: 30,
-  durationGrowth: 1.0,
-  bossEvery: 5,
-  hpGrowth: 1.13,
-  budgetBase: 18,
-  budgetLinear: 5,
-  budgetPow: 1.35,
-  speedGrowthPerWave: 0.015,
-  speedGrowthCap: 0.45
-};
-```
-
-建議純函式：
-
-```js
-function enemyHpScale(wave, config) => number
-function enemySpeedScale(wave, config) => number
-function waveBudget(wave, config) => number
-function generateWave({ wave, rng, config }) => wavePlan
-```
-
-### 經濟 `ECONOMY`
-
-```js
-const ECONOMY = {
-  partsPerWave: 3,
-  killDivisor: 8,
-  killRewardCap: 360,
-  bossParts: 12,
-  minRunParts: 2,
-  difficultyRewardMul: {
-    normal: 1.0,
-    hard: 1.15,
-    endless: 1.10
-  },
-  blueprintDropChance: 0.30,
-  blueprintBundle: 5,
-  blueprintPityAfterBosses: 3
-};
-```
-
-結算函式：
-
-```js
-function settleRunRewards({
-  meta,
-  run,
-  config,
-  rng,
-  now
-}) => {
-  meta,
-  reward: {
-    parts,
-    blueprints,
-    achievements,
-    isBest
-  }
-}
-```
-
-要求：
-
-- 不突變輸入 `meta`。
-- `parts` 不得為負。
-- `blueprints` 不得轉回 `parts`。
-- 成就不可重複給獎。
-- `rng` 只用於藍圖掉落，不可用於主貨幣公式。
-
-## Runtime State 骨架
-
-Runtime state 不直接存入 localStorage，只在單局中存在。
-
-```js
-const runState = {
-  seed: "stage1-seed",
-  time: 0,
-  paused: false,
-  over: false,
-  wave: 1,
-  vehicleId: "iron_crow",
-  vehicle: {
-    hp: 420,
-    maxHp: 420,
-    shield: 0,
-    x: 195,
-    y: 690,
-    aimX: 195,
-    aimY: 320,
-    weaponCooldown: 0
-  },
-  runMods: {
-    damageAdd: 0,
-    fireIntervalMul: 1,
-    projectileAdd: 0,
-    burn: 0,
-    shock: 0,
-    slow: 0
-  },
-  enemies: [],
-  projectiles: [],
-  gates: [],
-  effects: [],
-  stats: {
-    kills: 0,
-    bossesDefeated: 0,
-    damageDealt: 0,
-    gatesTaken: 0,
-    score: 0
-  }
-};
-```
-
-## `window.__test` 骨架
-
-Stage 1 實作完成時，瀏覽器需提供：
-
-```js
-window.__test = {
-  getState,
-  setState,
-  step,
-  spawnEnemy,
-  spawnGate,
-  grantGate,
-  damageVehicle,
-  killAllEnemies,
-  finishRun,
-  clearStorage,
-  config,
-  spritesReady
-};
-```
-
-規則：
-
-- `step(deltaMs)` 必須 deterministic。
-- `finishRun(overrides)` 可直接觸發結算，用於 E2E 驗證 localStorage。
-- `clearStorage()` 只清本專案 key，不清瀏覽器全部 localStorage。
-- 測試掛鉤不得需要外部套件。
+- `migrateMeta` 必須容忍壞 JSON、舊版 id、NaN/Infinity、缺欄位與未解鎖選車。
+- `settleRunRewards` 會同時更新零件、最佳紀錄、藍圖、成就與 `lastRun`，且不可直接突變傳入 meta。
+- `getAchievementProgress` 以 meta 推導進度，完成後由 `applyAchievementRewards` 發零件。
+- `buyUpgrade` 只能扣已解鎖載具可用節點的成本，達上限回傳不可購買。
+- Node 測試覆蓋 config shape、rules deterministic、經濟、storage migration、sprite contract。
