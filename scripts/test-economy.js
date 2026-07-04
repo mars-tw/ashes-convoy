@@ -11,6 +11,20 @@ assert.strictEqual(rules.rewardPartsForRun({ wavesCleared: 3, kills: 25, bossesD
 assert.strictEqual(rules.rewardPartsForRun({ wavesCleared: 5, kills: 55, bossesDefeated: 1, difficultyId: "normal" }, config), 53);
 assert.strictEqual(rules.rewardPartsForRun({ wavesCleared: 10, kills: 130, bossesDefeated: 2, difficultyId: "normal" }, config), 109);
 assert.strictEqual(rules.rewardPartsForRun({ wavesCleared: 15, kills: 205, bossesDefeated: 3, difficultyId: "normal" }, config), 166);
+assert.deepStrictEqual(
+  rules.rewardPartsBreakdownForRun({ wavesCleared: 5, kills: 55, bossesDefeated: 1, difficultyId: "normal" }, config),
+  {
+    waveParts: 20,
+    killParts: 9,
+    bossParts: 24,
+    subtotal: 53,
+    difficultyId: "normal",
+    difficultyMul: 1,
+    difficultyBonus: 0,
+    minimumBonus: 0,
+    total: 53
+  }
+);
 
 const meta = rules.migrateMeta(null, { config });
 const before = JSON.stringify(meta);
@@ -24,11 +38,15 @@ const result = rules.settleRunRewards({
 
 assert.strictEqual(JSON.stringify(meta), before, "settleRunRewards must not mutate input meta");
 assert.strictEqual(result.reward.parts, 53);
+assert.strictEqual(result.reward.partsBreakdown.waveParts, 20);
+assert.strictEqual(result.reward.partsBreakdown.killParts, 9);
+assert.strictEqual(result.reward.partsBreakdown.bossParts, 24);
 assert.strictEqual(result.reward.blueprints.parts, undefined, "blueprints must not convert to parts");
 assert.strictEqual(result.meta.parts, 53);
 assert.strictEqual(result.meta.totalRuns, 1);
 assert.strictEqual(result.meta.totalKills, 55);
 assert.strictEqual(result.meta.totalBossKills, 1);
+assert.strictEqual(result.meta.lastRun.partsBreakdown.total, 53);
 assert.strictEqual(result.meta.achievements.first_boss, true);
 assert(result.reward.achievements.includes("first_boss"));
 

@@ -442,18 +442,35 @@ function applyVehicleDamage(vehicle, incoming, armor) {
   return { vehicle: next, damage };
 }
 
-function rewardPartsForRun(run, config) {
+function rewardPartsBreakdownForRun(run, config) {
   const cfg = getConfig(config);
   const wavesCleared = finiteNumber(run && run.wavesCleared, 0, { min: 0, integer: true });
   const kills = finiteNumber(run && run.kills, 0, { min: 0, integer: true });
   const bossesDefeated = finiteNumber(run && run.bossesDefeated, 0, { min: 0, integer: true });
-  if (wavesCleared === 0 && kills === 0 && bossesDefeated === 0) return 0;
   const difficultyId = run && cfg.ECONOMY.difficultyRewardMul[run.difficultyId] ? run.difficultyId : "normal";
   const baseParts = wavesCleared * cfg.ECONOMY.partsPerWave;
   const killParts = Math.floor(Math.min(kills, cfg.ECONOMY.killRewardCap) / cfg.ECONOMY.killDivisor);
   const bossParts = bossesDefeated * cfg.ECONOMY.bossParts;
   const difficultyMul = cfg.ECONOMY.difficultyRewardMul[difficultyId];
-  return Math.max(cfg.ECONOMY.minRunParts, Math.round((baseParts + killParts + bossParts) * difficultyMul));
+  const subtotal = baseParts + killParts + bossParts;
+  const rounded = Math.round(subtotal * difficultyMul);
+  const emptyRun = wavesCleared === 0 && kills === 0 && bossesDefeated === 0;
+  const total = emptyRun ? 0 : Math.max(cfg.ECONOMY.minRunParts, rounded);
+  return {
+    waveParts: baseParts,
+    killParts,
+    bossParts,
+    subtotal,
+    difficultyId,
+    difficultyMul,
+    difficultyBonus: total - subtotal,
+    minimumBonus: Math.max(0, total - rounded),
+    total
+  };
+}
+
+function rewardPartsForRun(run, config) {
+  return rewardPartsBreakdownForRun(run, config).total;
 }
 
 function migrateMeta(raw, options) {
@@ -550,7 +567,8 @@ function settleRunRewards(options) {
   const vehicleId = cfg.VEHICLES[run.vehicleId] ? run.vehicleId : meta.selectedVehicle;
   const difficultyId = cfg.ECONOMY.difficultyRewardMul[run.difficultyId] ? run.difficultyId : "normal";
   const normalizedRun = { wavesCleared, kills, bossesDefeated, score, vehicleId, difficultyId };
-  const parts = rewardPartsForRun(normalizedRun, cfg);
+  const partsBreakdown = rewardPartsBreakdownForRun(normalizedRun, cfg);
+  const parts = partsBreakdown.total;
   const achievements = [];
 
   if (kills > 0 && meta.achievements.first_kill !== true) {
@@ -595,6 +613,7 @@ function settleRunRewards(options) {
     bossesDefeated,
     score,
     earnedParts: parts,
+    partsBreakdown,
     unlockedAchievements: achievements.slice(),
     at
   };
@@ -603,6 +622,7 @@ function settleRunRewards(options) {
     meta,
     reward: {
       parts,
+      partsBreakdown,
       blueprints: {},
       achievements,
       isBest
@@ -677,6 +697,7 @@ const DSRules = {
   applyGateEffect,
   damageEnemy,
   applyVehicleDamage,
+  rewardPartsBreakdownForRun,
   rewardPartsForRun,
   migrateMeta,
   settleRunRewards,

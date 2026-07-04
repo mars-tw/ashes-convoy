@@ -167,6 +167,18 @@
     });
   }
 
+  function pushEventBanner(title, body, options) {
+    if (!state) return;
+    const opts = options || {};
+    state.eventBanner = {
+      title,
+      body: body || "",
+      kind: opts.kind || "info",
+      time: state.time,
+      ttl: Number.isFinite(opts.ttl) ? opts.ttl : 1.8
+    };
+  }
+
   function pulseShake(amount, duration) {
     if (meta.settings && meta.settings.reducedFlash) return;
     state.shakeAmp = Math.max(state.shakeAmp || 0, amount);
@@ -203,6 +215,9 @@
       vehicleId: state.vehicleId,
       vehicle: rules.deepClone(state.vehicle),
       runMods: rules.deepClone(state.runMods),
+      input: rules.deepClone(state.input),
+      eventBanner: state.eventBanner ? rules.deepClone(state.eventBanner) : null,
+      lastGateChoice: state.lastGateChoice ? rules.deepClone(state.lastGateChoice) : null,
       enemies: state.enemies.map(publicEntity),
       projectiles: state.projectiles.map(publicEntity),
       gates: state.gates.map(publicEntity),
@@ -270,6 +285,7 @@
         radius: vehicleConfig.radius,
         x: W * 0.5,
         y: config.LOGIC.vehicleY,
+        followX: W * 0.5,
         aimX: W * 0.5,
         aimY: 300,
         weaponCooldown: 0,
@@ -296,6 +312,8 @@
       scroll: 0,
       shakeAmp: 0,
       shakeUntil: 0,
+      eventBanner: null,
+      lastGateChoice: null,
       messages: []
     };
 
@@ -383,6 +401,10 @@
     };
     if (state.enemies.length >= config.PERFORMANCE.maxEnemies) return null;
     state.enemies.push(enemy);
+    if (enemy.boss) {
+      pushEventBanner("Boss 來襲", enemyConfig.name, { kind: "boss", ttl: 2.4 });
+      state.messages.push({ text: `${enemyConfig.name} 逼近`, time: state.time, ttl: 2.1 });
+    }
     if (!opts.silent) emitState();
     return publicEntity(enemy);
   }
@@ -403,8 +425,9 @@
       y: Number.isFinite(opts.y) ? opts.y : -42,
       hp: Number.isFinite(opts.hp) ? opts.hp : Math.round(gateConfig.coreHp * Math.pow(config.WAVE.gateHpGrowth, state.wave - 1)),
       maxHp: Number.isFinite(opts.hp) ? opts.hp : Math.round(gateConfig.coreHp * Math.pow(config.WAVE.gateHpGrowth, state.wave - 1)),
-      radius: 20,
-      scale: 1.5,
+      radius: Number.isFinite(opts.radius) ? opts.radius : 29,
+      touchRadius: Number.isFinite(opts.touchRadius) ? opts.touchRadius : 31,
+      scale: Number.isFinite(opts.scale) ? opts.scale : 1.75,
       broken: false
     };
     state.gates.push(gate);
@@ -415,9 +438,9 @@
   function spawnGatePair(options) {
     const pairId = nextId("gatepair");
     const ids = options && options.length ? options : ["damage_plus", "repair"];
-    const gateHalf = 32 * 1.5 * 0.5;
-    const left = spawnGate(ids[0], { pairId, x: config.LOGIC.roadLeft + gateHalf, y: 104, silent: true });
-    const right = spawnGate(ids[1], { pairId, x: config.LOGIC.roadRight - gateHalf, y: 104, silent: true });
+    const gateHalf = 32 * 1.75 * 0.5;
+    const left = spawnGate(ids[0], { pairId, x: config.LOGIC.roadLeft + gateHalf + 1, y: 104, silent: true });
+    const right = spawnGate(ids[1], { pairId, x: config.LOGIC.roadRight - gateHalf - 1, y: 104, silent: true });
     emitState();
     return [left, right];
   }
@@ -435,7 +458,14 @@
     state.runMods = result.runMods;
     state.vehicle = result.vehicle || state.vehicle;
     state.stats.gatesTaken += 1;
-    state.messages.push({ text: config.GATES[gateId].label, time: state.time, ttl: 1.7 });
+    state.lastGateChoice = {
+      gateId,
+      label: config.GATES[gateId].label,
+      time: state.time,
+      ttl: 1.8
+    };
+    state.messages.push({ text: `已選：${config.GATES[gateId].label}`, time: state.time, ttl: 1.7 });
+    pushEventBanner("增益已選", config.GATES[gateId].label, { kind: "gate", ttl: 1.6 });
     addFloatingText(config.GATES[gateId].shortLabel, state.vehicle.x, state.vehicle.y - 54, {
       color: "#f0b64a",
       size: 9,
@@ -462,6 +492,15 @@
       alpha: 0.85
     });
     state.gates = state.gates.filter((other) => other.pairId !== gate.pairId);
+  }
+
+  function chooseGate(gateId) {
+    if (!state || state.over || state.paused) return getState();
+    const gate = state.gates.find((item) => item.id === gateId || item.gateId === gateId);
+    if (gate) triggerGate(gate);
+    draw();
+    emitState();
+    return getState();
   }
 
   function damageVehicle(amount) {
@@ -681,6 +720,23 @@
     }
   }
 
+  function bossPhaseLabel(action) {
+    if (action === "summon") return "召喚屍群";
+    if (action === "charge") return "狂暴衝撞";
+    return "變換階段";
+  }
+
+  function executeBossPhase(enemy, action) {
+    if (action === "summon") {
+      [-38, 0, 38].forEach((offset) => spawnEnemy("shambler", { x: enemy.x + offset, y: enemy.y + 30 }));
+      enemy.anim = "attack";
+    } else if (action === "charge") {
+      enemy.anim = "rage";
+      enemy.rageUntil = state.time + 2.2;
+    }
+    enemy.pendingPhase = null;
+  }
+
   function updateEnemies(dt) {
     const vehicle = state.vehicle;
     state.enemies.forEach((enemy) => {
@@ -702,13 +758,26 @@
 
       if (enemy.boss) {
         const enemyConfig = config.ENEMIES[enemy.enemyId];
+        if (!enemy.phaseTriggered) enemy.phaseTriggered = {};
+        if (enemy.pendingPhase && state.time >= enemy.pendingPhase.executeAt) {
+          executeBossPhase(enemy, enemy.pendingPhase.action);
+        }
+        if (enemy.telegraphUntil && state.time > enemy.telegraphUntil) {
+          enemy.telegraphText = "";
+          enemy.telegraphUntil = 0;
+        }
         enemyConfig.phases.forEach((phase) => {
-          if (enemy.hp <= enemy.maxHp * phase.hpPct && !enemy.phaseTriggered[phase.action]) {
+          if (enemy.hp <= enemy.maxHp * phase.hpPct && !enemy.phaseTriggered[phase.action] && !enemy.pendingPhase) {
             enemy.phaseTriggered[phase.action] = true;
-            enemy.anim = phase.action === "charge" ? "rage" : "attack";
-            if (phase.action === "summon") {
-              [-38, 0, 38].forEach((offset) => spawnEnemy("shambler", { x: enemy.x + offset, y: enemy.y + 30 }));
-            }
+            enemy.anim = "attack";
+            enemy.pendingPhase = {
+              action: phase.action,
+              label: bossPhaseLabel(phase.action),
+              executeAt: state.time + 0.95
+            };
+            enemy.telegraphText = bossPhaseLabel(phase.action);
+            enemy.telegraphUntil = state.time + 1.15;
+            pushEventBanner("Boss 前搖", `${enemyConfig.name}：${enemy.telegraphText}`, { kind: "boss", ttl: 1.4 });
           }
         });
       }
@@ -853,6 +922,8 @@
     });
     state.effects = state.effects.filter((effect) => effect.age < effect.ttl);
     state.messages = state.messages.filter((message) => state.time - message.time <= message.ttl);
+    if (state.eventBanner && state.time - state.eventBanner.time > state.eventBanner.ttl) state.eventBanner = null;
+    if (state.lastGateChoice && state.time - state.lastGateChoice.time > state.lastGateChoice.ttl) state.lastGateChoice = null;
   }
 
   function completeWaveIfReady() {
@@ -878,8 +949,13 @@
     const vehicleConfig = getVehicleConfig(state.vehicleId);
     const vehicle = state.vehicle;
     const half = vehicleConfig.visualHalfWidth || 24;
-    const targetX = rules.clamp(vehicle.aimX, config.LOGIC.roadLeft + half, config.LOGIC.roadRight - half);
-    vehicle.x += (targetX - vehicle.x) * Math.min(1, vehicleConfig.moveResponsiveness * dt * 60);
+    if (!Number.isFinite(vehicle.followX)) vehicle.followX = vehicle.x;
+    if (!state.input.dragging) {
+      const followRate = Math.min(1, 0.018 * dt * 60);
+      vehicle.followX += (vehicle.aimX - vehicle.followX) * followRate;
+    }
+    const targetX = rules.clamp(vehicle.followX, config.LOGIC.roadLeft + half, config.LOGIC.roadRight - half);
+    vehicle.x += (targetX - vehicle.x) * Math.min(1, vehicleConfig.moveResponsiveness * 0.28 * dt * 60);
     vehicle.x = rules.clamp(vehicle.x, config.LOGIC.roadLeft + half, config.LOGIC.roadRight - half);
     vehicle.aimY = rules.clamp(vehicle.aimY, config.LOGIC.aimMinY, config.LOGIC.aimMaxY);
   }
@@ -921,6 +997,16 @@
     state.vehicle.aimY = rules.clamp(point.y, config.LOGIC.aimMinY, state.vehicle.y - 40);
   }
 
+  function gateAtPoint(point) {
+    if (!state || !point) return null;
+    return (
+      state.gates.find((gate) => {
+        if (gate.broken) return false;
+        return distance(point, gate) <= (gate.touchRadius || gate.radius || 24);
+      }) || null
+    );
+  }
+
   function pointFromEvent(event) {
     const rect = canvas.getBoundingClientRect();
     return {
@@ -934,10 +1020,19 @@
     boundInput = true;
     canvas.addEventListener("pointerdown", (event) => {
       if (!state || state.over || state.paused) return;
+      const point = pointFromEvent(event);
+      const gate = gateAtPoint(point);
+      if (gate) {
+        triggerGate(gate);
+        draw();
+        emitState();
+        event.preventDefault();
+        return;
+      }
       canvas.setPointerCapture(event.pointerId);
       state.input.dragging = true;
       state.input.lastPointer = event.pointerId;
-      setAimFromPoint(pointFromEvent(event));
+      setAimFromPoint(point);
       event.preventDefault();
     });
     canvas.addEventListener("pointermove", (event) => {
@@ -966,9 +1061,9 @@
       } else if (event.key === "r" || event.key === "R") {
         startRun(meta.selectedVehicle);
       } else if (state && !state.paused && !state.over && event.key === "ArrowLeft") {
-        state.vehicle.aimX -= 18;
+        state.vehicle.followX = rules.clamp((state.vehicle.followX || state.vehicle.x) - 18, 26, W - 26);
       } else if (state && !state.paused && !state.over && event.key === "ArrowRight") {
-        state.vehicle.aimX += 18;
+        state.vehicle.followX = rules.clamp((state.vehicle.followX || state.vehicle.x) + 18, 26, W - 26);
       } else if (state && !state.paused && !state.over && (event.key === "1" || event.key === "2")) {
         const index = Number(event.key) - 1;
         const gate = state.gates[index];
@@ -999,7 +1094,6 @@
   function drawGateLabel(gate) {
     const gateConfig = config.GATES[gate.gateId];
     if (!gateConfig) return;
-    drawWorldText(gateConfig.shortLabel, gate.x, gate.y - 16, { size: 7, color: "#f4ead8" });
     const valueText =
       gate.gateId === "damage_plus"
         ? "+35%"
@@ -1008,7 +1102,17 @@
           : gate.gateId === "multishot_plus"
             ? "+1"
             : "維修";
-    drawWorldText(valueText, gate.x, gate.y - 5, { size: 8, color: gate.gateId === "repair" ? "#87d27d" : "#f0b64a" });
+    ctx.save();
+    ctx.globalAlpha *= 0.9;
+    ctx.fillStyle = "rgba(7, 9, 13, 0.72)";
+    ctx.strokeStyle = gate.gateId === "repair" ? "rgba(135,210,125,0.82)" : "rgba(240,182,74,0.82)";
+    ctx.lineWidth = 1;
+    ctx.fillRect(gate.x - 25, gate.y - 33, 50, 30);
+    ctx.strokeRect(gate.x - 25, gate.y - 33, 50, 30);
+    ctx.restore();
+    drawWorldText(gateConfig.shortLabel, gate.x, gate.y - 24, { size: 10, color: "#f4ead8" });
+    drawWorldText(valueText, gate.x, gate.y - 11, { size: 12, color: gate.gateId === "repair" ? "#87d27d" : "#f0b64a" });
+    drawWorldText("點選/射擊", gate.x, gate.y + 24, { size: 5, color: "#f4ead8", alpha: 0.72 });
     renderDebug.gateLabelsDrawn += 1;
   }
 
@@ -1728,6 +1832,7 @@
       spawnEnemy,
       spawnGate,
       grantGate,
+      chooseGate,
       damageVehicle,
       killAllEnemies,
       finishRun,
@@ -1751,6 +1856,7 @@
     spawnEnemy,
     spawnGate,
     grantGate,
+    chooseGate,
     damageVehicle,
     killAllEnemies,
     finishRun,

@@ -283,6 +283,8 @@ async function dragAim(page) {
   await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.78);
   await page.mouse.down();
   await page.mouse.move(box.x + box.width * 0.78, box.y + box.height * 0.24, { steps: 8 });
+  await page.evaluate(() => window.__test.step(180));
+  const duringDrag = await page.evaluate(() => window.__test.getState().vehicle);
   await page.mouse.up();
   await page.evaluate(() => {
     window.__test.setState({ projectiles: [], vehicle: { weaponCooldown: 0 } });
@@ -297,6 +299,10 @@ async function dragAim(page) {
   });
   assert(Math.abs(after.vehicle.aimX - before.aimX) > 20, "drag should change aimX");
   assert(after.vehicle.aimY < before.aimY - 80, "drag should move aim upward");
+  assert(
+    Math.abs(duringDrag.x - before.x) < 8,
+    `drag aim should not hard-pull vehicle horizontally, moved ${Math.abs(duringDrag.x - before.x).toFixed(1)}`
+  );
   assert(after.projectile, "auto fire should create a projectile after drag");
   assert(after.projectile.vx > 10, "projectile should point toward the dragged aim direction");
   assert(after.projectile.vy < -40, "projectile should travel upward");
@@ -569,6 +575,56 @@ async function shootGate(page) {
   assert(state.runMods.damageAdd > 0, "damage gate should apply immediately");
 }
 
+async function tapGateChoice(page) {
+  await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    const state = window.__test.getState();
+    window.__test.setState({ gates: [], projectiles: [], enemies: [], vehicle: { weaponCooldown: 999 } });
+    window.__test.spawnGate("rate_plus", {
+      id: "tap-left",
+      pairId: "tap-pair",
+      x: window.DSConfig.LOGIC.roadLeft + 29,
+      y: 132,
+      hp: 99
+    });
+    window.__test.spawnGate("repair", {
+      id: "tap-right",
+      pairId: "tap-pair",
+      x: window.DSConfig.LOGIC.roadRight - 29,
+      y: 132,
+      hp: 99
+    });
+    window.__test.setState({ vehicle: { hp: state.vehicle.maxHp - 80 } });
+  });
+  await page.waitForSelector('#gateChoiceLayer:not([hidden]) .gate-choice-btn[data-gate-id="rate_plus"]');
+  const buttons = await page.locator("#gateChoiceLayer .gate-choice-btn").evaluateAll((nodes) =>
+    nodes.map((node) => {
+      const rect = node.getBoundingClientRect();
+      return {
+        id: node.dataset.gateId,
+        text: node.innerText,
+        width: rect.width,
+        height: rect.height,
+        left: rect.left,
+        right: rect.right,
+        viewportWidth: window.innerWidth
+      };
+    })
+  );
+  assert.strictEqual(buttons.length, 2, "gate choice layer should expose two direct tap choices");
+  buttons.forEach((button) => {
+    assert(button.width >= 44 && button.height >= 44, `${button.id} gate tap target should be at least 44px`);
+    assert(button.left >= 0 && button.right <= button.viewportWidth, `${button.id} gate button should not overflow horizontally`);
+    assert(button.text.includes("點選"), `${button.id} gate button should explain direct selection`);
+  });
+  await page.click('#gateChoiceLayer .gate-choice-btn[data-gate-id="rate_plus"]');
+  await page.waitForFunction(() => window.__test.getState().stats.gatesTaken >= 1);
+  const state = await page.evaluate(() => window.__test.getState());
+  assert(state.runMods.fireIntervalMul < 1, "tapping a rate gate should apply the rate mod immediately");
+  assert.strictEqual(state.gates.length, 0, "choosing one gate should remove the pair");
+  assert(state.lastGateChoice && state.lastGateChoice.gateId === "rate_plus", "chosen gate should be recorded for feedback");
+}
+
 async function spawnBoss(page) {
   await page.evaluate(() => {
     window.__test.setState({ enemies: [], projectiles: [], gates: [] });
@@ -578,6 +634,31 @@ async function spawnBoss(page) {
   const state = await page.evaluate(() => window.__test.getState());
   assert.strictEqual(state.wave, 5);
   assert(state.enemies.some((enemy) => enemy.enemyId === "boss_hive_titan" && enemy.boss), "wave 5 should spawn boss");
+  const bossHud = await page.locator("#bossHud").evaluate((node) => ({
+    visible: node.classList.contains("is-visible"),
+    name: document.getElementById("bossName").textContent,
+    hp: document.getElementById("bossHpText").textContent
+  }));
+  assert(bossHud.visible, "boss HUD should be visible when the boss enters");
+  assert(bossHud.name.includes("母巢巨屍"), `boss HP bar should name the boss, got ${bossHud.name}`);
+  assert(bossHud.hp.includes("%"), "boss HP bar should show remaining percent");
+  const banner = await page.locator("#eventBanner").evaluate((node) => ({
+    hidden: node.hidden,
+    text: node.innerText
+  }));
+  assert(!banner.hidden && banner.text.includes("Boss 來襲"), `boss alert banner should be visible, got ${banner.text}`);
+
+  await page.evaluate(() => {
+    const stateNow = window.__test.getState();
+    const enemies = stateNow.enemies.map((enemy) => {
+      if (enemy.boss) return Object.assign({}, enemy, { hp: Math.floor(enemy.maxHp * 0.65) });
+      return enemy;
+    });
+    window.__test.setState({ enemies });
+    window.__test.step(120);
+  });
+  const telegraph = await page.locator("#bossTelegraph").innerText();
+  assert(telegraph.includes("召喚"), `boss phase telegraph should announce summon, got ${telegraph}`);
 }
 
 async function deathSettlementUpgradeAndReload(page) {
@@ -595,6 +676,20 @@ async function deathSettlementUpgradeAndReload(page) {
   await page.waitForSelector("#settlementPanel:not([hidden])");
   const settlementText = await page.locator("#settlementSummary").innerText();
   assert(settlementText.includes("109"), `settlement should show 109 earned parts: ${settlementText}`);
+  assert(settlementText.includes("新紀錄"), `settlement should call out new records: ${settlementText}`);
+  const settlementRows = await page.locator("#settlementList .settlement-item").evaluateAll((nodes) =>
+    nodes.map((node) => node.innerText.replace(/\s+/g, " ").trim())
+  );
+  assert(settlementRows.some((row) => row.includes("+40") && row.includes("波次零件")), `settlement should show wave parts breakdown: ${settlementRows.join(" | ")}`);
+  assert(settlementRows.some((row) => row.includes("+21") && row.includes("擊殺零件")), `settlement should show kill parts breakdown: ${settlementRows.join(" | ")}`);
+  assert(settlementRows.some((row) => row.includes("+48") && row.includes("Boss 零件")), `settlement should show boss parts breakdown: ${settlementRows.join(" | ")}`);
+  const badges = await page.locator("#settlementBadges .settlement-badge").evaluateAll((nodes) => nodes.map((node) => node.innerText));
+  assert(badges.some((text) => text.includes("首殺 Boss")), `settlement should show first boss achievement: ${badges.join(" | ")}`);
+  const recommendation = await page.locator("#settlementRecommendation").evaluate((node) => ({
+    hidden: node.hidden,
+    text: node.innerText
+  }));
+  assert(!recommendation.hidden && recommendation.text.includes("建議升級"), `settlement should show recommended upgrade CTA: ${recommendation.text}`);
   let meta = await page.evaluate(() => window.__test.getMeta());
   assert(meta.parts >= 109, "settlement should persist earned parts");
   const garageCta = await page.locator("#garageBtn").evaluate((button) => ({ text: button.textContent, className: button.className }));
@@ -606,6 +701,8 @@ async function deathSettlementUpgradeAndReload(page) {
   await page.click('[data-upgrade="hull"]');
   meta = await page.evaluate(() => window.__test.getMeta());
   assert.strictEqual(meta.vehicleLevels.land_rig.hull, 1, "hull upgrade should be bought");
+  const upgradeStatus = await page.locator("#garageStatus").innerText();
+  assert(upgradeStatus.includes("HP 520 → 562"), `upgrade feedback should show stat delta, got ${upgradeStatus}`);
 
   await clickSortie(page);
   const upgradedRun = await page.evaluate(() => ({
@@ -654,6 +751,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await dragAim(page);
   await killEnemiesAndEarnPreviewParts(page);
   await shootGate(page);
+  await tapGateChoice(page);
   await spawnBoss(page);
 
   if (full) {
