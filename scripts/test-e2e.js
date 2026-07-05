@@ -874,6 +874,114 @@ async function checkEnvironmentEventsAndVariants(page) {
   assert(state.enemies.some((enemy) => enemy.variantId), "late wave generation should spawn tinted variants");
 }
 
+async function checkEventCodexAndAchievements(page) {
+  await page.evaluate(() => {
+    window.__test.clearStorage();
+    const meta = window.__test.getMeta();
+    Object.keys(window.DSConfig.VEHICLES).forEach((vehicleId) => {
+      meta.unlockedVehicles[vehicleId] = true;
+      const required = window.DSRules.blueprintRequiredForVehicle(vehicleId, window.DSConfig);
+      if (required > 0) meta.blueprints[vehicleId] = required;
+    });
+    window.__test.setMeta(meta);
+    window.__test.startRun("void_runner");
+    window.__test.setState({ rng: () => 0, enemies: [], projectiles: [], gates: [], hazards: [] });
+    window.__test.pushWave(2);
+    const eventWave = window.__test.getState();
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      hazards: [],
+      spawnIndex: 999,
+      waveElapsed: eventWave.wavePlan.duration
+    });
+    window.__test.step(160);
+    window.__test.damageVehicle(99999);
+  });
+  await page.waitForSelector("#settlementPanel:not([hidden])");
+  let result = await page.evaluate(() => ({
+    meta: window.__test.getMeta(),
+    reward: window.__test.getLastSettlement().reward
+  }));
+  assert(result.meta.eventStats.meteor_shower.encounters >= 1, "event codex should record meteor encounters");
+  assert.strictEqual(result.meta.eventStats.meteor_shower.completions, 1, "event codex should record meteor completion");
+  assert.strictEqual(result.meta.achievements.event_meteor_shower, true, "first completed meteor event should unlock achievement");
+  assert(result.reward.achievements.includes("event_meteor_shower"), "event achievement should unlock in settlement");
+
+  await page.click("#garageBtn");
+  await page.waitForSelector("#garagePanel:not([hidden])");
+  await page.click("#seriesHotspotBtn");
+  await page.waitForSelector('[data-event-id="meteor_shower"]');
+  const codexText = await page.locator('[data-event-id="meteor_shower"]').innerText();
+  assert(codexText.includes("遭遇") && codexText.includes("完成 1"), `event codex should show counts: ${codexText}`);
+
+  await page.evaluate(() => {
+    window.__test.startRun("void_runner");
+    window.__test.setState({ rng: () => 0, enemies: [], projectiles: [], gates: [], hazards: [] });
+    window.__test.pushWave(2);
+    const eventWave = window.__test.getState();
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      hazards: [],
+      spawnIndex: 999,
+      waveElapsed: eventWave.wavePlan.duration
+    });
+    window.__test.step(160);
+    window.__test.damageVehicle(99999);
+  });
+  await page.waitForSelector("#settlementPanel:not([hidden])");
+  result = await page.evaluate(() => window.__test.getLastSettlement().reward);
+  assert(!result.achievements.includes("event_meteor_shower"), "event achievement should be one-time only");
+}
+
+async function checkSupplyDropPickupAndSettlement(page) {
+  await page.evaluate(() => {
+    window.__test.clearStorage();
+    window.__test.startRun("land_rig");
+    const state = window.__test.getState();
+    window.__test.setState({
+      rng: () => 0,
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      supplyDrops: [],
+      supplyBuffs: [],
+      vehicle: { aimX: state.vehicle.x, aimY: state.vehicle.y - 90, weaponCooldown: 0 }
+    });
+    const aimed = window.__test.getState();
+    window.__test.spawnEnemy("shambler", {
+      x: aimed.vehicle.x,
+      y: aimed.vehicle.y - 90,
+      hp: 1,
+      speed: 0
+    });
+    window.__test.step(1200);
+  });
+  let state = await page.evaluate(() => window.__test.getState());
+  assert(state.stats.supplyCratesDropped >= 1, "forced low roll kill should drop a supply cache");
+  assert(
+    state.stats.supplyCratesCollected >= 1 || state.supplyDrops.length >= 1,
+    "supply cache should be visible or already collected"
+  );
+
+  await page.evaluate(() => window.__test.step(2600));
+  state = await page.evaluate(() => window.__test.getState());
+  assert(state.stats.supplyCratesCollected >= 1, "vehicle should pick up the supply cache");
+  assert(state.supplyBuffs.some((buff) => buff.rewardId === "rate_boost"), "first supply reward should apply rate boost");
+  assert(state.effectiveRunMods.fireIntervalMul < 1, "rate boost should reduce effective fire interval");
+  assert.strictEqual(state.stats.lastSupplyReward, "rate_boost", "pickup should record feedback reward");
+
+  await page.evaluate(() => window.__test.damageVehicle(99999));
+  await page.waitForSelector("#settlementPanel:not([hidden])");
+  const settlementRows = await page.locator("#settlementList .settlement-item").evaluateAll((nodes) =>
+    nodes.map((node) => node.innerText.replace(/\s+/g, " ").trim())
+  );
+  assert(settlementRows.some((row) => row.includes("補給箱")), `settlement should list supply cache source: ${settlementRows.join(" | ")}`);
+}
+
 async function checkVehicleSpecificUpgradePurchase(page) {
   await page.evaluate(() => {
     const meta = window.__test.getMeta();
@@ -1035,6 +1143,9 @@ async function runScenario(browser, baseUrl, viewport, full) {
     await checkBossBlueprintDropAnimation(page);
     await unlockFleet(page);
     await checkEnvironmentEventsAndVariants(page);
+    await checkEventCodexAndAchievements(page);
+    await checkSupplyDropPickupAndSettlement(page);
+    await unlockFleet(page);
     await checkFleetProjectileTraits(page);
     await checkVehicleFleetSelectionAndCombat(page);
     await checkBlueprintAchievementsAndUnlock(page);

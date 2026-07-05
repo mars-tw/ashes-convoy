@@ -31,6 +31,12 @@ const eventBreakdown = rules.rewardPartsBreakdownForRun(
 );
 assert.strictEqual(eventBreakdown.eventBonus, 15, "sandstorm + meteor parts should be explicit event bonus");
 assert.strictEqual(eventBreakdown.total, 68, "event bonus should add to normal run rewards");
+const supplyBreakdown = rules.rewardPartsBreakdownForRun(
+  { wavesCleared: 1, kills: 1, bossesDefeated: 0, difficultyId: "normal", supplyParts: 99, supplyCratesCollected: 5 },
+  config
+);
+assert.strictEqual(supplyBreakdown.supplyParts, 12, "supply parts should respect the per-run cap");
+assert.strictEqual(supplyBreakdown.supplyCrates, 5, "settlement should preserve supply crate count");
 
 const meta = rules.migrateMeta(null, { config });
 const before = JSON.stringify(meta);
@@ -105,6 +111,40 @@ const wishlist = rules.settleRunRewards({
 });
 assert.strictEqual(wishlist.reward.blueprints.sea_ark, 1, "wishlist should prioritize sea ark blueprint drops");
 assert.strictEqual(wishlist.meta.blueprints.sky_barge, 0, "wishlist should not spend the drop on sky first");
+
+const eventAchievement = rules.settleRunRewards({
+  meta: rules.migrateMeta(null, { config }),
+  run: {
+    vehicleId: "land_rig",
+    wavesCleared: 2,
+    kills: 1,
+    bossesDefeated: 0,
+    score: 300,
+    difficultyId: "normal",
+    eventStats: { sandstorm: { encounters: 1, completions: 1 } }
+  },
+  rng: () => 0.99,
+  now: fixedNow,
+  config
+});
+assert.strictEqual(eventAchievement.meta.eventStats.sandstorm.completions, 1);
+assert(eventAchievement.reward.achievements.includes("event_sandstorm"), "first completed event should unlock its achievement");
+const eventRepeat = rules.settleRunRewards({
+  meta: eventAchievement.meta,
+  run: {
+    vehicleId: "land_rig",
+    wavesCleared: 2,
+    kills: 1,
+    bossesDefeated: 0,
+    score: 300,
+    difficultyId: "normal",
+    eventStats: { sandstorm: { encounters: 1, completions: 1 } }
+  },
+  rng: () => 0.99,
+  now: fixedNow,
+  config
+});
+assert(!eventRepeat.reward.achievements.includes("event_sandstorm"), "event achievements should not repeat");
 
 const unlockedSky = rules.settleRunRewards({
   meta: rules.migrateMeta(null, { config }),

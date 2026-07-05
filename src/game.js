@@ -215,11 +215,14 @@
       vehicleId: state.vehicleId,
       vehicle: rules.deepClone(state.vehicle),
       runMods: rules.deepClone(state.runMods),
+      effectiveRunMods: rules.deepClone(effectiveRunMods()),
       input: rules.deepClone(state.input),
       eventBanner: state.eventBanner ? rules.deepClone(state.eventBanner) : null,
       lastGateChoice: state.lastGateChoice ? rules.deepClone(state.lastGateChoice) : null,
       enemies: state.enemies.map(publicEntity),
       hazards: state.hazards.map(publicEntity),
+      supplyDrops: state.supplyDrops.map(publicEntity),
+      supplyBuffs: state.supplyBuffs.map(publicEntity),
       projectiles: state.projectiles.map(publicEntity),
       gates: state.gates.map(publicEntity),
       effects: state.effects.map(publicEntity),
@@ -237,6 +240,16 @@
     };
   }
 
+  function effectiveRunMods() {
+    const mods = rules.deepClone(state.runMods || rules.defaultRunMods());
+    (state.supplyBuffs || []).forEach((buff) => {
+      if (buff.until <= state.time) return;
+      if (buff.type === "rate") mods.fireIntervalMul *= buff.fireIntervalMul || 1;
+      if (buff.type === "damage") mods.damageAdd += buff.damageAdd || 0;
+    });
+    return mods;
+  }
+
   function updatePartsPreview() {
     if (!state) return;
     state.stats.partsPreview = rules.rewardPartsForRun(
@@ -246,6 +259,8 @@
         bossesDefeated: state.stats.bossesDefeated,
         eventRewardMul: state.stats.eventRewardMul,
         eventParts: state.stats.eventParts,
+        supplyParts: state.stats.supplyParts,
+        supplyCratesCollected: state.stats.supplyCratesCollected,
         difficultyId: state.difficultyId
       },
       config
@@ -334,17 +349,105 @@
     }
   }
 
+  function recordRunEventStat(eventId, key) {
+    if (!eventId || !state.stats.eventStats || !state.stats.eventStats[eventId]) return;
+    state.stats.eventStats[eventId][key] += 1;
+  }
+
   function activateWaveEnvironmentEvent() {
     if (!state || !state.wavePlan || !state.wavePlan.environmentEvent) return;
     if (state.activeEnvironmentEventWave === state.wave) return;
     const event = state.wavePlan.environmentEvent;
     state.activeEnvironmentEventWave = state.wave;
     if (!state.stats.environmentEvents.includes(event.id)) state.stats.environmentEvents.push(event.id);
+    recordRunEventStat(event.id, "encounters");
     if (event.rewardMulAdd) {
       state.stats.eventRewardMul = Math.min(2, state.stats.eventRewardMul + event.rewardMulAdd);
     }
     if (event.id === "meteor_shower") spawnMeteorHazards(event);
     pushEventBanner("環境事件", `${event.label}：${event.description}`, { kind: "event", ttl: 2.4 });
+  }
+
+  function completeCurrentEnvironmentEvent() {
+    const event = state.wavePlan && state.wavePlan.environmentEvent;
+    if (!event || state.completedEnvironmentEventWave === state.wave) return;
+    state.completedEnvironmentEventWave = state.wave;
+    recordRunEventStat(event.id, "completions");
+  }
+
+  function spawnSupplyDrop(x, y) {
+    state.supplyDrops.push({
+      id: nextId("supply"),
+      x,
+      y,
+      vx: 0,
+      vy: (config.SUPPLY_DROPS && config.SUPPLY_DROPS.crateSpeed) || 18,
+      radius: 12,
+      age: 0,
+      ttl: 11,
+      picked: false
+    });
+    addFloatingText("補給", x, y - 14, { color: "#5ed4cb", size: 8, ttl: 0.55, vy: -12 });
+  }
+
+  function maybeDropSupply(enemy) {
+    const result = rules.rollSupplyDrop({
+      killsSinceDrop: state.stats.supplyKillsSinceDrop,
+      rng: state.rng,
+      config
+    });
+    state.stats.supplyKillsSinceDrop = result.killsSinceDrop;
+    if (result.dropped) {
+      state.stats.supplyCratesDropped += 1;
+      spawnSupplyDrop(enemy.x, enemy.y);
+    }
+  }
+
+  function addSupplyRewardCount(rewardId) {
+    if (!state.stats.supplyRewards[rewardId]) state.stats.supplyRewards[rewardId] = 0;
+    state.stats.supplyRewards[rewardId] += 1;
+  }
+
+  function applySupplyReward(drop) {
+    if (!drop || drop.picked) return;
+    const reward = rules.chooseSupplyReward(state.rng, config);
+    if (!reward) return;
+    drop.picked = true;
+    state.stats.supplyCratesCollected += 1;
+    state.stats.lastSupplyReward = reward.id;
+    addSupplyRewardCount(reward.id);
+    if (reward.type === "rate" || reward.type === "damage") {
+      state.supplyBuffs.push({
+        id: nextId("buff"),
+        rewardId: reward.id,
+        label: reward.label,
+        type: reward.type,
+        fireIntervalMul: reward.fireIntervalMul || 1,
+        damageAdd: reward.damageAdd || 0,
+        until: state.time + (reward.duration || 10)
+      });
+    } else if (reward.type === "repair") {
+      const heal = Math.round(state.vehicle.maxHp * (reward.repairPct || 0));
+      state.vehicle.hp = Math.min(state.vehicle.maxHp, state.vehicle.hp + heal);
+    } else if (reward.type === "parts") {
+      const cap = (config.SUPPLY_DROPS && config.SUPPLY_DROPS.partsCapPerRun) || 12;
+      const gain = Math.min(reward.parts || 0, Math.max(0, cap - state.stats.supplyParts));
+      state.stats.supplyParts += gain;
+    }
+    state.messages.push({ text: `補給箱：${reward.label}`, time: state.time, ttl: 1.8 });
+    pushEventBanner("補給箱", reward.label, { kind: "supply", ttl: 1.5 });
+    addEffect({
+      id: nextId("effect"),
+      kind: "supply_pickup",
+      x: drop.x,
+      y: drop.y,
+      text: reward.label,
+      color: "#5ed4cb",
+      ttl: 0.55,
+      age: 0,
+      alpha: 1
+    });
+    updatePartsPreview();
   }
 
   function makeInitialState(vehicleId, nextMeta, seed) {
@@ -387,6 +490,8 @@
       runMods: rules.defaultRunMods(),
       enemies: [],
       hazards: [],
+      supplyDrops: [],
+      supplyBuffs: [],
       projectiles: [],
       gates: [],
       effects: [],
@@ -400,6 +505,13 @@
         eventRewardMul: 1,
         eventParts: 0,
         environmentEvents: [],
+        eventStats: rules.sanitizeEventStats(null, config),
+        supplyKillsSinceDrop: 0,
+        supplyCratesDropped: 0,
+        supplyCratesCollected: 0,
+        supplyParts: 0,
+        supplyRewards: {},
+        lastSupplyReward: "",
         partsPreview: config.ECONOMY.minRunParts
       },
       blueprintPreviewMeta: rules.deepClone(safeMeta),
@@ -690,6 +802,7 @@
         }
       });
     }
+    maybeDropSupply(enemy);
     updatePartsPreview();
   }
 
@@ -714,6 +827,10 @@
         score: state.stats.score,
         eventRewardMul: state.stats.eventRewardMul,
         eventParts: state.stats.eventParts,
+        eventStats: state.stats.eventStats,
+        supplyParts: state.stats.supplyParts,
+        supplyCratesCollected: state.stats.supplyCratesCollected,
+        supplyRewards: state.stats.supplyRewards,
         difficultyId: state.difficultyId
       },
       overrides || {}
@@ -763,7 +880,7 @@
     const shot = rules.calculateShotStats({
       vehicleId: state.vehicleId,
       meta,
-      runMods: state.runMods,
+      runMods: effectiveRunMods(),
       config
     });
     const idleMul = state.input.dragging ? 1 : 1.35;
@@ -1005,6 +1122,27 @@
     state.hazards = state.hazards.filter((hazard) => !hazard.dead && hazard.y < H + 44 && hazard.x > -36 && hazard.x < W + 36);
   }
 
+  function updateSupplyDrops(dt) {
+    state.supplyBuffs = state.supplyBuffs.filter((buff) => buff.until > state.time);
+    if (!state.supplyDrops.length) return;
+    const pickupRadius = (config.SUPPLY_DROPS && config.SUPPLY_DROPS.pickupRadius) || 34;
+    const magnetRadius = (config.SUPPLY_DROPS && config.SUPPLY_DROPS.magnetRadius) || 92;
+    state.supplyDrops.forEach((drop) => {
+      if (drop.picked) return;
+      drop.age += dt;
+      const toVehicle = normalize(state.vehicle.x - drop.x, state.vehicle.y - drop.y);
+      const d = distance(drop, state.vehicle);
+      if (d <= magnetRadius) {
+        drop.x += toVehicle.x * 82 * dt;
+        drop.y += toVehicle.y * 82 * dt;
+      } else {
+        drop.y += drop.vy * dt;
+      }
+      if (distance(drop, state.vehicle) <= pickupRadius + state.vehicle.radius) applySupplyReward(drop);
+    });
+    state.supplyDrops = state.supplyDrops.filter((drop) => !drop.picked && drop.age < drop.ttl && drop.y < H + 40);
+  }
+
   function updateProjectiles(dt) {
     state.projectiles.forEach((projectile) => {
       projectile.x += projectile.vx * dt;
@@ -1136,6 +1274,7 @@
     const timerExpired = state.waveElapsed >= plan.duration;
     const staleWave = state.waveElapsed > plan.duration + 8;
     if (spawnedAll && !bossAlive && (enemiesCleared || staleWave) && (timerExpired || enemiesCleared)) {
+      completeCurrentEnvironmentEvent();
       state.stats.wavesCleared = Math.max(state.stats.wavesCleared, state.wave);
       state.wave += 1;
       state.waveElapsed = 0;
@@ -1172,6 +1311,7 @@
     processWaveEvents();
     fireProjectiles(dt);
     updateHazards(dt);
+    updateSupplyDrops(dt);
     updateProjectiles(dt);
     updateEnemies(dt);
     updateGatesAndEffects(dt);
@@ -1869,6 +2009,34 @@
     ctx.restore();
   }
 
+  function drawSupplyDrop(drop) {
+    ctx.save();
+    const pulse = Math.sin((stateTime() + drop.age) * 7) * 0.08 + 1;
+    ctx.translate(drop.x, drop.y);
+    ctx.scale(pulse, pulse);
+    ctx.fillStyle = "rgba(9, 12, 16, 0.78)";
+    ctx.strokeStyle = "#5ed4cb";
+    ctx.lineWidth = 1.5;
+    ctx.fillRect(-11, -10, 22, 20);
+    ctx.strokeRect(-11, -10, 22, 20);
+    ctx.fillStyle = "#5ed4cb";
+    ctx.fillRect(-7, -2, 14, 4);
+    ctx.fillRect(-2, -7, 4, 14);
+    ctx.restore();
+  }
+
+  function drawSupplyPickup(effect) {
+    ctx.save();
+    ctx.globalAlpha *= effect.alpha == null ? 1 : effect.alpha;
+    ctx.strokeStyle = "#5ed4cb";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, 14 + effect.age * 20, 0, Math.PI * 2);
+    ctx.stroke();
+    drawWorldText(effect.text || "補給", effect.x, effect.y - 18, { size: 8, color: "#5ed4cb", alpha: effect.alpha });
+    ctx.restore();
+  }
+
   function drawBlueprintDrop(effect) {
     ctx.save();
     ctx.globalAlpha *= effect.alpha == null ? 1 : effect.alpha;
@@ -1977,6 +2145,7 @@
       drawGateLabel(gate);
     });
     state.hazards.forEach(drawHazard);
+    state.supplyDrops.forEach(drawSupplyDrop);
     state.projectiles.forEach((projectile) => {
       drawSprite(projectile.sprite, "move", timeMs, projectile.x - projectile.vx * 0.034, projectile.y - projectile.vy * 0.034, projectile.scale, {
         rotation: projectile.rotation,
@@ -2005,6 +2174,8 @@
         });
       } else if (effect.kind === "blueprint_drop") {
         drawBlueprintDrop(effect);
+      } else if (effect.kind === "supply_pickup") {
+        drawSupplyPickup(effect);
       } else if (effect.kind === "enemy_corpse") {
         drawEnemyCorpse(effect, timeMs);
       } else {

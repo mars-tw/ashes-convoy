@@ -526,11 +526,29 @@
     });
   }
 
+  function renderEventCodex() {
+    if (!els.eventCodexList) return;
+    const progress = rules.getEventCodexProgress(meta, config);
+    els.eventCodexList.textContent = "";
+    progress.forEach((entry) => {
+      const item = root.document.createElement("div");
+      item.className = "event-codex";
+      item.dataset.eventId = entry.id;
+      const title = root.document.createElement("strong");
+      title.innerHTML = `<span>${entry.label}</span><span>遭遇 ${entry.encounters} / 完成 ${entry.completions}</span>`;
+      const desc = root.document.createElement("small");
+      desc.textContent = entry.description;
+      item.append(title, desc);
+      els.eventCodexList.appendChild(item);
+    });
+  }
+
   function renderGarage() {
     els.garageMeta.textContent = `廢土零件 ${meta.parts} · 最遠第 ${meta.bestWave} 波 · 擊殺 ${meta.totalKills}`;
     updateStartImageUi();
     renderVehicles();
     renderUpgrades();
+    renderEventCodex();
     renderAchievements();
     if (!hasFullMetaBackground()) {
       setSectionVisibility("garage");
@@ -614,6 +632,7 @@
     els.hudKills.textContent = `擊殺 ${state.stats.kills}`;
     els.hudParts.textContent = `零件 ${state.stats.partsPreview}`;
     const mods = [];
+    const effectiveMods = state.effectiveRunMods || state.runMods;
     if (state.runMods.damageAdd > 0) mods.push(`火力 x${(1 + state.runMods.damageAdd).toFixed(2)}`);
     if (state.runMods.fireIntervalMul < 1) mods.push(`射速 x${(1 / state.runMods.fireIntervalMul).toFixed(2)}`);
     if (state.runMods.projectileAdd > 0) mods.push(`彈道 +${state.runMods.projectileAdd}`);
@@ -684,6 +703,12 @@
       ["難度加成", breakdown.difficultyBonus === 0 ? "+0" : `${breakdown.difficultyBonus > 0 ? "+" : ""}${breakdown.difficultyBonus}`]
     ];
     if (breakdown.eventBonus > 0) rows.splice(Math.max(0, rows.length - 1), 0, ["事件零件", `+${breakdown.eventBonus}`]);
+    if (run.supplyCratesCollected > 0 || breakdown.supplyCrates > 0) {
+      rows.splice(Math.max(0, rows.length - 1), 0, [
+        `補給箱 x${run.supplyCratesCollected || breakdown.supplyCrates || 0}`,
+        `+${breakdown.supplyParts || 0}`
+      ]);
+    }
     els.settlementList.textContent = "";
     rows.forEach(([label, value]) => {
       const item = root.document.createElement("div");
@@ -947,6 +972,7 @@
       "garageMeta",
       "vehicleList",
       "upgradeList",
+      "eventCodexList",
       "achievementList",
       "startBtn",
       "resetBtn",

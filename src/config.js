@@ -305,6 +305,48 @@ const ENVIRONMENT_EVENTS = {
   }
 };
 
+const SUPPLY_DROPS = {
+  chancePerKill: 0.05,
+  pityKills: 25,
+  partsPerCache: 3,
+  partsCapPerRun: 12,
+  crateSpeed: 18,
+  pickupRadius: 34,
+  magnetRadius: 92,
+  rewards: {
+    rate_boost: {
+      id: "rate_boost",
+      label: "射速補給",
+      weight: 1,
+      type: "rate",
+      duration: 10,
+      fireIntervalMul: 0.85
+    },
+    damage_boost: {
+      id: "damage_boost",
+      label: "火力補給",
+      weight: 1,
+      type: "damage",
+      duration: 10,
+      damageAdd: 0.2
+    },
+    repair_small: {
+      id: "repair_small",
+      label: "維修補給",
+      weight: 1,
+      type: "repair",
+      repairPct: 0.08
+    },
+    parts_cache: {
+      id: "parts_cache",
+      label: "零件補給",
+      weight: 1,
+      type: "parts",
+      parts: 3
+    }
+  }
+};
+
 const GATES = {
   damage_plus: {
     id: "damage_plus",
@@ -587,6 +629,38 @@ const ACHIEVEMENTS = {
     rewardParts: 8,
     target: 4,
     metric: "unlockedVehicles"
+  },
+  event_sandstorm: {
+    id: "event_sandstorm",
+    label: "沙塵穿越",
+    description: "首次完成沙塵暴事件波。",
+    rewardParts: 3,
+    target: 1,
+    metric: "eventCompletion:sandstorm"
+  },
+  event_turbulence: {
+    id: "event_turbulence",
+    label: "亂流穿越",
+    description: "首次完成亂流事件波。",
+    rewardParts: 3,
+    target: 1,
+    metric: "eventCompletion:turbulence"
+  },
+  event_undertow: {
+    id: "event_undertow",
+    label: "暗流穿越",
+    description: "首次完成暗流事件波。",
+    rewardParts: 3,
+    target: 1,
+    metric: "eventCompletion:undertow"
+  },
+  event_meteor_shower: {
+    id: "event_meteor_shower",
+    label: "隕石穿越",
+    description: "首次完成隕石雨事件波。",
+    rewardParts: 3,
+    target: 1,
+    metric: "eventCompletion:meteor_shower"
   }
 };
 
@@ -630,6 +704,12 @@ const META_DEFAULT = {
   blueprintWishlist: "sky_barge",
   bossBlueprintPity: 0,
   achievements: {},
+  eventStats: {
+    sandstorm: { encounters: 0, completions: 0 },
+    turbulence: { encounters: 0, completions: 0 },
+    undertow: { encounters: 0, completions: 0 },
+    meteor_shower: { encounters: 0, completions: 0 }
+  },
   claimedMilestones: {},
   settings: {
     aimAssist: true,
@@ -653,6 +733,7 @@ const DSConfig = {
   ENEMIES,
   ENEMY_VARIANTS,
   ENVIRONMENT_EVENTS,
+  SUPPLY_DROPS,
   GATES,
   WAVE,
   PERFORMANCE,

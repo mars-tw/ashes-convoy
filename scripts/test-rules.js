@@ -45,6 +45,23 @@ assert(variantSpawn, "late waves should be able to mix enemy variants");
 assert(["runner_frenzy", "shambler_hardened"].includes(variantSpawn.variantId), `unexpected variant ${variantSpawn.variantId}`);
 assert(variantSpawn.tint || variantSpawn.filter, "variant spawns should carry canvas tint/filter metadata");
 
+const noSupply = rules.rollSupplyDrop({ killsSinceDrop: 0, rng: () => 0.99, config });
+assert.strictEqual(noSupply.dropped, false, "high roll should not drop a supply cache before pity");
+assert.strictEqual(noSupply.killsSinceDrop, 1);
+const pitySupply = rules.rollSupplyDrop({ killsSinceDrop: 24, rng: () => 0.99, config });
+assert.strictEqual(pitySupply.dropped, true, "25th kill should guarantee a supply cache");
+assert.strictEqual(pitySupply.guaranteed, true);
+assert.strictEqual(pitySupply.killsSinceDrop, 0);
+assert.strictEqual(rules.chooseSupplyReward(() => 0, config).id, "rate_boost", "supply rewards should be deterministic with injected rng");
+
+const eventStats = rules.mergeEventStats(
+  { meteor_shower: { encounters: 1, completions: 0 } },
+  { meteor_shower: { encounters: 1, completions: 1 } },
+  config
+);
+assert.strictEqual(eventStats.meteor_shower.encounters, 2);
+assert.strictEqual(eventStats.meteor_shower.completions, 1);
+
 assert(rules.enemyHpScale(4, config) > rules.enemyHpScale(1, config), "enemy hp should scale by wave");
 assert(rules.enemySpeedScale(8, config) > rules.enemySpeedScale(1, config), "enemy speed should scale by wave");
 assert(rules.waveBudget(4, config) > rules.waveBudget(1, config), "wave budget should grow");

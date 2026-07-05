@@ -14,6 +14,8 @@ assert.strictEqual(freshAgain.unlockedVehicles.sky_barge, false);
 assert.strictEqual(freshAgain.unlockedVehicles.sea_ark, false);
 assert.strictEqual(freshAgain.unlockedVehicles.void_runner, false);
 assert.strictEqual(freshAgain.blueprintWishlist, "sky_barge");
+assert.strictEqual(freshAgain.eventStats.sandstorm.encounters, 0);
+assert.strictEqual(freshAgain.eventStats.meteor_shower.completions, 0);
 
 const invalid = rules.migrateMeta("{not-json", { config });
 assert.deepStrictEqual(invalid, config.META_DEFAULT, "invalid JSON should fall back to default");
@@ -40,6 +42,7 @@ const dirty = {
   settings: { aimAssist: false, reducedFlash: true, sound: "yes" },
   tutorial: { seenIntro: true, seenGate: "yes", seenGarage: false },
   blueprints: { rift_hauler: 5.5, frost_wing: -2 },
+  eventStats: { sandstorm: { encounters: 2.8, completions: 1 }, ghost_event: { encounters: 9, completions: 9 } },
   bestByVehicle: {
     iron_crow: { wave: 6, score: 4000, kills: 42, bosses: 1, at: "2026-07-03T00:00:00.000Z" },
     sea_ark: { wave: 5, score: 3500, kills: 30, bosses: 1, at: "2026-07-03T00:00:00.000Z" },
@@ -94,6 +97,9 @@ assert.strictEqual(migrated.blueprints.sky_barge, 3);
 assert.strictEqual(migrated.blueprints.sea_ark, 3);
 assert.strictEqual(migrated.blueprints.void_runner, 3);
 assert.strictEqual(migrated.blueprintWishlist, null);
+assert.strictEqual(migrated.eventStats.sandstorm.encounters, 2);
+assert.strictEqual(migrated.eventStats.sandstorm.completions, 1);
+assert.strictEqual(migrated.eventStats.ghost_event, undefined);
 assert.strictEqual(migrated.blueprints.rift_hauler, undefined);
 assert.strictEqual(migrated.blueprints.frost_wing, undefined);
 assert.strictEqual(migrated.bestByVehicle.iron_crow, undefined);

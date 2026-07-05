@@ -447,6 +447,34 @@
         gap: 8px;
       }
 
+      .event-codex-list {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .event-codex {
+        display: grid;
+        gap: 4px;
+        min-height: 66px;
+        padding: 9px 10px;
+        border: 1px solid rgba(94, 212, 203, 0.3);
+        border-radius: 8px;
+        background: rgba(94, 212, 203, 0.055);
+      }
+
+      .event-codex strong {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 13px;
+      }
+
+      .event-codex small {
+        color: var(--muted);
+        line-height: 1.35;
+      }
+
       .achievement {
         display: grid;
         gap: 4px;
@@ -903,6 +931,7 @@
             </section>
             <section class="meta-section" data-meta-section="achievements">
               <h2>成就牆</h2>
+              <div class="event-codex-list" id="eventCodexList"></div>
               <div class="achievement-list" id="achievementList"></div>
               <footer class="series-footer" aria-label="阿軒的小遊戲系列">
                 <div class="series-title">🎮 阿軒的小遊戲系列</div>

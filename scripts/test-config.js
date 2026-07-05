@@ -94,6 +94,11 @@ assert.strictEqual(config.ECONOMY.difficultyRewardMul.normal, 1);
 assert.strictEqual(config.ECONOMY.blueprintBundle, 1);
 assert.strictEqual(config.ECONOMY.blueprintPityAfterBosses, 3);
 assert.strictEqual(config.ECONOMY.eventPartsCapPerRun, 12);
+assert.strictEqual(config.SUPPLY_DROPS.chancePerKill, 0.05);
+assert.strictEqual(config.SUPPLY_DROPS.pityKills, 25);
+assert.strictEqual(config.SUPPLY_DROPS.partsPerCache, 3);
+assert.strictEqual(config.SUPPLY_DROPS.partsCapPerRun, 12);
+assert.deepStrictEqual(Object.keys(config.SUPPLY_DROPS.rewards).sort(), ["damage_boost", "parts_cache", "rate_boost", "repair_small"]);
 assert.strictEqual(config.META_DEFAULT.unlockedVehicles.land_rig, true);
 assert.strictEqual(config.META_DEFAULT.unlockedVehicles.sky_barge, false);
 assert.strictEqual(config.META_DEFAULT.unlockedVehicles.sea_ark, false);
@@ -136,7 +141,11 @@ Object.keys(config.VEHICLES).forEach((vehicleId) => {
 });
 
 const achievementRewardTotal = Object.values(config.ACHIEVEMENTS).reduce((sum, achievement) => sum + achievement.rewardParts, 0);
-assert.strictEqual(Object.keys(config.ACHIEVEMENTS).length, 10, "R12 should define ten achievements");
-assert.strictEqual(achievementRewardTotal, 60, "achievement rewards should cap at two Lv1 hull upgrades");
+const eventAchievementTotal = Object.values(config.ACHIEVEMENTS)
+  .filter((achievement) => achievement.metric.indexOf("eventCompletion:") === 0)
+  .reduce((sum, achievement) => sum + achievement.rewardParts, 0);
+assert.strictEqual(Object.keys(config.ACHIEVEMENTS).length, 14, "R22 should define fourteen achievements");
+assert.strictEqual(achievementRewardTotal, 72, "R22 achievement rewards should include the event set");
+assert(eventAchievementTotal <= config.ECONOMY.upgradeTracks.hull.costs[0], "event achievements should add at most one Lv1 hull upgrade");
 
 console.log("Config tests PASS");

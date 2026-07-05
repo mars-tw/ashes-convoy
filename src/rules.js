@@ -40,6 +40,36 @@ function boolTrueMap(input) {
   return output;
 }
 
+function eventIds(config) {
+  const cfg = getConfig(config);
+  return Object.values(cfg.ENVIRONMENT_EVENTS || {}).map((event) => event.id);
+}
+
+function sanitizeEventStats(input, config) {
+  const cfg = getConfig(config);
+  const source = input && typeof input === "object" && !Array.isArray(input) ? input : {};
+  const output = {};
+  eventIds(cfg).forEach((eventId) => {
+    const record = source[eventId] || {};
+    output[eventId] = {
+      encounters: finiteNumber(record.encounters, 0, { min: 0, integer: true }),
+      completions: finiteNumber(record.completions, 0, { min: 0, integer: true })
+    };
+  });
+  return output;
+}
+
+function mergeEventStats(metaStats, runStats, config) {
+  const cfg = getConfig(config);
+  const output = sanitizeEventStats(metaStats, cfg);
+  const run = sanitizeEventStats(runStats, cfg);
+  eventIds(cfg).forEach((eventId) => {
+    output[eventId].encounters += run[eventId].encounters;
+    output[eventId].completions += run[eventId].completions;
+  });
+  return output;
+}
+
 function valueFromNow(now) {
   if (typeof now === "function") return now();
   return now == null ? null : now;
@@ -238,6 +268,38 @@ function applyEnvironmentEventToSpawn(spawn, environmentEvent) {
 
 function finalizeSpawn(spawn, wave, rng, environmentEvent, config) {
   return applyEnvironmentEventToSpawn(applyEnemyVariantToSpawn(spawn, wave, rng, config), environmentEvent);
+}
+
+function rollSupplyDrop(options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const supply = cfg.SUPPLY_DROPS || {};
+  const rng = typeof opts.rng === "function" ? opts.rng : Math.random;
+  const killsSinceDrop = finiteNumber(opts.killsSinceDrop, 0, { min: 0, integer: true });
+  const pityKills = finiteNumber(supply.pityKills, 25, { min: 1, integer: true });
+  const nextCount = killsSinceDrop + 1;
+  const guaranteed = nextCount >= pityKills;
+  const chance = finiteNumber(supply.chancePerKill, 0, { min: 0, max: 1 });
+  const dropped = guaranteed || rng() < chance;
+  return {
+    dropped,
+    guaranteed,
+    killsSinceDrop: dropped ? 0 : nextCount
+  };
+}
+
+function chooseSupplyReward(rng, config) {
+  const cfg = getConfig(config);
+  const roll = typeof rng === "function" ? rng : Math.random;
+  const rewards = Object.values((cfg.SUPPLY_DROPS && cfg.SUPPLY_DROPS.rewards) || {});
+  if (!rewards.length) return null;
+  const total = rewards.reduce((sum, reward) => sum + Math.max(0, reward.weight || 0), 0) || rewards.length;
+  let value = roll() * total;
+  for (let i = 0; i < rewards.length; i += 1) {
+    value -= Math.max(0, rewards[i].weight || 1);
+    if (value <= 0) return deepClone(rewards[i]);
+  }
+  return deepClone(rewards[rewards.length - 1]);
 }
 
 function generateWave(options) {
@@ -571,6 +633,12 @@ function rewardPartsBreakdownForRun(run, config) {
     max: cfg.ECONOMY.eventPartsCapPerRun || 12,
     integer: true
   });
+  const supplyParts = finiteNumber(run && run.supplyParts, 0, {
+    min: 0,
+    max: (cfg.SUPPLY_DROPS && cfg.SUPPLY_DROPS.partsCapPerRun) || 12,
+    integer: true
+  });
+  const supplyCrates = finiteNumber(run && run.supplyCratesCollected, 0, { min: 0, integer: true });
   const difficultyId = run && cfg.ECONOMY.difficultyRewardMul[run.difficultyId] ? run.difficultyId : "normal";
   const baseParts = wavesCleared * cfg.ECONOMY.partsPerWave;
   const killParts = Math.floor(Math.min(kills, cfg.ECONOMY.killRewardCap) / cfg.ECONOMY.killDivisor);
@@ -578,9 +646,9 @@ function rewardPartsBreakdownForRun(run, config) {
   const difficultyMul = cfg.ECONOMY.difficultyRewardMul[difficultyId];
   const subtotal = baseParts + killParts + bossParts;
   const eventBonus = Math.max(0, Math.round(subtotal * (eventRewardMul - 1)) + eventParts);
-  const subtotalWithEvents = subtotal + eventBonus;
+  const subtotalWithEvents = subtotal + eventBonus + supplyParts;
   const rounded = Math.round(subtotalWithEvents * difficultyMul);
-  const emptyRun = wavesCleared === 0 && kills === 0 && bossesDefeated === 0 && eventBonus === 0;
+  const emptyRun = wavesCleared === 0 && kills === 0 && bossesDefeated === 0 && eventBonus === 0 && supplyParts === 0;
   const total = emptyRun ? 0 : Math.max(cfg.ECONOMY.minRunParts, rounded);
   const breakdown = {
     waveParts: baseParts,
@@ -594,6 +662,10 @@ function rewardPartsBreakdownForRun(run, config) {
     total
   };
   if (eventBonus > 0) breakdown.eventBonus = eventBonus;
+  if (supplyCrates > 0 || supplyParts > 0) {
+    breakdown.supplyCrates = supplyCrates;
+    breakdown.supplyParts = supplyParts;
+  }
   return breakdown;
 }
 
@@ -699,7 +771,27 @@ function achievementMetricValue(meta, achievement, config) {
       ? 1
       : 0;
   }
+  if (metric.indexOf("eventCompletion:") === 0) {
+    const eventId = metric.split(":")[1];
+    const stats = sanitizeEventStats(meta.eventStats, cfg);
+    return Math.min(achievement.target, stats[eventId] ? stats[eventId].completions : 0);
+  }
   return 0;
+}
+
+function getEventCodexProgress(meta, config) {
+  const cfg = getConfig(config);
+  const migrated = migrateMeta(meta || cfg.META_DEFAULT, { config: cfg });
+  const stats = sanitizeEventStats(migrated.eventStats, cfg);
+  const events = Object.values(cfg.ENVIRONMENT_EVENTS || {});
+  return events.map((event) => ({
+    id: event.id,
+    label: event.label,
+    environment: event.environment,
+    description: event.description,
+    encounters: stats[event.id] ? stats[event.id].encounters : 0,
+    completions: stats[event.id] ? stats[event.id].completions : 0
+  }));
 }
 
 function getAchievementProgress(meta, config) {
@@ -809,6 +901,7 @@ function migrateMeta(raw, options) {
   meta.blueprintWishlist = normalizeBlueprintWishlist(meta, cfg);
 
   meta.achievements = boolTrueMap(input.achievements);
+  meta.eventStats = sanitizeEventStats(input.eventStats, cfg);
   meta.claimedMilestones = boolTrueMap(input.claimedMilestones);
   meta.settings = Object.assign({}, base.settings);
   if (input.settings && typeof input.settings === "object" && !Array.isArray(input.settings)) {
@@ -846,7 +939,28 @@ function settleRunRewards(options) {
     max: cfg.ECONOMY.eventPartsCapPerRun || 12,
     integer: true
   });
-  const normalizedRun = { wavesCleared, kills, bossesDefeated, score, vehicleId, difficultyId, eventRewardMul, eventParts };
+  const supplyParts = finiteNumber(run.supplyParts, 0, {
+    min: 0,
+    max: (cfg.SUPPLY_DROPS && cfg.SUPPLY_DROPS.partsCapPerRun) || 12,
+    integer: true
+  });
+  const supplyCratesCollected = finiteNumber(run.supplyCratesCollected, 0, { min: 0, integer: true });
+  const supplyRewards = run.supplyRewards && typeof run.supplyRewards === "object" && !Array.isArray(run.supplyRewards)
+    ? deepClone(run.supplyRewards)
+    : {};
+  const eventStats = sanitizeEventStats(run.eventStats, cfg);
+  const normalizedRun = {
+    wavesCleared,
+    kills,
+    bossesDefeated,
+    score,
+    vehicleId,
+    difficultyId,
+    eventRewardMul,
+    eventParts,
+    supplyParts,
+    supplyCratesCollected
+  };
   const partsBreakdown = rewardPartsBreakdownForRun(normalizedRun, cfg);
   const parts = partsBreakdown.total;
 
@@ -866,6 +980,7 @@ function settleRunRewards(options) {
   meta.totalRuns += 1;
   meta.totalKills += kills;
   meta.totalBossKills += bossesDefeated;
+  meta.eventStats = mergeEventStats(meta.eventStats, eventStats, cfg);
   meta.bestWave = Math.max(meta.bestWave, wavesCleared);
   meta.bestScore = Math.max(meta.bestScore, score);
   meta.selectedVehicle = vehicleId;
@@ -899,6 +1014,10 @@ function settleRunRewards(options) {
     score,
     eventRewardMul,
     eventParts,
+    eventStats,
+    supplyParts,
+    supplyCratesCollected,
+    supplyRewards,
     earnedParts: totalParts,
     runParts: parts,
     achievementParts,
@@ -988,6 +1107,8 @@ const DSRules = {
   variantChanceForWave,
   applyEnemyVariantToSpawn,
   chooseEnvironmentEvent,
+  rollSupplyDrop,
+  chooseSupplyReward,
   generateWave,
   defaultRunMods,
   blueprintRequiredForVehicle,
@@ -1005,6 +1126,9 @@ const DSRules = {
   rewardPartsBreakdownForRun,
   rewardPartsForRun,
   getAchievementProgress,
+  getEventCodexProgress,
+  sanitizeEventStats,
+  mergeEventStats,
   migrateMeta,
   settleRunRewards,
   getUpgradeCost,
