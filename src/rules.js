@@ -172,6 +172,74 @@ function chooseGatePair(wave, rng, config) {
   return [first, second];
 }
 
+function blueprintVehicleIds(config) {
+  const cfg = getConfig(config);
+  return Object.keys(cfg.VEHICLES).filter((vehicleId) => {
+    const vehicle = cfg.VEHICLES[vehicleId];
+    return vehicle.unlock && vehicle.unlock.type === "blueprint";
+  });
+}
+
+function normalizeBlueprintWishlist(meta, config) {
+  const cfg = getConfig(config);
+  const input = meta && typeof meta === "object" ? meta : {};
+  const locked = blueprintVehicleIds(cfg).filter((vehicleId) => {
+    return input.unlockedVehicles && input.unlockedVehicles[vehicleId] !== true;
+  });
+  if (!locked.length) return null;
+  return locked.includes(input.blueprintWishlist) ? input.blueprintWishlist : locked[0];
+}
+
+function variantChanceForWave(wave, config) {
+  const cfg = getConfig(config);
+  const safeWave = finiteNumber(wave, 1, { min: 1, integer: true });
+  if (!cfg.ENEMY_VARIANTS || safeWave < 3) return 0;
+  return clamp(0.04 + safeWave * 0.025, 0, 0.3);
+}
+
+function applyEnemyVariantToSpawn(spawn, wave, rng, config) {
+  const cfg = getConfig(config);
+  const variants = Object.values(cfg.ENEMY_VARIANTS || {}).filter((variant) => {
+    return variant.baseEnemy === spawn.enemyId && wave >= finiteNumber(variant.minWave, 3, { min: 1, integer: true });
+  });
+  if (!variants.length || rng() >= variantChanceForWave(wave, cfg)) return spawn;
+  const variant = variants[Math.floor(rng() * variants.length) % variants.length];
+  const next = Object.assign({}, spawn);
+  next.variantId = variant.id;
+  next.variantLabel = variant.label;
+  next.hp = Math.max(1, Math.round(next.hp * finiteNumber(variant.hpMul, 1, { min: 0.1 })));
+  next.speed *= finiteNumber(variant.speedMul, 1, { min: 0.1 });
+  next.tint = variant.tint || "";
+  next.filter = variant.filter || "";
+  return next;
+}
+
+function chooseEnvironmentEvent(options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const rng = typeof opts.rng === "function" ? opts.rng : Math.random;
+  const wave = finiteNumber(opts.wave, 1, { min: 1, integer: true });
+  const vehicle = cfg.VEHICLES[opts.vehicleId] || cfg.VEHICLES[defaultVehicleId(cfg)];
+  const event = cfg.ENVIRONMENT_EVENTS && cfg.ENVIRONMENT_EVENTS[vehicle.environment];
+  if (!event || wave < finiteNumber(event.minWave, 2, { min: 1, integer: true })) return null;
+  const chance = finiteNumber(event.chance, 0, { min: 0, max: 1 });
+  if (rng() >= chance) return null;
+  return deepClone(event);
+}
+
+function applyEnvironmentEventToSpawn(spawn, environmentEvent) {
+  if (!environmentEvent) return spawn;
+  const next = Object.assign({}, spawn);
+  if (environmentEvent.enemySpeedMul) next.speed *= finiteNumber(environmentEvent.enemySpeedMul, 1, { min: 0.1 });
+  if (environmentEvent.swayAmpMul) next.swayAmp = finiteNumber(next.swayAmp, 0, { min: 0 }) * environmentEvent.swayAmpMul;
+  if (environmentEvent.driftAmp) next.eventDriftAmp = environmentEvent.driftAmp;
+  return next;
+}
+
+function finalizeSpawn(spawn, wave, rng, environmentEvent, config) {
+  return applyEnvironmentEventToSpawn(applyEnemyVariantToSpawn(spawn, wave, rng, config), environmentEvent);
+}
+
 function generateWave(options) {
   const opts = options || {};
   const cfg = getConfig(opts.config);
@@ -181,6 +249,10 @@ function generateWave(options) {
   const bossWave = wave % cfg.WAVE.bossEvery === 0;
   const spawns = [];
   const budget = waveBudget(wave, cfg);
+  const vehicleId = cfg.VEHICLES[opts.vehicleId] ? opts.vehicleId : defaultVehicleId(cfg);
+  const environmentEvent = bossWave
+    ? null
+    : chooseEnvironmentEvent({ wave, vehicleId, rng, config: cfg });
 
   if (bossWave) {
     const stats = scaledEnemyStats("boss_hive_titan", wave, cfg);
@@ -248,7 +320,7 @@ function generateWave(options) {
         cfg.LOGIC.roadRight - 7
       );
       const y = -12 - rng() * 18 - row * 8 - col * 3;
-      spawns.push({
+      spawns.push(finalizeSpawn({
         time: Math.min(duration - 1, clusterTime + rng() * 0.55),
         enemyId: enemy.id,
         x,
@@ -259,7 +331,7 @@ function generateWave(options) {
         swayPhase: rng() * Math.PI * 2,
         swayAmp: 4 + rng() * 4,
         swayFreq: 1.1 + rng() * 0.8
-      });
+      }, wave, rng, environmentEvent, cfg));
       spawnCount += 1;
     }
   }
@@ -278,7 +350,7 @@ function generateWave(options) {
         : laneRoll > 0.82
           ? cfg.LOGIC.roadRight - 32 + rng() * 24
           : cfg.LOGIC.roadLeft + 14 + rng() * (cfg.LOGIC.roadRight - cfg.LOGIC.roadLeft - 28);
-    spawns.push({
+    spawns.push(finalizeSpawn({
       time: Math.min(duration - 1, t),
       enemyId: enemy.id,
       x,
@@ -289,7 +361,7 @@ function generateWave(options) {
       swayPhase: rng() * Math.PI * 2,
       swayAmp: 4 + rng() * 4,
       swayFreq: 1.1 + rng() * 0.8
-    });
+    }, wave, rng, environmentEvent, cfg));
     spawnCount += 1;
   }
 
@@ -300,6 +372,7 @@ function generateWave(options) {
     duration,
     budget,
     boss: bossWave,
+    environmentEvent,
     spawns,
     gates: [
       {
@@ -492,26 +565,36 @@ function rewardPartsBreakdownForRun(run, config) {
   const wavesCleared = finiteNumber(run && run.wavesCleared, 0, { min: 0, integer: true });
   const kills = finiteNumber(run && run.kills, 0, { min: 0, integer: true });
   const bossesDefeated = finiteNumber(run && run.bossesDefeated, 0, { min: 0, integer: true });
+  const eventRewardMul = finiteNumber(run && run.eventRewardMul, 1, { min: 1, max: 2 });
+  const eventParts = finiteNumber(run && run.eventParts, 0, {
+    min: 0,
+    max: cfg.ECONOMY.eventPartsCapPerRun || 12,
+    integer: true
+  });
   const difficultyId = run && cfg.ECONOMY.difficultyRewardMul[run.difficultyId] ? run.difficultyId : "normal";
   const baseParts = wavesCleared * cfg.ECONOMY.partsPerWave;
   const killParts = Math.floor(Math.min(kills, cfg.ECONOMY.killRewardCap) / cfg.ECONOMY.killDivisor);
   const bossParts = bossesDefeated * cfg.ECONOMY.bossParts;
   const difficultyMul = cfg.ECONOMY.difficultyRewardMul[difficultyId];
   const subtotal = baseParts + killParts + bossParts;
-  const rounded = Math.round(subtotal * difficultyMul);
-  const emptyRun = wavesCleared === 0 && kills === 0 && bossesDefeated === 0;
+  const eventBonus = Math.max(0, Math.round(subtotal * (eventRewardMul - 1)) + eventParts);
+  const subtotalWithEvents = subtotal + eventBonus;
+  const rounded = Math.round(subtotalWithEvents * difficultyMul);
+  const emptyRun = wavesCleared === 0 && kills === 0 && bossesDefeated === 0 && eventBonus === 0;
   const total = emptyRun ? 0 : Math.max(cfg.ECONOMY.minRunParts, rounded);
-  return {
+  const breakdown = {
     waveParts: baseParts,
     killParts,
     bossParts,
     subtotal,
     difficultyId,
     difficultyMul,
-    difficultyBonus: total - subtotal,
+    difficultyBonus: total - subtotalWithEvents,
     minimumBonus: Math.max(0, total - rounded),
     total
   };
+  if (eventBonus > 0) breakdown.eventBonus = eventBonus;
+  return breakdown;
 }
 
 function rewardPartsForRun(run, config) {
@@ -535,10 +618,7 @@ function isVehicleUnlocked(meta, vehicleId, config) {
 function firstLockedBlueprintVehicle(meta, config) {
   const cfg = getConfig(config);
   const migrated = meta && meta.version === cfg.META_VERSION ? meta : migrateMeta(meta || cfg.META_DEFAULT, { config: cfg });
-  return Object.keys(cfg.VEHICLES).find((vehicleId) => {
-    const vehicle = cfg.VEHICLES[vehicleId];
-    return vehicle.unlock && vehicle.unlock.type === "blueprint" && migrated.unlockedVehicles[vehicleId] !== true;
-  });
+  return normalizeBlueprintWishlist(migrated, cfg);
 }
 
 function hasVehicleUseSignal(input, vehicleId, config) {
@@ -593,9 +673,11 @@ function applyBlueprintDrops(meta, bossesDefeated, rng, config) {
     if (after >= required && next.unlockedVehicles[target] !== true) {
       next.unlockedVehicles[target] = true;
       unlocked.push(target);
+      next.blueprintWishlist = normalizeBlueprintWishlist(next, cfg);
     }
   }
 
+  next.blueprintWishlist = normalizeBlueprintWishlist(next, cfg);
   return { meta: next, drops, unlocked };
 }
 
@@ -723,6 +805,8 @@ function migrateMeta(raw, options) {
 
   meta.selectedVehicle = cfg.VEHICLES[input.selectedVehicle] ? input.selectedVehicle : base.selectedVehicle;
   if (!meta.unlockedVehicles[meta.selectedVehicle]) meta.selectedVehicle = base.selectedVehicle;
+  meta.blueprintWishlist = typeof input.blueprintWishlist === "string" ? input.blueprintWishlist : base.blueprintWishlist;
+  meta.blueprintWishlist = normalizeBlueprintWishlist(meta, cfg);
 
   meta.achievements = boolTrueMap(input.achievements);
   meta.claimedMilestones = boolTrueMap(input.claimedMilestones);
@@ -756,14 +840,28 @@ function settleRunRewards(options) {
   const score = finiteNumber(run.score, wavesCleared * 100 + kills * 10 + bossesDefeated * 500, { min: 0, integer: true });
   const vehicleId = cfg.VEHICLES[run.vehicleId] ? run.vehicleId : meta.selectedVehicle;
   const difficultyId = cfg.ECONOMY.difficultyRewardMul[run.difficultyId] ? run.difficultyId : "normal";
-  const normalizedRun = { wavesCleared, kills, bossesDefeated, score, vehicleId, difficultyId };
+  const eventRewardMul = finiteNumber(run.eventRewardMul, 1, { min: 1, max: 2 });
+  const eventParts = finiteNumber(run.eventParts, 0, {
+    min: 0,
+    max: cfg.ECONOMY.eventPartsCapPerRun || 12,
+    integer: true
+  });
+  const normalizedRun = { wavesCleared, kills, bossesDefeated, score, vehicleId, difficultyId, eventRewardMul, eventParts };
   const partsBreakdown = rewardPartsBreakdownForRun(normalizedRun, cfg);
   const parts = partsBreakdown.total;
 
-  const blueprintResult = applyBlueprintDrops(meta, bossesDefeated, opts.rng, cfg);
+  const providedBlueprint = opts.blueprintResult && opts.blueprintResult.meta ? opts.blueprintResult : null;
+  const blueprintResult = providedBlueprint
+    ? {
+        meta: migrateMeta(providedBlueprint.meta, { config: cfg }),
+        drops: deepClone(providedBlueprint.drops || {}),
+        unlocked: Array.isArray(providedBlueprint.unlocked) ? providedBlueprint.unlocked.slice() : []
+      }
+    : applyBlueprintDrops(meta, bossesDefeated, opts.rng, cfg);
   meta.blueprints = blueprintResult.meta.blueprints;
   meta.unlockedVehicles = blueprintResult.meta.unlockedVehicles;
   meta.bossBlueprintPity = blueprintResult.meta.bossBlueprintPity;
+  meta.blueprintWishlist = blueprintResult.meta.blueprintWishlist;
 
   meta.totalRuns += 1;
   meta.totalKills += kills;
@@ -799,6 +897,8 @@ function settleRunRewards(options) {
     kills,
     bossesDefeated,
     score,
+    eventRewardMul,
+    eventParts,
     earnedParts: totalParts,
     runParts: parts,
     achievementParts,
@@ -885,11 +985,15 @@ const DSRules = {
   bossHpScale,
   waveDuration,
   scaledEnemyStats,
+  variantChanceForWave,
+  applyEnemyVariantToSpawn,
+  chooseEnvironmentEvent,
   generateWave,
   defaultRunMods,
   blueprintRequiredForVehicle,
   isVehicleUnlocked,
   firstLockedBlueprintVehicle,
+  normalizeBlueprintWishlist,
   applyBlueprintDrops,
   getUpgradeDefinition,
   getVehicleLevels,

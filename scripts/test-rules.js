@@ -34,6 +34,17 @@ const bossWave = rules.generateWave({ wave: 5, rng: fixedRng([0.1, 0.2, 0.3, 0.4
 assert.strictEqual(bossWave.boss, true, "wave 5 should be a boss wave");
 assert(bossWave.spawns.some((spawn) => spawn.enemyId === "boss_hive_titan"), "wave 5 should spawn hive titan");
 
+const airEventWave = rules.generateWave({ wave: 3, vehicleId: "sky_barge", rng: fixedRng([0.1, 0.9, 0.9, 0.9]), config });
+assert(airEventWave.environmentEvent && airEventWave.environmentEvent.id === "turbulence", "low event roll should trigger air turbulence");
+const airSpawn = airEventWave.spawns.find((spawn) => spawn.enemyId !== "boss_hive_titan");
+assert(airSpawn.speed >= rules.scaledEnemyStats(airSpawn.enemyId, 3, config).speed * 1.14, "turbulence should speed up enemies");
+
+const variantWave = rules.generateWave({ wave: 8, vehicleId: "land_rig", rng: () => 0, config });
+const variantSpawn = variantWave.spawns.find((spawn) => spawn.variantId);
+assert(variantSpawn, "late waves should be able to mix enemy variants");
+assert(["runner_frenzy", "shambler_hardened"].includes(variantSpawn.variantId), `unexpected variant ${variantSpawn.variantId}`);
+assert(variantSpawn.tint || variantSpawn.filter, "variant spawns should carry canvas tint/filter metadata");
+
 assert(rules.enemyHpScale(4, config) > rules.enemyHpScale(1, config), "enemy hp should scale by wave");
 assert(rules.enemySpeedScale(8, config) > rules.enemySpeedScale(1, config), "enemy speed should scale by wave");
 assert(rules.waveBudget(4, config) > rules.waveBudget(1, config), "wave budget should grow");

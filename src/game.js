@@ -219,6 +219,7 @@
       eventBanner: state.eventBanner ? rules.deepClone(state.eventBanner) : null,
       lastGateChoice: state.lastGateChoice ? rules.deepClone(state.lastGateChoice) : null,
       enemies: state.enemies.map(publicEntity),
+      hazards: state.hazards.map(publicEntity),
       projectiles: state.projectiles.map(publicEntity),
       gates: state.gates.map(publicEntity),
       effects: state.effects.map(publicEntity),
@@ -228,6 +229,7 @@
             wave: state.wavePlan.wave,
             duration: state.wavePlan.duration,
             boss: state.wavePlan.boss,
+            environmentEvent: state.wavePlan.environmentEvent ? rules.deepClone(state.wavePlan.environmentEvent) : null,
             remainingSpawns: Math.max(0, state.wavePlan.spawns.length - state.spawnIndex)
           }
         : null,
@@ -242,6 +244,8 @@
         wavesCleared: state.stats.wavesCleared,
         kills: state.stats.kills,
         bossesDefeated: state.stats.bossesDefeated,
+        eventRewardMul: state.stats.eventRewardMul,
+        eventParts: state.stats.eventParts,
         difficultyId: state.difficultyId
       },
       config
@@ -251,9 +255,96 @@
   function makeWavePlan(wave) {
     return rules.generateWave({
       wave,
+      vehicleId: state.vehicleId,
       rng: state.rng,
       config
     });
+  }
+
+  function mergeBlueprintDrops(target, source) {
+    Object.keys(source || {}).forEach((vehicleId) => {
+      target[vehicleId] = (target[vehicleId] || 0) + source[vehicleId];
+    });
+  }
+
+  function addBlueprintDropNotice(drops, sourceX, sourceY) {
+    Object.keys(drops || {}).forEach((vehicleId) => {
+      const amount = drops[vehicleId];
+      if (!amount) return;
+      const required = rules.blueprintRequiredForVehicle(vehicleId, config);
+      const count =
+        (state.blueprintPreviewMeta && state.blueprintPreviewMeta.blueprints && state.blueprintPreviewMeta.blueprints[vehicleId]) ||
+        0;
+      const vehicle = config.VEHICLES[vehicleId];
+      const body = `${vehicle.name} ${count}/${required}`;
+      const title = `藍圖碎片 +${amount}`;
+      state.messages.push({ text: `${title} (${body})`, time: state.time, ttl: 2.4 });
+      pushEventBanner(title, body, { kind: "blueprint", ttl: 2.2 });
+      addEffect({
+        id: nextId("effect"),
+        kind: "blueprint_drop",
+        text: "+1",
+        x: sourceX,
+        y: sourceY,
+        startX: sourceX,
+        startY: sourceY,
+        targetX: W - 22,
+        targetY: 28,
+        color: "#5ed4cb",
+        ttl: 1.05,
+        age: 0,
+        alpha: 1
+      });
+    });
+  }
+
+  function resolveBossBlueprintDrop(enemy) {
+    if (!state.blueprintPreviewMeta) state.blueprintPreviewMeta = rules.deepClone(meta);
+    const result = rules.applyBlueprintDrops(state.blueprintPreviewMeta, 1, state.rng, config);
+    state.blueprintPreviewMeta = result.meta;
+    mergeBlueprintDrops(state.blueprintDrops, result.drops);
+    result.unlocked.forEach((vehicleId) => {
+      if (!state.blueprintUnlocks.includes(vehicleId)) state.blueprintUnlocks.push(vehicleId);
+    });
+    state.blueprintBossesResolved += 1;
+    if (Object.keys(result.drops).length) addBlueprintDropNotice(result.drops, enemy.x, enemy.y);
+  }
+
+  function spawnMeteorHazards(event) {
+    const count = rules.finiteNumber(event.hazardCount, 3, { min: 1, max: 6, integer: true });
+    const hp = rules.finiteNumber(event.hazardHp, 20, { min: 4, integer: true });
+    const parts = rules.finiteNumber(event.hazardParts, 2, { min: 0, max: 6, integer: true });
+    for (let i = 0; i < count; i += 1) {
+      const lane = (i + 1) / (count + 1);
+      state.hazards.push({
+        id: nextId("hazard"),
+        kind: "meteor",
+        x: config.LOGIC.roadLeft + (config.LOGIC.roadRight - config.LOGIC.roadLeft) * lane + (state.rng() - 0.5) * 14,
+        y: -42 - i * 62,
+        vx: -18 + state.rng() * 36,
+        vy: 62 + state.rng() * 22,
+        hp,
+        maxHp: hp,
+        radius: 13,
+        parts,
+        rotation: state.rng() * Math.PI * 2,
+        spin: -1.8 + state.rng() * 3.6,
+        dead: false
+      });
+    }
+  }
+
+  function activateWaveEnvironmentEvent() {
+    if (!state || !state.wavePlan || !state.wavePlan.environmentEvent) return;
+    if (state.activeEnvironmentEventWave === state.wave) return;
+    const event = state.wavePlan.environmentEvent;
+    state.activeEnvironmentEventWave = state.wave;
+    if (!state.stats.environmentEvents.includes(event.id)) state.stats.environmentEvents.push(event.id);
+    if (event.rewardMulAdd) {
+      state.stats.eventRewardMul = Math.min(2, state.stats.eventRewardMul + event.rewardMulAdd);
+    }
+    if (event.id === "meteor_shower") spawnMeteorHazards(event);
+    pushEventBanner("環境事件", `${event.label}：${event.description}`, { kind: "event", ttl: 2.4 });
   }
 
   function makeInitialState(vehicleId, nextMeta, seed) {
@@ -295,6 +386,7 @@
       },
       runMods: rules.defaultRunMods(),
       enemies: [],
+      hazards: [],
       projectiles: [],
       gates: [],
       effects: [],
@@ -305,8 +397,15 @@
         gatesTaken: 0,
         score: 0,
         wavesCleared: 0,
+        eventRewardMul: 1,
+        eventParts: 0,
+        environmentEvents: [],
         partsPreview: config.ECONOMY.minRunParts
       },
+      blueprintPreviewMeta: rules.deepClone(safeMeta),
+      blueprintDrops: {},
+      blueprintUnlocks: [],
+      blueprintBossesResolved: 0,
       input: {
         dragging: false,
         lastPointer: null
@@ -321,6 +420,7 @@
 
     state = initial;
     state.wavePlan = makeWavePlan(1);
+    activateWaveEnvironmentEvent();
     state.messages.push({ text: "拖曳瞄準", time: 0, ttl: 2 });
     return state;
   }
@@ -367,7 +467,7 @@
     const enemy = {
       id: opts.id || nextId("enemy"),
       enemyId,
-      name: enemyConfig.name,
+      name: opts.variantLabel ? `${enemyConfig.name} ${opts.variantLabel}` : enemyConfig.name,
       sprite: enemyConfig.sprite,
       anim: enemyConfig.boss ? "walk" : "walk",
       x: Number.isFinite(opts.x) ? opts.x : config.LOGIC.roadLeft + state.rng() * (config.LOGIC.roadRight - config.LOGIC.roadLeft),
@@ -375,6 +475,7 @@
       vx: 0,
       vy: scaled.speed,
       laneOffset: Number.isFinite(opts.laneOffset) ? opts.laneOffset : 0,
+      eventDriftAmp: Number.isFinite(opts.eventDriftAmp) ? opts.eventDriftAmp : 0,
       swayPhase: Number.isFinite(opts.swayPhase) ? opts.swayPhase : state.rng() * Math.PI * 2,
       swayAmp: Number.isFinite(opts.swayAmp) ? opts.swayAmp : 4 + state.rng() * 3,
       swayFreq: Number.isFinite(opts.swayFreq) ? opts.swayFreq : 1.1 + state.rng() * 0.7,
@@ -395,6 +496,10 @@
       radius: Number.isFinite(opts.radius) ? opts.radius : enemyConfig.radius,
       scale: Number.isFinite(opts.scale) ? opts.scale : enemyConfig.scale,
       score: enemyConfig.score,
+      variantId: opts.variantId || null,
+      variantLabel: opts.variantLabel || "",
+      tint: opts.tint || "",
+      filter: opts.filter || "",
       boss: enemyConfig.boss === true,
       dead: false,
       hitCooldown: 0,
@@ -529,6 +634,7 @@
     if (enemy.boss) {
       state.stats.bossesDefeated += 1;
       state.stats.score += 900;
+      resolveBossBlueprintDrop(enemy);
       state.messages.push({ text: "Boss 已擊破", time: state.time, ttl: 1.8 });
     }
     if (cause !== "burst") {
@@ -543,6 +649,8 @@
         radius: enemy.radius,
         visualWidth: enemyVisualWidth(enemy, enemyConfig),
         boss: enemy.boss,
+        tint: enemy.tint || "",
+        filter: enemy.filter || "",
         rotation: Math.sin((enemy.animPhase || 0) + state.time) * (enemy.boss ? 0.08 : 0.18),
         scale: enemy.scale,
         ttl: config.PERFORMANCE.corpseFadeSeconds,
@@ -604,14 +712,25 @@
         kills: state.stats.kills,
         bossesDefeated: state.stats.bossesDefeated,
         score: state.stats.score,
+        eventRewardMul: state.stats.eventRewardMul,
+        eventParts: state.stats.eventParts,
         difficultyId: state.difficultyId
       },
       overrides || {}
     );
+    const blueprintResult =
+      state.blueprintBossesResolved >= (run.bossesDefeated || 0) && state.blueprintPreviewMeta
+        ? {
+            meta: state.blueprintPreviewMeta,
+            drops: state.blueprintDrops,
+            unlocked: state.blueprintUnlocks
+          }
+        : null;
     const result = rules.settleRunRewards({
       meta,
       run,
       rng: state.rng,
+      blueprintResult,
       now: callbacks.now || null,
       config
     });
@@ -633,6 +752,7 @@
     state.spawnIndex = 0;
     state.gateIndex = 0;
     state.wavePlan = makeWavePlan(state.wave);
+    activateWaveEnvironmentEvent();
     emitState();
     return getState();
   }
@@ -752,7 +872,8 @@
       const toTarget = normalize(targetX - enemy.x, targetY - enemy.y);
       const speedMul = enemy.boss && enemy.hp < enemy.maxHp * 0.33 ? 1.35 : 1;
       const sway = enemy.boss ? 0 : Math.sin(state.time * enemy.swayFreq + enemy.swayPhase) * enemy.swayAmp;
-      enemy.vx = toTarget.x * enemy.speed * speedMul * 0.62 + sway;
+      const eventDrift = enemy.eventDriftAmp ? Math.sin(state.time * 1.7 + enemy.swayPhase) * enemy.eventDriftAmp : 0;
+      enemy.vx = toTarget.x * enemy.speed * speedMul * 0.62 + sway + eventDrift;
       enemy.vy = Math.max(enemy.speed * 0.35, toTarget.y * enemy.speed * speedMul);
       enemy.x += enemy.vx * dt;
       enemy.y += enemy.vy * dt;
@@ -834,11 +955,83 @@
     });
   }
 
+  function destroyHazard(hazard) {
+    if (!hazard || hazard.dead) return;
+    hazard.dead = true;
+    const earned = Math.min(
+      hazard.parts || 0,
+      Math.max(0, (config.ECONOMY.eventPartsCapPerRun || 12) - (state.stats.eventParts || 0))
+    );
+    state.stats.eventParts += earned;
+    state.stats.score += earned * 18;
+    if (earned > 0) addFloatingText(`+${earned}`, hazard.x, hazard.y - hazard.radius, { color: "#5ed4cb", size: 8, ttl: 0.62 });
+    addEffect({
+      id: nextId("effect"),
+      sprite: "effect_explosion_small",
+      anim: "burst",
+      x: hazard.x,
+      y: hazard.y,
+      scale: 1.25,
+      ttl: 0.35,
+      age: 0,
+      alpha: 0.9
+    });
+    updatePartsPreview();
+  }
+
+  function updateHazards(dt) {
+    if (!state.hazards.length) return;
+    state.hazards.forEach((hazard) => {
+      if (hazard.dead) return;
+      hazard.x += hazard.vx * dt;
+      hazard.y += hazard.vy * dt;
+      hazard.rotation += (hazard.spin || 0) * dt;
+      if (distance(hazard, state.vehicle) <= hazard.radius + state.vehicle.radius) {
+        damageVehicle(22);
+        hazard.dead = true;
+        addEffect({
+          id: nextId("effect"),
+          sprite: "effect_hit",
+          anim: "burst",
+          x: hazard.x,
+          y: hazard.y,
+          scale: 1.1,
+          ttl: 0.24,
+          age: 0,
+          alpha: 0.86
+        });
+      }
+    });
+    state.hazards = state.hazards.filter((hazard) => !hazard.dead && hazard.y < H + 44 && hazard.x > -36 && hazard.x < W + 36);
+  }
+
   function updateProjectiles(dt) {
     state.projectiles.forEach((projectile) => {
       projectile.x += projectile.vx * dt;
       projectile.y += projectile.vy * dt;
       projectile.life -= dt;
+
+      for (let i = 0; i < state.hazards.length; i += 1) {
+        const hazard = state.hazards[i];
+        if (hazard.dead) continue;
+        if (distance(projectile, hazard) <= projectile.radius + hazard.radius) {
+          hazard.hp -= projectile.damage;
+          projectile.life = -1;
+          addEffect({
+            id: nextId("effect"),
+            sprite: "effect_hit",
+            anim: "burst",
+            x: projectile.x,
+            y: projectile.y,
+            scale: 0.9,
+            ttl: 0.18,
+            age: 0,
+            alpha: 0.82
+          });
+          if (hazard.hp <= 0) destroyHazard(hazard);
+          return;
+        }
+      }
 
       for (let i = 0; i < state.gates.length; i += 1) {
         const gate = state.gates[i];
@@ -909,6 +1102,7 @@
     state.projectiles = state.projectiles.filter((projectile) => {
       return projectile.life > 0 && projectile.x > -30 && projectile.x < W + 30 && projectile.y > -45 && projectile.y < H + 35;
     });
+    state.hazards = state.hazards.filter((hazard) => !hazard.dead);
     state.enemies = state.enemies.filter((enemy) => !enemy.dead);
   }
 
@@ -920,6 +1114,12 @@
     state.effects.forEach((effect) => {
       effect.age += dt;
       if (effect.kind === "text") effect.y += (effect.vy || 0) * dt;
+      if (effect.kind === "blueprint_drop") {
+        const t = Math.min(1, effect.age / Math.max(0.01, effect.ttl));
+        const eased = 1 - Math.pow(1 - t, 3);
+        effect.x = effect.startX + (effect.targetX - effect.startX) * eased;
+        effect.y = effect.startY + (effect.targetY - effect.startY) * eased - Math.sin(t * Math.PI) * 24;
+      }
       effect.alpha = Math.max(0, 1 - effect.age / effect.ttl);
     });
     state.effects = state.effects.filter((effect) => effect.age < effect.ttl);
@@ -942,6 +1142,7 @@
       state.spawnIndex = 0;
       state.gateIndex = 0;
       state.wavePlan = makeWavePlan(state.wave);
+      activateWaveEnvironmentEvent();
       state.messages.push({ text: `第 ${state.wave} 波`, time: state.time, ttl: 1.4 });
       updatePartsPreview();
     }
@@ -970,6 +1171,7 @@
     updateVehicleAim(dt);
     processWaveEvents();
     fireProjectiles(dt);
+    updateHazards(dt);
     updateProjectiles(dt);
     updateEnemies(dt);
     updateGatesAndEffects(dt);
@@ -1583,7 +1785,14 @@
       ctx.scale(squashX, squashY);
       ctx.globalAlpha *= flash ? drawAlpha * 0.82 : drawAlpha;
       ctx.imageSmoothingEnabled = false;
+      if (enemy.filter) ctx.filter = enemy.filter;
       ctx.drawImage(image, -width * 0.5, -height * 0.5, width, height);
+      if (enemy.tint) {
+        ctx.globalCompositeOperation = "source-atop";
+        ctx.fillStyle = enemy.tint;
+        ctx.fillRect(-width * 0.5, -height * 0.5, width, height);
+        ctx.globalCompositeOperation = "source-over";
+      }
       if (flash) {
         ctx.globalCompositeOperation = "source-atop";
         ctx.fillStyle = "rgba(255, 244, 214, 0.36)";
@@ -1599,7 +1808,10 @@
     ctx.rotate(wobble);
     enemySpriteOptions.flipX = enemy.vx < -8;
     enemySpriteOptions.alpha = flash ? drawAlpha * 0.78 : drawAlpha;
+    enemySpriteOptions.tint = enemy.tint || null;
+    if (enemy.filter) ctx.filter = enemy.filter;
     drawSprite(enemy.sprite, anim || enemy.anim || "walk", timeMs, 0, 0, enemy.scale * Math.max(0.94, Math.min(1.08, squashY)), enemySpriteOptions);
+    enemySpriteOptions.tint = null;
     ctx.restore();
     renderDebug.enemyFallbackDrawn += 1;
   }
@@ -1619,11 +1831,102 @@
       ctx.scale(1.08, 0.9);
       ctx.globalAlpha *= effect.alpha * 0.78;
       ctx.imageSmoothingEnabled = false;
+      if (effect.filter) ctx.filter = effect.filter;
       ctx.drawImage(image, -width * 0.5, -height * 0.5, width, height);
+      if (effect.tint) {
+        ctx.globalCompositeOperation = "source-atop";
+        ctx.fillStyle = effect.tint;
+        ctx.fillRect(-width * 0.5, -height * 0.5, width, height);
+      }
       ctx.restore();
       return;
     }
-    drawSprite(effect.sprite, effect.anim, timeMs, effect.x, effect.y, effect.scale, { alpha: effect.alpha });
+    drawSprite(effect.sprite, effect.anim, timeMs, effect.x, effect.y, effect.scale, { alpha: effect.alpha, tint: effect.tint || null });
+  }
+
+  function drawHazard(hazard) {
+    ctx.save();
+    ctx.translate(hazard.x, hazard.y);
+    ctx.rotate(hazard.rotation || 0);
+    ctx.globalAlpha *= hazard.dead ? 0.35 : 0.96;
+    ctx.fillStyle = "#6e625d";
+    ctx.strokeStyle = "#f0b64a";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i < 7; i += 1) {
+      const angle = (Math.PI * 2 * i) / 7;
+      const radius = hazard.radius * (0.74 + ((i * 17) % 5) * 0.08);
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "rgba(240, 182, 74, 0.42)";
+    ctx.fillRect(-4, -2, 8, 3);
+    ctx.restore();
+  }
+
+  function drawBlueprintDrop(effect) {
+    ctx.save();
+    ctx.globalAlpha *= effect.alpha == null ? 1 : effect.alpha;
+    ctx.translate(effect.x, effect.y);
+    ctx.fillStyle = "rgba(94, 212, 203, 0.92)";
+    ctx.strokeStyle = "#f4ead8";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, -8);
+    ctx.lineTo(7, 0);
+    ctx.lineTo(0, 8);
+    ctx.lineTo(-7, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    drawWorldText(effect.text || "+1", 0, 14, { size: 7, color: "#5ed4cb", alpha: effect.alpha });
+    ctx.restore();
+  }
+
+  function drawEnvironmentEventOverlay() {
+    if (!state || !state.wavePlan || !state.wavePlan.environmentEvent) return;
+    const event = state.wavePlan.environmentEvent;
+    ctx.save();
+    if (event.id === "sandstorm") {
+      ctx.globalAlpha = 0.22;
+      ctx.fillStyle = "#d3a45f";
+      ctx.fillRect(0, 0, W, H);
+      ctx.globalAlpha = 0.24;
+      ctx.strokeStyle = "#f0d199";
+      for (let y = -20 + (state.scroll * 1.8) % 44; y < H + 40; y += 22) {
+        ctx.beginPath();
+        ctx.moveTo(-10, y);
+        ctx.lineTo(W + 10, y + 18);
+        ctx.stroke();
+      }
+    } else if (event.id === "turbulence") {
+      ctx.globalAlpha = 0.22;
+      ctx.strokeStyle = "#f4ead8";
+      for (let y = -30 + (state.scroll * 2.2) % 54; y < H + 30; y += 27) {
+        ctx.beginPath();
+        ctx.moveTo(8, y);
+        ctx.bezierCurveTo(58, y + 12, 128, y - 14, W - 8, y + 8);
+        ctx.stroke();
+      }
+    } else if (event.id === "undertow") {
+      ctx.globalAlpha = 0.2;
+      ctx.strokeStyle = "#b9fff2";
+      for (let y = -20 + (state.scroll * 1.6) % 58; y < H + 58; y += 29) {
+        ctx.beginPath();
+        for (let x = 0; x <= W; x += 16) {
+          const yy = y + Math.sin(x * 0.12 + state.time * 3) * 5;
+          if (x === 0) ctx.moveTo(x, yy);
+          else ctx.lineTo(x, yy);
+        }
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
   }
 
   function drawIdlePreview(timeMs) {
@@ -1673,6 +1976,7 @@
       drawSprite(gate.sprite, "idle", timeMs, gate.x, gate.y, gate.scale, { alpha: 0.95 });
       drawGateLabel(gate);
     });
+    state.hazards.forEach(drawHazard);
     state.projectiles.forEach((projectile) => {
       drawSprite(projectile.sprite, "move", timeMs, projectile.x - projectile.vx * 0.034, projectile.y - projectile.vy * 0.034, projectile.scale, {
         rotation: projectile.rotation,
@@ -1699,6 +2003,8 @@
           alpha: effect.alpha,
           color: effect.color
         });
+      } else if (effect.kind === "blueprint_drop") {
+        drawBlueprintDrop(effect);
       } else if (effect.kind === "enemy_corpse") {
         drawEnemyCorpse(effect, timeMs);
       } else {
@@ -1742,6 +2048,7 @@
       ctx.translate(Math.sin(state.time * 91) * amp, Math.cos(state.time * 73) * amp);
     }
     drawBackground(timeMs);
+    if (state) drawEnvironmentEventOverlay();
     if (state) drawGame(timeMs);
     else drawIdlePreview(timeMs);
     if (state && state.shakeUntil > state.time && !(meta.settings && meta.settings.reducedFlash)) ctx.restore();

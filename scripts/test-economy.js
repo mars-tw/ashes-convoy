@@ -25,6 +25,12 @@ assert.deepStrictEqual(
     total: 53
   }
 );
+const eventBreakdown = rules.rewardPartsBreakdownForRun(
+  { wavesCleared: 5, kills: 55, bossesDefeated: 1, difficultyId: "normal", eventRewardMul: 1.2, eventParts: 4 },
+  config
+);
+assert.strictEqual(eventBreakdown.eventBonus, 15, "sandstorm + meteor parts should be explicit event bonus");
+assert.strictEqual(eventBreakdown.total, 68, "event bonus should add to normal run rewards");
 
 const meta = rules.migrateMeta(null, { config });
 const before = JSON.stringify(meta);
@@ -81,6 +87,24 @@ const pity = rules.settleRunRewards({
   config
 });
 assert.strictEqual(pity.reward.blueprints.sky_barge, 1, "three bosses should trigger one guaranteed blueprint");
+
+const wishlist = rules.settleRunRewards({
+  meta: rules.migrateMeta(
+    {
+      version: config.META_VERSION,
+      unlockedVehicles: { land_rig: true, sky_barge: false, sea_ark: false, void_runner: false },
+      blueprints: { sky_barge: 0, sea_ark: 0, void_runner: 0 },
+      blueprintWishlist: "sea_ark"
+    },
+    { config }
+  ),
+  run: { vehicleId: "land_rig", wavesCleared: 5, kills: 1, bossesDefeated: 1, score: 1500, difficultyId: "normal" },
+  rng: () => 0,
+  now: fixedNow,
+  config
+});
+assert.strictEqual(wishlist.reward.blueprints.sea_ark, 1, "wishlist should prioritize sea ark blueprint drops");
+assert.strictEqual(wishlist.meta.blueprints.sky_barge, 0, "wishlist should not spend the drop on sky first");
 
 const unlockedSky = rules.settleRunRewards({
   meta: rules.migrateMeta(null, { config }),

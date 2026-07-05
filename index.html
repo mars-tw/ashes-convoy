@@ -262,10 +262,13 @@
 
       .gate-choice-btn {
         position: absolute;
+        left: 0;
+        top: 0;
         width: 112px;
         min-height: 68px;
         padding: 7px 8px;
-        transform: translate(-50%, -50%);
+        transform: translate3d(var(--gate-x, 0), var(--gate-y, 0), 0) translate(-50%, -50%);
+        will-change: transform;
         border-color: rgba(240, 182, 74, 0.88);
         background: rgba(9, 12, 16, 0.78);
         box-shadow: 0 12px 24px rgba(0, 0, 0, 0.34);
@@ -403,6 +406,23 @@
       .upgrade small {
         color: var(--muted);
         font-size: 12px;
+      }
+
+      .vehicle-actions {
+        display: grid;
+        gap: 6px;
+        min-width: 78px;
+      }
+
+      .vehicle-actions button {
+        width: 100%;
+        padding: 0 8px;
+        font-size: 12px;
+      }
+
+      .wishlist-btn.is-active {
+        border-color: rgba(94, 212, 203, 0.72);
+        background: rgba(94, 212, 203, 0.16);
       }
 
       .upgrade {

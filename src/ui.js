@@ -12,8 +12,12 @@
   let meta = rules.migrateMeta(null, { config });
   let latestState = null;
   let lastSettlement = null;
-  let lastGateSignature = "";
   let recommendedUpgradeTrack = "";
+  const gateChoiceButtons = new Map();
+  let gateChoiceLayerSize = {
+    width: config.LOGIC.displayWidth,
+    height: config.LOGIC.displayHeight
+  };
 
   const els = {};
   const shelter = {
@@ -303,6 +307,35 @@
     return "維修";
   }
 
+  function syncGateChoiceLayerSize() {
+    if (!els.gateChoiceLayer) return;
+    const host = els.gateChoiceLayer.parentElement || els.gateChoiceLayer;
+    const rect = host.getBoundingClientRect();
+    gateChoiceLayerSize = {
+      width: rect.width || config.LOGIC.displayWidth,
+      height: rect.height || config.LOGIC.displayHeight
+    };
+  }
+
+  function updateGateChoiceButtonPosition(button, gate) {
+    const x = Math.round(((gate.x / config.LOGIC.width) * gateChoiceLayerSize.width) / 4) * 4;
+    const y = Math.round(((gate.y / config.LOGIC.height) * gateChoiceLayerSize.height) / 4) * 4;
+    button.style.setProperty("--gate-x", `${x}px`);
+    button.style.setProperty("--gate-y", `${y}px`);
+  }
+
+  function removeGateChoiceButton(entityId) {
+    const record = gateChoiceButtons.get(entityId);
+    if (!record) return;
+    record.button.removeEventListener("click", record.onClick);
+    record.button.remove();
+    gateChoiceButtons.delete(entityId);
+  }
+
+  function clearGateChoiceButtons() {
+    Array.from(gateChoiceButtons.keys()).forEach(removeGateChoiceButton);
+  }
+
   function achievementLabel(id) {
     return (config.ACHIEVEMENTS[id] && config.ACHIEVEMENTS[id].label) || id;
   }
@@ -315,6 +348,8 @@
     const required = rules.blueprintRequiredForVehicle(vehicleId, config);
     if (required <= 0) return "";
     const count = Math.min(required, meta.blueprints[vehicleId] || 0);
+    const wishlist = meta.blueprintWishlist === vehicleId ? " | 優先解鎖" : "";
+    if (wishlist) return `?? ${count} / ${required}${wishlist}`;
     return `藍圖 ${count} / ${required} · 擊敗 Boss 取得碎片`;
   }
 
@@ -416,7 +451,22 @@
       button.disabled = !unlocked;
       button.dataset.vehicle = vehicleId;
       button.addEventListener("click", () => selectVehicle(vehicleId));
-      item.append(text, button);
+      const actions = root.document.createElement("div");
+      actions.className = "vehicle-actions";
+      actions.appendChild(button);
+      if (!unlocked && rules.blueprintRequiredForVehicle(vehicleId, config) > 0) {
+        const wishlistBtn = root.document.createElement("button");
+        wishlistBtn.type = "button";
+        wishlistBtn.className = meta.blueprintWishlist === vehicleId ? "wishlist-btn is-active" : "wishlist-btn";
+        wishlistBtn.textContent = meta.blueprintWishlist === vehicleId ? "優先中" : "設優先";
+        wishlistBtn.dataset.blueprintWishlist = vehicleId;
+        wishlistBtn.addEventListener("click", (event) => {
+          event.preventDefault();
+          setBlueprintWishlist(vehicleId);
+        });
+        actions.appendChild(wishlistBtn);
+      }
+      item.append(text, actions);
       els.vehicleList.appendChild(item);
     });
   }
@@ -492,32 +542,40 @@
   function renderGateChoices(state) {
     if (!els.gateChoiceLayer) return;
     const gates = state && state.mode === "playing" ? state.gates.filter((gate) => !gate.broken) : [];
-    const signature = gates.map((gate) => `${gate.id}:${Math.round(gate.x)}:${Math.round(gate.y)}:${gate.gateId}`).join("|");
     if (!gates.length) {
       els.gateChoiceLayer.hidden = true;
-      els.gateChoiceLayer.textContent = "";
-      lastGateSignature = "";
+      clearGateChoiceButtons();
       return;
     }
-    if (signature === lastGateSignature) return;
-    lastGateSignature = signature;
-    els.gateChoiceLayer.textContent = "";
+    syncGateChoiceLayerSize();
+    const activeIds = new Set();
     gates.forEach((gate) => {
       const gateConfig = config.GATES[gate.gateId];
       if (!gateConfig) return;
+      activeIds.add(gate.id);
+      let record = gateChoiceButtons.get(gate.id);
+      if (!record) {
       const button = root.document.createElement("button");
       button.type = "button";
       button.className = "gate-choice-btn";
       button.dataset.gateId = gate.gateId;
       button.dataset.entityId = gate.id;
-      button.style.left = `${(gate.x / config.LOGIC.width) * 100}%`;
-      button.style.top = `${(gate.y / config.LOGIC.height) * 100}%`;
+      button.style.left = "0";
+      button.style.top = "0";
       button.innerHTML = `<b>${gateConfig.shortLabel}</b><span>${gateValueText(gate.gateId)}</span><small>點選取得</small>`;
-      button.addEventListener("click", (event) => {
+      const onClick = (event) => {
         event.preventDefault();
         game.chooseGate(gate.id);
-      });
+      };
+      button.addEventListener("click", onClick);
+      record = { button, onClick };
+      gateChoiceButtons.set(gate.id, record);
       els.gateChoiceLayer.appendChild(button);
+      }
+      updateGateChoiceButtonPosition(record.button, gate);
+    });
+    Array.from(gateChoiceButtons.keys()).forEach((entityId) => {
+      if (!activeIds.has(entityId)) removeGateChoiceButton(entityId);
     });
     els.gateChoiceLayer.hidden = false;
   }
@@ -625,6 +683,7 @@
       ["Boss 零件", `+${breakdown.bossParts}`],
       ["難度加成", breakdown.difficultyBonus === 0 ? "+0" : `${breakdown.difficultyBonus > 0 ? "+" : ""}${breakdown.difficultyBonus}`]
     ];
+    if (breakdown.eventBonus > 0) rows.splice(Math.max(0, rows.length - 1), 0, ["事件零件", `+${breakdown.eventBonus}`]);
     els.settlementList.textContent = "";
     rows.forEach(([label, value]) => {
       const item = root.document.createElement("div");
@@ -692,6 +751,16 @@
     els.settlementPanel.hidden = false;
     renderSettlement(result);
     renderHud(null);
+  }
+
+  function setBlueprintWishlist(vehicleId) {
+    if (!config.VEHICLES[vehicleId] || rules.blueprintRequiredForVehicle(vehicleId, config) <= 0) return;
+    if (isUnlocked(vehicleId)) return;
+    meta = migrateUiMeta(Object.assign({}, meta, { blueprintWishlist: vehicleId }));
+    saveMeta();
+    game.setMeta(meta);
+    setStatus(`${config.VEHICLES[vehicleId].name} 已設為優先解鎖`);
+    renderGarage();
   }
 
   function selectVehicle(vehicleId) {
@@ -785,6 +854,7 @@
     els.seriesHotspotBtn.addEventListener("click", () => openMetaDrawer("achievements"));
     els.resetOverlayBtn.addEventListener("click", clearStorage);
     els.closeMetaDrawer.addEventListener("click", closeMetaDrawer);
+    root.addEventListener("resize", syncGateChoiceLayerSize);
     els.pauseBtn.addEventListener("click", () => game.togglePause());
     els.resumeBtn.addEventListener("click", () => {
       game.resume();
@@ -817,6 +887,10 @@
       buyUpgrade: (vehicleId, track) => {
         if (vehicleId && config.VEHICLES[vehicleId]) selectVehicle(vehicleId);
         buyUpgrade(track);
+        return rules.deepClone(meta);
+      },
+      setBlueprintWishlist: (vehicleId) => {
+        setBlueprintWishlist(vehicleId);
         return rules.deepClone(meta);
       },
       startRun: (vehicleId) => {
@@ -899,6 +973,7 @@
 
   function init() {
     collectElements();
+    syncGateChoiceLayerSize();
     loadMeta();
     bindEvents();
     game.init({

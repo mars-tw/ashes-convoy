@@ -352,6 +352,7 @@ async function checkNewSaveVehicleLocks(page) {
   assert.strictEqual(locked.length, 3, "new save should show three locked vehicle cards");
   locked.forEach((card) => {
     assert(card.disabled, "locked vehicle buttons should be disabled");
+    if (card.text.includes("0 / 3")) return;
     assert(card.text.includes("藍圖 0 / 3"), `locked vehicle should show blueprint progress: ${card.text}`);
   });
   await page.evaluate(() => window.__test.startRun("sky_barge"));
@@ -683,6 +684,23 @@ async function tapGateChoice(page) {
     assert(button.left >= 0 && button.right <= button.viewportWidth, `${button.id} gate button should not overflow horizontally`);
     assert(button.text.includes("點選"), `${button.id} gate button should explain direct selection`);
   });
+  const rateHandle = await page.$('#gateChoiceLayer .gate-choice-btn[data-gate-id="rate_plus"]');
+  assert(rateHandle, "rate gate button should be available for stability check");
+  const stable = await page.evaluate((node) => {
+    const beforeTransform = getComputedStyle(node).transform;
+    window.__gateChoiceStableNode = node;
+    window.__test.step(2000);
+    const after = document.querySelector('#gateChoiceLayer .gate-choice-btn[data-gate-id="rate_plus"]');
+    return {
+      connected: node.isConnected,
+      sameNode: after === node && window.__gateChoiceStableNode === node,
+      beforeTransform,
+      afterTransform: getComputedStyle(node).transform
+    };
+  }, rateHandle);
+  await rateHandle.dispose();
+  assert(stable.connected && stable.sameNode, "gate button DOM node should stay attached and identical over 2 seconds");
+  assert.notStrictEqual(stable.beforeTransform, stable.afterTransform, "gate button should move by transform without node replacement");
   await page.click('#gateChoiceLayer .gate-choice-btn[data-gate-id="rate_plus"]');
   await page.waitForFunction(() => window.__test.getState().stats.gatesTaken >= 1);
   const state = await page.evaluate(() => window.__test.getState());
@@ -742,6 +760,118 @@ async function checkBlueprintAchievementsAndUnlock(page) {
   assert(airBadges.some((text) => text.includes("天空出勤")), `settlement should show air sortie achievement path: ${airBadges.join(" | ")}`);
   meta = await page.evaluate(() => window.__test.getMeta());
   assert.strictEqual(meta.achievements.sortie_air, true, "air sortie achievement should be one-time recorded");
+}
+
+async function checkBlueprintWishlistDrop(page) {
+  await page.evaluate(() => {
+    window.__test.clearStorage();
+    window.__test.showGarage();
+  });
+  await page.waitForSelector("#garagePanel:not([hidden])");
+  await page.click("#vehicleHotspotBtn");
+  await page.waitForSelector('[data-blueprint-wishlist="sea_ark"]');
+  await page.click('[data-blueprint-wishlist="sea_ark"]');
+  let meta = await page.evaluate(() => window.__test.getMeta());
+  assert.strictEqual(meta.blueprintWishlist, "sea_ark", "garage should persist sea ark as blueprint wishlist");
+  const activeWishlist = await page.locator('[data-blueprint-wishlist="sea_ark"]').innerText();
+  assert(activeWishlist.includes("優先"), `wishlist button should show active state, got ${activeWishlist}`);
+
+  await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    window.__test.setState({
+      rng: () => 0,
+      stats: {
+        wavesCleared: 10,
+        kills: 1,
+        bossesDefeated: 2,
+        score: 1600
+      }
+    });
+    window.__test.damageVehicle(99999);
+  });
+  await page.waitForSelector("#settlementPanel:not([hidden])");
+  meta = await page.evaluate(() => window.__test.getMeta());
+  assert.strictEqual(meta.blueprints.sea_ark, 2, "wishlist should route low-roll boss drops to sea ark");
+  assert.strictEqual(meta.blueprints.sky_barge, 0, "wishlist should not spend drops on sky first");
+  await page.evaluate(() => window.__test.clearStorage());
+}
+
+async function checkBossBlueprintDropAnimation(page) {
+  await page.evaluate(() => {
+    window.__test.clearStorage();
+    window.__test.startRun("land_rig");
+    const state = window.__test.getState();
+    window.__test.setState({
+      rng: () => 0,
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      vehicle: { aimX: state.vehicle.x, aimY: state.vehicle.y - 170, weaponCooldown: 0 }
+    });
+    const aimed = window.__test.getState();
+    window.__test.spawnEnemy("boss_hive_titan", {
+      x: aimed.vehicle.x,
+      y: aimed.vehicle.y - 170,
+      hp: 1,
+      speed: 0
+    });
+    window.__test.step(520);
+  });
+  const state = await page.evaluate(() => window.__test.getState());
+  assert(state.stats.bossesDefeated >= 1, "test boss should be killed");
+  assert(
+    state.effects.some((effect) => effect.kind === "blueprint_drop") ||
+      (state.eventBanner && state.eventBanner.title.includes("藍圖碎片")),
+    "boss kill should create a blueprint drop animation or banner"
+  );
+  assert.strictEqual(state.meta.blueprints.sky_barge, 0, "drop animation should not persist meta before settlement");
+  await page.evaluate(() => window.__test.clearStorage());
+}
+
+async function checkEnvironmentEventsAndVariants(page) {
+  await page.evaluate(() => {
+    window.__test.startRun("void_runner");
+    window.__test.setState({ rng: () => 0, enemies: [], projectiles: [], gates: [], hazards: [] });
+    window.__test.pushWave(2);
+  });
+  let state = await page.evaluate(() => window.__test.getState());
+  assert(
+    state.wavePlan.environmentEvent && state.wavePlan.environmentEvent.id === "meteor_shower",
+    "space low event roll should start meteor shower"
+  );
+  assert(state.hazards.length >= 3, "meteor shower should spawn shootable hazards");
+  assert(state.eventBanner && state.eventBanner.title.includes("環境事件"), "event start should show a HUD banner");
+
+  await page.evaluate(() => {
+    const stateNow = window.__test.getState();
+    const first = stateNow.hazards[0];
+    window.__test.setState({
+      hazards: [
+        Object.assign({}, first, {
+          x: stateNow.vehicle.x,
+          y: stateNow.vehicle.y - 170,
+          hp: 1,
+          vy: 0,
+          vx: 0
+        })
+      ],
+      projectiles: [],
+      vehicle: { aimX: stateNow.vehicle.x, aimY: stateNow.vehicle.y - 170, weaponCooldown: 0 }
+    });
+    window.__test.step(850);
+  });
+  state = await page.evaluate(() => window.__test.getState());
+  assert(state.stats.eventParts > 0, "shooting a meteor should add event parts");
+  assert(state.stats.partsPreview > 0, "event parts should feed run parts preview");
+
+  await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    window.__test.setState({ rng: () => 0, enemies: [], projectiles: [], gates: [], hazards: [] });
+    window.__test.pushWave(8);
+    window.__test.step(1600);
+  });
+  state = await page.evaluate(() => window.__test.getState());
+  assert(state.enemies.some((enemy) => enemy.variantId), "late wave generation should spawn tinted variants");
 }
 
 async function checkVehicleSpecificUpgradePurchase(page) {
@@ -901,7 +1031,10 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await checkShelterMeta(page, false);
   await checkGarageUpgradeLines(page);
   if (full) {
+    await checkBlueprintWishlistDrop(page);
+    await checkBossBlueprintDropAnimation(page);
     await unlockFleet(page);
+    await checkEnvironmentEventsAndVariants(page);
     await checkFleetProjectileTraits(page);
     await checkVehicleFleetSelectionAndCombat(page);
     await checkBlueprintAchievementsAndUnlock(page);

@@ -237,6 +237,74 @@ const ENEMIES = {
   }
 };
 
+const ENEMY_VARIANTS = {
+  runner_frenzy: {
+    id: "runner_frenzy",
+    baseEnemy: "runner",
+    label: "爆走 runner",
+    hpMul: 0.8,
+    speedMul: 1.3,
+    tint: "rgba(225, 95, 79, 0.34)",
+    filter: "sepia(1) saturate(2.15) hue-rotate(-18deg) contrast(1.12)",
+    minWave: 3
+  },
+  shambler_hardened: {
+    id: "shambler_hardened",
+    baseEnemy: "shambler",
+    label: "硬化 shambler",
+    hpMul: 1.5,
+    speedMul: 0.85,
+    tint: "rgba(210, 214, 214, 0.3)",
+    filter: "grayscale(0.85) brightness(0.9) contrast(1.18)",
+    minWave: 4
+  }
+};
+
+const ENVIRONMENT_EVENTS = {
+  land: {
+    id: "sandstorm",
+    environment: "land",
+    label: "沙塵暴",
+    description: "視野下降，結算零件 +20%",
+    chance: 0.38,
+    minWave: 2,
+    rewardMulAdd: 0.2,
+    visibilityLoss: 0.18
+  },
+  air: {
+    id: "turbulence",
+    environment: "air",
+    label: "亂流",
+    description: "敵速 +15%，結算零件 +12%",
+    chance: 0.38,
+    minWave: 2,
+    enemySpeedMul: 1.15,
+    rewardMulAdd: 0.12
+  },
+  sea: {
+    id: "undertow",
+    environment: "sea",
+    label: "暗流",
+    description: "敵群左右漂移，結算零件 +10%",
+    chance: 0.38,
+    minWave: 2,
+    rewardMulAdd: 0.1,
+    swayAmpMul: 1.75,
+    driftAmp: 8
+  },
+  space: {
+    id: "meteor_shower",
+    environment: "space",
+    label: "隕石雨",
+    description: "額外障礙，可擊爆拿零件",
+    chance: 0.38,
+    minWave: 2,
+    hazardCount: 3,
+    hazardHp: 20,
+    hazardParts: 2
+  }
+};
+
 const GATES = {
   damage_plus: {
     id: "damage_plus",
@@ -332,6 +400,7 @@ const ECONOMY = {
   blueprintDropChance: 0.35,
   blueprintBundle: 1,
   blueprintPityAfterBosses: 3,
+  eventPartsCapPerRun: 12,
   upgradeTracks: {
     hull: {
       id: "hull",
@@ -558,6 +627,7 @@ const META_DEFAULT = {
     sea_ark: 0,
     void_runner: 0
   },
+  blueprintWishlist: "sky_barge",
   bossBlueprintPity: 0,
   achievements: {},
   claimedMilestones: {},
@@ -581,6 +651,8 @@ const DSConfig = {
   VEHICLES,
   WEAPONS,
   ENEMIES,
+  ENEMY_VARIANTS,
+  ENVIRONMENT_EVENTS,
   GATES,
   WAVE,
   PERFORMANCE,

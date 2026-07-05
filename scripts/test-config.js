@@ -93,13 +93,26 @@ assert.strictEqual(config.DIFFICULTIES.normal.locked, undefined);
 assert.strictEqual(config.ECONOMY.difficultyRewardMul.normal, 1);
 assert.strictEqual(config.ECONOMY.blueprintBundle, 1);
 assert.strictEqual(config.ECONOMY.blueprintPityAfterBosses, 3);
+assert.strictEqual(config.ECONOMY.eventPartsCapPerRun, 12);
 assert.strictEqual(config.META_DEFAULT.unlockedVehicles.land_rig, true);
 assert.strictEqual(config.META_DEFAULT.unlockedVehicles.sky_barge, false);
 assert.strictEqual(config.META_DEFAULT.unlockedVehicles.sea_ark, false);
 assert.strictEqual(config.META_DEFAULT.unlockedVehicles.void_runner, false);
+assert.strictEqual(config.META_DEFAULT.blueprintWishlist, "sky_barge");
 ["sky_barge", "sea_ark", "void_runner"].forEach((vehicleId) => {
   assert.strictEqual(config.VEHICLES[vehicleId].unlock.type, "blueprint", `${vehicleId} should use blueprint unlock`);
   assert.strictEqual(config.VEHICLES[vehicleId].unlock.blueprintsRequired, 3, `${vehicleId} should need 3 blueprints`);
+});
+assert.deepStrictEqual(Object.keys(config.ENVIRONMENT_EVENTS).sort(), ["air", "land", "sea", "space"]);
+Object.values(config.ENVIRONMENT_EVENTS).forEach((event) => {
+  assert(event.id && event.label && event.description, `${event.id} should have readable copy`);
+  assert(event.chance > 0 && event.chance < 1, `${event.id} should be a random wave event`);
+});
+assert.strictEqual(config.ENEMY_VARIANTS.runner_frenzy.baseEnemy, "runner");
+assert.strictEqual(config.ENEMY_VARIANTS.shambler_hardened.baseEnemy, "shambler");
+Object.values(config.ENEMY_VARIANTS).forEach((variant) => {
+  assert(variant.hpMul > 0 && variant.speedMul > 0, `${variant.id} needs stat multipliers`);
+  assert(variant.tint || variant.filter, `${variant.id} needs a canvas-only visual difference`);
 });
 
 ["hull", "weapon"].forEach((trackId) => {
