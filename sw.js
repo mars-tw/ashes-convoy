@@ -1,13 +1,16 @@
 "use strict";
 
-const CACHE_VERSION = "ashes-convoy-r38-v1";
+importScripts("src/version.js");
+
+const CACHE_VERSION = self.DSVersion.CACHE_VERSION;
 const APP_CACHE = `${CACHE_VERSION}:app`;
 const OFFLINE_URL = "offline.html";
 const APP_SHELL_PATHS = [
   "./",
   "index.html",
-  OFFLINE_URL,
+  "offline.html",
   "manifest.webmanifest",
+  "src/version.js",
   "src/sprites.js",
   "src/sprite-renderer.js",
   "src/shelter-scene.js",

@@ -430,7 +430,7 @@
     if (required <= 0) return "";
     const count = Math.min(required, meta.blueprints[vehicleId] || 0);
     const wishlist = meta.blueprintWishlist === vehicleId ? " | 優先解鎖" : "";
-    if (wishlist) return `?? ${count} / ${required}${wishlist}`;
+    if (wishlist) return `藍圖 ${count} / ${required}${wishlist}`;
     return `藍圖 ${count} / ${required} · 擊敗 Boss 取得碎片`;
   }
 
@@ -641,7 +641,7 @@
     els.damageTextDensitySelect.value = meta.settings.damageTextDensity || "all";
     els.performanceModeSelect.value = meta.settings.performanceMode || "auto";
     els.fontSizeSelect.value = meta.settings.fontSize || "medium";
-    if (els.versionText) els.versionText.textContent = `版本 ${config.APP_VERSION || "R38"}`;
+    if (els.versionText) els.versionText.textContent = `版本 ${config.APP_VERSION}`;
     renderPerformanceDiagnostics();
   }
 
@@ -654,7 +654,11 @@
       return;
     }
     const locked = perf.mode === "auto" ? "自動" : perf.mode === "high" ? "鎖高" : "鎖低";
-    els.performanceDiagnosticText.textContent = `FPS ${perf.fps}｜品質 ${locked}/${perf.quality}｜原因 ${perf.reason || "穩定"}｜cap ${Math.round((perf.capMultiplier || 1) * 100)}%`;
+    const history = (perf.history || [])
+      .slice(0, 5)
+      .map((item) => `${item.time}s ${item.reason}`)
+      .join(" / ");
+    els.performanceDiagnosticText.textContent = `FPS ${perf.fps}｜品質 ${locked}/${perf.quality}｜原因 ${perf.reason || "穩定"}｜cap ${Math.round((perf.capMultiplier || 1) * 100)}%｜歷史 ${history || "無"}`;
   }
 
   function renderEventCodex() {

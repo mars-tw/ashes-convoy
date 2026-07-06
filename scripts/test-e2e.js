@@ -276,9 +276,10 @@ async function checkPwaFilesAndSkipRegistration(page) {
       orientation: manifest.orientation,
       icons: manifest.icons.map((icon) => icon.sizes).sort(),
       swHasVersion: swText.includes("CACHE_VERSION"),
+      swImportsVersion: swText.includes('importScripts("src/version.js")') && swText.includes("DSVersion.CACHE_VERSION"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/ui.js") && swText.includes("src/game.js") && swText.includes("src/rules.js"),
+      swCachesJs: swText.includes("src/version.js") && swText.includes("src/ui.js") && swText.includes("src/game.js") && swText.includes("src/rules.js"),
       swHasOffline: swText.includes("offline.html"),
       webdriver: navigator.webdriver,
       registrationCount: registrations.length
@@ -288,10 +289,36 @@ async function checkPwaFilesAndSkipRegistration(page) {
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
-  assert(pwa.swHasVersion && pwa.swHasNetworkFirst && pwa.swHasCacheFirst, "service worker should define versioned network/cache strategies");
+  assert(pwa.swHasVersion && pwa.swImportsVersion && pwa.swHasNetworkFirst && pwa.swHasCacheFirst, "service worker should define versioned network/cache strategies");
   assert(pwa.swCachesJs && pwa.swHasOffline, "service worker should cache JS app shell and offline fallback");
   assert.strictEqual(pwa.webdriver, true, "E2E should run under webdriver");
   assert.strictEqual(pwa.registrationCount, 0, "webdriver sessions should skip service worker registration");
+}
+
+async function checkLiveRegionsAndKeyboard(page) {
+  const live = await page.evaluate(() => ({
+    eventBanner: document.getElementById("eventBanner").getAttribute("aria-live"),
+    eventRole: document.getElementById("eventBanner").getAttribute("role"),
+    garageStatus: document.getElementById("garageStatus").getAttribute("aria-live"),
+    badges: document.getElementById("settlementBadges").getAttribute("aria-live")
+  }));
+  assert.strictEqual(live.eventBanner, "polite", "event banner should announce politely");
+  assert.strictEqual(live.eventRole, "status", "event banner should use status role");
+  assert.strictEqual(live.garageStatus, "polite", "garage toast/status should announce politely");
+  assert.strictEqual(live.badges, "polite", "settlement badge updates should announce politely");
+
+  await page.evaluate(() => {
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  });
+  const focusSeen = [];
+  for (let i = 0; i < 10; i += 1) {
+    await page.keyboard.press("Tab");
+    focusSeen.push(await page.evaluate(() => document.activeElement && document.activeElement.id));
+  }
+  assert(
+    focusSeen.some((id) => ["sortieBtn", "upgradeHotspotBtn", "vehicleHotspotBtn", "seriesHotspotBtn", "opsHotspotBtn"].includes(id)),
+    `keyboard Tab smoke should reach shelter controls, saw ${focusSeen.join(",")}`
+  );
 }
 
 async function checkClearStorageButton(page) {
@@ -315,6 +342,7 @@ async function checkShelterMeta(page) {
   await checkStartTitle(page);
   await checkPwaFilesAndSkipRegistration(page);
   await checkMetaHotspotsFit(page);
+  await checkLiveRegionsAndKeyboard(page);
   await checkClearStorageButton(page);
   await expectMetaBackground(page);
   await openUpgradePanel(page);
@@ -399,7 +427,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R38"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R42"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -763,6 +791,8 @@ async function checkAdaptivePerformance(page) {
   });
   perf = await page.evaluate(() => window.__test.getState().performance);
   assert.strictEqual(perf.quality, "low", "auto performance mode should downgrade after sustained low FPS samples");
+  assert(perf.history && perf.history.length >= 1 && perf.history.length <= 5, "performance history should keep recent downgrade/recovery events");
+  assert(perf.history[0].reason.includes("FPS"), `performance history should include a reason, got ${JSON.stringify(perf.history)}`);
   await page.evaluate(() => {
     const meta = window.__test.getMeta();
     meta.settings.performanceMode = "high";
@@ -1565,7 +1595,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r38")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r42")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -1583,7 +1613,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r38")), "R38 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r42")), "R42 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

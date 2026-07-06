@@ -32,7 +32,8 @@
     lowFrames: 0,
     highFrames: 0,
     lastFloatingTextAt: -Infinity,
-    reason: "穩定"
+    reason: "穩定",
+    history: []
   };
   let renderDebug = {
     messagesDrawn: 0,
@@ -273,7 +274,8 @@
             effectiveMaxEffects() / Math.max(1, config.PERFORMANCE.maxEffects)
           ) * 100
         ) / 100,
-        reason: performanceState.reason
+        reason: performanceState.reason,
+        history: rules.deepClone(performanceState.history)
       },
       stats: rules.deepClone(state.stats),
       wavePlan: state.wavePlan
@@ -1512,6 +1514,15 @@
     if (state.vehicle.hp <= 0) finishRun();
   }
 
+  function recordPerformanceHistory(reason) {
+    const time = state ? state.time : idleTime;
+    performanceState.history.unshift({
+      time: Math.round(time * 10) / 10,
+      reason
+    });
+    if (performanceState.history.length > 5) performanceState.history.length = 5;
+  }
+
   function updatePerformanceQuality(deltaSeconds) {
     const settings = meta.settings || {};
     const mode = settings.performanceMode || "auto";
@@ -1543,12 +1554,16 @@
       performanceState.highFrames = Math.max(0, performanceState.highFrames - 1);
     }
     if (performanceState.lowFrames >= 45) {
+      const reason = `FPS ${Math.round(performanceState.fps)} 低於 ${config.PERFORMANCE.lowFpsFloor}`;
+      if (performanceState.quality !== "low") recordPerformanceHistory(reason);
       performanceState.quality = "low";
-      performanceState.reason = `FPS ${Math.round(performanceState.fps)} 低於 ${config.PERFORMANCE.lowFpsFloor}`;
+      performanceState.reason = reason;
       performanceState.lowFrames = 0;
     } else if (performanceState.highFrames >= 100) {
+      const reason = `FPS ${Math.round(performanceState.fps)} 回穩`;
+      if (performanceState.quality !== "high") recordPerformanceHistory(reason);
       performanceState.quality = "high";
-      performanceState.reason = `FPS ${Math.round(performanceState.fps)} 回穩`;
+      performanceState.reason = reason;
       performanceState.highFrames = 0;
     }
   }

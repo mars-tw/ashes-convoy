@@ -10,7 +10,8 @@ function assertFinitePositive(value, label) {
 
 assert.strictEqual(config.STORAGE_KEY, "ashes_convoy_meta_v1");
 assert.strictEqual(config.META_VERSION, 2);
-assert.strictEqual(config.APP_VERSION, "R38");
+assert.strictEqual(config.APP_VERSION, "R42");
+assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r42-v1");
 assert.strictEqual(config.LOGIC.width, 195);
 assert.strictEqual(config.LOGIC.height, 422);
 assert.strictEqual(config.LOGIC.displayWidth, 390);

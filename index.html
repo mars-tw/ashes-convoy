@@ -1051,7 +1051,7 @@
           <div class="boss-telegraph" id="bossTelegraph"></div>
         </div>
       </section>
-      <div class="event-banner" id="eventBanner" hidden>
+      <div class="event-banner" id="eventBanner" role="status" aria-live="polite" aria-atomic="true" hidden>
         <strong id="eventBannerTitle"></strong>
         <span id="eventBannerBody"></span>
       </div>
@@ -1064,7 +1064,7 @@
         <div class="meta-summary panel-head">
           <h1>灰燼護航</h1>
           <p class="subtle" id="garageMeta">廢土零件 0</p>
-          <div class="status" id="garageStatus"></div>
+          <div class="status" id="garageStatus" role="status" aria-live="polite" aria-atomic="true"></div>
         </div>
 
         <div class="hotspot-layer" id="hotspotLayer" aria-label="避難所互動" hidden>
@@ -1188,7 +1188,7 @@
           <p class="subtle" id="settlementSummary">本局獲得 0 廢土零件。</p>
         </div>
         <div class="settlement-list" id="settlementList"></div>
-        <div class="settlement-badges" id="settlementBadges" hidden></div>
+        <div class="settlement-badges" id="settlementBadges" role="status" aria-live="polite" aria-atomic="true" hidden></div>
         <div class="settlement-recommendation" id="settlementRecommendation" hidden>
           <strong id="settlementRecommendationTitle"></strong>
           <small id="settlementRecommendationDetail"></small>
@@ -1203,6 +1203,7 @@
       </section>
     </main>
 
+    <script src="src/version.js"></script>
     <script src="src/sprites.js"></script>
     <script src="src/sprite-renderer.js"></script>
     <script src="src/shelter-scene.js"></script>

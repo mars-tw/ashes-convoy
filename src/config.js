@@ -2,7 +2,11 @@
 
 const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 2;
-const APP_VERSION = "R38";
+const VERSION_SOURCE =
+  (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R42", CACHE_VERSION: "ashes-convoy-r42-v1" });
+const APP_VERSION = VERSION_SOURCE.APP_VERSION;
+const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
 const LOGIC = {
   width: 195,
@@ -842,6 +846,7 @@ const DSConfig = {
   STORAGE_KEY,
   META_VERSION,
   APP_VERSION,
+  CACHE_VERSION,
   LOGIC,
   VEHICLES,
   WEAPONS,
