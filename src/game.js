@@ -152,6 +152,11 @@
   function addFloatingText(text, x, y, options) {
     if (meta.settings && meta.settings.reducedFlash) return;
     const opts = options || {};
+    if (opts.damageNumber) {
+      const density = meta.settings && meta.settings.damageTextDensity ? meta.settings.damageTextDensity : "all";
+      if (density === "off") return;
+      if (density === "large" && rules.finiteNumber(opts.amount, 0, { min: 0 }) < 30) return;
+    }
     addEffect({
       id: nextId("text"),
       kind: "text",
@@ -181,6 +186,7 @@
 
   function pulseShake(amount, duration) {
     if (meta.settings && meta.settings.reducedFlash) return;
+    if (meta.settings && meta.settings.screenShake === false) return;
     state.shakeAmp = Math.max(state.shakeAmp || 0, amount);
     state.shakeUntil = Math.max(state.shakeUntil || 0, state.time + duration);
   }
@@ -281,6 +287,37 @@
   function addDamageTaken(source, amount) {
     const key = source && source.type ? source.type : "unknown";
     addStatMapValue("damageTakenBy", key, amount);
+  }
+
+  function activeBuffLabels() {
+    const labels = [];
+    if (state.runMods.damageAdd > 0) labels.push("增傷門");
+    if (state.runMods.fireIntervalMul < 0.999) labels.push("射速門");
+    if (state.runMods.projectileAdd > 0) labels.push("多重彈");
+    state.supplyBuffs.forEach((buff) => {
+      if (buff.until > state.time && buff.label) labels.push(buff.label);
+    });
+    return labels;
+  }
+
+  function recordRecentDamage(source, amount) {
+    if (!state.stats.recentDamageEvents) state.stats.recentDamageEvents = [];
+    state.stats.recentDamageEvents.push({
+      time: state.time,
+      source: source && source.type ? source.type : "unknown",
+      enemyId: source && source.enemyId ? source.enemyId : "",
+      amount,
+      buffs: activeBuffLabels()
+    });
+    state.stats.recentDamageEvents = state.stats.recentDamageEvents.filter((event) => state.time - event.time <= 5);
+  }
+
+  function recordDamageTimeline(amount) {
+    const value = Number.isFinite(amount) ? amount : 0;
+    if (value <= 0) return;
+    if (!state.stats.damageTimeline) state.stats.damageTimeline = {};
+    const bucket = Math.max(0, Math.floor(state.time));
+    state.stats.damageTimeline[bucket] = (state.stats.damageTimeline[bucket] || 0) + value;
   }
 
   function projectileDamageSources(runMods) {
@@ -555,6 +592,8 @@
         lastSupplyReward: "",
         damageTakenBy: {},
         damageBySource: {},
+        damageTimeline: {},
+        recentDamageEvents: [],
         variantKills: {},
         deathContext: null,
         partsPreview: config.ECONOMY.minRunParts
@@ -772,6 +811,7 @@
     const result = rules.applyVehicleDamage(state.vehicle, amount, state.vehicle.armor);
     state.vehicle = result.vehicle;
     addDamageTaken(source, result.damage);
+    recordRecentDamage(source, result.damage);
     state.vehicle.recentHitUntil = state.time + 0.28;
     const passive = getVehicleConfig(state.vehicleId).passive;
     if (passive && passive.id === "revenge_fire") state.vehicle.recentHitUntil = state.time + passive.duration;
@@ -881,6 +921,7 @@
         kills: state.stats.kills,
         bossesDefeated: state.stats.bossesDefeated,
         score: state.stats.score,
+        damageDealt: state.stats.damageDealt,
         eventRewardMul: state.stats.eventRewardMul,
         eventParts: state.stats.eventParts,
         eventStats: state.stats.eventStats,
@@ -890,7 +931,10 @@
         deathContext: state.stats.deathContext,
         damageTakenBy: state.stats.damageTakenBy,
         damageBySource: state.stats.damageBySource,
+        damageTimeline: state.stats.damageTimeline,
+        recentDamageEvents: state.stats.recentDamageEvents,
         variantKills: state.stats.variantKills,
+        duration: state.time,
         difficultyId: state.difficultyId
       },
       overrides || {}
@@ -1094,7 +1138,8 @@
             enemy.hitCooldown = 1.15;
           }
         } else {
-          damageVehicle(enemy.contactDamage, { type: "enemy", enemyId: enemy.enemyId });
+          const enemyConfig = config.ENEMIES[enemy.enemyId] || {};
+          damageVehicle(enemy.contactDamage, { type: enemyConfig.deathBurst ? "burst" : "enemy", enemyId: enemy.enemyId });
           enemy.dead = true;
           addEffect({
             id: nextId("effect"),
@@ -1123,6 +1168,7 @@
         enemy.hp -= splashDamage;
         enemy.hitFlash = 0.12;
         state.stats.damageDealt += splashDamage;
+        recordDamageTimeline(splashDamage);
         addProjectileDamageSource(projectile, splashDamage);
         if (enemy.hp <= 0) killEnemy(enemy, "splash");
       }
@@ -1276,12 +1322,15 @@
           enemy.hp -= damage;
           enemy.hitFlash = 0.12;
           state.stats.damageDealt += damage;
+          recordDamageTimeline(damage);
           addProjectileDamageSource(projectile, damage);
           addFloatingText(Math.round(damage).toString(), enemy.x + 3, enemy.y - enemy.radius - 2, {
             color: projectileVehicle.environment === "space" ? "#5ed4cb" : "#f4ead8",
             size: 6,
             ttl: 0.42,
-            vy: -12
+            vy: -12,
+            damageNumber: true,
+            amount: damage
           });
           addEffect({
             id: nextId("effect"),
@@ -1372,7 +1421,8 @@
     vehicle.assistAimX = vehicle.aimX;
     vehicle.assistAimY = vehicle.aimY;
     vehicle.aimAssistTarget = null;
-    if (meta.settings && meta.settings.aimAssist) {
+    const assistBase = rules.aimAssistStrength(meta.settings);
+    if (assistBase > 0) {
       const target = rules.selectAimAssistTarget({
         vehicle,
         enemies: state.enemies,
@@ -1380,7 +1430,7 @@
         config
       });
       if (target) {
-        const strength = state.input.dragging ? 0.14 : 0.2;
+        const strength = state.input.dragging ? assistBase * 0.75 : assistBase;
         const lead = state.input.dragging ? 0.08 : 0.14;
         const enemy = state.enemies.find((item) => item.id === target.id);
         const targetXWithLead = target.x + (enemy ? (enemy.vx || 0) * lead : 0);
@@ -2320,7 +2370,12 @@
     };
     const timeMs = ((state ? state.time : idleTime) || 0) * 1000;
     ctx.clearRect(0, 0, W, H);
-    if (state && state.shakeUntil > state.time && !(meta.settings && meta.settings.reducedFlash)) {
+    if (
+      state &&
+      state.shakeUntil > state.time &&
+      !(meta.settings && meta.settings.reducedFlash) &&
+      !(meta.settings && meta.settings.screenShake === false)
+    ) {
       const progress = Math.max(0, (state.shakeUntil - state.time) / Math.max(0.01, state.shakeUntil));
       const amp = (state.shakeAmp || 0) * progress;
       ctx.save();
@@ -2330,7 +2385,12 @@
     if (state) drawEnvironmentEventOverlay();
     if (state) drawGame(timeMs);
     else drawIdlePreview(timeMs);
-    if (state && state.shakeUntil > state.time && !(meta.settings && meta.settings.reducedFlash)) ctx.restore();
+    if (
+      state &&
+      state.shakeUntil > state.time &&
+      !(meta.settings && meta.settings.reducedFlash) &&
+      !(meta.settings && meta.settings.screenShake === false)
+    ) ctx.restore();
     displayCtx.clearRect(0, 0, DISPLAY_W, DISPLAY_H);
     displayCtx.imageSmoothingEnabled = false;
     displayCtx.drawImage(worldCanvas, 0, 0, W, H, 0, 0, DISPLAY_W, DISPLAY_H);

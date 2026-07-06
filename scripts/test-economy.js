@@ -61,6 +61,7 @@ assert.strictEqual(result.meta.parts, 77);
 assert.strictEqual(result.meta.totalRuns, 1);
 assert.strictEqual(result.meta.totalKills, 55);
 assert.strictEqual(result.meta.totalBossKills, 1);
+assert.strictEqual(result.meta.questStats.environmentWins.land, 1, "clearing 3+ waves should advance environment quest stats");
 assert.strictEqual(result.meta.blueprints.sky_barge, 1);
 assert.strictEqual(result.meta.unlockedVehicles.sky_barge, false);
 assert.strictEqual(result.meta.lastRun.earnedParts, 77);
@@ -128,6 +129,7 @@ const eventAchievement = rules.settleRunRewards({
   config
 });
 assert.strictEqual(eventAchievement.meta.eventStats.sandstorm.completions, 1);
+assert.strictEqual(eventAchievement.meta.questStats.eventCompletions, 1, "completed events should advance quest stats");
 assert(eventAchievement.reward.achievements.includes("event_sandstorm"), "first completed event should unlock its achievement");
 const eventRepeat = rules.settleRunRewards({
   meta: eventAchievement.meta,
@@ -145,6 +147,33 @@ const eventRepeat = rules.settleRunRewards({
   config
 });
 assert(!eventRepeat.reward.achievements.includes("event_sandstorm"), "event achievements should not repeat");
+
+const questOnlyProgress = rules.settleRunRewards({
+  meta: rules.migrateMeta(null, { config }),
+  run: {
+    vehicleId: "land_rig",
+    wavesCleared: 1,
+    kills: 3,
+    bossesDefeated: 0,
+    score: 300,
+    difficultyId: "normal",
+    supplyCratesCollected: 2,
+    variantKills: { runner_frenzy: 2 },
+    damageTimeline: { 1: 20, 2: 45 },
+    recentDamageEvents: [{ time: 9, source: "enemy", amount: 12, buffs: ["射速門"] }],
+    damageTakenBy: { enemy: 12 },
+    damageDealt: 65,
+    duration: 10
+  },
+  rng: () => 0.99,
+  now: fixedNow,
+  config
+});
+assert.strictEqual(questOnlyProgress.meta.questStats.supplyCrates, 2, "supply pickup should advance quest stats");
+assert.strictEqual(questOnlyProgress.meta.questStats.variantKills, 2, "variant kills should advance quest stats");
+assert.strictEqual(questOnlyProgress.meta.lastRun.damageTimeline["2"], 45, "settlement should preserve damage timeline buckets");
+assert.strictEqual(questOnlyProgress.meta.lastRun.recentDamageEvents[0].source, "enemy", "settlement should preserve death-window damage events");
+assert.strictEqual(questOnlyProgress.meta.parts, questOnlyProgress.reward.totalParts, "quest progress alone should not auto-issue quest rewards");
 
 const unlockedSky = rules.settleRunRewards({
   meta: rules.migrateMeta(null, { config }),

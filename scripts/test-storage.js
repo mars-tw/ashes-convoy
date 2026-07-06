@@ -16,6 +16,10 @@ assert.strictEqual(freshAgain.unlockedVehicles.void_runner, false);
 assert.strictEqual(freshAgain.blueprintWishlist, "sky_barge");
 assert.strictEqual(freshAgain.eventStats.sandstorm.encounters, 0);
 assert.strictEqual(freshAgain.eventStats.meteor_shower.completions, 0);
+assert.strictEqual(freshAgain.settings.aimAssistLevel, "medium");
+assert.strictEqual(freshAgain.settings.screenShake, true);
+assert.strictEqual(freshAgain.settings.damageTextDensity, "all");
+assert.strictEqual(freshAgain.questStats.supplyCrates, 0);
 
 const invalid = rules.migrateMeta("{not-json", { config });
 assert.deepStrictEqual(invalid, config.META_DEFAULT, "invalid JSON should fall back to default");
@@ -39,10 +43,13 @@ const dirty = {
   },
   achievements: { first_boss: true, bogus: false },
   claimedMilestones: { a: true, b: "true" },
-  settings: { aimAssist: false, reducedFlash: true, sound: "yes" },
+  settings: { aimAssist: false, reducedFlash: true, screenShake: false, damageTextDensity: "large", sound: "yes" },
   tutorial: { seenIntro: true, seenGate: "yes", seenGarage: false },
   blueprints: { rift_hauler: 5.5, frost_wing: -2 },
   eventStats: { sandstorm: { encounters: 2.8, completions: 1 }, ghost_event: { encounters: 9, completions: 9 } },
+  questStats: { variantKills: 3.8, eventCompletions: "2", supplyCrates: 4, environmentWins: { land: 1, ghost: 9 } },
+  questBaselines: { "daily:test": { variantKills: 1, environmentWins: { land: 1 } } },
+  questClaims: { "daily:test": true, ghost: "yes" },
   bestByVehicle: {
     iron_crow: { wave: 6, score: 4000, kills: 42, bosses: 1, at: "2026-07-03T00:00:00.000Z" },
     sea_ark: { wave: 5, score: 3500, kills: 30, bosses: 1, at: "2026-07-03T00:00:00.000Z" },
@@ -89,7 +96,10 @@ assert.strictEqual(migrated.achievements.bogus, undefined);
 assert.strictEqual(migrated.claimedMilestones.a, true);
 assert.strictEqual(migrated.claimedMilestones.b, undefined);
 assert.strictEqual(migrated.settings.aimAssist, false);
+assert.strictEqual(migrated.settings.aimAssistLevel, "off");
 assert.strictEqual(migrated.settings.reducedFlash, true);
+assert.strictEqual(migrated.settings.screenShake, false);
+assert.strictEqual(migrated.settings.damageTextDensity, "large");
 assert.strictEqual(migrated.settings.sound, true);
 assert.strictEqual(migrated.tutorial.seenIntro, true);
 assert.strictEqual(migrated.tutorial.seenGate, false);
@@ -100,6 +110,14 @@ assert.strictEqual(migrated.blueprintWishlist, null);
 assert.strictEqual(migrated.eventStats.sandstorm.encounters, 2);
 assert.strictEqual(migrated.eventStats.sandstorm.completions, 1);
 assert.strictEqual(migrated.eventStats.ghost_event, undefined);
+assert.strictEqual(migrated.questStats.variantKills, 3);
+assert.strictEqual(migrated.questStats.eventCompletions, 2);
+assert.strictEqual(migrated.questStats.supplyCrates, 4);
+assert.strictEqual(migrated.questStats.environmentWins.land, 1);
+assert.strictEqual(migrated.questStats.environmentWins.ghost, undefined);
+assert.strictEqual(migrated.questBaselines["daily:test"].variantKills, 1);
+assert.strictEqual(migrated.questClaims["daily:test"], true);
+assert.strictEqual(migrated.questClaims.ghost, undefined);
 assert.strictEqual(migrated.blueprints.rift_hauler, undefined);
 assert.strictEqual(migrated.blueprints.frost_wing, undefined);
 assert.strictEqual(migrated.bestByVehicle.iron_crow, undefined);

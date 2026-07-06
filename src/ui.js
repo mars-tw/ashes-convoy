@@ -120,7 +120,9 @@
             ? "載具棚"
             : kind === "achievements"
               ? "成就牆"
-              : "基地管理";
+              : kind === "operations"
+                ? "任務與設定"
+                : "基地管理";
     }
   }
 
@@ -156,7 +158,7 @@
   }
 
   function collectActionRects() {
-    const buttons = [els.sortieBtn, els.upgradeHotspotBtn, els.vehicleHotspotBtn, els.seriesHotspotBtn, els.resetOverlayBtn];
+    const buttons = [els.sortieBtn, els.upgradeHotspotBtn, els.vehicleHotspotBtn, els.seriesHotspotBtn, els.opsHotspotBtn, els.resetOverlayBtn];
     const panelRect = els.garagePanel.getBoundingClientRect();
     shelter.hotspotRects = {};
     buttons.forEach((button) => {
@@ -541,6 +543,48 @@
     });
   }
 
+  function syncQuestState() {
+    const before = JSON.stringify(meta.questBaselines || {});
+    const ensured = rules.ensureQuestState(meta, { now: nowIso, config });
+    const after = JSON.stringify(ensured.questBaselines || {});
+    if (before !== after) {
+      meta = migrateUiMeta(ensured);
+      saveMeta();
+      game.setMeta(meta);
+    }
+  }
+
+  function renderQuestBoard() {
+    if (!els.questList) return;
+    syncQuestState();
+    const quests = rules.getQuestBoard(meta, { now: nowIso, config });
+    els.questList.textContent = "";
+    quests.forEach((quest) => {
+      const item = root.document.createElement("div");
+      item.className = `quest-card${quest.ready ? " is-ready" : ""}${quest.claimed ? " is-claimed" : ""}`;
+      item.dataset.questInstance = quest.instanceId;
+      const title = root.document.createElement("strong");
+      title.innerHTML = `<span>${quest.period === "daily" ? "每日" : "每週"}｜${quest.label}</span><span>${quest.progress}/${quest.target}</span>`;
+      const desc = root.document.createElement("small");
+      desc.textContent = `${quest.description} · 獎勵 ${quest.rewardParts} 零件`;
+      const button = root.document.createElement("button");
+      button.type = "button";
+      button.textContent = quest.claimed ? "已領取" : quest.ready ? "領取" : "未完成";
+      button.disabled = quest.claimed || !quest.ready;
+      button.dataset.questClaim = quest.instanceId;
+      button.addEventListener("click", () => claimQuest(quest.instanceId));
+      item.append(title, desc, button);
+      els.questList.appendChild(item);
+    });
+  }
+
+  function renderSettings() {
+    if (!els.aimAssistLevelSelect) return;
+    els.aimAssistLevelSelect.value = meta.settings.aimAssistLevel || (meta.settings.aimAssist ? "medium" : "off");
+    els.screenShakeToggle.checked = meta.settings.screenShake !== false;
+    els.damageTextDensitySelect.value = meta.settings.damageTextDensity || "all";
+  }
+
   function renderEventCodex() {
     if (!els.eventCodexList) return;
     const progress = rules.getEventCodexProgress(meta, config);
@@ -618,6 +662,50 @@
     return `${vehicle ? vehicle.name : labels[top.key] || top.key} ${pct}%`;
   }
 
+  function sourceLabel(source) {
+    if (source === "boss") return "Boss";
+    if (source === "enemy") return "小怪";
+    if (source === "burst") return "爆裂";
+    if (source === "hazard") return "環境";
+    return "未知";
+  }
+
+  function damageTakenDistributionLine(run) {
+    const taken = run.damageTakenBy || {};
+    const keys = ["boss", "enemy", "burst"];
+    const total = keys.reduce((sum, key) => sum + (Number(taken[key]) || 0), 0);
+    if (!total) return "Boss 0% / 小怪 0% / 爆裂 0%";
+    return keys
+      .map((key) => `${sourceLabel(key)} ${Math.round(((Number(taken[key]) || 0) / total) * 100)}%`)
+      .join(" / ");
+  }
+
+  function deathSummaryLine(run) {
+    const events = Array.isArray(run.recentDamageEvents) ? run.recentDamageEvents : [];
+    if (!events.length) return "死前 5 秒無受傷記錄";
+    const total = events.reduce((sum, event) => sum + (Number(event.amount) || 0), 0);
+    const bySource = {};
+    const buffs = new Set();
+    let hardest = null;
+    events.forEach((event) => {
+      bySource[event.source || "unknown"] = (bySource[event.source || "unknown"] || 0) + (Number(event.amount) || 0);
+      (event.buffs || []).forEach((buff) => buffs.add(buff));
+      if (!hardest || (Number(event.amount) || 0) > (Number(hardest.amount) || 0)) hardest = event;
+    });
+    const top = topCountMapEntry(bySource);
+    const enemy = hardest && hardest.enemyId && config.ENEMIES[hardest.enemyId] ? config.ENEMIES[hardest.enemyId].name : "";
+    return `受傷 ${Math.round(total)}，主要來自 ${sourceLabel(top ? top.key : "unknown")}${enemy ? `（${enemy}）` : ""}，增益：${buffs.size ? Array.from(buffs).join("、") : "無"}`;
+  }
+
+  function damageStatsLine(run) {
+    const timeline = run.damageTimeline || {};
+    const peak = Math.round(Math.max(0, ...Object.keys(timeline).map((key) => Number(timeline[key]) || 0)));
+    const total = Number(run.damageDealt) || countMapTotal(timeline);
+    const duration = Math.max(1, Number(run.duration) || 1);
+    const average = Math.round(total / duration);
+    return `主要傷害來源：${damageSourceLine(run)}，平均 ${average}/秒，峰值 ${peak}/秒`;
+  }
+
   function comparisonLine(run) {
     const previous = run.previousRun;
     if (!previous) return "上局比較：尚無上一局資料";
@@ -632,10 +720,12 @@
     if (!els.runAnalysisPanel || !run) return;
     const supplyParts = run.partsBreakdown && run.partsBreakdown.supplyParts ? run.partsBreakdown.supplyParts : run.supplyParts || 0;
     const sections = [
+      ["死前5秒", deathSummaryLine(run)],
+      ["受傷", damageTakenDistributionLine(run)],
       ["事件", eventAnalysisLine(run)],
       ["補給", `補給箱 ${run.supplyCratesCollected || 0} 個，零件 +${supplyParts}，${supplyRewardSummary(run.supplyRewards)}`],
       ["變種", variantAnalysisLine(run)],
-      ["傷害", `主要傷害來源：${damageSourceLine(run)}`],
+      ["傷害", damageStatsLine(run)],
       ["比較", comparisonLine(run)]
     ];
     els.runAnalysisPanel.textContent = "";
@@ -661,6 +751,8 @@
     renderUpgrades();
     renderEventCodex();
     renderAchievements();
+    renderQuestBoard();
+    renderSettings();
     if (meta.recovery && meta.recovery.pending) {
       setStatus("偵測到上次異常，已保留存檔。");
     }
@@ -893,6 +985,38 @@
     renderHud(null);
   }
 
+  function claimQuest(instanceId) {
+    const result = rules.claimQuestReward({
+      meta,
+      instanceId,
+      now: nowIso,
+      config
+    });
+    meta = migrateUiMeta(result.meta);
+    saveMeta();
+    game.setMeta(meta);
+    if (result.claim.ok) {
+      setStatus(`任務完成：+${result.claim.rewardParts} 零件`);
+    } else if (result.claim.reason === "claimed") {
+      setStatus("這個任務已領取。");
+    } else {
+      setStatus("任務尚未完成。");
+    }
+    renderGarage();
+    openMetaDrawer("operations");
+  }
+
+  function updateSetting(key, value) {
+    const settings = Object.assign({}, meta.settings);
+    settings[key] = value;
+    if (key === "aimAssistLevel") settings.aimAssist = value !== "off";
+    meta = migrateUiMeta(Object.assign({}, meta, { settings }));
+    saveMeta();
+    game.setMeta(meta);
+    renderSettings();
+    setStatus("設定已更新。");
+  }
+
   function setBlueprintWishlist(vehicleId) {
     if (!config.VEHICLES[vehicleId] || rules.blueprintRequiredForVehicle(vehicleId, config) <= 0) return;
     if (isUnlocked(vehicleId)) return;
@@ -992,6 +1116,7 @@
     els.upgradeHotspotBtn.addEventListener("click", () => openMetaDrawer("upgrades"));
     els.vehicleHotspotBtn.addEventListener("click", () => openMetaDrawer("vehicle"));
     els.seriesHotspotBtn.addEventListener("click", () => openMetaDrawer("achievements"));
+    els.opsHotspotBtn.addEventListener("click", () => openMetaDrawer("operations"));
     els.resetOverlayBtn.addEventListener("click", clearStorage);
     els.closeMetaDrawer.addEventListener("click", closeMetaDrawer);
     root.addEventListener("resize", syncGateChoiceLayerSize);
@@ -1009,6 +1134,9 @@
       els.runAnalysisToggleBtn.textContent = els.runAnalysisPanel.hidden ? "本局分析" : "收合分析";
     });
     els.resetBtn.addEventListener("click", clearStorage);
+    els.aimAssistLevelSelect.addEventListener("change", () => updateSetting("aimAssistLevel", els.aimAssistLevelSelect.value));
+    els.screenShakeToggle.addEventListener("change", () => updateSetting("screenShake", els.screenShakeToggle.checked));
+    els.damageTextDensitySelect.addEventListener("change", () => updateSetting("damageTextDensity", els.damageTextDensitySelect.value));
     els.selectSkiffBtn.addEventListener("click", () => {
       const ids = Object.keys(config.VEHICLES).filter((vehicleId) => isUnlocked(vehicleId));
       const index = Math.max(0, ids.indexOf(meta.selectedVehicle));
@@ -1084,6 +1212,7 @@
       "upgradeHotspotBtn",
       "vehicleHotspotBtn",
       "seriesHotspotBtn",
+      "opsHotspotBtn",
       "resetOverlayBtn",
       "metaDrawer",
       "metaDrawerTitle",
@@ -1093,6 +1222,11 @@
       "upgradeList",
       "eventCodexList",
       "achievementList",
+      "questList",
+      "settingsPanel",
+      "aimAssistLevelSelect",
+      "screenShakeToggle",
+      "damageTextDensitySelect",
       "startBtn",
       "resetBtn",
       "selectSkiffBtn",

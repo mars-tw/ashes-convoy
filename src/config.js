@@ -347,6 +347,81 @@ const SUPPLY_DROPS = {
   }
 };
 
+const QUESTS = {
+  dailyRewardParts: 5,
+  weeklyRewardParts: 15,
+  dailyPool: [
+    {
+      id: "daily_variant_hunt",
+      label: "變種清掃",
+      description: "擊殺 2 隻變種殭屍",
+      metric: "variantKills",
+      target: 2,
+      rewardParts: 5
+    },
+    {
+      id: "daily_event_finish",
+      label: "事件應對",
+      description: "完成 1 次環境事件",
+      metric: "eventCompletions",
+      target: 1,
+      rewardParts: 5
+    },
+    {
+      id: "daily_supply_run",
+      label: "補給回收",
+      description: "撿取 2 個補給箱",
+      metric: "supplyCrates",
+      target: 2,
+      rewardParts: 5
+    },
+    {
+      id: "daily_land_win",
+      label: "陸地巡防",
+      description: "用陸地載具完成 3 波",
+      metric: "environmentWins",
+      environment: "land",
+      target: 1,
+      rewardParts: 5
+    }
+  ],
+  weeklyPool: [
+    {
+      id: "weekly_variant_hunt",
+      label: "變種壓制",
+      description: "擊殺 8 隻變種殭屍",
+      metric: "variantKills",
+      target: 8,
+      rewardParts: 15
+    },
+    {
+      id: "weekly_event_finish",
+      label: "事件專員",
+      description: "完成 4 次環境事件",
+      metric: "eventCompletions",
+      target: 4,
+      rewardParts: 15
+    },
+    {
+      id: "weekly_supply_run",
+      label: "補給線維持",
+      description: "撿取 8 個補給箱",
+      metric: "supplyCrates",
+      target: 8,
+      rewardParts: 15
+    },
+    {
+      id: "weekly_air_win",
+      label: "天空航線",
+      description: "用天空載具完成 3 波",
+      metric: "environmentWins",
+      environment: "air",
+      target: 1,
+      rewardParts: 15
+    }
+  ]
+};
+
 const GATES = {
   damage_plus: {
     id: "damage_plus",
@@ -710,10 +785,26 @@ const META_DEFAULT = {
     undertow: { encounters: 0, completions: 0 },
     meteor_shower: { encounters: 0, completions: 0 }
   },
+  questStats: {
+    variantKills: 0,
+    eventCompletions: 0,
+    supplyCrates: 0,
+    environmentWins: {
+      land: 0,
+      air: 0,
+      sea: 0,
+      space: 0
+    }
+  },
+  questBaselines: {},
+  questClaims: {},
   claimedMilestones: {},
   settings: {
     aimAssist: true,
+    aimAssistLevel: "medium",
     reducedFlash: false,
+    screenShake: true,
+    damageTextDensity: "all",
     sound: true
   },
   tutorial: {
@@ -739,6 +830,7 @@ const DSConfig = {
   ENEMY_VARIANTS,
   ENVIRONMENT_EVENTS,
   SUPPLY_DROPS,
+  QUESTS,
   GATES,
   WAVE,
   PERFORMANCE,

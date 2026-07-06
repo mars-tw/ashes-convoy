@@ -170,10 +170,10 @@ async function checkMetaHotspotsFit(page) {
       viewportOverflow: document.documentElement.scrollWidth - window.innerWidth
     };
   });
-  assert.strictEqual(result.buttons.length, 5, "meta screen should expose five overlay action buttons");
+  assert.strictEqual(result.buttons.length, 6, "meta screen should expose six overlay action buttons");
   assert.deepStrictEqual(
     result.buttons.map((button) => button.id).sort(),
-    ["resetOverlayBtn", "seriesHotspotBtn", "sortieBtn", "upgradeHotspotBtn", "vehicleHotspotBtn"],
+    ["opsHotspotBtn", "resetOverlayBtn", "seriesHotspotBtn", "sortieBtn", "upgradeHotspotBtn", "vehicleHotspotBtn"],
     "meta action buttons should match the key art controls"
   );
   assert(result.layer.left >= result.layer.appLeft - 1, "meta action layer should not overflow left");
@@ -207,6 +207,19 @@ async function openUpgradePanel(page) {
     if (alreadyOpen) return;
     await page.click("#upgradeHotspotBtn");
     await page.waitForSelector('#metaDrawer:not([hidden]) [data-meta-section="upgrades"]:not([hidden])');
+  }
+}
+
+async function openOperationsPanel(page) {
+  const fullBackground = await page.evaluate(() => {
+    const mode = window.__test.getShelterState().backgroundMode;
+    return mode === "image" || mode === "scene";
+  });
+  if (fullBackground) {
+    const alreadyOpen = await page.locator('#metaDrawer:not([hidden]) [data-meta-section="operations"]:not([hidden])').count();
+    if (alreadyOpen) return;
+    await page.click("#opsHotspotBtn");
+    await page.waitForSelector('#metaDrawer:not([hidden]) [data-meta-section="operations"]:not([hidden])');
   }
 }
 
@@ -316,6 +329,54 @@ async function checkGarageUpgradeLines(page) {
     ["energy", "gate", "hull", "land_armor", "land_resist", "weapon"],
     "land garage should show common tracks plus two vehicle-specific nodes"
   );
+}
+
+async function checkSettingsAndQuestBoard(page) {
+  await openOperationsPanel(page);
+  const questCount = await page.locator("#questList .quest-card").count();
+  assert.strictEqual(questCount, 2, "operations panel should show one daily and one weekly quest");
+
+  await page.selectOption("#aimAssistLevelSelect", "high");
+  await page.locator("#screenShakeToggle").uncheck();
+  await page.selectOption("#damageTextDensitySelect", "large");
+  let meta = await page.evaluate(() => window.__test.getMeta());
+  assert.strictEqual(meta.settings.aimAssistLevel, "high", "aim assist level should persist from settings panel");
+  assert.strictEqual(meta.settings.aimAssist, true, "high aim assist should keep compatibility boolean enabled");
+  assert.strictEqual(meta.settings.screenShake, false, "screen shake toggle should persist");
+  assert.strictEqual(meta.settings.damageTextDensity, "large", "damage text density should persist");
+
+  const dailyInstanceId = await page.evaluate(() => {
+    const now = new Date().toISOString();
+    const config = window.DSConfig;
+    let nextMeta = window.DSRules.ensureQuestState(window.__test.getMeta(), { now, config });
+    const daily = window.DSRules.getQuestBoard(nextMeta, { now, config }).find((quest) => quest.period === "daily");
+    if (daily.metric === "variantKills") nextMeta.questStats.variantKills += daily.target;
+    if (daily.metric === "eventCompletions") nextMeta.questStats.eventCompletions += daily.target;
+    if (daily.metric === "supplyCrates") nextMeta.questStats.supplyCrates += daily.target;
+    if (daily.metric === "environmentWins") nextMeta.questStats.environmentWins[daily.environment] += daily.target;
+    window.__test.setMeta(nextMeta);
+    return daily.instanceId;
+  });
+  await openOperationsPanel(page);
+  const card = page.locator(`[data-quest-instance="${dailyInstanceId}"]`);
+  const readyButton = await card.locator("[data-quest-claim]").evaluate((button) => ({
+    disabled: button.disabled,
+    text: button.textContent
+  }));
+  assert(!readyButton.disabled && readyButton.text.includes("領取"), `daily quest should be ready to claim: ${readyButton.text}`);
+  const beforeParts = await page.evaluate(() => window.__test.getMeta().parts);
+  await card.locator("[data-quest-claim]").click();
+  meta = await page.evaluate(() => window.__test.getMeta());
+  assert.strictEqual(meta.parts, beforeParts + 5, "daily quest claim should grant 5 parts");
+  assert.strictEqual(meta.questClaims[dailyInstanceId], true, "quest claim should be stored by instance id");
+  const claimedButton = await card.locator("[data-quest-claim]").innerText();
+  assert(claimedButton.includes("已領取"), `claimed quest button should switch state: ${claimedButton}`);
+
+  meta.settings.aimAssistLevel = "medium";
+  meta.settings.aimAssist = true;
+  meta.settings.screenShake = true;
+  meta.settings.damageTextDensity = "all";
+  await page.evaluate((nextMeta) => window.__test.setMeta(nextMeta), meta);
 }
 
 async function unlockFleet(page) {
@@ -533,6 +594,7 @@ async function checkInitialPromptAndMessages(page) {
 async function checkAimAssistToggle(page) {
   await page.evaluate(() => {
     const meta = window.__test.getMeta();
+    meta.settings.aimAssistLevel = "high";
     meta.settings.aimAssist = true;
     window.__test.setMeta(meta);
     let state = window.__test.getState();
@@ -563,6 +625,7 @@ async function checkAimAssistToggle(page) {
 
   await page.evaluate(() => {
     const meta = window.__test.getMeta();
+    meta.settings.aimAssistLevel = "off";
     meta.settings.aimAssist = false;
     window.__test.setMeta(meta);
     let state = window.__test.getState();
@@ -587,6 +650,7 @@ async function checkAimAssistToggle(page) {
       speed: 118
     });
     window.__test.step(120);
+    meta.settings.aimAssistLevel = "medium";
     meta.settings.aimAssist = true;
     window.__test.setMeta(meta);
     window.__test.setState({ enemies: [], projectiles: [], gates: [] });
@@ -1039,7 +1103,11 @@ async function checkSupplyDropPickupAndSettlement(page) {
   assert(state.effectiveRunMods.fireIntervalMul < 1, "rate boost should reduce effective fire interval");
   assert.strictEqual(state.stats.lastSupplyReward, "rate_boost", "pickup should record feedback reward");
 
-  await page.evaluate(() => window.__test.damageVehicle(99999));
+  await page.evaluate(() => {
+    window.__test.damageVehicle(12, { type: "enemy", enemyId: "shambler" });
+    window.__test.step(300);
+    window.__test.damageVehicle(99999, { type: "boss", enemyId: "boss_hive_titan" });
+  });
   await page.waitForSelector("#settlementPanel:not([hidden])");
   const settlementRows = await page.locator("#settlementList .settlement-item").evaluateAll((nodes) =>
     nodes.map((node) => node.innerText.replace(/\s+/g, " ").trim())
@@ -1055,6 +1123,9 @@ async function checkSupplyDropPickupAndSettlement(page) {
   assert(analysisSections.some((section) => section.title === "事件"), "run analysis should include event section");
   assert(analysisSections.some((section) => section.title === "補給" && section.body.includes("補給箱")), "run analysis should include supply section");
   assert(analysisSections.some((section) => section.title === "變種"), "run analysis should include variant section");
+  assert(analysisSections.some((section) => section.title === "死前5秒" && section.body.includes("主要來自")), "run analysis should include death-window summary");
+  assert(analysisSections.some((section) => section.title === "受傷" && section.body.includes("Boss")), "run analysis should include incoming damage distribution");
+  assert(analysisSections.some((section) => section.title === "傷害" && section.body.includes("平均") && section.body.includes("峰值")), "run analysis should include average and peak damage stats");
 }
 
 async function checkVehicleSpecificUpgradePurchase(page) {
@@ -1213,6 +1284,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await checkNewSaveVehicleLocks(page);
   await checkOldSaveRetention(page);
   await checkGarageUpgradeLines(page);
+  await checkSettingsAndQuestBoard(page);
   await checkWaveProgressionRegression(page);
   await page.evaluate(() => window.__test.clearStorage());
   await checkShelterMeta(page, false);

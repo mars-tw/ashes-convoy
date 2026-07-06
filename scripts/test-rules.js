@@ -84,6 +84,8 @@ const fastTarget = rules.selectAimAssistTarget({
   config
 });
 assert.strictEqual(fastTarget.id, "fast", "aim assist should prefer fast runner over nearest shambler");
+assert.strictEqual(rules.aimAssistStrength({ aimAssistLevel: "off" }), 0);
+assert(rules.aimAssistStrength({ aimAssistLevel: "high" }) > rules.aimAssistStrength({ aimAssistLevel: "low" }));
 
 const recommendationMeta = rules.migrateMeta(
   {
@@ -112,6 +114,25 @@ const lateRecommendation = rules.recommendUpgradeForRun({
   config
 });
 assert(lateRecommendation.track.indexOf("sea_") === 0, "high wave runs should recommend vehicle-specific nodes");
+
+const questNow = "2026-07-06T00:00:00.000Z";
+const questMeta = rules.ensureQuestState(rules.migrateMeta(null, { config }), { now: questNow, config });
+const boardA = rules.getQuestBoard(questMeta, { now: questNow, config });
+const boardB = rules.getQuestBoard(questMeta, { now: questNow, config });
+assert.strictEqual(boardA.length, 2, "quest board should expose one daily and one weekly quest");
+assert.deepStrictEqual(boardA.map((quest) => quest.instanceId), boardB.map((quest) => quest.instanceId), "quest rotation should be deterministic by date seed");
+const readyQuestMeta = rules.deepClone(questMeta);
+const dailyQuest = boardA.find((quest) => quest.period === "daily");
+if (dailyQuest.metric === "variantKills") readyQuestMeta.questStats.variantKills += dailyQuest.target;
+if (dailyQuest.metric === "eventCompletions") readyQuestMeta.questStats.eventCompletions += dailyQuest.target;
+if (dailyQuest.metric === "supplyCrates") readyQuestMeta.questStats.supplyCrates += dailyQuest.target;
+if (dailyQuest.metric === "environmentWins") readyQuestMeta.questStats.environmentWins[dailyQuest.environment] += dailyQuest.target;
+const claimedQuest = rules.claimQuestReward({ meta: readyQuestMeta, instanceId: dailyQuest.instanceId, now: questNow, config });
+assert.strictEqual(claimedQuest.claim.ok, true, "ready daily quest should be claimable");
+assert.strictEqual(claimedQuest.claim.rewardParts, 5);
+const claimedAgain = rules.claimQuestReward({ meta: claimedQuest.meta, instanceId: dailyQuest.instanceId, now: questNow, config });
+assert.strictEqual(claimedAgain.claim.ok, false, "quest rewards should be gated once per instance");
+assert.strictEqual(claimedAgain.claim.reason, "claimed");
 
 assert(rules.enemyHpScale(4, config) > rules.enemyHpScale(1, config), "enemy hp should scale by wave");
 assert(rules.enemySpeedScale(8, config) > rules.enemySpeedScale(1, config), "enemy speed should scale by wave");

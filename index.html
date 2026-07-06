@@ -447,6 +447,60 @@
         gap: 8px;
       }
 
+      .quest-list,
+      .settings-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .settings-list {
+        margin-top: 10px;
+      }
+
+      .settings-row,
+      .quest-card {
+        display: grid;
+        gap: 6px;
+        min-height: 62px;
+        padding: 9px 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      .settings-row {
+        grid-template-columns: 1fr auto;
+        align-items: center;
+      }
+
+      .settings-row select,
+      .settings-row input {
+        min-height: 38px;
+      }
+
+      .quest-card.is-ready {
+        border-color: rgba(240, 182, 74, 0.66);
+        background: rgba(240, 182, 74, 0.08);
+      }
+
+      .quest-card.is-claimed {
+        border-color: rgba(135, 210, 125, 0.42);
+        background: rgba(135, 210, 125, 0.07);
+      }
+
+      .quest-card strong {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 13px;
+      }
+
+      .quest-card small,
+      .settings-row small {
+        color: var(--muted);
+        line-height: 1.35;
+      }
+
       .event-codex-list {
         display: grid;
         gap: 8px;
@@ -945,6 +999,7 @@
           <button class="hotspot-btn" id="upgradeHotspotBtn" type="button">升級</button>
           <button class="hotspot-btn" id="vehicleHotspotBtn" type="button">載具</button>
           <button class="hotspot-btn" id="seriesHotspotBtn" type="button">成就</button>
+          <button class="hotspot-btn" id="opsHotspotBtn" type="button">任務/設定</button>
           <button class="hotspot-btn danger" id="resetOverlayBtn" type="button">清存檔</button>
         </div>
 
@@ -974,6 +1029,34 @@
                   <a href="https://mars-tw.github.io/pixel-idle-farm-skill/" target="_blank" rel="noopener">像素農場</a>
                 </nav>
               </footer>
+            </section>
+            <section class="meta-section" data-meta-section="operations">
+              <h2>任務板</h2>
+              <div class="quest-list" id="questList"></div>
+              <h2>設定</h2>
+              <div class="settings-list" id="settingsPanel">
+                <label class="settings-row">
+                  <small>瞄準輔助</small>
+                  <select id="aimAssistLevelSelect">
+                    <option value="off">關</option>
+                    <option value="low">低</option>
+                    <option value="medium">中</option>
+                    <option value="high">高</option>
+                  </select>
+                </label>
+                <label class="settings-row">
+                  <small>螢幕震動</small>
+                  <input id="screenShakeToggle" type="checkbox" />
+                </label>
+                <label class="settings-row">
+                  <small>傷害數字</small>
+                  <select id="damageTextDensitySelect">
+                    <option value="all">全部</option>
+                    <option value="large">僅大額</option>
+                    <option value="off">關</option>
+                  </select>
+                </label>
+              </div>
             </section>
           </div>
           <div class="actions meta-actions">

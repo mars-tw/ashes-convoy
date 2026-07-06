@@ -88,7 +88,7 @@ function sanitizeCountMap(input, options) {
 
 function sanitizeDeathContext(input) {
   const source = input && typeof input === "object" && !Array.isArray(input) ? input : {};
-  const allowed = { boss: true, enemy: true, hazard: true, quit: true, unknown: true };
+  const allowed = { boss: true, enemy: true, burst: true, hazard: true, quit: true, unknown: true };
   const type = allowed[source.type] ? source.type : "unknown";
   return {
     type,
@@ -107,6 +107,88 @@ function sanitizeRecovery(input) {
   };
 }
 
+function validAimAssistLevel(level) {
+  return level === "off" || level === "low" || level === "medium" || level === "high";
+}
+
+function validDamageTextDensity(density) {
+  return density === "all" || density === "large" || density === "off";
+}
+
+function sanitizeSettings(input, config) {
+  const cfg = getConfig(config);
+  const base = deepClone(cfg.META_DEFAULT.settings);
+  const source = input && typeof input === "object" && !Array.isArray(input) ? input : {};
+  const output = Object.assign({}, base);
+  if (validAimAssistLevel(source.aimAssistLevel)) {
+    output.aimAssistLevel = source.aimAssistLevel;
+  } else if (typeof source.aimAssist === "boolean") {
+    output.aimAssistLevel = source.aimAssist ? "medium" : "off";
+  }
+  ["reducedFlash", "screenShake", "sound"].forEach((key) => {
+    if (typeof source[key] === "boolean") output[key] = source[key];
+  });
+  if (validDamageTextDensity(source.damageTextDensity)) output.damageTextDensity = source.damageTextDensity;
+  output.aimAssist = output.aimAssistLevel !== "off";
+  return output;
+}
+
+function aimAssistStrength(settings) {
+  const source = settings && typeof settings === "object" ? settings : {};
+  const level = validAimAssistLevel(source.aimAssistLevel)
+    ? source.aimAssistLevel
+    : source.aimAssist === false
+      ? "off"
+      : "medium";
+  if (level === "off") return 0;
+  if (level === "low") return 0.1;
+  if (level === "high") return 0.28;
+  return 0.18;
+}
+
+function sanitizeQuestStats(input, config) {
+  const cfg = getConfig(config);
+  const source = input && typeof input === "object" && !Array.isArray(input) ? input : {};
+  const wins = source.environmentWins && typeof source.environmentWins === "object" && !Array.isArray(source.environmentWins)
+    ? source.environmentWins
+    : {};
+  const environmentWins = {};
+  ["land", "air", "sea", "space"].forEach((environment) => {
+    environmentWins[environment] = finiteNumber(wins[environment], 0, { min: 0, integer: true });
+  });
+  return {
+    variantKills: finiteNumber(source.variantKills, 0, { min: 0, integer: true }),
+    eventCompletions: finiteNumber(source.eventCompletions, 0, { min: 0, integer: true }),
+    supplyCrates: finiteNumber(source.supplyCrates, 0, { min: 0, integer: true }),
+    environmentWins
+  };
+}
+
+function sanitizeQuestBaselines(input, config) {
+  const cfg = getConfig(config);
+  const source = input && typeof input === "object" && !Array.isArray(input) ? input : {};
+  const output = {};
+  Object.keys(source).slice(0, 32).forEach((instanceId) => {
+    output[String(instanceId).slice(0, 96)] = sanitizeQuestStats(source[instanceId], cfg);
+  });
+  return output;
+}
+
+function sanitizeDamageEvents(input) {
+  if (!Array.isArray(input)) return [];
+  return input.slice(-12).map((event) => {
+    const source = event && typeof event === "object" ? event : {};
+    const buffs = Array.isArray(source.buffs) ? source.buffs.slice(0, 6).map((item) => String(item).slice(0, 24)) : [];
+    return {
+      time: finiteNumber(source.time, 0, { min: 0 }),
+      source: typeof source.source === "string" ? source.source.slice(0, 24) : "unknown",
+      enemyId: typeof source.enemyId === "string" ? source.enemyId.slice(0, 48) : "",
+      amount: finiteNumber(source.amount, 0, { min: 0, max: 100000 }),
+      buffs
+    };
+  });
+}
+
 function valueFromNow(now) {
   if (typeof now === "function") return now();
   return now == null ? null : now;
@@ -119,6 +201,41 @@ function timestampFromNow(now) {
   if (typeof value === "number" && Number.isFinite(value)) return new Date(value).toISOString();
   if (value && typeof value.toISOString === "function") return value.toISOString();
   return String(value);
+}
+
+function dateFromNow(now) {
+  const value = valueFromNow(now);
+  if (value == null) return new Date();
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return new Date();
+  return date;
+}
+
+function pad2(value) {
+  return String(value).padStart(2, "0");
+}
+
+function dailyKey(now) {
+  const date = dateFromNow(now);
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+function weeklyKey(now) {
+  const date = dateFromNow(now);
+  const local = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const day = local.getDay() || 7;
+  local.setDate(local.getDate() - day + 1);
+  return `${local.getFullYear()}-${pad2(local.getMonth() + 1)}-${pad2(local.getDate())}`;
+}
+
+function hashText(text) {
+  let hash = 2166136261;
+  const source = String(text);
+  for (let i = 0; i < source.length; i += 1) {
+    hash ^= source.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
 }
 
 function createSeededRng(seed) {
@@ -463,6 +580,121 @@ function createSafeRecoveryMeta(meta, errorInfo, options) {
     at: timestampFromNow(opts.now || info.at) || null
   };
   return next;
+}
+
+function questMetricValue(stats, quest) {
+  const safeStats = sanitizeQuestStats(stats);
+  if (!quest) return 0;
+  if (quest.metric === "variantKills") return safeStats.variantKills;
+  if (quest.metric === "eventCompletions") return safeStats.eventCompletions;
+  if (quest.metric === "supplyCrates") return safeStats.supplyCrates;
+  if (quest.metric === "environmentWins") {
+    return safeStats.environmentWins[quest.environment] || 0;
+  }
+  return 0;
+}
+
+function activeQuestDefinitions(now, config) {
+  const cfg = getConfig(config);
+  const dailyPool = (cfg.QUESTS && cfg.QUESTS.dailyPool) || [];
+  const weeklyPool = (cfg.QUESTS && cfg.QUESTS.weeklyPool) || [];
+  const dayKey = dailyKey(now);
+  const weekKey = weeklyKey(now);
+  const daily = dailyPool.length ? dailyPool[hashText(`daily:${dayKey}`) % dailyPool.length] : null;
+  const weekly = weeklyPool.length ? weeklyPool[hashText(`weekly:${weekKey}`) % weeklyPool.length] : null;
+  return [
+    daily
+      ? Object.assign({}, daily, {
+          period: "daily",
+          periodKey: dayKey,
+          instanceId: `daily:${dayKey}:${daily.id}`,
+          rewardParts: daily.rewardParts || (cfg.QUESTS && cfg.QUESTS.dailyRewardParts) || 5
+        })
+      : null,
+    weekly
+      ? Object.assign({}, weekly, {
+          period: "weekly",
+          periodKey: weekKey,
+          instanceId: `weekly:${weekKey}:${weekly.id}`,
+          rewardParts: weekly.rewardParts || (cfg.QUESTS && cfg.QUESTS.weeklyRewardParts) || 15
+        })
+      : null
+  ].filter(Boolean);
+}
+
+function ensureQuestState(meta, options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const next = migrateMeta(meta || cfg.META_DEFAULT, { config: cfg });
+  const active = activeQuestDefinitions(opts.now, cfg);
+  active.forEach((quest) => {
+    if (!next.questBaselines[quest.instanceId]) {
+      next.questBaselines[quest.instanceId] = sanitizeQuestStats(next.questStats, cfg);
+    }
+  });
+  return next;
+}
+
+function getQuestBoard(meta, options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const ensured = ensureQuestState(meta || cfg.META_DEFAULT, { now: opts.now, config: cfg });
+  const active = activeQuestDefinitions(opts.now, cfg);
+  return active.map((quest) => {
+    const current = questMetricValue(ensured.questStats, quest);
+    const baseline = questMetricValue(ensured.questBaselines[quest.instanceId], quest);
+    const progress = Math.min(quest.target, Math.max(0, current - baseline));
+    const claimed = ensured.questClaims[quest.instanceId] === true;
+    return Object.assign({}, quest, {
+      progress,
+      target: finiteNumber(quest.target, 1, { min: 1, integer: true }),
+      claimed,
+      ready: progress >= quest.target && !claimed
+    });
+  });
+}
+
+function applyQuestRunStats(meta, run, config) {
+  const cfg = getConfig(config);
+  const next = deepClone(meta);
+  const stats = sanitizeQuestStats(next.questStats, cfg);
+  const variantKills = sanitizeCountMap(run.variantKills);
+  const eventStats = sanitizeEventStats(run.eventStats, cfg);
+  stats.variantKills += Object.keys(variantKills).reduce((sum, key) => sum + variantKills[key], 0);
+  stats.supplyCrates += finiteNumber(run.supplyCratesCollected, 0, { min: 0, integer: true });
+  stats.eventCompletions += Object.keys(eventStats).reduce((sum, eventId) => {
+    return sum + finiteNumber(eventStats[eventId].completions, 0, { min: 0, integer: true });
+  }, 0);
+  const vehicle = cfg.VEHICLES[run.vehicleId];
+  const wonSortie = finiteNumber(run.wavesCleared, 0, { min: 0, integer: true }) >= 3 || finiteNumber(run.bossesDefeated, 0, { min: 0, integer: true }) > 0;
+  if (vehicle && wonSortie) {
+    stats.environmentWins[vehicle.environment] = (stats.environmentWins[vehicle.environment] || 0) + 1;
+  }
+  next.questStats = stats;
+  return next;
+}
+
+function claimQuestReward(options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const ensured = ensureQuestState(opts.meta || cfg.META_DEFAULT, { now: opts.now, config: cfg });
+  const board = getQuestBoard(ensured, { now: opts.now, config: cfg });
+  const quest = board.find((entry) => entry.instanceId === opts.instanceId);
+  if (!quest) return { meta: ensured, claim: { ok: false, reason: "missing" } };
+  if (quest.claimed) return { meta: ensured, claim: { ok: false, reason: "claimed", quest } };
+  if (!quest.ready) return { meta: ensured, claim: { ok: false, reason: "progress", quest } };
+  const next = deepClone(ensured);
+  next.questClaims[quest.instanceId] = true;
+  next.parts += quest.rewardParts;
+  next.updatedAt = timestampFromNow(opts.now);
+  return {
+    meta: next,
+    claim: {
+      ok: true,
+      quest,
+      rewardParts: quest.rewardParts
+    }
+  };
 }
 
 function generateWave(options) {
@@ -1065,13 +1297,11 @@ function migrateMeta(raw, options) {
 
   meta.achievements = boolTrueMap(input.achievements);
   meta.eventStats = sanitizeEventStats(input.eventStats, cfg);
+  meta.questStats = sanitizeQuestStats(input.questStats, cfg);
+  meta.questBaselines = sanitizeQuestBaselines(input.questBaselines, cfg);
+  meta.questClaims = boolTrueMap(input.questClaims);
   meta.claimedMilestones = boolTrueMap(input.claimedMilestones);
-  meta.settings = Object.assign({}, base.settings);
-  if (input.settings && typeof input.settings === "object" && !Array.isArray(input.settings)) {
-    Object.keys(base.settings).forEach((key) => {
-      if (typeof input.settings[key] === "boolean") meta.settings[key] = input.settings[key];
-    });
-  }
+  meta.settings = sanitizeSettings(input.settings, cfg);
   meta.tutorial = Object.assign({}, base.tutorial);
   if (input.tutorial && typeof input.tutorial === "object" && !Array.isArray(input.tutorial)) {
     Object.keys(base.tutorial).forEach((key) => {
@@ -1095,6 +1325,7 @@ function settleRunRewards(options) {
   const kills = finiteNumber(run.kills, 0, { min: 0, integer: true });
   const bossesDefeated = finiteNumber(run.bossesDefeated, 0, { min: 0, integer: true });
   const score = finiteNumber(run.score, wavesCleared * 100 + kills * 10 + bossesDefeated * 500, { min: 0, integer: true });
+  const damageDealt = finiteNumber(run.damageDealt, 0, { min: 0 });
   const vehicleId = cfg.VEHICLES[run.vehicleId] ? run.vehicleId : meta.selectedVehicle;
   const difficultyId = cfg.ECONOMY.difficultyRewardMul[run.difficultyId] ? run.difficultyId : "normal";
   const eventRewardMul = finiteNumber(run.eventRewardMul, 1, { min: 1, max: 2 });
@@ -1117,6 +1348,9 @@ function settleRunRewards(options) {
   const damageTakenBy = sanitizeCountMap(run.damageTakenBy);
   const variantKills = sanitizeCountMap(run.variantKills);
   const damageBySource = sanitizeCountMap(run.damageBySource);
+  const damageTimeline = sanitizeCountMap(run.damageTimeline, { maxKeys: 120, maxValue: 1000000 });
+  const recentDamageEvents = sanitizeDamageEvents(run.recentDamageEvents);
+  const duration = finiteNumber(run.duration, 0, { min: 0, max: 36000 });
   const previousRun = sourceMeta.lastRun && typeof sourceMeta.lastRun === "object"
     ? {
         wavesCleared: finiteNumber(sourceMeta.lastRun.wavesCleared, 0, { min: 0, integer: true }),
@@ -1157,6 +1391,7 @@ function settleRunRewards(options) {
   meta.totalKills += kills;
   meta.totalBossKills += bossesDefeated;
   meta.eventStats = mergeEventStats(meta.eventStats, eventStats, cfg);
+  meta.questStats = applyQuestRunStats(meta, { vehicleId, wavesCleared, bossesDefeated, eventStats, supplyCratesCollected, variantKills }, cfg).questStats;
   meta.bestWave = Math.max(meta.bestWave, wavesCleared);
   meta.bestScore = Math.max(meta.bestScore, score);
   meta.selectedVehicle = vehicleId;
@@ -1188,6 +1423,7 @@ function settleRunRewards(options) {
     kills,
     bossesDefeated,
     score,
+    damageDealt,
     eventRewardMul,
     eventParts,
     eventStats,
@@ -1198,6 +1434,9 @@ function settleRunRewards(options) {
     damageTakenBy,
     variantKills,
     damageBySource,
+    damageTimeline,
+    recentDamageEvents,
+    duration,
     previousRun,
     earnedParts: totalParts,
     runParts: parts,
@@ -1291,8 +1530,12 @@ const DSRules = {
   rollSupplyDrop,
   chooseSupplyReward,
   selectAimAssistTarget,
+  aimAssistStrength,
   recommendUpgradeForRun,
   createSafeRecoveryMeta,
+  ensureQuestState,
+  getQuestBoard,
+  claimQuestReward,
   generateWave,
   defaultRunMods,
   blueprintRequiredForVehicle,
