@@ -10,6 +10,7 @@ const rootDir = path.resolve(__dirname, "..");
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
+  ".webmanifest": "application/manifest+json; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".json": "application/json; charset=utf-8",
@@ -277,6 +278,8 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasVersion: swText.includes("CACHE_VERSION"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
+      swCachesJs: swText.includes("src/ui.js") && swText.includes("src/game.js") && swText.includes("src/rules.js"),
+      swHasOffline: swText.includes("offline.html"),
       webdriver: navigator.webdriver,
       registrationCount: registrations.length
     };
@@ -286,6 +289,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
   assert(pwa.swHasVersion && pwa.swHasNetworkFirst && pwa.swHasCacheFirst, "service worker should define versioned network/cache strategies");
+  assert(pwa.swCachesJs && pwa.swHasOffline, "service worker should cache JS app shell and offline fallback");
   assert.strictEqual(pwa.webdriver, true, "E2E should run under webdriver");
   assert.strictEqual(pwa.registrationCount, 0, "webdriver sessions should skip service worker registration");
 }
@@ -316,9 +320,15 @@ async function checkShelterMeta(page) {
   await openUpgradePanel(page);
   const drawer = await page.locator("#metaDrawer").evaluate((node) => ({
     hidden: node.hidden,
-    title: document.getElementById("metaDrawerTitle").textContent
+    title: document.getElementById("metaDrawerTitle").textContent,
+    activeId: document.activeElement && document.activeElement.id
   }));
   assert(!drawer.hidden && drawer.title.includes("升級"), "upgrade hotspot should open the upgrade drawer");
+  assert.strictEqual(drawer.activeId, "closeMetaDrawer", "opening a meta drawer should move focus to the close button");
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(() => document.getElementById("metaDrawer").hidden === true);
+  const focusAfterEsc = await page.evaluate(() => document.activeElement && document.activeElement.id);
+  assert.strictEqual(focusAfterEsc, "upgradeHotspotBtn", "Escape should close the drawer and restore focus");
 }
 
 async function dragAim(page) {
@@ -372,12 +382,24 @@ async function checkSettingsAndQuestBoard(page) {
   await page.locator("#screenShakeToggle").uncheck();
   await page.selectOption("#damageTextDensitySelect", "large");
   await page.selectOption("#performanceModeSelect", "low");
+  await page.selectOption("#fontSizeSelect", "large");
   let meta = await page.evaluate(() => window.__test.getMeta());
   assert.strictEqual(meta.settings.aimAssistLevel, "high", "aim assist level should persist from settings panel");
   assert.strictEqual(meta.settings.aimAssist, true, "high aim assist should keep compatibility boolean enabled");
   assert.strictEqual(meta.settings.screenShake, false, "screen shake toggle should persist");
   assert.strictEqual(meta.settings.damageTextDensity, "large", "damage text density should persist");
   assert.strictEqual(meta.settings.performanceMode, "low", "performance mode should persist");
+  assert.strictEqual(meta.settings.fontSize, "large", "font size setting should persist");
+  const fontState = await page.evaluate(() => ({
+    largeClass: document.body.classList.contains("font-large"),
+    questFont: parseFloat(getComputedStyle(document.querySelector(".quest-card strong")).fontSize),
+    diagnostics: document.getElementById("performanceDiagnosticText").textContent,
+    version: document.getElementById("versionText").textContent
+  }));
+  assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
+  assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
+  assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
+  assert(fontState.version.includes("R38"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -429,6 +451,7 @@ async function checkSettingsAndQuestBoard(page) {
   meta.settings.screenShake = true;
   meta.settings.damageTextDensity = "all";
   meta.settings.performanceMode = "auto";
+  meta.settings.fontSize = "medium";
   await page.evaluate((nextMeta) => window.__test.setMeta(nextMeta), meta);
 }
 
@@ -1520,6 +1543,69 @@ async function runZombieImageFallbackScenario(browser, baseUrl) {
   console.log("E2E zombie image fallback PASS");
 }
 
+async function runServiceWorkerOfflineScenario(browser, baseUrl) {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    serviceWorkers: "allow"
+  });
+  const page = await context.newPage();
+  const errors = [];
+  page.on("console", (message) => {
+    if (message.type() === "error" && !isIgnorableConsoleError(message.text())) errors.push(message.text());
+  });
+  page.on("pageerror", (error) => errors.push(error.message));
+
+  try {
+    await page.goto(`${baseUrl}?swtest=1`, { waitUntil: "networkidle" });
+    await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
+    await page.waitForFunction(async () => {
+      if (!("serviceWorker" in navigator)) return false;
+      const registration = await navigator.serviceWorker.ready;
+      return !!registration.active;
+    });
+    await page.reload({ waitUntil: "networkidle" });
+    await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r38")));
+
+    await context.setOffline(true);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
+    await page.waitForSelector("#garagePanel:not([hidden])");
+    const offlineShell = await page.evaluate(async () => {
+      const keys = await caches.keys();
+      return {
+        title: document.querySelector("#garagePanel .meta-summary h1").textContent.trim(),
+        sortieVisible: !document.getElementById("sortieBtn").hidden,
+        hasController: !!navigator.serviceWorker.controller,
+        cacheKeys: keys
+      };
+    });
+    assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
+    assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
+    assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r38")), "R38 cache should exist offline");
+    await clickSortie(page);
+    await page.waitForFunction(() => window.__test.getState().mode === "playing");
+    const runState = await page.evaluate(() => window.__test.getState());
+    assert.strictEqual(runState.vehicleId, "land_rig", "offline sortie should start with the default vehicle");
+    assert.deepStrictEqual(errors, [], "console/page errors during service worker offline scenario");
+    console.log("E2E service worker offline PASS");
+  } finally {
+    await context.setOffline(false).catch(() => {});
+    await page.evaluate(async () => {
+      if ("serviceWorker" in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map((registration) => registration.unregister()));
+      }
+      if ("caches" in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((key) => caches.delete(key)));
+      }
+    }).catch(() => {});
+    await context.close();
+  }
+}
+
 (async () => {
   const { server, url } = await startServer();
   const browser = await chromium.launch();
@@ -1537,6 +1623,7 @@ async function runZombieImageFallbackScenario(browser, baseUrl) {
     await runImageFallbackScenario(browser, url);
     await runVehicleImageFallbackScenario(browser, url);
     await runZombieImageFallbackScenario(browser, url);
+    await runServiceWorkerOfflineScenario(browser, url);
     console.log("E2E tests PASS");
   } finally {
     await browser.close();

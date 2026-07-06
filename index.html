@@ -61,6 +61,15 @@
         touch-action: manipulation;
       }
 
+      button:focus-visible,
+      select:focus-visible,
+      textarea:focus-visible,
+      input:focus-visible,
+      a:focus-visible {
+        outline: 2px solid var(--accent-2);
+        outline-offset: 2px;
+      }
+
       button:disabled {
         cursor: not-allowed;
         opacity: 0.48;
@@ -184,6 +193,46 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      body.font-small .hud,
+      body.font-small .settlement-list,
+      body.font-small .settlement-badges,
+      body.font-small .settlement-recommendation,
+      body.font-small .run-analysis,
+      body.font-small .quest-list,
+      body.font-small .settings-list {
+        font-size: 12px;
+      }
+
+      body.font-large .hud,
+      body.font-large .settlement-list,
+      body.font-large .settlement-badges,
+      body.font-large .settlement-recommendation,
+      body.font-large .run-analysis,
+      body.font-large .quest-list,
+      body.font-large .settings-list {
+        font-size: 15px;
+      }
+
+      body.font-small .quest-card strong,
+      body.font-small .achievement strong,
+      body.font-small .event-codex strong,
+      body.font-small .settings-row small,
+      body.font-small .quest-card small,
+      body.font-small .settlement-recommendation small,
+      body.font-small .run-analysis-section small {
+        font-size: 11px;
+      }
+
+      body.font-large .quest-card strong,
+      body.font-large .achievement strong,
+      body.font-large .event-codex strong,
+      body.font-large .settings-row small,
+      body.font-large .quest-card small,
+      body.font-large .settlement-recommendation small,
+      body.font-large .run-analysis-section small {
+        font-size: 14px;
       }
 
       .boss {
@@ -1019,12 +1068,12 @@
         </div>
 
         <div class="hotspot-layer" id="hotspotLayer" aria-label="避難所互動" hidden>
-          <button class="hotspot-btn hotspot-primary" id="sortieBtn" type="button">出勤</button>
-          <button class="hotspot-btn" id="upgradeHotspotBtn" type="button">升級</button>
-          <button class="hotspot-btn" id="vehicleHotspotBtn" type="button">載具</button>
-          <button class="hotspot-btn" id="seriesHotspotBtn" type="button">成就</button>
-          <button class="hotspot-btn" id="opsHotspotBtn" type="button">任務/設定</button>
-          <button class="hotspot-btn danger" id="resetOverlayBtn" type="button">清存檔</button>
+          <button class="hotspot-btn hotspot-primary" id="sortieBtn" type="button" aria-label="開始出勤">出勤</button>
+          <button class="hotspot-btn" id="upgradeHotspotBtn" type="button" aria-label="開啟升級工坊">升級</button>
+          <button class="hotspot-btn" id="vehicleHotspotBtn" type="button" aria-label="開啟載具棚">載具</button>
+          <button class="hotspot-btn" id="seriesHotspotBtn" type="button" aria-label="開啟成就牆">成就</button>
+          <button class="hotspot-btn" id="opsHotspotBtn" type="button" aria-label="開啟任務與設定">任務/設定</button>
+          <button class="hotspot-btn danger" id="resetOverlayBtn" type="button" aria-label="清除存檔">清存檔</button>
         </div>
 
         <div class="meta-drawer" id="metaDrawer">
@@ -1088,21 +1137,36 @@
                     <option value="low">鎖低</option>
                   </select>
                 </label>
+                <label class="settings-row">
+                  <small>文字大小</small>
+                  <select id="fontSizeSelect">
+                    <option value="small">小</option>
+                    <option value="medium">中</option>
+                    <option value="large">大</option>
+                  </select>
+                </label>
+                <div class="settings-row" id="versionRow">
+                  <small id="versionText">版本</small>
+                  <button id="checkUpdateBtn" type="button" aria-label="檢查更新並套用">檢查更新</button>
+                </div>
+                <div class="settings-row" id="performanceDiagnostics">
+                  <small id="performanceDiagnosticText">FPS --｜品質 --｜cap --</small>
+                </div>
                 <div class="save-manager" id="saveManager">
                   <strong>存檔管家</strong>
                   <textarea id="saveCodeBox" spellcheck="false" aria-label="存檔代碼"></textarea>
                   <div class="actions">
-                    <button id="exportSaveBtn" type="button">匯出</button>
-                    <button id="importSaveBtn" type="button">匯入</button>
+                    <button id="exportSaveBtn" type="button" aria-label="匯出存檔代碼">匯出</button>
+                    <button id="importSaveBtn" type="button" aria-label="匯入存檔代碼">匯入</button>
                   </div>
                 </div>
               </div>
             </section>
           </div>
           <div class="actions meta-actions">
-            <button class="primary wide" id="startBtn" type="button">出勤</button>
-            <button id="resetBtn" type="button">清除存檔</button>
-            <button class="secondary" id="selectSkiffBtn" type="button">切換載具</button>
+            <button class="primary wide" id="startBtn" type="button" aria-label="開始出勤">出勤</button>
+            <button id="resetBtn" type="button" aria-label="清除存檔">清除存檔</button>
+            <button class="secondary" id="selectSkiffBtn" type="button" aria-label="切換可用載具">切換載具</button>
           </div>
         </div>
       </section>
@@ -1113,8 +1177,8 @@
           <p class="subtle">目前進度會保留在本局中。</p>
         </div>
         <div class="actions">
-          <button class="primary" id="resumeBtn" type="button">繼續</button>
-          <button class="danger" id="quitBtn" type="button">結束本局</button>
+          <button class="primary" id="resumeBtn" type="button" aria-label="繼續遊戲">繼續</button>
+          <button class="danger" id="quitBtn" type="button" aria-label="結束本局並結算">結束本局</button>
         </div>
       </section>
 
@@ -1128,13 +1192,13 @@
         <div class="settlement-recommendation" id="settlementRecommendation" hidden>
           <strong id="settlementRecommendationTitle"></strong>
           <small id="settlementRecommendationDetail"></small>
-          <button class="primary" id="recommendedUpgradeBtn" type="button">前往升級</button>
+          <button class="primary" id="recommendedUpgradeBtn" type="button" aria-label="前往建議升級">前往升級</button>
         </div>
-        <button class="secondary run-analysis-toggle" id="runAnalysisToggleBtn" type="button">本局分析</button>
+        <button class="secondary run-analysis-toggle" id="runAnalysisToggleBtn" type="button" aria-label="展開本局分析">本局分析</button>
         <div class="run-analysis" id="runAnalysisPanel" hidden></div>
         <div class="actions">
-          <button class="primary" id="againBtn" type="button">再跑一趟</button>
-          <button class="secondary" id="garageBtn" type="button">回車庫升級</button>
+          <button class="primary" id="againBtn" type="button" aria-label="再次出勤">再跑一趟</button>
+          <button class="secondary" id="garageBtn" type="button" aria-label="回車庫升級">回車庫升級</button>
         </div>
       </section>
     </main>

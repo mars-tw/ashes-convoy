@@ -2,6 +2,7 @@
 
 const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 2;
+const APP_VERSION = "R38";
 
 const LOGIC = {
   width: 195,
@@ -821,6 +822,7 @@ const META_DEFAULT = {
     screenShake: true,
     damageTextDensity: "all",
     performanceMode: "auto",
+    fontSize: "medium",
     sound: true
   },
   tutorial: {
@@ -839,6 +841,7 @@ const META_DEFAULT = {
 const DSConfig = {
   STORAGE_KEY,
   META_VERSION,
+  APP_VERSION,
   LOGIC,
   VEHICLES,
   WEAPONS,

@@ -31,7 +31,8 @@
     fps: 60,
     lowFrames: 0,
     highFrames: 0,
-    lastFloatingTextAt: -Infinity
+    lastFloatingTextAt: -Infinity,
+    reason: "穩定"
   };
   let renderDebug = {
     messagesDrawn: 0,
@@ -265,7 +266,14 @@
         fps: Math.round(performanceState.fps),
         mode: (meta.settings && meta.settings.performanceMode) || "auto",
         maxEffects: effectiveMaxEffects(),
-        maxEnemies: effectiveMaxEnemies()
+        maxEnemies: effectiveMaxEnemies(),
+        capMultiplier: Math.round(
+          Math.min(
+            effectiveMaxEnemies() / Math.max(1, config.PERFORMANCE.maxEnemies),
+            effectiveMaxEffects() / Math.max(1, config.PERFORMANCE.maxEffects)
+          ) * 100
+        ) / 100,
+        reason: performanceState.reason
       },
       stats: rules.deepClone(state.stats),
       wavePlan: state.wavePlan
@@ -1512,12 +1520,14 @@
     performanceState.fps = performanceState.fps * 0.88 + instant * 0.12;
     if (mode === "high") {
       performanceState.quality = "high";
+      performanceState.reason = "鎖高";
       performanceState.lowFrames = 0;
       performanceState.highFrames = 0;
       return;
     }
     if (mode === "low") {
       performanceState.quality = "low";
+      performanceState.reason = "鎖低";
       performanceState.lowFrames = 0;
       performanceState.highFrames = 0;
       return;
@@ -1534,9 +1544,11 @@
     }
     if (performanceState.lowFrames >= 45) {
       performanceState.quality = "low";
+      performanceState.reason = `FPS ${Math.round(performanceState.fps)} 低於 ${config.PERFORMANCE.lowFpsFloor}`;
       performanceState.lowFrames = 0;
     } else if (performanceState.highFrames >= 100) {
       performanceState.quality = "high";
+      performanceState.reason = `FPS ${Math.round(performanceState.fps)} 回穩`;
       performanceState.highFrames = 0;
     }
   }

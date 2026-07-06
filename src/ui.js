@@ -13,6 +13,8 @@
   let latestState = null;
   let lastSettlement = null;
   let recommendedUpgradeTrack = "";
+  let lastDrawerTrigger = null;
+  let swRegistration = null;
   const gateChoiceButtons = new Map();
   let gateChoiceLayerSize = {
     width: config.LOGIC.displayWidth,
@@ -65,6 +67,12 @@
     els.garageStatus.textContent = text || "";
   }
 
+  function applyFontSize() {
+    const size = meta.settings && meta.settings.fontSize ? meta.settings.fontSize : "medium";
+    root.document.body.classList.toggle("font-small", size === "small");
+    root.document.body.classList.toggle("font-large", size === "large");
+  }
+
   function handleGlobalErrorRecovery(message) {
     try {
       meta = rules.createSafeRecoveryMeta(meta, { message, at: nowIso() }, { config });
@@ -94,8 +102,10 @@
 
   function registerServiceWorker() {
     if (!("serviceWorker" in root.navigator)) return;
-    if (root.navigator.webdriver) return;
+    const params = new URLSearchParams(root.location.search || "");
+    if (root.navigator.webdriver && !params.has("swtest")) return;
     root.navigator.serviceWorker.register("sw.js").then((registration) => {
+      swRegistration = registration;
       if (registration.waiting) showUpdateAvailable();
       registration.addEventListener("updatefound", () => {
         const worker = registration.installing;
@@ -107,6 +117,26 @@
     }).catch(() => {
       // PWA is optional; offline support failure should not block play.
     });
+  }
+
+  function checkForUpdate() {
+    if (!swRegistration) {
+      setStatus("此環境尚未啟用離線更新。");
+      return;
+    }
+    if (swRegistration.waiting) {
+      swRegistration.waiting.postMessage({ type: "SKIP_WAITING" });
+      root.location.reload();
+      return;
+    }
+    swRegistration.update().then(() => {
+      if (swRegistration.waiting) {
+        swRegistration.waiting.postMessage({ type: "SKIP_WAITING" });
+        root.location.reload();
+      } else {
+        setStatus("已是最新版本。");
+      }
+    }).catch(() => setStatus("檢查更新失敗，請稍後再試。"));
   }
 
   function getShelterApi() {
@@ -147,10 +177,14 @@
     }
   }
 
-  function openMetaDrawer(kind) {
+  function openMetaDrawer(kind, trigger) {
+    if (trigger && typeof trigger.focus === "function") lastDrawerTrigger = trigger;
     shelter.drawerKind = kind || "garage";
     setSectionVisibility(shelter.drawerKind);
     els.metaDrawer.hidden = false;
+    if (hasFullMetaBackground() && els.closeMetaDrawer && typeof els.closeMetaDrawer.focus === "function") {
+      els.closeMetaDrawer.focus();
+    }
   }
 
   function closeMetaDrawer() {
@@ -160,6 +194,7 @@
     }
     els.metaDrawer.hidden = true;
     shelter.drawerKind = "";
+    if (lastDrawerTrigger && typeof lastDrawerTrigger.focus === "function") lastDrawerTrigger.focus();
   }
 
   function applyMetaBackgroundMode(mode) {
@@ -605,6 +640,21 @@
     els.screenShakeToggle.checked = meta.settings.screenShake !== false;
     els.damageTextDensitySelect.value = meta.settings.damageTextDensity || "all";
     els.performanceModeSelect.value = meta.settings.performanceMode || "auto";
+    els.fontSizeSelect.value = meta.settings.fontSize || "medium";
+    if (els.versionText) els.versionText.textContent = `版本 ${config.APP_VERSION || "R38"}`;
+    renderPerformanceDiagnostics();
+  }
+
+  function renderPerformanceDiagnostics(state) {
+    if (!els.performanceDiagnosticText) return;
+    const source = state || latestState || game.getState();
+    const perf = source && source.performance;
+    if (!perf) {
+      els.performanceDiagnosticText.textContent = "FPS --｜品質 --｜cap --";
+      return;
+    }
+    const locked = perf.mode === "auto" ? "自動" : perf.mode === "high" ? "鎖高" : "鎖低";
+    els.performanceDiagnosticText.textContent = `FPS ${perf.fps}｜品質 ${locked}/${perf.quality}｜原因 ${perf.reason || "穩定"}｜cap ${Math.round((perf.capMultiplier || 1) * 100)}%`;
   }
 
   function renderEventCodex() {
@@ -767,6 +817,7 @@
   }
 
   function renderGarage() {
+    applyFontSize();
     els.garageMeta.textContent = `廢土零件 ${meta.parts} · 最遠第 ${meta.bestWave} 波 · 擊殺 ${meta.totalKills}`;
     updateStartImageUi();
     renderVehicles();
@@ -1005,6 +1056,7 @@
     els.settlementPanel.hidden = false;
     renderSettlement(result);
     renderHud(null);
+    if (els.againBtn && typeof els.againBtn.focus === "function") els.againBtn.focus();
   }
 
   function claimQuest(instanceId) {
@@ -1036,6 +1088,7 @@
     saveMeta();
     game.setMeta(meta);
     renderSettings();
+    applyFontSize();
     setStatus("設定已更新。");
   }
 
@@ -1150,8 +1203,10 @@
     latestState = state;
     if (state.mode === "playing") {
       renderHud(state);
+      renderPerformanceDiagnostics(state);
     } else if (state.mode === "paused") {
       renderHud(state);
+      renderPerformanceDiagnostics(state);
       showPause();
     }
   }
@@ -1167,10 +1222,10 @@
   function bindEvents() {
     els.startBtn.addEventListener("click", startSelectedRun);
     els.sortieBtn.addEventListener("click", startSelectedRun);
-    els.upgradeHotspotBtn.addEventListener("click", () => openMetaDrawer("upgrades"));
-    els.vehicleHotspotBtn.addEventListener("click", () => openMetaDrawer("vehicle"));
-    els.seriesHotspotBtn.addEventListener("click", () => openMetaDrawer("achievements"));
-    els.opsHotspotBtn.addEventListener("click", () => openMetaDrawer("operations"));
+    els.upgradeHotspotBtn.addEventListener("click", () => openMetaDrawer("upgrades", els.upgradeHotspotBtn));
+    els.vehicleHotspotBtn.addEventListener("click", () => openMetaDrawer("vehicle", els.vehicleHotspotBtn));
+    els.seriesHotspotBtn.addEventListener("click", () => openMetaDrawer("achievements", els.seriesHotspotBtn));
+    els.opsHotspotBtn.addEventListener("click", () => openMetaDrawer("operations", els.opsHotspotBtn));
     els.resetOverlayBtn.addEventListener("click", clearStorage);
     els.closeMetaDrawer.addEventListener("click", closeMetaDrawer);
     root.addEventListener("resize", syncGateChoiceLayerSize);
@@ -1186,12 +1241,15 @@
     els.runAnalysisToggleBtn.addEventListener("click", () => {
       els.runAnalysisPanel.hidden = !els.runAnalysisPanel.hidden;
       els.runAnalysisToggleBtn.textContent = els.runAnalysisPanel.hidden ? "本局分析" : "收合分析";
+      els.runAnalysisToggleBtn.setAttribute("aria-label", els.runAnalysisPanel.hidden ? "展開本局分析" : "收合本局分析");
     });
     els.resetBtn.addEventListener("click", clearStorage);
     els.aimAssistLevelSelect.addEventListener("change", () => updateSetting("aimAssistLevel", els.aimAssistLevelSelect.value));
     els.screenShakeToggle.addEventListener("change", () => updateSetting("screenShake", els.screenShakeToggle.checked));
     els.damageTextDensitySelect.addEventListener("change", () => updateSetting("damageTextDensity", els.damageTextDensitySelect.value));
     els.performanceModeSelect.addEventListener("change", () => updateSetting("performanceMode", els.performanceModeSelect.value));
+    els.fontSizeSelect.addEventListener("change", () => updateSetting("fontSize", els.fontSizeSelect.value));
+    els.checkUpdateBtn.addEventListener("click", checkForUpdate);
     els.exportSaveBtn.addEventListener("click", exportSave);
     els.importSaveBtn.addEventListener("click", importSave);
     els.selectSkiffBtn.addEventListener("click", () => {
@@ -1199,6 +1257,27 @@
       const index = Math.max(0, ids.indexOf(meta.selectedVehicle));
       const next = ids[(index + 1) % ids.length];
       selectVehicle(next);
+    });
+    root.document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      if (!els.metaDrawer.hidden && hasFullMetaBackground()) {
+        event.preventDefault();
+        closeMetaDrawer();
+        return;
+      }
+      if (!els.pausePanel.hidden) {
+        event.preventDefault();
+        game.resume();
+        showPlaying();
+        return;
+      }
+      if (!els.runAnalysisPanel.hidden) {
+        event.preventDefault();
+        els.runAnalysisPanel.hidden = true;
+        els.runAnalysisToggleBtn.textContent = "本局分析";
+        els.runAnalysisToggleBtn.setAttribute("aria-label", "展開本局分析");
+        els.runAnalysisToggleBtn.focus();
+      }
     });
   }
 
@@ -1288,6 +1367,10 @@
       "screenShakeToggle",
       "damageTextDensitySelect",
       "performanceModeSelect",
+      "fontSizeSelect",
+      "versionText",
+      "checkUpdateBtn",
+      "performanceDiagnosticText",
       "saveManager",
       "saveCodeBox",
       "exportSaveBtn",
