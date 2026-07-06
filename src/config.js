@@ -494,7 +494,22 @@ const PERFORMANCE = {
   maxProjectiles: 96,
   maxEffects: 90,
   corpseFadeSeconds: 0.7,
-  lowFpsFloor: 30
+  lowFpsFloor: 30,
+  recoverFps: 48,
+  qualityProfiles: {
+    high: {
+      maxEnemies: 72,
+      maxEffects: 90,
+      floatingTextMinInterval: 0,
+      enemyAnimScale: 1
+    },
+    low: {
+      maxEnemies: 54,
+      maxEffects: 48,
+      floatingTextMinInterval: 0.08,
+      enemyAnimScale: 0.45
+    }
+  }
 };
 
 const DIFFICULTIES = {
@@ -805,6 +820,7 @@ const META_DEFAULT = {
     reducedFlash: false,
     screenShake: true,
     damageTextDensity: "all",
+    performanceMode: "auto",
     sound: true
   },
   tutorial: {

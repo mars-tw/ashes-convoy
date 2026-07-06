@@ -88,6 +88,27 @@
     });
   }
 
+  function showUpdateAvailable() {
+    setStatus("新版本可用，重新整理後套用。");
+  }
+
+  function registerServiceWorker() {
+    if (!("serviceWorker" in root.navigator)) return;
+    if (root.navigator.webdriver) return;
+    root.navigator.serviceWorker.register("sw.js").then((registration) => {
+      if (registration.waiting) showUpdateAvailable();
+      registration.addEventListener("updatefound", () => {
+        const worker = registration.installing;
+        if (!worker) return;
+        worker.addEventListener("statechange", () => {
+          if (worker.state === "installed" && root.navigator.serviceWorker.controller) showUpdateAvailable();
+        });
+      });
+    }).catch(() => {
+      // PWA is optional; offline support failure should not block play.
+    });
+  }
+
   function getShelterApi() {
     return root.DSShelterScene;
   }
@@ -583,6 +604,7 @@
     els.aimAssistLevelSelect.value = meta.settings.aimAssistLevel || (meta.settings.aimAssist ? "medium" : "off");
     els.screenShakeToggle.checked = meta.settings.screenShake !== false;
     els.damageTextDensitySelect.value = meta.settings.damageTextDensity || "all";
+    els.performanceModeSelect.value = meta.settings.performanceMode || "auto";
   }
 
   function renderEventCodex() {
@@ -1017,6 +1039,38 @@
     setStatus("設定已更新。");
   }
 
+  function exportSave() {
+    const code = rules.encodeSaveMeta(meta, { config });
+    els.saveCodeBox.value = code;
+    if (root.navigator.clipboard && typeof root.navigator.clipboard.writeText === "function") {
+      root.navigator.clipboard.writeText(code).catch(() => {});
+    }
+    setStatus("存檔代碼已匯出。");
+    return code;
+  }
+
+  function importSave() {
+    const code = els.saveCodeBox.value || "";
+    const decoded = rules.decodeSaveMeta(code, { config });
+    if (!decoded.ok || !decoded.meta) {
+      setStatus("匯入失敗：存檔代碼無效。");
+      return { ok: false, reason: decoded.reason };
+    }
+    if (root.localStorage) {
+      root.localStorage.setItem(`${config.STORAGE_KEY}_backup`, JSON.stringify(meta));
+      root.localStorage.setItem(config.STORAGE_KEY, JSON.stringify(decoded.meta));
+    }
+    meta = migrateUiMeta(decoded.meta);
+    game.setMeta(meta);
+    setStatus("匯入成功，重新載入中。");
+    if (root.__test && root.__test.skipImportReload) {
+      renderGarage();
+    } else {
+      root.location.reload();
+    }
+    return { ok: true };
+  }
+
   function setBlueprintWishlist(vehicleId) {
     if (!config.VEHICLES[vehicleId] || rules.blueprintRequiredForVehicle(vehicleId, config) <= 0) return;
     if (isUnlocked(vehicleId)) return;
@@ -1137,6 +1191,9 @@
     els.aimAssistLevelSelect.addEventListener("change", () => updateSetting("aimAssistLevel", els.aimAssistLevelSelect.value));
     els.screenShakeToggle.addEventListener("change", () => updateSetting("screenShake", els.screenShakeToggle.checked));
     els.damageTextDensitySelect.addEventListener("change", () => updateSetting("damageTextDensity", els.damageTextDensitySelect.value));
+    els.performanceModeSelect.addEventListener("change", () => updateSetting("performanceMode", els.performanceModeSelect.value));
+    els.exportSaveBtn.addEventListener("click", exportSave);
+    els.importSaveBtn.addEventListener("click", importSave);
     els.selectSkiffBtn.addEventListener("click", () => {
       const ids = Object.keys(config.VEHICLES).filter((vehicleId) => isUnlocked(vehicleId));
       const index = Math.max(0, ids.indexOf(meta.selectedVehicle));
@@ -1165,6 +1222,9 @@
         setBlueprintWishlist(vehicleId);
         return rules.deepClone(meta);
       },
+      exportSave,
+      importSave,
+      skipImportReload: false,
       startRun: (vehicleId) => {
         if (vehicleId && config.VEHICLES[vehicleId]) selectVehicle(vehicleId);
         startSelectedRun();
@@ -1227,6 +1287,11 @@
       "aimAssistLevelSelect",
       "screenShakeToggle",
       "damageTextDensitySelect",
+      "performanceModeSelect",
+      "saveManager",
+      "saveCodeBox",
+      "exportSaveBtn",
+      "importSaveBtn",
       "startBtn",
       "resetBtn",
       "selectSkiffBtn",
@@ -1267,6 +1332,7 @@
     });
     exposeTestApi();
     showGarage();
+    registerServiceWorker();
   }
 
   if (root.document.readyState === "loading") {

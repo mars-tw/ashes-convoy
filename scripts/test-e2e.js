@@ -259,6 +259,37 @@ async function checkStartTitle(page) {
   assert(title.top >= title.appTop - 1 && title.bottom <= title.appBottom + 1, "start title should stay inside the app");
 }
 
+async function checkPwaFilesAndSkipRegistration(page) {
+  const pwa = await page.evaluate(async () => {
+    const manifestLink = document.querySelector('link[rel="manifest"]');
+    const manifestResponse = await fetch(manifestLink.getAttribute("href"));
+    const manifest = await manifestResponse.json();
+    const swText = await fetch("sw.js").then((response) => response.text());
+    const registrations =
+      "serviceWorker" in navigator && navigator.serviceWorker.getRegistrations
+        ? await navigator.serviceWorker.getRegistrations()
+        : [];
+    return {
+      manifestHref: manifestLink && manifestLink.getAttribute("href"),
+      name: manifest.name,
+      orientation: manifest.orientation,
+      icons: manifest.icons.map((icon) => icon.sizes).sort(),
+      swHasVersion: swText.includes("CACHE_VERSION"),
+      swHasNetworkFirst: swText.includes("networkFirst"),
+      swHasCacheFirst: swText.includes("cacheFirst"),
+      webdriver: navigator.webdriver,
+      registrationCount: registrations.length
+    };
+  });
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest", "page should link the web manifest");
+  assert.strictEqual(pwa.name, "灰燼護航");
+  assert.strictEqual(pwa.orientation, "portrait");
+  assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
+  assert(pwa.swHasVersion && pwa.swHasNetworkFirst && pwa.swHasCacheFirst, "service worker should define versioned network/cache strategies");
+  assert.strictEqual(pwa.webdriver, true, "E2E should run under webdriver");
+  assert.strictEqual(pwa.registrationCount, 0, "webdriver sessions should skip service worker registration");
+}
+
 async function checkClearStorageButton(page) {
   await page.evaluate(() => {
     const meta = window.__test.getMeta();
@@ -278,6 +309,7 @@ async function checkShelterMeta(page) {
   await page.waitForSelector("#garagePanel:not([hidden])");
   await expectMetaBackground(page);
   await checkStartTitle(page);
+  await checkPwaFilesAndSkipRegistration(page);
   await checkMetaHotspotsFit(page);
   await checkClearStorageButton(page);
   await expectMetaBackground(page);
@@ -339,11 +371,31 @@ async function checkSettingsAndQuestBoard(page) {
   await page.selectOption("#aimAssistLevelSelect", "high");
   await page.locator("#screenShakeToggle").uncheck();
   await page.selectOption("#damageTextDensitySelect", "large");
+  await page.selectOption("#performanceModeSelect", "low");
   let meta = await page.evaluate(() => window.__test.getMeta());
   assert.strictEqual(meta.settings.aimAssistLevel, "high", "aim assist level should persist from settings panel");
   assert.strictEqual(meta.settings.aimAssist, true, "high aim assist should keep compatibility boolean enabled");
   assert.strictEqual(meta.settings.screenShake, false, "screen shake toggle should persist");
   assert.strictEqual(meta.settings.damageTextDensity, "large", "damage text density should persist");
+  assert.strictEqual(meta.settings.performanceMode, "low", "performance mode should persist");
+
+  await page.click("#exportSaveBtn");
+  const exported = await page.locator("#saveCodeBox").inputValue();
+  assert(exported.length > 20, "export should write a base64 save code");
+  await page.fill("#saveCodeBox", "bad-save-code");
+  await page.click("#importSaveBtn");
+  const badStatus = await page.locator("#garageStatus").innerText();
+  assert(badStatus.includes("匯入失敗"), `bad save code should be rejected: ${badStatus}`);
+  const beforeImportMeta = await page.evaluate(() => window.__test.getMeta());
+  const changedMeta = Object.assign({}, beforeImportMeta, { parts: beforeImportMeta.parts + 33 });
+  const changedCode = await page.evaluate((nextMeta) => window.DSRules.encodeSaveMeta(nextMeta, { config: window.DSConfig }), changedMeta);
+  await page.evaluate(() => { window.__test.skipImportReload = true; });
+  await page.fill("#saveCodeBox", changedCode);
+  await page.click("#importSaveBtn");
+  meta = await page.evaluate(() => window.__test.getMeta());
+  assert.strictEqual(meta.parts, changedMeta.parts, "valid import should replace meta");
+  const backupExists = await page.evaluate(() => !!localStorage.getItem(`${window.DSConfig.STORAGE_KEY}_backup`));
+  assert.strictEqual(backupExists, true, "import should keep a local backup before replacing the save");
 
   const dailyInstanceId = await page.evaluate(() => {
     const now = new Date().toISOString();
@@ -376,6 +428,7 @@ async function checkSettingsAndQuestBoard(page) {
   meta.settings.aimAssist = true;
   meta.settings.screenShake = true;
   meta.settings.damageTextDensity = "all";
+  meta.settings.performanceMode = "auto";
   await page.evaluate((nextMeta) => window.__test.setMeta(nextMeta), meta);
 }
 
@@ -657,6 +710,54 @@ async function checkAimAssistToggle(page) {
   });
   const disabled = await page.evaluate(() => window.__test.getState().vehicle);
   assert(Math.abs(disabled.assistAimX - disabled.aimX) < 1, "disabled aim assist should leave aim untouched");
+}
+
+async function checkAdaptivePerformance(page) {
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.settings.performanceMode = "low";
+    window.__test.setMeta(meta);
+    window.__test.step(120);
+  });
+  let perf = await page.evaluate(() => window.__test.getState().performance);
+  assert.strictEqual(perf.quality, "low", "locked low performance mode should force low quality");
+  assert(perf.maxEffects < windowlessEffectHigh(), "low quality should reduce effect cap");
+
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.settings.performanceMode = "high";
+    window.__test.setMeta(meta);
+    for (let i = 0; i < 70; i += 1) window.__test.step(90);
+  });
+  perf = await page.evaluate(() => window.__test.getState().performance);
+  assert.strictEqual(perf.quality, "high", "locked high performance mode should resist auto downgrade");
+
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.settings.performanceMode = "auto";
+    window.__test.setMeta(meta);
+    for (let i = 0; i < 70; i += 1) window.__test.step(90);
+  });
+  perf = await page.evaluate(() => window.__test.getState().performance);
+  assert.strictEqual(perf.quality, "low", "auto performance mode should downgrade after sustained low FPS samples");
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.settings.performanceMode = "high";
+    window.__test.setMeta(meta);
+    const state = window.__test.getState();
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      hazards: [],
+      vehicle: { hp: state.vehicle.maxHp, weaponCooldown: 0 }
+    });
+    window.__test.step(16);
+  });
+}
+
+function windowlessEffectHigh() {
+  return 90;
 }
 
 async function sampleFps(page) {
@@ -1313,6 +1414,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await checkInitialPromptAndMessages(page);
   await checkOpeningHordeGateAndFps(page);
   await checkAimAssistToggle(page);
+  await checkAdaptivePerformance(page);
   await dragAim(page);
   await killEnemiesAndEarnPreviewParts(page);
   await shootGate(page);

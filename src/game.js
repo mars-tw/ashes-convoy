@@ -26,6 +26,13 @@
   let rafStarted = false;
   let lastFrameMs = null;
   let boundInput = false;
+  let performanceState = {
+    quality: "high",
+    fps: 60,
+    lowFrames: 0,
+    highFrames: 0,
+    lastFloatingTextAt: -Infinity
+  };
   let renderDebug = {
     messagesDrawn: 0,
     gateLabelsDrawn: 0,
@@ -144,19 +151,23 @@
 
   function addEffect(effect) {
     state.effects.push(effect);
-    if (state.effects.length > config.PERFORMANCE.maxEffects) {
-      state.effects.splice(0, state.effects.length - config.PERFORMANCE.maxEffects);
+    const cap = effectiveMaxEffects();
+    if (state.effects.length > cap) {
+      state.effects.splice(0, state.effects.length - cap);
     }
   }
 
   function addFloatingText(text, x, y, options) {
     if (meta.settings && meta.settings.reducedFlash) return;
     const opts = options || {};
+    const minInterval = qualityProfile().floatingTextMinInterval || 0;
+    if (minInterval > 0 && state && state.time - performanceState.lastFloatingTextAt < minInterval) return;
     if (opts.damageNumber) {
       const density = meta.settings && meta.settings.damageTextDensity ? meta.settings.damageTextDensity : "all";
       if (density === "off") return;
       if (density === "large" && rules.finiteNumber(opts.amount, 0, { min: 0 }) < 30) return;
     }
+    performanceState.lastFloatingTextAt = state ? state.time : performanceState.lastFloatingTextAt;
     addEffect({
       id: nextId("text"),
       kind: "text",
@@ -189,6 +200,23 @@
     if (meta.settings && meta.settings.screenShake === false) return;
     state.shakeAmp = Math.max(state.shakeAmp || 0, amount);
     state.shakeUntil = Math.max(state.shakeUntil || 0, state.time + duration);
+  }
+
+  function qualityProfile() {
+    const profiles = config.PERFORMANCE.qualityProfiles || {};
+    return profiles[performanceState.quality] || profiles.high || config.PERFORMANCE;
+  }
+
+  function effectiveMaxEffects() {
+    return qualityProfile().maxEffects || config.PERFORMANCE.maxEffects;
+  }
+
+  function effectiveMaxEnemies() {
+    return qualityProfile().maxEnemies || config.PERFORMANCE.maxEnemies;
+  }
+
+  function enemyAnimScale() {
+    return qualityProfile().enemyAnimScale || 1;
   }
 
   function publicEntity(entity) {
@@ -232,6 +260,13 @@
       projectiles: state.projectiles.map(publicEntity),
       gates: state.gates.map(publicEntity),
       effects: state.effects.map(publicEntity),
+      performance: {
+        quality: performanceState.quality,
+        fps: Math.round(performanceState.fps),
+        mode: (meta.settings && meta.settings.performanceMode) || "auto",
+        maxEffects: effectiveMaxEffects(),
+        maxEnemies: effectiveMaxEnemies()
+      },
       stats: rules.deepClone(state.stats),
       wavePlan: state.wavePlan
         ? {
@@ -702,7 +737,7 @@
       phaseTriggered: {},
       hitFlash: 0
     };
-    if (state.enemies.length >= config.PERFORMANCE.maxEnemies) return null;
+    if (state.enemies.length >= effectiveMaxEnemies()) return null;
     state.enemies.push(enemy);
     if (enemy.boss) {
       pushEventBanner("Boss 來襲", enemyConfig.name, { kind: "boss", ttl: 2.4 });
@@ -1055,7 +1090,7 @@
     const plan = state.wavePlan;
     let spawnedAny = false;
     while (state.spawnIndex < plan.spawns.length && plan.spawns[state.spawnIndex].time <= state.waveElapsed) {
-      if (state.enemies.length >= config.PERFORMANCE.maxEnemies) break;
+      if (state.enemies.length >= effectiveMaxEnemies()) break;
       const spawn = plan.spawns[state.spawnIndex];
       spawnEnemy(spawn.enemyId, Object.assign({}, spawn, { silent: true }));
       state.spawnIndex += 1;
@@ -1097,8 +1132,9 @@
         : rules.clamp(vehicle.x + enemy.laneOffset * 0.42, config.LOGIC.roadLeft + 8, config.LOGIC.roadRight - 8);
       const toTarget = normalize(targetX - enemy.x, targetY - enemy.y);
       const speedMul = enemy.boss && enemy.hp < enemy.maxHp * 0.33 ? 1.35 : 1;
-      const sway = enemy.boss ? 0 : Math.sin(state.time * enemy.swayFreq + enemy.swayPhase) * enemy.swayAmp;
-      const eventDrift = enemy.eventDriftAmp ? Math.sin(state.time * 1.7 + enemy.swayPhase) * enemy.eventDriftAmp : 0;
+      const animScale = enemyAnimScale();
+      const sway = enemy.boss ? 0 : Math.sin(state.time * enemy.swayFreq + enemy.swayPhase) * enemy.swayAmp * animScale;
+      const eventDrift = enemy.eventDriftAmp ? Math.sin(state.time * 1.7 + enemy.swayPhase) * enemy.eventDriftAmp * animScale : 0;
       enemy.vx = toTarget.x * enemy.speed * speedMul * 0.62 + sway + eventDrift;
       enemy.vy = Math.max(enemy.speed * 0.35, toTarget.y * enemy.speed * speedMul);
       enemy.x += enemy.vx * dt;
@@ -1468,9 +1504,47 @@
     if (state.vehicle.hp <= 0) finishRun();
   }
 
+  function updatePerformanceQuality(deltaSeconds) {
+    const settings = meta.settings || {};
+    const mode = settings.performanceMode || "auto";
+    const dt = Math.max(0.001, deltaSeconds || 1 / 60);
+    const instant = Math.min(120, 1 / dt);
+    performanceState.fps = performanceState.fps * 0.88 + instant * 0.12;
+    if (mode === "high") {
+      performanceState.quality = "high";
+      performanceState.lowFrames = 0;
+      performanceState.highFrames = 0;
+      return;
+    }
+    if (mode === "low") {
+      performanceState.quality = "low";
+      performanceState.lowFrames = 0;
+      performanceState.highFrames = 0;
+      return;
+    }
+    if (performanceState.fps < config.PERFORMANCE.lowFpsFloor) {
+      performanceState.lowFrames += 1;
+      performanceState.highFrames = 0;
+    } else if (performanceState.fps > config.PERFORMANCE.recoverFps) {
+      performanceState.highFrames += 1;
+      performanceState.lowFrames = 0;
+    } else {
+      performanceState.lowFrames = Math.max(0, performanceState.lowFrames - 1);
+      performanceState.highFrames = Math.max(0, performanceState.highFrames - 1);
+    }
+    if (performanceState.lowFrames >= 45) {
+      performanceState.quality = "low";
+      performanceState.lowFrames = 0;
+    } else if (performanceState.highFrames >= 100) {
+      performanceState.quality = "high";
+      performanceState.highFrames = 0;
+    }
+  }
+
   function step(deltaMs) {
     if (!state) startRun(meta.selectedVehicle);
     const total = Math.max(0, Math.min(30000, Number(deltaMs) || 0)) / 1000;
+    updatePerformanceQuality(total);
     let remaining = total;
     while (remaining > 0) {
       const dt = Math.min(MAX_STEP, remaining);
@@ -2402,6 +2476,7 @@
     lastFrameMs = frameMs;
     idleTime += delta;
     if (state && !state.paused && !state.over) {
+      updatePerformanceQuality(delta);
       update(delta);
       emitState();
     }

@@ -115,6 +115,10 @@ function validDamageTextDensity(density) {
   return density === "all" || density === "large" || density === "off";
 }
 
+function validPerformanceMode(mode) {
+  return mode === "auto" || mode === "high" || mode === "low";
+}
+
 function sanitizeSettings(input, config) {
   const cfg = getConfig(config);
   const base = deepClone(cfg.META_DEFAULT.settings);
@@ -129,6 +133,7 @@ function sanitizeSettings(input, config) {
     if (typeof source[key] === "boolean") output[key] = source[key];
   });
   if (validDamageTextDensity(source.damageTextDensity)) output.damageTextDensity = source.damageTextDensity;
+  if (validPerformanceMode(source.performanceMode)) output.performanceMode = source.performanceMode;
   output.aimAssist = output.aimAssistLevel !== "off";
   return output;
 }
@@ -580,6 +585,41 @@ function createSafeRecoveryMeta(meta, errorInfo, options) {
     at: timestampFromNow(opts.now || info.at) || null
   };
   return next;
+}
+
+function encodeSaveMeta(meta, options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const migrated = migrateMeta(meta || cfg.META_DEFAULT, { config: cfg });
+  const json = JSON.stringify(migrated);
+  if (typeof Buffer !== "undefined") return Buffer.from(json, "utf8").toString("base64");
+  if (typeof btoa === "function") return btoa(unescape(encodeURIComponent(json)));
+  throw new Error("Base64 encoder unavailable.");
+}
+
+function decodeSaveMeta(code, options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  if (typeof code !== "string" || !code.trim()) {
+    return { ok: false, reason: "empty", meta: null };
+  }
+  try {
+    let json;
+    const text = code.trim();
+    if (typeof Buffer !== "undefined") {
+      json = Buffer.from(text, "base64").toString("utf8");
+    } else if (typeof atob === "function") {
+      json = decodeURIComponent(escape(atob(text)));
+    } else {
+      throw new Error("Base64 decoder unavailable.");
+    }
+    const parsed = JSON.parse(json);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return { ok: false, reason: "shape", meta: null };
+    const meta = migrateMeta(parsed, { config: cfg });
+    return { ok: true, reason: "", meta };
+  } catch (error) {
+    return { ok: false, reason: "decode", meta: null };
+  }
 }
 
 function questMetricValue(stats, quest) {
@@ -1533,6 +1573,8 @@ const DSRules = {
   aimAssistStrength,
   recommendUpgradeForRun,
   createSafeRecoveryMeta,
+  encodeSaveMeta,
+  decodeSaveMeta,
   ensureQuestState,
   getQuestBoard,
   claimQuestReward,

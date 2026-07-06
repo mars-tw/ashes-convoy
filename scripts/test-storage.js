@@ -43,7 +43,7 @@ const dirty = {
   },
   achievements: { first_boss: true, bogus: false },
   claimedMilestones: { a: true, b: "true" },
-  settings: { aimAssist: false, reducedFlash: true, screenShake: false, damageTextDensity: "large", sound: "yes" },
+  settings: { aimAssist: false, reducedFlash: true, screenShake: false, damageTextDensity: "large", performanceMode: "low", sound: "yes" },
   tutorial: { seenIntro: true, seenGate: "yes", seenGarage: false },
   blueprints: { rift_hauler: 5.5, frost_wing: -2 },
   eventStats: { sandstorm: { encounters: 2.8, completions: 1 }, ghost_event: { encounters: 9, completions: 9 } },
@@ -100,6 +100,7 @@ assert.strictEqual(migrated.settings.aimAssistLevel, "off");
 assert.strictEqual(migrated.settings.reducedFlash, true);
 assert.strictEqual(migrated.settings.screenShake, false);
 assert.strictEqual(migrated.settings.damageTextDensity, "large");
+assert.strictEqual(migrated.settings.performanceMode, "low");
 assert.strictEqual(migrated.settings.sound, true);
 assert.strictEqual(migrated.tutorial.seenIntro, true);
 assert.strictEqual(migrated.tutorial.seenGate, false);

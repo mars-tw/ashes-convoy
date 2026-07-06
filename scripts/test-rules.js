@@ -134,6 +134,15 @@ const claimedAgain = rules.claimQuestReward({ meta: claimedQuest.meta, instanceI
 assert.strictEqual(claimedAgain.claim.ok, false, "quest rewards should be gated once per instance");
 assert.strictEqual(claimedAgain.claim.reason, "claimed");
 
+const encodedSave = rules.encodeSaveMeta(Object.assign({}, config.META_DEFAULT, { parts: 42 }), { config });
+assert.strictEqual(typeof encodedSave, "string");
+assert(encodedSave.length > 20, "encoded save should be a base64 payload");
+const decodedSave = rules.decodeSaveMeta(encodedSave, { config });
+assert.strictEqual(decodedSave.ok, true, "valid save code should decode");
+assert.strictEqual(decodedSave.meta.parts, 42);
+const badSave = rules.decodeSaveMeta("not valid base64", { config });
+assert.strictEqual(badSave.ok, false, "bad save code should be rejected");
+
 assert(rules.enemyHpScale(4, config) > rules.enemyHpScale(1, config), "enemy hp should scale by wave");
 assert(rules.enemySpeedScale(8, config) > rules.enemySpeedScale(1, config), "enemy speed should scale by wave");
 assert(rules.waveBudget(4, config) > rules.waveBudget(1, config), "wave budget should grow");

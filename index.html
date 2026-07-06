@@ -3,6 +3,9 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#111317" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
     <title>灰燼護航</title>
     <style>
       :root {
@@ -476,6 +479,27 @@
       .settings-row select,
       .settings-row input {
         min-height: 38px;
+      }
+
+      .save-manager {
+        display: grid;
+        gap: 8px;
+        padding: 9px 10px;
+        border: 1px solid rgba(94, 212, 203, 0.28);
+        border-radius: 8px;
+        background: rgba(94, 212, 203, 0.055);
+      }
+
+      .save-manager textarea {
+        width: 100%;
+        min-height: 76px;
+        resize: vertical;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(9, 12, 16, 0.76);
+        color: var(--text);
+        font: inherit;
+        font-size: 12px;
       }
 
       .quest-card.is-ready {
@@ -1056,6 +1080,22 @@
                     <option value="off">關</option>
                   </select>
                 </label>
+                <label class="settings-row">
+                  <small>效能模式</small>
+                  <select id="performanceModeSelect">
+                    <option value="auto">自動</option>
+                    <option value="high">鎖高</option>
+                    <option value="low">鎖低</option>
+                  </select>
+                </label>
+                <div class="save-manager" id="saveManager">
+                  <strong>存檔管家</strong>
+                  <textarea id="saveCodeBox" spellcheck="false" aria-label="存檔代碼"></textarea>
+                  <div class="actions">
+                    <button id="exportSaveBtn" type="button">匯出</button>
+                    <button id="importSaveBtn" type="button">匯入</button>
+                  </div>
+                </div>
               </div>
             </section>
           </div>
