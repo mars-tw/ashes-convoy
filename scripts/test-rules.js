@@ -62,6 +62,57 @@ const eventStats = rules.mergeEventStats(
 assert.strictEqual(eventStats.meteor_shower.encounters, 2);
 assert.strictEqual(eventStats.meteor_shower.completions, 1);
 
+const assistVehicle = { x: 98, y: config.LOGIC.vehicleY, radius: 18 };
+const burstTarget = rules.selectAimAssistTarget({
+  vehicle: assistVehicle,
+  enemies: [
+    { id: "near", enemyId: "shambler", x: 99, y: 252, hp: 20, speed: 36, vy: 36 },
+    { id: "fast", enemyId: "runner", x: 140, y: 222, hp: 20, speed: 118, vy: 118 },
+    { id: "burst", enemyId: "bloater", x: 100, y: 312, hp: 20, speed: 34, vy: 34 }
+  ],
+  config
+});
+assert.strictEqual(burstTarget.id, "burst", "aim assist should prioritize bloater burst risk");
+assert.strictEqual(burstTarget.reason, "burst");
+
+const fastTarget = rules.selectAimAssistTarget({
+  vehicle: assistVehicle,
+  enemies: [
+    { id: "near", enemyId: "shambler", x: 99, y: 252, hp: 20, speed: 36, vy: 36 },
+    { id: "fast", enemyId: "runner", x: 140, y: 222, hp: 20, speed: 118, vy: 118 }
+  ],
+  config
+});
+assert.strictEqual(fastTarget.id, "fast", "aim assist should prefer fast runner over nearest shambler");
+
+const recommendationMeta = rules.migrateMeta(
+  {
+    version: config.META_VERSION,
+    parts: 1000,
+    unlockedVehicles: { land_rig: true, sky_barge: true, sea_ark: true, void_runner: true }
+  },
+  { config }
+);
+const bossRecommendation = rules.recommendUpgradeForRun({
+  meta: recommendationMeta,
+  run: { vehicleId: "land_rig", wavesCleared: 5, deathContext: { type: "boss" }, damageTakenBy: { boss: 220 } },
+  config
+});
+assert(["land_armor", "land_resist", "hull"].includes(bossRecommendation.track), "boss deaths should recommend survivability");
+assert(bossRecommendation.reason.includes("Boss"), "boss recommendation should include a reason");
+const mobRecommendation = rules.recommendUpgradeForRun({
+  meta: recommendationMeta,
+  run: { vehicleId: "land_rig", wavesCleared: 3, deathContext: { type: "enemy" }, damageTakenBy: { enemy: 180 } },
+  config
+});
+assert(["weapon", "energy"].includes(mobRecommendation.track), "mob deaths should recommend clear speed");
+const lateRecommendation = rules.recommendUpgradeForRun({
+  meta: recommendationMeta,
+  run: { vehicleId: "sea_ark", wavesCleared: 10, deathContext: { type: "enemy" } },
+  config
+});
+assert(lateRecommendation.track.indexOf("sea_") === 0, "high wave runs should recommend vehicle-specific nodes");
+
 assert(rules.enemyHpScale(4, config) > rules.enemyHpScale(1, config), "enemy hp should scale by wave");
 assert(rules.enemySpeedScale(8, config) > rules.enemySpeedScale(1, config), "enemy speed should scale by wave");
 assert(rules.waveBudget(4, config) > rules.waveBudget(1, config), "wave budget should grow");

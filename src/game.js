@@ -267,6 +267,44 @@
     );
   }
 
+  function addStatMapValue(mapName, key, value) {
+    if (!state || !state.stats) return;
+    const safeKey = key || "unknown";
+    if (!state.stats[mapName]) state.stats[mapName] = {};
+    state.stats[mapName][safeKey] = (state.stats[mapName][safeKey] || 0) + (Number.isFinite(value) ? value : 0);
+  }
+
+  function addDamageSource(source, amount) {
+    addStatMapValue("damageBySource", source || state.vehicleId || "weapon", amount);
+  }
+
+  function addDamageTaken(source, amount) {
+    const key = source && source.type ? source.type : "unknown";
+    addStatMapValue("damageTakenBy", key, amount);
+  }
+
+  function projectileDamageSources(runMods) {
+    const totalDamageAdd = Math.max(0, runMods && runMods.damageAdd ? runMods.damageAdd : 0);
+    const gateDamageAdd = Math.max(0, state.runMods && state.runMods.damageAdd ? state.runMods.damageAdd : 0);
+    const supplyDamageAdd = Math.max(0, totalDamageAdd - gateDamageAdd);
+    const totalMul = 1 + totalDamageAdd;
+    const sources = [{ key: state.vehicleId, ratio: 1 / totalMul }];
+    if (gateDamageAdd > 0) sources.push({ key: "gate_damage", ratio: gateDamageAdd / totalMul });
+    if (supplyDamageAdd > 0) sources.push({ key: "supply_damage", ratio: supplyDamageAdd / totalMul });
+    return sources;
+  }
+
+  function addProjectileDamageSource(projectile, amount) {
+    const sources = projectile && Array.isArray(projectile.damageSources) ? projectile.damageSources : null;
+    if (!sources || !sources.length) {
+      addDamageSource((projectile && projectile.vehicleId) || "weapon", amount);
+      return;
+    }
+    sources.forEach((source) => {
+      addDamageSource(source.key, amount * source.ratio);
+    });
+  }
+
   function makeWavePlan(wave) {
     return rules.generateWave({
       wave,
@@ -484,6 +522,9 @@
         followX: W * 0.5,
         aimX: W * 0.5,
         aimY: 300,
+        assistAimX: W * 0.5,
+        assistAimY: 300,
+        aimAssistTarget: null,
         weaponCooldown: 0,
         recentHitUntil: 0
       },
@@ -512,6 +553,10 @@
         supplyParts: 0,
         supplyRewards: {},
         lastSupplyReward: "",
+        damageTakenBy: {},
+        damageBySource: {},
+        variantKills: {},
+        deathContext: null,
         partsPreview: config.ECONOMY.minRunParts
       },
       blueprintPreviewMeta: rules.deepClone(safeMeta),
@@ -722,15 +767,25 @@
     return getState();
   }
 
-  function damageVehicle(amount) {
+  function damageVehicle(amount, source) {
     if (!state) startRun(meta.selectedVehicle);
     const result = rules.applyVehicleDamage(state.vehicle, amount, state.vehicle.armor);
     state.vehicle = result.vehicle;
+    addDamageTaken(source, result.damage);
     state.vehicle.recentHitUntil = state.time + 0.28;
     const passive = getVehicleConfig(state.vehicleId).passive;
     if (passive && passive.id === "revenge_fire") state.vehicle.recentHitUntil = state.time + passive.duration;
     pulseShake(1.2, 0.18);
-    if (state.vehicle.hp <= 0) finishRun();
+    if (state.vehicle.hp <= 0) {
+      const kind = source && source.type ? source.type : "unknown";
+      state.stats.deathContext = {
+        type: kind,
+        enemyId: source && source.enemyId ? source.enemyId : "",
+        amount: result.damage,
+        wave: state.wave
+      };
+      finishRun();
+    }
     emitState();
     return result;
   }
@@ -741,6 +796,7 @@
     enemy.dead = true;
     state.stats.kills += 1;
     state.stats.score += enemy.score + state.wave * 3;
+    if (enemy.variantId) addStatMapValue("variantKills", enemy.variantId, 1);
     addFloatingText("+1", enemy.x, enemy.y - enemy.radius, { color: "#f0b64a", size: 8, ttl: 0.5, vy: -14 });
     pulseShake(enemy.boss ? 3 : 1.5, enemy.boss ? 0.35 : 0.16);
     if (enemy.boss) {
@@ -831,6 +887,10 @@
         supplyParts: state.stats.supplyParts,
         supplyCratesCollected: state.stats.supplyCratesCollected,
         supplyRewards: state.stats.supplyRewards,
+        deathContext: state.stats.deathContext,
+        damageTakenBy: state.stats.damageTakenBy,
+        damageBySource: state.stats.damageBySource,
+        variantKills: state.stats.variantKills,
         difficultyId: state.difficultyId
       },
       overrides || {}
@@ -877,17 +937,21 @@
   function fireProjectiles(dt) {
     const vehicle = state.vehicle;
     const vehicleConfig = getVehicleConfig(state.vehicleId);
+    const runMods = effectiveRunMods();
     const shot = rules.calculateShotStats({
       vehicleId: state.vehicleId,
       meta,
-      runMods: effectiveRunMods(),
+      runMods,
       config
     });
+    const damageSources = projectileDamageSources(runMods);
     const idleMul = state.input.dragging ? 1 : 1.35;
     vehicle.weaponCooldown -= dt;
     if (vehicle.weaponCooldown > 0) return;
 
-    const direction = normalize(vehicle.aimX - vehicle.x, Math.min(vehicle.aimY, vehicle.y - 60) - vehicle.y);
+    const targetX = Number.isFinite(vehicle.assistAimX) ? vehicle.assistAimX : vehicle.aimX;
+    const targetY = Number.isFinite(vehicle.assistAimY) ? vehicle.assistAimY : vehicle.aimY;
+    const direction = normalize(targetX - vehicle.x, Math.min(targetY, vehicle.y - 60) - vehicle.y);
     const centerAngle = Math.atan2(direction.y, direction.x);
     const count = shot.projectiles;
     const fullDamageIndices = baseProjectileIndexSet(count, shot.baseProjectiles);
@@ -916,6 +980,7 @@
           vx,
           vy,
           damage: shot.damage * (bonusProjectile ? 0.55 : 1) * passiveDamageMul,
+          damageSources,
           bonusProjectile,
           vehicleId: state.vehicleId,
           pierce: shot.pierce,
@@ -1025,11 +1090,11 @@
       if (distance(enemy, vehicle) <= enemy.radius + vehicle.radius) {
         if (enemy.boss) {
           if (enemy.hitCooldown <= 0) {
-            damageVehicle(enemy.contactDamage);
+            damageVehicle(enemy.contactDamage, { type: "boss", enemyId: enemy.enemyId });
             enemy.hitCooldown = 1.15;
           }
         } else {
-          damageVehicle(enemy.contactDamage);
+          damageVehicle(enemy.contactDamage, { type: "enemy", enemyId: enemy.enemyId });
           enemy.dead = true;
           addEffect({
             id: nextId("effect"),
@@ -1054,8 +1119,11 @@
       if (enemy.dead || enemy.id === target.id) return;
       const d = distance(enemy, target);
       if (d <= projectile.splash) {
-        enemy.hp -= projectile.damage * (1 - d / projectile.splash) * 0.7;
+        const splashDamage = projectile.damage * (1 - d / projectile.splash) * 0.7;
+        enemy.hp -= splashDamage;
         enemy.hitFlash = 0.12;
+        state.stats.damageDealt += splashDamage;
+        addProjectileDamageSource(projectile, splashDamage);
         if (enemy.hp <= 0) killEnemy(enemy, "splash");
       }
     });
@@ -1104,7 +1172,7 @@
       hazard.y += hazard.vy * dt;
       hazard.rotation += (hazard.spin || 0) * dt;
       if (distance(hazard, state.vehicle) <= hazard.radius + state.vehicle.radius) {
-        damageVehicle(22);
+        damageVehicle(22, { type: "hazard", enemyId: "meteor" });
         hazard.dead = true;
         addEffect({
           id: nextId("effect"),
@@ -1208,6 +1276,7 @@
           enemy.hp -= damage;
           enemy.hitFlash = 0.12;
           state.stats.damageDealt += damage;
+          addProjectileDamageSource(projectile, damage);
           addFloatingText(Math.round(damage).toString(), enemy.x + 3, enemy.y - enemy.radius - 2, {
             color: projectileVehicle.environment === "space" ? "#5ed4cb" : "#f4ead8",
             size: 6,
@@ -1300,6 +1369,35 @@
     vehicle.x += (targetX - vehicle.x) * Math.min(1, vehicleConfig.moveResponsiveness * 0.28 * dt * 60);
     vehicle.x = rules.clamp(vehicle.x, config.LOGIC.roadLeft + half, config.LOGIC.roadRight - half);
     vehicle.aimY = rules.clamp(vehicle.aimY, config.LOGIC.aimMinY, config.LOGIC.aimMaxY);
+    vehicle.assistAimX = vehicle.aimX;
+    vehicle.assistAimY = vehicle.aimY;
+    vehicle.aimAssistTarget = null;
+    if (meta.settings && meta.settings.aimAssist) {
+      const target = rules.selectAimAssistTarget({
+        vehicle,
+        enemies: state.enemies,
+        maxDistance: config.LOGIC.height * 0.54,
+        config
+      });
+      if (target) {
+        const strength = state.input.dragging ? 0.14 : 0.2;
+        const lead = state.input.dragging ? 0.08 : 0.14;
+        const enemy = state.enemies.find((item) => item.id === target.id);
+        const targetXWithLead = target.x + (enemy ? (enemy.vx || 0) * lead : 0);
+        const targetYWithLead = target.y + (enemy ? (enemy.vy || 0) * lead : 0);
+        vehicle.assistAimX = rules.clamp(vehicle.aimX + (targetXWithLead - vehicle.aimX) * strength, 26, W - 26);
+        vehicle.assistAimY = rules.clamp(
+          vehicle.aimY + (targetYWithLead - vehicle.aimY) * strength,
+          config.LOGIC.aimMinY,
+          vehicle.y - 40
+        );
+        vehicle.aimAssistTarget = {
+          id: target.id,
+          enemyId: target.enemyId,
+          reason: target.reason
+        };
+      }
+    }
   }
 
   function update(dt) {
@@ -1480,21 +1578,23 @@
   function drawAimGuide() {
     if (!state || state.over) return;
     const alpha = state.time < 2 ? 0.72 : 0.32;
+    const guideX = Number.isFinite(state.vehicle.assistAimX) ? state.vehicle.assistAimX : state.vehicle.aimX;
+    const guideY = Number.isFinite(state.vehicle.assistAimY) ? state.vehicle.assistAimY : state.vehicle.aimY;
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.strokeStyle = "#f0b64a";
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(state.vehicle.x, state.vehicle.y - 18);
-    ctx.lineTo(state.vehicle.aimX, state.vehicle.aimY);
+    ctx.lineTo(guideX, guideY);
     ctx.stroke();
     ctx.strokeStyle = "#f4ead8";
     ctx.beginPath();
-    ctx.arc(state.vehicle.aimX, state.vehicle.aimY, 8, 0, Math.PI * 2);
-    ctx.moveTo(state.vehicle.aimX - 12, state.vehicle.aimY);
-    ctx.lineTo(state.vehicle.aimX + 12, state.vehicle.aimY);
-    ctx.moveTo(state.vehicle.aimX, state.vehicle.aimY - 12);
-    ctx.lineTo(state.vehicle.aimX, state.vehicle.aimY + 12);
+    ctx.arc(guideX, guideY, 8, 0, Math.PI * 2);
+    ctx.moveTo(guideX - 12, guideY);
+    ctx.lineTo(guideX + 12, guideY);
+    ctx.moveTo(guideX, guideY - 12);
+    ctx.lineTo(guideX, guideY + 12);
     ctx.stroke();
     if (state.time < 2) {
       drawWorldText("拖曳瞄準", W * 0.5, 118, { size: 10, alpha: 0.92, color: "#f4ead8" });
@@ -2191,7 +2291,15 @@
       hitFlash: state.vehicle.recentHitUntil > state.time
     });
     drawAimGuide();
-    drawSprite("effect_muzzle", "burst", timeMs, state.vehicle.aimX, state.vehicle.aimY, 0.8, { alpha: state.input.dragging ? 0.62 : 0.35 });
+    drawSprite(
+      "effect_muzzle",
+      "burst",
+      timeMs,
+      Number.isFinite(state.vehicle.assistAimX) ? state.vehicle.assistAimX : state.vehicle.aimX,
+      Number.isFinite(state.vehicle.assistAimY) ? state.vehicle.assistAimY : state.vehicle.aimY,
+      0.8,
+      { alpha: state.input.dragging ? 0.62 : 0.35 }
+    );
     drawMessages();
   }
 

@@ -105,6 +105,17 @@ assert.strictEqual(migrated.blueprints.frost_wing, undefined);
 assert.strictEqual(migrated.bestByVehicle.iron_crow, undefined);
 assert.strictEqual(migrated.bestByVehicle.sea_ark.wave, 5);
 assert.strictEqual(migrated.bestByVehicle.ghost, undefined);
+assert.strictEqual(migrated.recovery.pending, false);
+
+const safeRecovery = rules.createSafeRecoveryMeta(
+  { version: config.META_VERSION, parts: 12, recovery: { pending: false } },
+  { message: "boom".repeat(80) },
+  { now: () => "2026-07-06T00:00:00.000Z", config }
+);
+assert.strictEqual(safeRecovery.parts, 12, "safe recovery must preserve existing meta values");
+assert.strictEqual(safeRecovery.recovery.pending, true);
+assert.strictEqual(safeRecovery.recovery.at, "2026-07-06T00:00:00.000Z");
+assert(safeRecovery.recovery.message.length <= 160, "safe recovery message should be bounded");
 
 const oldJson = JSON.stringify({
   selectedVehicle: "dawn_skiff",

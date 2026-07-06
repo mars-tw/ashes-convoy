@@ -70,6 +70,43 @@ function mergeEventStats(metaStats, runStats, config) {
   return output;
 }
 
+function sanitizeCountMap(input, options) {
+  const opts = options || {};
+  const maxKeys = finiteNumber(opts.maxKeys, 16, { min: 1, max: 80, integer: true });
+  const maxValue = finiteNumber(opts.maxValue, 1000000, { min: 1, integer: true });
+  const output = {};
+  if (!input || typeof input !== "object" || Array.isArray(input)) return output;
+  Object.keys(input)
+    .slice(0, maxKeys)
+    .forEach((key) => {
+      const safeKey = String(key).slice(0, 48);
+      const value = finiteNumber(input[key], 0, { min: 0, max: maxValue });
+      if (value > 0) output[safeKey] = value;
+    });
+  return output;
+}
+
+function sanitizeDeathContext(input) {
+  const source = input && typeof input === "object" && !Array.isArray(input) ? input : {};
+  const allowed = { boss: true, enemy: true, hazard: true, quit: true, unknown: true };
+  const type = allowed[source.type] ? source.type : "unknown";
+  return {
+    type,
+    enemyId: typeof source.enemyId === "string" ? source.enemyId.slice(0, 48) : "",
+    amount: finiteNumber(source.amount, 0, { min: 0, max: 100000 }),
+    wave: finiteNumber(source.wave, 0, { min: 0, integer: true })
+  };
+}
+
+function sanitizeRecovery(input) {
+  const source = input && typeof input === "object" && !Array.isArray(input) ? input : {};
+  return {
+    pending: source.pending === true,
+    message: typeof source.message === "string" ? source.message.slice(0, 160) : "",
+    at: typeof source.at === "string" || typeof source.at === "number" ? source.at : null
+  };
+}
+
 function valueFromNow(now) {
   if (typeof now === "function") return now();
   return now == null ? null : now;
@@ -300,6 +337,132 @@ function chooseSupplyReward(rng, config) {
     if (value <= 0) return deepClone(rewards[i]);
   }
   return deepClone(rewards[rewards.length - 1]);
+}
+
+function selectAimAssistTarget(options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const vehicle = opts.vehicle || {};
+  const enemies = Array.isArray(opts.enemies) ? opts.enemies : [];
+  const vehicleX = finiteNumber(vehicle.x, cfg.LOGIC.width * 0.5);
+  const vehicleY = finiteNumber(vehicle.y, cfg.LOGIC.vehicleY || cfg.LOGIC.height * 0.82);
+  const vehicleRadius = finiteNumber(vehicle.radius, 18, { min: 1 });
+  const maxDistance = finiteNumber(opts.maxDistance, cfg.LOGIC.height * 0.52, { min: 80 });
+  let best = null;
+
+  enemies.forEach((enemy, index) => {
+    if (!enemy || enemy.dead === true || finiteNumber(enemy.hp, 1) <= 0) return;
+    const enemyId = typeof enemy.enemyId === "string" ? enemy.enemyId : "";
+    const enemyConfig = cfg.ENEMIES[enemyId] || {};
+    const x = finiteNumber(enemy.x, cfg.LOGIC.width * 0.5);
+    const y = finiteNumber(enemy.y, 0);
+    if (y > cfg.LOGIC.height + 40) return;
+    const dx = x - vehicleX;
+    const dy = y - vehicleY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (!Number.isFinite(dist) || dist > maxDistance) return;
+
+    const speed = finiteNumber(enemy.speed, finiteNumber(enemy.vy, 0));
+    const vy = finiteNumber(enemy.vy, speed);
+    const variantId = typeof enemy.variantId === "string" ? enemy.variantId : "";
+    const isBloater = enemyId === "bloater" || !!enemyConfig.deathBurst;
+    const burstRadius = finiteNumber(enemyConfig.deathBurst && enemyConfig.deathBurst.radius, 0, { min: 0 });
+    const burstThreat = isBloater && dist <= burstRadius + vehicleRadius + 82 && y > vehicleY - 230;
+    const fastThreat =
+      enemyId === "runner" ||
+      variantId.indexOf("runner") >= 0 ||
+      variantId.indexOf("frenzy") >= 0 ||
+      speed >= 82 ||
+      vy >= 82;
+    const tier = burstThreat ? 3 : fastThreat || variantId ? 2 : 1;
+    const reason = tier === 3 ? "burst" : tier === 2 ? "fast" : "nearest";
+    const score = tier * 100000 - dist + Math.max(0, vy) * 0.45 - Math.abs(dx) * 0.08 - index * 0.001;
+
+    if (!best || score > best.score) {
+      best = {
+        id: enemy.id || enemyId || `enemy_${index}`,
+        enemyId,
+        variantId,
+        x,
+        y,
+        distance: dist,
+        reason,
+        score
+      };
+    }
+  });
+
+  return best;
+}
+
+function vehicleSpecialTracks(vehicleId, config) {
+  const cfg = getConfig(config);
+  return Object.keys((cfg.ECONOMY.vehicleUpgradeTracks && cfg.ECONOMY.vehicleUpgradeTracks[vehicleId]) || {});
+}
+
+function firstUpgradeableTrack(meta, vehicleId, tracks, affordableOnly, config) {
+  const cfg = getConfig(config);
+  for (let i = 0; i < tracks.length; i += 1) {
+    const track = tracks[i];
+    const cost = getUpgradeCost(meta, vehicleId, track, cfg);
+    if (cost == null) continue;
+    if (affordableOnly && meta.parts < cost) continue;
+    const def = getUpgradeDefinition(vehicleId, track, cfg);
+    return { vehicleId, track, cost, label: def.label };
+  }
+  return null;
+}
+
+function recommendUpgradeForRun(options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const meta = migrateMeta(opts.meta || cfg.META_DEFAULT, { config: cfg });
+  const run = opts.run || {};
+  const vehicleId = cfg.VEHICLES[run.vehicleId] ? run.vehicleId : cfg.VEHICLES[opts.vehicleId] ? opts.vehicleId : meta.selectedVehicle;
+  const wavesCleared = finiteNumber(run.wavesCleared, 0, { min: 0, integer: true });
+  const deathContext = sanitizeDeathContext(run.deathContext);
+  const damageTakenBy = sanitizeCountMap(run.damageTakenBy);
+  const specialTracks = vehicleSpecialTracks(vehicleId, cfg);
+  const defensiveSpecials = specialTracks.filter((track) => {
+    return track.indexOf("armor") >= 0 || track.indexOf("resist") >= 0 || track.indexOf("evasion") >= 0;
+  });
+  const offensiveSpecials = specialTracks.filter((track) => defensiveSpecials.indexOf(track) < 0);
+  const affordableOnly = opts.affordableOnly !== false;
+  let tracks = ["hull", "weapon", "energy", "gate"].concat(specialTracks);
+  let reason = "用最便宜的可用升級補上下一局基礎戰力。";
+  let profile = "balanced";
+
+  if (wavesCleared >= 10 && specialTracks.length) {
+    tracks = specialTracks.concat(["energy", "weapon", "hull", "gate"]);
+    reason = "已撐到高波段，專屬節點能把這台載具的後期打法放大。";
+    profile = "late_wave";
+  } else if (deathContext.type === "boss" || (damageTakenBy.boss || 0) >= Math.max(1, damageTakenBy.enemy || 0) * 1.15) {
+    tracks = defensiveSpecials.concat(["hull", "weapon", "energy", "gate"], offensiveSpecials);
+    reason = "Boss 壓力是本局主要破口，先補車體或護甲提高容錯。";
+    profile = "boss_survival";
+  } else if (deathContext.type === "enemy" || (damageTakenBy.enemy || 0) > (damageTakenBy.boss || 0)) {
+    tracks = ["weapon", "energy"].concat(offensiveSpecials, ["hull", "gate"], defensiveSpecials);
+    reason = "小怪磨血偏多，先提升清場速度降低被貼身時間。";
+    profile = "mob_clear";
+  }
+
+  const candidate = firstUpgradeableTrack(meta, vehicleId, tracks, affordableOnly, cfg);
+  if (!candidate) return null;
+  return Object.assign(candidate, { reason, profile });
+}
+
+function createSafeRecoveryMeta(meta, errorInfo, options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const next = migrateMeta(meta || cfg.META_DEFAULT, { config: cfg });
+  const info = errorInfo && typeof errorInfo === "object" ? errorInfo : {};
+  const rawMessage = typeof info.message === "string" ? info.message : String(errorInfo || "unknown error");
+  next.recovery = {
+    pending: true,
+    message: rawMessage.slice(0, 160),
+    at: timestampFromNow(opts.now || info.at) || null
+  };
+  return next;
 }
 
 function generateWave(options) {
@@ -917,6 +1080,7 @@ function migrateMeta(raw, options) {
   }
 
   meta.lastRun = input.lastRun && typeof input.lastRun === "object" && !Array.isArray(input.lastRun) ? deepClone(input.lastRun) : null;
+  meta.recovery = sanitizeRecovery(input.recovery);
   return meta;
 }
 
@@ -949,6 +1113,18 @@ function settleRunRewards(options) {
     ? deepClone(run.supplyRewards)
     : {};
   const eventStats = sanitizeEventStats(run.eventStats, cfg);
+  const deathContext = sanitizeDeathContext(run.deathContext);
+  const damageTakenBy = sanitizeCountMap(run.damageTakenBy);
+  const variantKills = sanitizeCountMap(run.variantKills);
+  const damageBySource = sanitizeCountMap(run.damageBySource);
+  const previousRun = sourceMeta.lastRun && typeof sourceMeta.lastRun === "object"
+    ? {
+        wavesCleared: finiteNumber(sourceMeta.lastRun.wavesCleared, 0, { min: 0, integer: true }),
+        kills: finiteNumber(sourceMeta.lastRun.kills, 0, { min: 0, integer: true }),
+        score: finiteNumber(sourceMeta.lastRun.score, 0, { min: 0, integer: true }),
+        earnedParts: finiteNumber(sourceMeta.lastRun.earnedParts, 0, { min: 0, integer: true })
+      }
+    : null;
   const normalizedRun = {
     wavesCleared,
     kills,
@@ -1018,6 +1194,11 @@ function settleRunRewards(options) {
     supplyParts,
     supplyCratesCollected,
     supplyRewards,
+    deathContext,
+    damageTakenBy,
+    variantKills,
+    damageBySource,
+    previousRun,
     earnedParts: totalParts,
     runParts: parts,
     achievementParts,
@@ -1109,6 +1290,9 @@ const DSRules = {
   chooseEnvironmentEvent,
   rollSupplyDrop,
   chooseSupplyReward,
+  selectAimAssistTarget,
+  recommendUpgradeForRun,
+  createSafeRecoveryMeta,
   generateWave,
   defaultRunMods,
   blueprintRequiredForVehicle,

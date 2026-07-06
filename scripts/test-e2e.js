@@ -530,6 +530,71 @@ async function checkInitialPromptAndMessages(page) {
   assert(debug.messagesDrawn > 0, "opening message should be drawn");
 }
 
+async function checkAimAssistToggle(page) {
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.settings.aimAssist = true;
+    window.__test.setMeta(meta);
+    let state = window.__test.getState();
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      vehicle: {
+        aimX: state.vehicle.x,
+        aimY: state.vehicle.y - 170,
+        assistAimX: state.vehicle.x,
+        assistAimY: state.vehicle.y - 170,
+        weaponCooldown: 999
+      }
+    });
+    state = window.__test.getState();
+    window.__test.spawnEnemy("runner", {
+      x: state.vehicle.x + 70,
+      y: state.vehicle.y - 150,
+      hp: 999,
+      speed: 118
+    });
+    window.__test.step(120);
+  });
+  const enabled = await page.evaluate(() => window.__test.getState().vehicle);
+  assert(enabled.aimAssistTarget && enabled.aimAssistTarget.reason === "fast", "aim assist should select the runner threat");
+  assert(enabled.assistAimX > enabled.aimX + 6, "aim assist should gently pull aim toward the runner");
+
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.settings.aimAssist = false;
+    window.__test.setMeta(meta);
+    let state = window.__test.getState();
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      vehicle: {
+        aimX: state.vehicle.x,
+        aimY: state.vehicle.y - 170,
+        assistAimX: state.vehicle.x,
+        assistAimY: state.vehicle.y - 170,
+        aimAssistTarget: null,
+        weaponCooldown: 999
+      }
+    });
+    state = window.__test.getState();
+    window.__test.spawnEnemy("runner", {
+      x: state.vehicle.x + 70,
+      y: state.vehicle.y - 150,
+      hp: 999,
+      speed: 118
+    });
+    window.__test.step(120);
+    meta.settings.aimAssist = true;
+    window.__test.setMeta(meta);
+    window.__test.setState({ enemies: [], projectiles: [], gates: [] });
+  });
+  const disabled = await page.evaluate(() => window.__test.getState().vehicle);
+  assert(Math.abs(disabled.assistAimX - disabled.aimX) < 1, "disabled aim assist should leave aim untouched");
+}
+
 async function sampleFps(page) {
   return page.evaluate(async () => {
     const stamps = [];
@@ -980,6 +1045,16 @@ async function checkSupplyDropPickupAndSettlement(page) {
     nodes.map((node) => node.innerText.replace(/\s+/g, " ").trim())
   );
   assert(settlementRows.some((row) => row.includes("補給箱")), `settlement should list supply cache source: ${settlementRows.join(" | ")}`);
+  await page.click("#runAnalysisToggleBtn");
+  const analysisSections = await page.locator("#runAnalysisPanel .run-analysis-section").evaluateAll((nodes) =>
+    nodes.map((node) => ({
+      title: node.querySelector("strong").textContent,
+      body: node.querySelector("small").textContent
+    }))
+  );
+  assert(analysisSections.some((section) => section.title === "事件"), "run analysis should include event section");
+  assert(analysisSections.some((section) => section.title === "補給" && section.body.includes("補給箱")), "run analysis should include supply section");
+  assert(analysisSections.some((section) => section.title === "變種"), "run analysis should include variant section");
 }
 
 async function checkVehicleSpecificUpgradePurchase(page) {
@@ -1092,6 +1167,10 @@ async function deathSettlementUpgradeAndReload(page) {
     text: node.innerText
   }));
   assert(!recommendation.hidden && recommendation.text.includes("建議升級"), `settlement should show recommended upgrade CTA: ${recommendation.text}`);
+  assert(
+    recommendation.text.includes("高波段") || recommendation.text.includes("Boss") || recommendation.text.includes("小怪"),
+    `settlement recommendation should include a reason: ${recommendation.text}`
+  );
   let meta = await page.evaluate(() => window.__test.getMeta());
   assert(meta.parts >= 109, "settlement should persist earned parts");
   const garageCta = await page.locator("#garageBtn").evaluate((button) => ({ text: button.textContent, className: button.className }));
@@ -1161,6 +1240,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await expectCanvasHasPixels(page);
   await checkInitialPromptAndMessages(page);
   await checkOpeningHordeGateAndFps(page);
+  await checkAimAssistToggle(page);
   await dragAim(page);
   await killEnemiesAndEarnPreviewParts(page);
   await shootGate(page);

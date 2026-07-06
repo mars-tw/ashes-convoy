@@ -65,6 +65,29 @@
     els.garageStatus.textContent = text || "";
   }
 
+  function handleGlobalErrorRecovery(message) {
+    try {
+      meta = rules.createSafeRecoveryMeta(meta, { message, at: nowIso() }, { config });
+      saveMeta();
+      if (els.garageStatus) setStatus("偵測到異常，已安全保留存檔。重新整理後可繼續。");
+    } catch (error) {
+      if (root.console && typeof root.console.error === "function") root.console.error(error);
+    }
+  }
+
+  function installErrorRecovery() {
+    if (root.__ashesRecoveryInstalled) return;
+    root.__ashesRecoveryInstalled = true;
+    root.addEventListener("error", (event) => {
+      handleGlobalErrorRecovery(event && event.message ? event.message : "window error");
+    });
+    root.addEventListener("unhandledrejection", (event) => {
+      const reason = event && event.reason;
+      const message = reason && reason.message ? reason.message : String(reason || "unhandled rejection");
+      handleGlobalErrorRecovery(message);
+    });
+  }
+
   function getShelterApi() {
     return root.DSShelterScene;
   }
@@ -399,24 +422,16 @@
   }
 
   function recommendedUpgradeForRun(run) {
-    const vehicleId = run && config.VEHICLES[run.vehicleId] ? run.vehicleId : meta.selectedVehicle;
-    const specialTracks = Object.keys((config.ECONOMY.vehicleUpgradeTracks && config.ECONOMY.vehicleUpgradeTracks[vehicleId]) || {});
-    const priority = ["hull", "weapon", "energy", "gate"].concat(specialTracks);
-    for (let i = 0; i < priority.length; i += 1) {
-      const track = priority[i];
-      const cost = rules.getUpgradeCost(meta, vehicleId, track, config);
-      if (cost != null && meta.parts >= cost) {
-        const def = rules.getUpgradeDefinition(vehicleId, track, config);
-        return {
-          vehicleId,
-          track,
-          cost,
-          label: def.label,
-          delta: previewUpgradeDelta(vehicleId, track, meta)
-        };
-      }
-    }
-    return null;
+    const recommendation = rules.recommendUpgradeForRun({
+      meta,
+      run,
+      affordableOnly: true,
+      config
+    });
+    if (!recommendation) return null;
+    return Object.assign({}, recommendation, {
+      delta: previewUpgradeDelta(recommendation.vehicleId, recommendation.track, meta)
+    });
   }
 
   function renderVehicles() {
@@ -543,6 +558,102 @@
     });
   }
 
+  function countMapTotal(map) {
+    return Object.keys(map || {}).reduce((sum, key) => sum + (Number(map[key]) || 0), 0);
+  }
+
+  function topCountMapEntry(map) {
+    let best = null;
+    Object.keys(map || {}).forEach((key) => {
+      const value = Number(map[key]) || 0;
+      if (value <= 0) return;
+      if (!best || value > best.value) best = { key, value };
+    });
+    return best;
+  }
+
+  function supplyRewardSummary(rewards) {
+    const labels = config.SUPPLY_DROPS && config.SUPPLY_DROPS.rewards ? config.SUPPLY_DROPS.rewards : {};
+    const parts = Object.keys(rewards || {}).map((id) => {
+      const reward = labels[id];
+      return `${reward ? reward.label : id} x${rewards[id]}`;
+    });
+    return parts.length ? parts.join("、") : "本局無補給效果";
+  }
+
+  function eventAnalysisLine(run) {
+    const events = config.ENVIRONMENT_EVENTS || {};
+    const lines = Object.keys(run.eventStats || {})
+      .filter((id) => {
+        const record = run.eventStats[id];
+        return record && (record.encounters > 0 || record.completions > 0);
+      })
+      .map((id) => {
+        const event = Object.values(events).find((item) => item.id === id);
+        const record = run.eventStats[id];
+        return `${event ? event.label : id} 遭遇 ${record.encounters || 0} / 完成 ${record.completions || 0}`;
+      });
+    const bonus = run.partsBreakdown && run.partsBreakdown.eventBonus ? `，事件收益 +${run.partsBreakdown.eventBonus}` : "";
+    return `${lines.length ? lines.join("、") : "本局無事件"}${bonus}`;
+  }
+
+  function variantAnalysisLine(run) {
+    const total = countMapTotal(run.variantKills);
+    if (!total) return "本局無變種擊殺";
+    return Object.keys(run.variantKills)
+      .map((id) => `${id} x${run.variantKills[id]}`)
+      .join("、");
+  }
+
+  function damageSourceLine(run) {
+    const top = topCountMapEntry(run.damageBySource);
+    if (!top) return "尚無有效傷害來源資料";
+    const labels = {
+      gate_damage: "增益門傷害加成",
+      supply_damage: "補給傷害加成"
+    };
+    const vehicle = config.VEHICLES[top.key];
+    const total = countMapTotal(run.damageBySource) || top.value;
+    const pct = Math.round((top.value / total) * 100);
+    return `${vehicle ? vehicle.name : labels[top.key] || top.key} ${pct}%`;
+  }
+
+  function comparisonLine(run) {
+    const previous = run.previousRun;
+    if (!previous) return "上局比較：尚無上一局資料";
+    const waveDelta = (run.wavesCleared || 0) - (previous.wavesCleared || 0);
+    const scoreDelta = (run.score || 0) - (previous.score || 0);
+    if (waveDelta > 0 || scoreDelta > 0) return `上局比較：更好（波次 ${waveDelta >= 0 ? "+" : ""}${waveDelta}，分數 ${scoreDelta >= 0 ? "+" : ""}${scoreDelta}）`;
+    if (waveDelta < 0 || scoreDelta < 0) return `上局比較：更差（波次 ${waveDelta}，分數 ${scoreDelta}）`;
+    return "上局比較：持平";
+  }
+
+  function renderRunAnalysis(run) {
+    if (!els.runAnalysisPanel || !run) return;
+    const supplyParts = run.partsBreakdown && run.partsBreakdown.supplyParts ? run.partsBreakdown.supplyParts : run.supplyParts || 0;
+    const sections = [
+      ["事件", eventAnalysisLine(run)],
+      ["補給", `補給箱 ${run.supplyCratesCollected || 0} 個，零件 +${supplyParts}，${supplyRewardSummary(run.supplyRewards)}`],
+      ["變種", variantAnalysisLine(run)],
+      ["傷害", `主要傷害來源：${damageSourceLine(run)}`],
+      ["比較", comparisonLine(run)]
+    ];
+    els.runAnalysisPanel.textContent = "";
+    sections.forEach(([title, body]) => {
+      const section = root.document.createElement("div");
+      section.className = "run-analysis-section";
+      section.dataset.analysisSection = title;
+      const strong = root.document.createElement("strong");
+      strong.textContent = title;
+      const small = root.document.createElement("small");
+      small.textContent = body;
+      section.append(strong, small);
+      els.runAnalysisPanel.appendChild(section);
+    });
+    els.runAnalysisPanel.hidden = true;
+    if (els.runAnalysisToggleBtn) els.runAnalysisToggleBtn.textContent = "本局分析";
+  }
+
   function renderGarage() {
     els.garageMeta.textContent = `廢土零件 ${meta.parts} · 最遠第 ${meta.bestWave} 波 · 擊殺 ${meta.totalKills}`;
     updateStartImageUi();
@@ -550,6 +661,9 @@
     renderUpgrades();
     renderEventCodex();
     renderAchievements();
+    if (meta.recovery && meta.recovery.pending) {
+      setStatus("偵測到上次異常，已保留存檔。");
+    }
     if (!hasFullMetaBackground()) {
       setSectionVisibility("garage");
     } else if (!els.metaDrawer.hidden && shelter.drawerKind) {
@@ -759,7 +873,7 @@
     recommendedUpgradeTrack = recommendation ? recommendation.track : "";
     if (recommendation) {
       els.settlementRecommendationTitle.textContent = `建議升級：${recommendation.label}`;
-      els.settlementRecommendationDetail.textContent = `${config.VEHICLES[recommendation.vehicleId].name} · ${recommendation.delta} · 消耗 ${recommendation.cost} 零件`;
+      els.settlementRecommendationDetail.textContent = `${config.VEHICLES[recommendation.vehicleId].name} · ${recommendation.delta} · ${recommendation.reason} · 消耗 ${recommendation.cost} 零件`;
       els.recommendedUpgradeBtn.textContent = `前往升級 ${recommendation.label}`;
       els.settlementRecommendation.hidden = false;
     } else {
@@ -767,6 +881,7 @@
       els.settlementRecommendationTitle.textContent = "";
       els.settlementRecommendationDetail.textContent = "";
     }
+    renderRunAnalysis(run);
   }
 
   function showSettlement(result) {
@@ -889,6 +1004,10 @@
     els.againBtn.addEventListener("click", startSelectedRun);
     els.garageBtn.addEventListener("click", showGarage);
     els.recommendedUpgradeBtn.addEventListener("click", openRecommendedUpgrade);
+    els.runAnalysisToggleBtn.addEventListener("click", () => {
+      els.runAnalysisPanel.hidden = !els.runAnalysisPanel.hidden;
+      els.runAnalysisToggleBtn.textContent = els.runAnalysisPanel.hidden ? "本局分析" : "收合分析";
+    });
     els.resetBtn.addEventListener("click", clearStorage);
     els.selectSkiffBtn.addEventListener("click", () => {
       const ids = Object.keys(config.VEHICLES).filter((vehicleId) => isUnlocked(vehicleId));
@@ -989,6 +1108,8 @@
       "settlementRecommendationTitle",
       "settlementRecommendationDetail",
       "recommendedUpgradeBtn",
+      "runAnalysisToggleBtn",
+      "runAnalysisPanel",
       "againBtn",
       "garageBtn"
     ].forEach((id) => {
@@ -1000,6 +1121,7 @@
   function init() {
     collectElements();
     syncGateChoiceLayerSize();
+    installErrorRecovery();
     loadMeta();
     bindEvents();
     game.init({

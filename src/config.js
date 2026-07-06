@@ -721,6 +721,11 @@ const META_DEFAULT = {
     seenGate: false,
     seenGarage: false
   },
+  recovery: {
+    pending: false,
+    message: "",
+    at: null
+  },
   lastRun: null
 };
 
