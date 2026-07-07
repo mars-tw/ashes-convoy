@@ -52,6 +52,8 @@ jobs:
           npx playwright install --with-deps chromium
       - name: 執行真瀏覽器 E2E
         run: npm run test:e2e
+      - name: 執行 RWD 矩陣守門（9 視口零違規）
+        run: npm run test:rwd
 
   deploy:
     name: 部署 GitHub Pages
