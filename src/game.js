@@ -5,6 +5,7 @@
   const rules = root.DSRules;
   const renderer = root.DSSpriteRenderer;
   const fx = root.DSFx;
+  const audio = root.DSAudio || null;
 
   if (!config || !rules || !renderer || !fx) {
     throw new Error("AshesGame requires sprites, sprite-renderer, config, rules and fx to be loaded first.");
@@ -91,6 +92,16 @@
   function fxLevelSetting() {
     const level = meta.settings && meta.settings.fxLevel;
     return level === "reduced" || level === "off" ? level : "full";
+  }
+
+  // ── DSAudio 音效整合：settings.sound === false 時完全靜音（不呼叫引擎、不建任何 node）──
+  function soundEnabled() {
+    return !(meta.settings && meta.settings.sound === false);
+  }
+
+  function playSound(name, variant) {
+    if (!audio || !soundEnabled()) return;
+    audio.play(name, variant ? { variant } : undefined);
   }
 
   function fxPoolQuality() {
@@ -760,6 +771,7 @@
     }
     state.messages.push({ text: `補給箱：${reward.label}`, time: state.time, ttl: 1.8 });
     pushEventBanner("補給箱", reward.label, { kind: "supply", ttl: 1.5 });
+    playSound("pickup");
     addEffect({
       id: nextId("effect"),
       kind: "supply_pickup",
@@ -871,6 +883,7 @@
     if (state.wavePlan && state.wavePlan.boss) state.waveBannerKind = "boss";
     activateWaveEnvironmentEvent();
     resetRunFx(initial.seed, initial.vehicle.x);
+    playSound("waveStart");
     state.messages.push({ text: "拖曳瞄準", time: 0, ttl: 2 });
     return state;
   }
@@ -961,6 +974,7 @@
     if (enemy.boss) {
       pushEventBanner("Boss 來襲", enemyConfig.name, { kind: "boss", ttl: 2.4 });
       state.messages.push({ text: `${enemyConfig.name} 逼近`, time: state.time, ttl: 2.1 });
+      playSound("bossWarn");
     }
     if (!opts.silent) emitState();
     return publicEntity(enemy);
@@ -1023,6 +1037,7 @@
     };
     state.messages.push({ text: `已選：${config.GATES[gateId].label}`, time: state.time, ttl: 1.7 });
     pushEventBanner("增益已選", config.GATES[gateId].label, { kind: "gate", ttl: 1.6 });
+    playSound("gateChoice");
     addFloatingText(config.GATES[gateId].shortLabel, state.vehicle.x, state.vehicle.y - 54, {
       color: "#f0b64a",
       size: 9,
@@ -1066,6 +1081,7 @@
     state.vehicle = result.vehicle;
     addDamageTaken(source, result.damage);
     recordRecentDamage(source, result.damage);
+    playSound("hurt");
     state.vehicle.recentHitUntil = state.time + 0.28;
     const passive = getVehicleConfig(state.vehicleId).passive;
     if (passive && passive.id === "revenge_fire") state.vehicle.recentHitUntil = state.time + passive.duration;
@@ -1098,6 +1114,7 @@
     if (FXC && fxEnabled()) {
       fx.spawnKillBurst(fxState, FXC, fx.enemyFxKind(enemyConfig), enemy.x, enemy.y, fxRng);
     }
+    playSound(enemy.boss ? "bossKill" : "kill");
     if (enemy.boss) {
       // Boss 死亡演出：多段爆炸由 killBurst 的 delay 規格構成；此旗標驅動純視覺慢放感
       fxBossKillFx = { x: enemy.x, y: enemy.y, start: state.time };
@@ -1240,6 +1257,7 @@
     state.waveBannerKind = state.wavePlan && state.wavePlan.boss ? "boss" : "wave";
     state.waveBannerStart = state.time;
     state.waveBannerNumber = state.wave;
+    playSound("waveStart");
     emitState();
     return getState();
   }
@@ -1318,6 +1336,7 @@
         age: 0,
         alpha: 0.9
       });
+      playSound("shoot", state.vehicleId);
       vehicle.weaponCooldown += shot.fireInterval * idleMul;
       shots += 1;
     }
@@ -1400,6 +1419,7 @@
             enemy.telegraphText = bossPhaseLabel(phase.action);
             enemy.telegraphUntil = state.time + 1.15;
             pushEventBanner("Boss 前搖", `${enemyConfig.name}：${enemy.telegraphText}`, { kind: "boss", ttl: 1.4 });
+            playSound("bossWarn");
           }
         });
       }
@@ -1542,6 +1562,7 @@
         if (distance(projectile, hazard) <= projectile.radius + hazard.radius) {
           hazard.hp -= projectile.damage;
           projectile.life = -1;
+          playSound("hit");
           if (FXC && fxEnabled()) {
             fxHitOpts.x = projectile.x;
             fxHitOpts.y = projectile.y;
@@ -1612,6 +1633,7 @@
             damageNumber: true,
             amount: damage
           });
+          playSound("hit");
           if (FXC && fxEnabled()) {
             fxHitOpts.x = projectile.x;
             fxHitOpts.y = projectile.y;
@@ -1690,6 +1712,7 @@
       state.waveBannerKind = state.wavePlan && state.wavePlan.boss ? "boss" : "wave";
       state.waveBannerStart = state.time;
       state.waveBannerNumber = state.wave;
+      playSound("waveStart");
       state.messages.push({ text: `第 ${state.wave} 波`, time: state.time, ttl: 1.4 });
       updatePartsPreview();
     }
@@ -3069,6 +3092,8 @@
     preloadVehicleImages();
     preloadEnemyImages();
     bindInput();
+    // 音效解鎖：首次 pointerdown / keydown resume AudioContext（autoplay 政策）
+    if (audio && typeof audio.installUnlockHandlers === "function") audio.installUnlockHandlers(root);
     draw();
     if (!rafStarted) {
       rafStarted = true;

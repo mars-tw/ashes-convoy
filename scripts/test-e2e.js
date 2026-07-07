@@ -282,12 +282,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R47") && swText.includes("src/ui.js?v=R47") && swText.includes("src/game.js?v=R47") && swText.includes("src/rules.js?v=R47"),
+      swCachesJs: swText.includes("src/version.js?v=R48") && swText.includes("src/ui.js?v=R48") && swText.includes("src/game.js?v=R48") && swText.includes("src/rules.js?v=R48"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R47"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R47"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R47"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R48"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R48"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R48"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -296,7 +296,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R47", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R48", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -355,6 +355,7 @@ async function checkShortDesktopReachability(page) {
   for (const selector of [
     "#aimAssistLevelSelect",
     "#screenShakeToggle",
+    "#soundToggle",
     "#fxLevelSelect",
     "#damageTextDensitySelect",
     "#performanceModeSelect",
@@ -500,7 +501,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R47"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R48"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -1821,6 +1822,184 @@ async function runEnvironmentBackgroundFallbackScenario(browser, baseUrl) {
   console.log("E2E environment background fallback PASS");
 }
 
+function audioCountersProbe(page) {
+  return page.evaluate(() => ({
+    contexts: window.__audioCounters.contexts,
+    oscillators: window.__audioCounters.oscillators,
+    gains: window.__audioCounters.gains,
+    bufferSources: window.__audioCounters.bufferSources,
+    resumes: window.__audioCounters.resumes,
+    total: window.__audioCounters.oscillators + window.__audioCounters.gains + window.__audioCounters.bufferSources
+  }));
+}
+
+async function shootOnceForAudio(page) {
+  await page.evaluate(() => {
+    const state = window.__test.getState();
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      vehicle: { hp: state.vehicle.maxHp, aimX: state.vehicle.x, aimY: state.vehicle.y - 170, weaponCooldown: 0 }
+    });
+    const aimed = window.__test.getState();
+    window.__test.spawnEnemy("shambler", { x: aimed.vehicle.x, y: aimed.vehicle.y - 170, hp: 1, speed: 0 });
+    window.__test.step(900);
+  });
+}
+
+async function runAudioScenario(browser, baseUrl) {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const errors = [];
+  page.on("console", (message) => {
+    if (message.type() === "error" && !isIgnorableConsoleError(message.text())) errors.push(message.text());
+  });
+  page.on("pageerror", (error) => errors.push(error.message));
+
+  // 注入 fake AudioContext：計數 createOscillator / createGain / createBufferSource / resume。
+  await page.addInitScript(() => {
+    window.__audioCounters = { contexts: 0, oscillators: 0, gains: 0, bufferSources: 0, filters: 0, resumes: 0 };
+    function fakeParam(value) {
+      return {
+        value,
+        setValueAtTime() { return this; },
+        linearRampToValueAtTime() { return this; },
+        exponentialRampToValueAtTime() { return this; },
+        cancelScheduledValues() { return this; }
+      };
+    }
+    function fakeNode(extra) {
+      return Object.assign(
+        {
+          connect(target) { return target; },
+          disconnect() {}
+        },
+        extra || {}
+      );
+    }
+    class FakeAudioContext {
+      constructor() {
+        window.__audioCounters.contexts += 1;
+        this.state = "suspended";
+        this.sampleRate = 8000;
+        this.destination = fakeNode();
+      }
+      get currentTime() {
+        return performance.now() / 1000;
+      }
+      createGain() {
+        window.__audioCounters.gains += 1;
+        return fakeNode({ gain: fakeParam(1) });
+      }
+      createOscillator() {
+        window.__audioCounters.oscillators += 1;
+        return fakeNode({ type: "sine", frequency: fakeParam(440), detune: fakeParam(0), start() {}, stop() {} });
+      }
+      createBuffer(channels, length, rate) {
+        return { numberOfChannels: channels, length, sampleRate: rate, getChannelData: () => new Float32Array(length) };
+      }
+      createBufferSource() {
+        window.__audioCounters.bufferSources += 1;
+        return fakeNode({ buffer: null, loop: false, playbackRate: fakeParam(1), start() {}, stop() {} });
+      }
+      createBiquadFilter() {
+        window.__audioCounters.filters += 1;
+        return fakeNode({ type: "lowpass", frequency: fakeParam(350), Q: fakeParam(1) });
+      }
+      resume() {
+        window.__audioCounters.resumes += 1;
+        this.state = "running";
+        return Promise.resolve();
+      }
+      suspend() {
+        this.state = "suspended";
+        return Promise.resolve();
+      }
+      close() {
+        this.state = "closed";
+        return Promise.resolve();
+      }
+    }
+    window.AudioContext = FakeAudioContext;
+    window.webkitAudioContext = FakeAudioContext;
+  });
+
+  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
+  await page.evaluate(() => window.__test.clearStorage());
+
+  // 1) 預設音效開啟：出勤射擊後應建立 AudioContext 與合成節點（觸發數 > 0）。
+  const defaults = await page.evaluate(() => ({
+    sound: window.__test.getMeta().settings.sound,
+    migrated: window.DSRules.migrateMeta(null, { config: window.DSConfig }).settings.sound
+  }));
+  assert.strictEqual(defaults.sound, true, "fresh meta should enable sound by default");
+  assert.strictEqual(defaults.migrated, true, "migrateMeta should default sound to true");
+  await page.evaluate(() => window.__test.startRun("land_rig"));
+  await shootOnceForAudio(page);
+  const afterShoot = await audioCountersProbe(page);
+  assert(afterShoot.contexts >= 1, "sortie shooting should lazily create one AudioContext");
+  assert(afterShoot.oscillators > 0, `shooting should create oscillator nodes, got ${afterShoot.oscillators}`);
+  assert(afterShoot.gains > 0, `shooting should create gain nodes, got ${afterShoot.gains}`);
+  assert(afterShoot.bufferSources > 0, `land shots should include noise buffer layers, got ${afterShoot.bufferSources}`);
+
+  // 2) 首次使用者互動（pointerdown）應 resume 解鎖 AudioContext。
+  const canvasBox = await page.locator("#gameCanvas").boundingBox();
+  await page.mouse.click(canvasBox.x + canvasBox.width * 0.5, canvasBox.y + canvasBox.height * 0.6);
+  await page.waitForFunction(() => window.__audioCounters.resumes >= 1);
+
+  // 3) 設定關閉音效：立即靜音（不再建任何 node）且持久化。
+  await page.evaluate(() => window.__test.showGarage());
+  await waitForMetaBackground(page);
+  await openOperationsPanel(page);
+  await page.locator("#soundToggle").uncheck();
+  const muted = await page.evaluate(() => ({
+    sound: window.__test.getMeta().settings.sound,
+    stored: JSON.parse(localStorage.getItem(window.DSConfig.STORAGE_KEY)).settings.sound,
+    ui: document.getElementById("soundToggle").checked
+  }));
+  assert.strictEqual(muted.sound, false, "sound toggle off should persist in meta settings");
+  assert.strictEqual(muted.stored, false, "sound=false should be written to localStorage");
+  assert.strictEqual(muted.ui, false, "sound toggle UI should render off");
+  await page.evaluate(() => window.__test.startRun("land_rig"));
+  const beforeMuted = await audioCountersProbe(page);
+  await shootOnceForAudio(page);
+  await page.evaluate(() => {
+    window.__test.grantGate("repair");
+    window.__test.damageVehicle(5, { type: "enemy", enemyId: "shambler" });
+    window.__test.pushWave(2);
+    window.__test.step(600);
+  });
+  const afterMuted = await audioCountersProbe(page);
+  assert.strictEqual(afterMuted.total, beforeMuted.total, "sound off must not create any audio nodes");
+
+  // 4) reload 後音效關閉設定應保留；重新開啟後觸發數恢復增加。
+  await page.reload({ waitUntil: "networkidle" });
+  await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
+  const reloaded = await page.evaluate(() => window.__test.getMeta().settings.sound);
+  assert.strictEqual(reloaded, false, "sound=false should survive reload");
+  await waitForMetaBackground(page);
+  await openOperationsPanel(page);
+  const reloadedToggle = await page.locator("#soundToggle").isChecked();
+  assert.strictEqual(reloadedToggle, false, "sound toggle should render persisted off state after reload");
+  await page.locator("#soundToggle").check();
+  const reEnabled = await page.evaluate(() => ({
+    sound: window.__test.getMeta().settings.sound,
+    stored: JSON.parse(localStorage.getItem(window.DSConfig.STORAGE_KEY)).settings.sound
+  }));
+  assert.strictEqual(reEnabled.sound, true, "sound toggle on should persist again");
+  assert.strictEqual(reEnabled.stored, true, "sound=true should be written back to localStorage");
+  await page.evaluate(() => window.__test.startRun("land_rig"));
+  const beforeReEnabled = await audioCountersProbe(page);
+  await shootOnceForAudio(page);
+  const afterReEnabled = await audioCountersProbe(page);
+  assert(afterReEnabled.total > beforeReEnabled.total, "re-enabled sound should create audio nodes again");
+
+  assert.deepStrictEqual(errors, [], "console/page errors during audio scenario");
+  await page.close();
+  console.log("E2E audio synthesis PASS");
+}
+
 async function runServiceWorkerOfflineScenario(browser, baseUrl) {
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
@@ -1843,7 +2022,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r47")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r48")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -1861,7 +2040,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r47")), "R47 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r48")), "R48 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());
@@ -1903,6 +2082,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     await runVehicleImageFallbackScenario(browser, url);
     await runZombieImageFallbackScenario(browser, url);
     await runEnvironmentBackgroundFallbackScenario(browser, url);
+    await runAudioScenario(browser, url);
     await runServiceWorkerOfflineScenario(browser, url);
     console.log("E2E tests PASS");
   } finally {

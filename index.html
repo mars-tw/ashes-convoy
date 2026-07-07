@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#111317" />
-    <link rel="manifest" href="manifest.webmanifest?v=R47" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R47" />
+    <link rel="manifest" href="manifest.webmanifest?v=R48" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R48" />
     <title>灰燼護航</title>
     <style>
       :root {
@@ -1131,6 +1131,10 @@
                   <input id="screenShakeToggle" type="checkbox" />
                 </label>
                 <label class="settings-row">
+                  <small>音效</small>
+                  <input id="soundToggle" type="checkbox" />
+                </label>
+                <label class="settings-row">
                   <small>畫面特效</small>
                   <select id="fxLevelSelect">
                     <option value="full">完整</option>
@@ -1224,7 +1228,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R47";
+        var key = "ashes_convoy_html_boot_reload_R48";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -1241,14 +1245,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R47"></script>
-    <script src="src/sprites.js?v=R47"></script>
-    <script src="src/sprite-renderer.js?v=R47"></script>
-    <script src="src/shelter-scene.js?v=R47"></script>
-    <script src="src/config.js?v=R47"></script>
-    <script src="src/rules.js?v=R47"></script>
-    <script src="src/fx.js?v=R47"></script>
-    <script src="src/game.js?v=R47"></script>
-    <script src="src/ui.js?v=R47"></script>
+    <script src="src/version.js?v=R48"></script>
+    <script src="src/sprites.js?v=R48"></script>
+    <script src="src/sprite-renderer.js?v=R48"></script>
+    <script src="src/shelter-scene.js?v=R48"></script>
+    <script src="src/config.js?v=R48"></script>
+    <script src="src/rules.js?v=R48"></script>
+    <script src="src/fx.js?v=R48"></script>
+    <script src="src/audio.js?v=R48"></script>
+    <script src="src/game.js?v=R48"></script>
+    <script src="src/ui.js?v=R48"></script>
   </body>
 </html>
