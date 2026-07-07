@@ -21,6 +21,10 @@ const APP_SHELL_PATHS = [
 ];
 const ASSET_PATHS = [
   "assets/ui/start.png",
+  "assets/env/land.png",
+  "assets/env/air.png",
+  "assets/env/sea.png",
+  "assets/env/space.png",
   "assets/vehicles/land.png",
   "assets/vehicles/air.png",
   "assets/vehicles/sea.png",

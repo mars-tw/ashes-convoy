@@ -57,6 +57,7 @@ indexLocalResources(indexHtml).forEach((resource) => expectedCached.add(resource
 manifest.icons.forEach((icon) => expectedCached.add(icon.src));
 listFiles("src", ".js").forEach((resource) => expectedCached.add(resource));
 expectedCached.add(config.START_SCREEN.image);
+listFiles("assets/env", ".png").forEach((resource) => expectedCached.add(resource));
 Object.values(config.VEHICLES).forEach((vehicle) => expectedCached.add(vehicle.spriteImage));
 Object.values(config.ENEMIES).forEach((enemy) => {
   if (enemy.spriteImage) expectedCached.add(enemy.spriteImage);
@@ -72,7 +73,7 @@ expectedCached.forEach((resource) => {
   assert(fileExists(resource), `service worker cache entry does not exist: ${resource}`);
 });
 
-assert.strictEqual(version.APP_VERSION, "R42");
+assert.strictEqual(version.APP_VERSION, "R43");
 assert.strictEqual(version.CACHE_VERSION, `ashes-convoy-${version.APP_VERSION.toLowerCase()}-v1`);
 assert.strictEqual(config.APP_VERSION, version.APP_VERSION, "config APP_VERSION should use src/version.js");
 assert.strictEqual(config.CACHE_VERSION, version.CACHE_VERSION, "config CACHE_VERSION should use src/version.js");

@@ -44,6 +44,7 @@
     enemyShadowDrawn: 0,
     enemyImageStatus: {}
   };
+  const environmentImages = {};
   const vehicleImages = {};
   const enemyImages = {};
   const enemySpriteOptions = { flipX: false, alpha: 1 };
@@ -119,6 +120,33 @@
 
   function vehicleImageStatus(vehicleId) {
     const record = vehicleImages[vehicleId];
+    if (!record) return "none";
+    if (record.status === "loaded" && record.image.complete && record.image.naturalWidth > 0) return "loaded";
+    return record.status;
+  }
+
+  function preloadEnvironmentImages() {
+    if (typeof root.Image !== "function") return;
+    Object.keys(config.ENVIRONMENT_BACKGROUNDS || {}).forEach((environment) => {
+      const src = config.ENVIRONMENT_BACKGROUNDS[environment];
+      if (!src || environmentImages[environment]) return;
+      const record = { image: new root.Image(), status: "loading", src };
+      record.image.onload = () => {
+        record.status = "loaded";
+        draw();
+      };
+      record.image.onerror = () => {
+        record.status = "failed";
+        draw();
+      };
+      record.image.decoding = "async";
+      record.image.src = src;
+      environmentImages[environment] = record;
+    });
+  }
+
+  function environmentImageStatus(environment) {
+    const record = environmentImages[environment];
     if (!record) return "none";
     if (record.status === "loaded" && record.image.complete && record.image.naturalWidth > 0) return "loaded";
     return record.status;
@@ -1779,6 +1807,13 @@
   function drawBackground(timeMs) {
     const environment = currentEnvironment();
     renderDebug.environment = environment;
+    renderDebug.backgroundImageStatus = environmentImageStatus(environment);
+    renderDebug.backgroundImagePath =
+      config.ENVIRONMENT_BACKGROUNDS && config.ENVIRONMENT_BACKGROUNDS[environment]
+        ? config.ENVIRONMENT_BACKGROUNDS[environment]
+        : "";
+    if (drawRasterEnvironmentBackground(environment)) return;
+    renderDebug.backgroundFallbackDrawn = true;
     if (environment === "air") {
       drawAirBackground(timeMs);
     } else if (environment === "sea") {
@@ -1788,6 +1823,24 @@
     } else {
       drawLandBackground(timeMs);
     }
+  }
+
+  function drawRasterEnvironmentBackground(environment) {
+    const record = environmentImages[environment];
+    if (!record || environmentImageStatus(environment) !== "loaded") return false;
+    const image = record.image;
+    const tileHeight = W * (image.naturalHeight / Math.max(1, image.naturalWidth));
+    if (!Number.isFinite(tileHeight) || tileHeight <= 0) return false;
+    const scroll = ((state ? state.time * 112 : idleTime * 42) % tileHeight + tileHeight) % tileHeight;
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    for (let y = -tileHeight + scroll; y < H + tileHeight; y += tileHeight) {
+      ctx.drawImage(image, 0, y, W, tileHeight);
+    }
+    ctx.restore();
+    renderDebug.backgroundRasterDrawn = true;
+    renderDebug.backgroundImageStatus = "loaded";
+    return true;
   }
 
   function drawLandBackground(timeMs) {
@@ -2464,6 +2517,10 @@
       vehicleRasterDrawn: false,
       vehicleFallbackDrawn: false,
       vehicleImageStatus: "none",
+      backgroundRasterDrawn: false,
+      backgroundFallbackDrawn: false,
+      backgroundImageStatus: "none",
+      backgroundImagePath: "",
       enemyRasterDrawn: 0,
       enemyFallbackDrawn: 0,
       enemyShadowDrawn: 0,
@@ -2541,6 +2598,7 @@
     ctx.imageSmoothingEnabled = false;
     if (callbacks.meta) meta = rules.migrateMeta(callbacks.meta, { config });
     renderer.preRenderSprites({ pixelRatio: 1, smoothing: false });
+    preloadEnvironmentImages();
     preloadVehicleImages();
     preloadEnemyImages();
     bindInput();

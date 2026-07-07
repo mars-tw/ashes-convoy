@@ -10,18 +10,25 @@ function assertFinitePositive(value, label) {
 
 assert.strictEqual(config.STORAGE_KEY, "ashes_convoy_meta_v1");
 assert.strictEqual(config.META_VERSION, 2);
-assert.strictEqual(config.APP_VERSION, "R42");
-assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r42-v1");
+assert.strictEqual(config.APP_VERSION, "R43");
+assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r43-v1");
 assert.strictEqual(config.LOGIC.width, 195);
 assert.strictEqual(config.LOGIC.height, 422);
 assert.strictEqual(config.LOGIC.displayWidth, 390);
 assert.strictEqual(config.LOGIC.displayHeight, 844);
 assert.strictEqual(config.LOGIC.renderScale, 2);
 assert.strictEqual(config.START_SCREEN.image, "assets/ui/start.png");
+assert.deepStrictEqual(config.ENVIRONMENT_BACKGROUNDS, {
+  land: "assets/env/land.png",
+  air: "assets/env/air.png",
+  sea: "assets/env/sea.png",
+  space: "assets/env/space.png"
+});
 assert.deepStrictEqual(config.SHELTER_THEMES, {}, "shelter reference themes should not be used by the start screen");
 const roadRatio = (config.LOGIC.roadRight - config.LOGIC.roadLeft) / config.LOGIC.width;
 assert(roadRatio >= 0.55 && roadRatio <= 0.65, `road ratio should be 55-65%, got ${roadRatio}`);
 const vehicleIds = ["land_rig", "sky_barge", "sea_ark", "void_runner"];
+const expectedVehicleVisualWidths = { land_rig: 60, sky_barge: 56, sea_ark: 64, void_runner: 58 };
 assert.strictEqual(config.META_DEFAULT.selectedVehicle, "land_rig");
 
 vehicleIds.forEach((id) => {
@@ -36,7 +43,9 @@ vehicleIds.forEach((id) => {
   assertFinitePositive(vehicle.hp, `${id}.hp`);
   assert(Number.isFinite(vehicle.armor) && vehicle.armor >= 0, `${id}.armor must be non-negative`);
   assertFinitePositive(vehicle.visualWidth, `${id}.visualWidth`);
-  assert(vehicle.visualWidth >= 70 && vehicle.visualWidth <= 90, `${id} raster width should be 70-90 world px`);
+  assert.strictEqual(vehicle.visualWidth, expectedVehicleVisualWidths[id], `${id} should use the R43 visual width`);
+  assert(vehicle.visualWidth >= 56 && vehicle.visualWidth <= 64, `${id} raster width should be 56-64 world px`);
+  assert.strictEqual(vehicle.visualHalfWidth * 2, vehicle.visualWidth, `${id} visual half width should match visual width`);
   assert(vehicle.visualHalfWidth * 2 < config.LOGIC.roadRight - config.LOGIC.roadLeft, `${id} should fit inside road`);
   assert.strictEqual(vehicle.stage, 4);
 });

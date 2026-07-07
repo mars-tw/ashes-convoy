@@ -427,7 +427,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R42"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R43"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -585,6 +585,10 @@ async function checkVehicleFleetSelectionAndCombat(page) {
       });
       window.__test.step(2200);
     }, vehicleId);
+    await page.waitForFunction(() => {
+      const debug = window.__test.getRenderDebug();
+      return debug.backgroundRasterDrawn === true && debug.backgroundImageStatus === "loaded";
+    });
     const result = await page.evaluate((id) => {
       const state = window.__test.getState();
       const debug = window.__test.getRenderDebug();
@@ -595,12 +599,21 @@ async function checkVehicleFleetSelectionAndCombat(page) {
         expectedEnvironment: window.DSConfig.VEHICLES[id].environment,
         raster: debug.vehicleRasterDrawn,
         fallback: debug.vehicleFallbackDrawn,
-        imageStatus: debug.vehicleImageStatus
+        imageStatus: debug.vehicleImageStatus,
+        backgroundRaster: debug.backgroundRasterDrawn,
+        backgroundFallback: debug.backgroundFallbackDrawn,
+        backgroundStatus: debug.backgroundImageStatus,
+        backgroundPath: debug.backgroundImagePath,
+        visualWidth: window.DSConfig.VEHICLES[id].visualWidth
       };
     }, vehicleId);
     assert.strictEqual(result.vehicleId, vehicleId, `${vehicleId} should be the active vehicle`);
     assert.strictEqual(result.environment, result.expectedEnvironment, `${vehicleId} should draw its environment`);
     assert(result.raster || result.fallback, `${vehicleId} should draw raster vehicle or fallback sprite`);
+    assert(result.backgroundRaster, `${vehicleId} should draw its raster environment background`);
+    assert.strictEqual(result.backgroundStatus, "loaded", `${vehicleId} environment background should be loaded`);
+    assert(result.backgroundPath.includes(`assets/env/${result.expectedEnvironment}.png`), `${vehicleId} should use environment background asset: ${result.backgroundPath}`);
+    assert(result.visualWidth >= 56 && result.visualWidth <= 64, `${vehicleId} visual width should be reduced to 56-64 world px`);
     assert(result.kills >= 1, `${vehicleId} should be able to shoot and kill`);
   }
   await page.evaluate(() => window.__test.showGarage());
@@ -1573,6 +1586,39 @@ async function runZombieImageFallbackScenario(browser, baseUrl) {
   console.log("E2E zombie image fallback PASS");
 }
 
+async function runEnvironmentBackgroundFallbackScenario(browser, baseUrl) {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const errors = [];
+  page.on("console", (message) => {
+    if (message.type() === "error" && !isIgnorableConsoleError(message.text())) errors.push(message.text());
+  });
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.route("**/assets/env/*.png", (route) => {
+    route.fulfill({ status: 404, contentType: "text/plain", body: "missing test background" });
+  });
+
+  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
+  await page.evaluate(() => {
+    window.__test.clearStorage();
+    window.__test.startRun("land_rig");
+    window.__test.setState({ enemies: [], projectiles: [], gates: [] });
+    window.__test.step(220);
+  });
+  await page.waitForFunction(() => {
+    const debug = window.__test.getRenderDebug();
+    return debug.backgroundImageStatus === "failed" && debug.backgroundFallbackDrawn === true;
+  });
+  await expectCanvasHasPixels(page);
+  const debug = await page.evaluate(() => window.__test.getRenderDebug());
+  assert.strictEqual(debug.environment, "land", "background fallback should keep land environment");
+  assert.strictEqual(debug.backgroundRasterDrawn, false, "missing environment image should not report raster draw");
+  assert.strictEqual(debug.backgroundFallbackDrawn, true, "missing environment image should draw fallback background");
+  assert.deepStrictEqual(errors, [], "console/page errors during missing-environment-background fallback");
+  await page.close();
+  console.log("E2E environment background fallback PASS");
+}
+
 async function runServiceWorkerOfflineScenario(browser, baseUrl) {
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
@@ -1595,7 +1641,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r42")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r43")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -1613,7 +1659,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r42")), "R42 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r43")), "R43 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());
@@ -1653,6 +1699,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     await runImageFallbackScenario(browser, url);
     await runVehicleImageFallbackScenario(browser, url);
     await runZombieImageFallbackScenario(browser, url);
+    await runEnvironmentBackgroundFallbackScenario(browser, url);
     await runServiceWorkerOfflineScenario(browser, url);
     console.log("E2E tests PASS");
   } finally {
