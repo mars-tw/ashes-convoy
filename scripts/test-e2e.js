@@ -282,12 +282,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R45") && swText.includes("src/ui.js?v=R45") && swText.includes("src/game.js?v=R45") && swText.includes("src/rules.js?v=R45"),
+      swCachesJs: swText.includes("src/version.js?v=R47") && swText.includes("src/ui.js?v=R47") && swText.includes("src/game.js?v=R47") && swText.includes("src/rules.js?v=R47"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R45"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R45"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R45"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R47"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R47"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R47"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -296,7 +296,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R45", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R47", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -355,6 +355,7 @@ async function checkShortDesktopReachability(page) {
   for (const selector of [
     "#aimAssistLevelSelect",
     "#screenShakeToggle",
+    "#fxLevelSelect",
     "#damageTextDensitySelect",
     "#performanceModeSelect",
     "#fontSizeSelect",
@@ -469,6 +470,27 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(meta.settings.damageTextDensity, "large", "damage text density should persist");
   assert.strictEqual(meta.settings.performanceMode, "low", "performance mode should persist");
   assert.strictEqual(meta.settings.fontSize, "large", "font size setting should persist");
+
+  // 畫面特效三段（完整/精簡/關閉）切換持久化＋migrate 兼容（預設完整）
+  const fxDefault = await page.evaluate(() => window.DSRules.migrateMeta(null, { config: window.DSConfig }).settings.fxLevel);
+  assert.strictEqual(fxDefault, "full", "fresh migrate should default fx level to full");
+  for (const level of ["reduced", "off", "full"]) {
+    await page.selectOption("#fxLevelSelect", level);
+    meta = await page.evaluate(() => window.__test.getMeta());
+    assert.strictEqual(meta.settings.fxLevel, level, `fx level ${level} should persist in meta settings`);
+    const persisted = await page.evaluate(() => {
+      const raw = localStorage.getItem(window.DSConfig.STORAGE_KEY);
+      return {
+        stored: JSON.parse(raw).settings.fxLevel,
+        migrated: window.DSRules.migrateMeta(raw, { config: window.DSConfig }).settings.fxLevel,
+        ui: document.getElementById("fxLevelSelect").value
+      };
+    });
+    assert.strictEqual(persisted.stored, level, `fx level ${level} should be written to localStorage`);
+    assert.strictEqual(persisted.migrated, level, `fx level ${level} should survive migrateMeta`);
+    assert.strictEqual(persisted.ui, level, `fx level select should render ${level}`);
+  }
+
   const fontState = await page.evaluate(() => ({
     largeClass: document.body.classList.contains("font-large"),
     questFont: parseFloat(getComputedStyle(document.querySelector(".quest-card strong")).fontSize),
@@ -478,7 +500,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R45"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R47"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -530,6 +552,7 @@ async function checkSettingsAndQuestBoard(page) {
   meta.settings.screenShake = true;
   meta.settings.damageTextDensity = "all";
   meta.settings.performanceMode = "auto";
+  meta.settings.fxLevel = "full";
   meta.settings.fontSize = "medium";
   await page.evaluate((nextMeta) => window.__test.setMeta(nextMeta), meta);
 }
@@ -875,6 +898,130 @@ async function checkAdaptivePerformance(page) {
 
 function windowlessEffectHigh() {
   return 90;
+}
+
+async function checkFxIntegration(page) {
+  const fxQuality = await page.evaluate(() => window.DSConfig.FX.quality);
+
+  // 1) run 中 fx 粒子活躍數 > 0（環境層/排氣/曳光/擊殺爆發共同供給）
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.settings.performanceMode = "high";
+    meta.settings.fxLevel = "full";
+    meta.settings.reducedFlash = false;
+    window.__test.setMeta(meta);
+    const state = window.__test.getState();
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      vehicle: { hp: state.vehicle.maxHp, aimX: state.vehicle.x, aimY: state.vehicle.y - 170, weaponCooldown: 0 }
+    });
+    const aimed = window.__test.getState();
+    window.__test.spawnEnemy("shambler", { x: aimed.vehicle.x, y: aimed.vehicle.y - 170, hp: 1, speed: 0 });
+    window.__test.step(900);
+  });
+  let debug = await page.evaluate(() => window.__test.getRenderDebug());
+  assert(debug.fxActive > 0, `fx particles should be active during a run, got ${debug.fxActive}`);
+  assert.strictEqual(debug.fxLevel, "full", "fx level should report full");
+  assert.strictEqual(debug.fxQuality, "high", "locked high performance should use the high fx pool");
+  assert.strictEqual(debug.fxMaxParticles, fxQuality.high.maxParticles, "high fx pool should use the configured particle cap");
+  assert.strictEqual(debug.vignetteDrawn, true, "full fx on high quality should draw the environment vignette");
+
+  // 2) 低效能模式：fx 池上限縮減（至少砍半）＋ vignette 關閉
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.settings.performanceMode = "low";
+    window.__test.setMeta(meta);
+    window.__test.step(300);
+  });
+  debug = await page.evaluate(() => window.__test.getRenderDebug());
+  assert.strictEqual(debug.fxQuality, "low", "locked low performance should switch to the low fx pool");
+  assert.strictEqual(debug.fxMaxParticles, fxQuality.low.maxParticles, "low fx pool should use the reduced particle cap");
+  assert(debug.fxMaxParticles <= fxQuality.high.maxParticles / 2, "low fx pool should be at most half of high");
+  assert.strictEqual(debug.vignetteDrawn, false, "low quality should disable the vignette layer");
+
+  // 3) 特效關閉：粒子池清空、不畫 vignette
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.settings.performanceMode = "high";
+    meta.settings.fxLevel = "off";
+    window.__test.setMeta(meta);
+    window.__test.step(300);
+  });
+  debug = await page.evaluate(() => window.__test.getRenderDebug());
+  assert.strictEqual(debug.fxLevel, "off", "fx level off should be reported");
+  assert.strictEqual(debug.fxActive, 0, "fx off should keep the particle pool empty");
+  assert.strictEqual(debug.vignetteDrawn, false, "fx off should not draw the vignette");
+
+  // 4) 精簡：即使鎖高效能也改用縮減池，但仍會發射粒子
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.settings.fxLevel = "reduced";
+    window.__test.setMeta(meta);
+    window.__test.step(400);
+  });
+  debug = await page.evaluate(() => window.__test.getRenderDebug());
+  assert.strictEqual(debug.fxQuality, "low", "reduced fx level should use the low fx pool even when quality is high");
+  assert(debug.fxActive > 0, "reduced fx level should still emit particles");
+
+  // 5) 補給箱：像素木箱重繪、無舊青色線框
+  const supply = await page.evaluate(async () => {
+    const meta = window.__test.getMeta();
+    meta.settings.fxLevel = "full";
+    window.__test.setMeta(meta);
+    const state = window.__test.getState();
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      supplyDrops: [
+        { id: "fx_supply", x: state.vehicle.x - 40, y: state.vehicle.y - 160, vx: 0, vy: 0, radius: 12, age: 0, ttl: 30, picked: false }
+      ],
+      vehicle: { weaponCooldown: 999 }
+    });
+    window.__test.step(60);
+    const source = await fetch(`src/game.js?v=${window.DSConfig.APP_VERSION}`).then((response) => response.text());
+    const start = source.indexOf("function drawSupplyDrop");
+    const end = source.indexOf("function", start + 10);
+    return {
+      debug: window.__test.getRenderDebug(),
+      crateFn: source.slice(start, end),
+      cyanDom: !!document.querySelector(".supply-crate-wireframe, .supply-cyan-frame")
+    };
+  });
+  assert(supply.debug.supplyCrateDrawn >= 1, "supply crate should be drawn while on screen");
+  assert.strictEqual(supply.debug.supplyCrateStyle, "pixel_wood", "supply crate should use the pixel wood style");
+  assert(supply.crateFn.length > 40, "drawSupplyDrop source should be inspectable");
+  assert(!supply.crateFn.includes("#5ed4cb"), "supply crate draw should not use the legacy cyan wireframe color");
+  assert(!supply.crateFn.includes("strokeStyle = \"#5ed4cb\""), "supply crate should not stroke a cyan frame");
+  assert.strictEqual(supply.cyanDom, false, "no cyan wireframe class should exist in the DOM");
+
+  // 6) 波次演出：pushWave 後應繪出開場橫幅
+  await page.evaluate(() => {
+    window.__test.setState({ enemies: [], projectiles: [], gates: [], supplyDrops: [] });
+    window.__test.pushWave(3);
+    window.__test.step(120);
+  });
+  debug = await page.evaluate(() => window.__test.getRenderDebug());
+  assert.strictEqual(debug.waveBannerDrawn, true, "wave start should draw the wave banner");
+
+  // 收尾還原，避免影響後續斷言
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.settings.performanceMode = "high";
+    meta.settings.fxLevel = "full";
+    window.__test.setMeta(meta);
+    const state = window.__test.getState();
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      hazards: [],
+      supplyDrops: [],
+      vehicle: { hp: state.vehicle.maxHp, weaponCooldown: 0 }
+    });
+    window.__test.step(16);
+  });
 }
 
 async function sampleFps(page) {
@@ -1535,6 +1682,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await checkOpeningHordeGateAndFps(page);
   await checkAimAssistToggle(page);
   await checkAdaptivePerformance(page);
+  await checkFxIntegration(page);
   await dragAim(page);
   await killEnemiesAndEarnPreviewParts(page);
   await shootGate(page);
@@ -1695,7 +1843,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r45")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r47")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -1713,7 +1861,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r45")), "R45 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r47")), "R47 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

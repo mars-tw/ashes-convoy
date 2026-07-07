@@ -4,9 +4,10 @@
   const config = root.DSConfig;
   const rules = root.DSRules;
   const renderer = root.DSSpriteRenderer;
+  const fx = root.DSFx;
 
-  if (!config || !rules || !renderer) {
-    throw new Error("AshesGame requires sprites, sprite-renderer, config and rules to be loaded first.");
+  if (!config || !rules || !renderer || !fx) {
+    throw new Error("AshesGame requires sprites, sprite-renderer, config, rules and fx to be loaded first.");
   }
 
   const W = config.LOGIC.width;
@@ -48,6 +49,181 @@
   const vehicleImages = {};
   const enemyImages = {};
   const enemySpriteOptions = { flipX: false, alpha: 1 };
+
+  // ── DSFx 特效整合（固定粒子池 + 注入式 rng/time；全部掛在效能分級與畫面特效設定之下）──
+  const FXC = config.FX || null;
+  const TAU = Math.PI * 2;
+  const fxPools = { high: null, low: null };
+  let fxState = null;
+  let fxRng = fx.createSeededRng(1);
+  let fxTiltRad = 0;
+  let fxMoveX = 0;
+  let fxPrevVehicleX = null;
+  let fxBossKillFx = null;
+  let fxStarLayer;
+  const fxScratch = { muzzle: {}, motion: {}, crate: {}, banner: {}, anchor: { x: 0, y: 0 } };
+  const fxHitOpts = { x: 0, y: 0, angle: 0, vehicleId: "", color: null };
+  const fxTrailSpec = {
+    x: 0,
+    y: 0,
+    vx: 0,
+    vy: 0,
+    life: 0.22,
+    size: 1.7,
+    sizeEnd: 0.2,
+    color: "#ffd76a",
+    shape: "spark",
+    stretch: 2.6
+  };
+  const fxExhaustLayers = {};
+  const fxVignetteCache = {};
+
+  function hashSeed(text) {
+    const source = String(text == null ? "seed" : text);
+    let h = 2166136261 >>> 0;
+    for (let i = 0; i < source.length; i += 1) {
+      h ^= source.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  function fxLevelSetting() {
+    const level = meta.settings && meta.settings.fxLevel;
+    return level === "reduced" || level === "off" ? level : "full";
+  }
+
+  function fxPoolQuality() {
+    return performanceState.quality === "low" || fxLevelSetting() === "reduced" ? "low" : "high";
+  }
+
+  function ensureFxState() {
+    const quality = fxPoolQuality();
+    if (!fxPools[quality]) fxPools[quality] = fx.createFxState({ quality, fxConfig: FXC });
+    if (fxState !== fxPools[quality]) {
+      fxState = fxPools[quality];
+      fx.resetFxState(fxState);
+    }
+    return fxState;
+  }
+
+  function fxEnabled() {
+    return !!fxState && fxLevelSetting() !== "off";
+  }
+
+  function resetRunFx(seed, vehicleX) {
+    fxRng = fx.createSeededRng(hashSeed(seed));
+    fxTiltRad = 0;
+    fxMoveX = 0;
+    fxPrevVehicleX = Number.isFinite(vehicleX) ? vehicleX : null;
+    fxBossKillFx = null;
+    ensureFxState();
+    fx.resetFxState(fxState);
+  }
+
+  function fxTrailColor(vehicleId) {
+    const spark = FXC && FXC.hitSpark;
+    if (!spark) return "#ffd76a";
+    return (spark.colorsByVehicle && spark.colorsByVehicle[vehicleId]) || spark.defaultColor || "#ffd76a";
+  }
+
+  function fxExhaustLayer(environment, spec) {
+    let layer = fxExhaustLayers[environment];
+    if (!layer || layer.__spec !== spec) {
+      layer = Object.assign({ id: `exhaust_${environment}` }, spec);
+      layer.__spec = spec;
+      fxExhaustLayers[environment] = layer;
+    }
+    return layer;
+  }
+
+  function fxVehicleVisualHeight(vehicleConfig) {
+    const width = vehicleConfig.visualWidth || (vehicleConfig.visualHalfWidth || 36) * 2;
+    const record = vehicleConfig.spriteImage ? vehicleImages[vehicleConfig.id] : null;
+    if (record && record.image && record.image.naturalWidth > 0) {
+      return width * (record.image.naturalHeight / record.image.naturalWidth);
+    }
+    return width * 1.6;
+  }
+
+  function fxLayerAnchor(layer, vehicle) {
+    const anchor = fxScratch.anchor;
+    // 載具貼圖以 y - 0.72h 為頂、y + 0.28h 為底（同 drawVehicle）；
+    // 錨點必須落在貼圖輪廓外，粒子才不會被載具蓋住（船首白沫/船尾尾流）。
+    const vehicleConfig = getVehicleConfig(state.vehicleId);
+    const visualWidth = vehicleConfig.visualWidth || (vehicleConfig.visualHalfWidth || 36) * 2;
+    const visualHeight = fxVehicleVisualHeight(vehicleConfig);
+    const sideOffset = (layer.anchorSide || 0) * visualWidth * 0.3;
+    if (layer.anchor === "vehicle_rear") {
+      anchor.x = vehicle.x + sideOffset;
+      anchor.y = vehicle.y + visualHeight * 0.28 + 6;
+    } else if (layer.anchor === "vehicle_bow") {
+      anchor.x = vehicle.x + sideOffset;
+      anchor.y = vehicle.y - visualHeight * 0.72 - 4;
+    } else if (layer.anchor === "road") {
+      anchor.x = (config.LOGIC.roadLeft + config.LOGIC.roadRight) * 0.5;
+      anchor.y = fxRng() * H * 0.7;
+    } else if (layer.anchor === "water") {
+      anchor.x = W * 0.5;
+      anchor.y = H * 0.42;
+    } else {
+      anchor.x = W * 0.5;
+      anchor.y = fxRng() * H * 0.55;
+    }
+    return anchor;
+  }
+
+  function updateFx(dt) {
+    if (!FXC || !state) return;
+    ensureFxState();
+    if (fxLevelSetting() === "off") {
+      if (fxState.activeCount > 0) fx.resetFxState(fxState);
+      fxTiltRad = 0;
+      fxMoveX = 0;
+      fxPrevVehicleX = state.vehicle.x;
+      return;
+    }
+    const vehicle = state.vehicle;
+    const environment = currentEnvironment();
+
+    // 載具水平速度平滑（供移動傾斜與排氣方向使用）
+    if (fxPrevVehicleX == null) fxPrevVehicleX = vehicle.x;
+    const instantVx = (vehicle.x - fxPrevVehicleX) / Math.max(0.0001, dt);
+    fxPrevVehicleX = vehicle.x;
+    fxMoveX += (instantVx - fxMoveX) * Math.min(1, 8 * dt);
+
+    const motion = fx.vehicleMotion(FXC, environment, state.time, fxMoveX, fxScratch.motion);
+    fxTiltRad += (motion.tiltRad - fxTiltRad) * Math.min(1, (motion.tiltEase || 8) * dt);
+
+    // 環境動態層（parallax 星塵由渲染端直繪，不佔池）
+    const layers = fx.environmentLayers(FXC, environment);
+    for (let i = 0; i < layers.length; i += 1) {
+      const layer = layers[i];
+      if (Array.isArray(layer.parallax)) continue;
+      const anchor = fxLayerAnchor(layer, vehicle);
+      fx.spawnEnvironmentLayer(fxState, layer, dt, anchor.x, anchor.y, fxRng);
+    }
+
+    // 排氣 / 噴焰（生成於載具貼圖底緣外，避免被載具蓋住）
+    if (motion.exhaust) {
+      const exhaustLayer = fxExhaustLayer(environment, motion.exhaust);
+      const exhaustY = vehicle.y + fxVehicleVisualHeight(getVehicleConfig(state.vehicleId)) * 0.28 + 6;
+      fx.spawnEnvironmentLayer(fxState, exhaustLayer, dt, vehicle.x, exhaustY, fxRng);
+    }
+
+    // 子彈曳光（trailEvery 於低品質自動抽疏）
+    for (let i = 0; i < state.projectiles.length; i += 1) {
+      const projectile = state.projectiles[i];
+      fxTrailSpec.x = projectile.x - projectile.vx * 0.012;
+      fxTrailSpec.y = projectile.y - projectile.vy * 0.012;
+      fxTrailSpec.vx = projectile.vx * 0.08;
+      fxTrailSpec.vy = projectile.vy * 0.08;
+      fxTrailSpec.color = fxTrailColor(projectile.vehicleId);
+      fx.spawnTrailPoint(fxState, fxTrailSpec);
+    }
+
+    fx.updateParticles(fxState, dt);
+  }
 
   function emitState() {
     if (callbacks.onState) callbacks.onState(getState());
@@ -684,12 +860,17 @@
       shakeUntil: 0,
       eventBanner: null,
       lastGateChoice: null,
+      waveBannerKind: "wave",
+      waveBannerStart: 0,
+      waveBannerNumber: 1,
       messages: []
     };
 
     state = initial;
     state.wavePlan = makeWavePlan(1);
+    if (state.wavePlan && state.wavePlan.boss) state.waveBannerKind = "boss";
     activateWaveEnvironmentEvent();
+    resetRunFx(initial.seed, initial.vehicle.x);
     state.messages.push({ text: "拖曳瞄準", time: 0, ttl: 2 });
     return state;
   }
@@ -888,7 +1069,7 @@
     state.vehicle.recentHitUntil = state.time + 0.28;
     const passive = getVehicleConfig(state.vehicleId).passive;
     if (passive && passive.id === "revenge_fire") state.vehicle.recentHitUntil = state.time + passive.duration;
-    pulseShake(1.2, 0.18);
+    pulseShake(fx.resolveShake(FXC, 1.2 + (FXC && FXC.shake ? FXC.shake.hitAmp * 0.5 : 0), meta.settings), 0.18);
     if (state.vehicle.hp <= 0) {
       const kind = source && source.type ? source.type : "unknown";
       state.stats.deathContext = {
@@ -911,7 +1092,16 @@
     state.stats.score += enemy.score + state.wave * 3;
     if (enemy.variantId) addStatMapValue("variantKills", enemy.variantId, 1);
     addFloatingText("+1", enemy.x, enemy.y - enemy.radius, { color: "#f0b64a", size: 8, ttl: 0.5, vy: -14 });
-    pulseShake(enemy.boss ? 3 : 1.5, enemy.boss ? 0.35 : 0.16);
+    const killShakeBase = enemy.boss ? 3 : 1.5;
+    const killShakeBonus = FXC && FXC.shake ? (enemy.boss ? FXC.shake.bossKillAmp : FXC.shake.killAmp) : 0;
+    pulseShake(fx.resolveShake(FXC, killShakeBase + killShakeBonus, meta.settings), enemy.boss ? 0.42 : 0.18);
+    if (FXC && fxEnabled()) {
+      fx.spawnKillBurst(fxState, FXC, fx.enemyFxKind(enemyConfig), enemy.x, enemy.y, fxRng);
+    }
+    if (enemy.boss) {
+      // Boss 死亡演出：多段爆炸由 killBurst 的 delay 規格構成；此旗標驅動純視覺慢放感
+      fxBossKillFx = { x: enemy.x, y: enemy.y, start: state.time };
+    }
     if (enemy.boss) {
       state.stats.bossesDefeated += 1;
       state.stats.score += 900;
@@ -1047,6 +1237,9 @@
     state.gateIndex = 0;
     state.wavePlan = makeWavePlan(state.wave);
     activateWaveEnvironmentEvent();
+    state.waveBannerKind = state.wavePlan && state.wavePlan.boss ? "boss" : "wave";
+    state.waveBannerStart = state.time;
+    state.waveBannerNumber = state.wave;
     emitState();
     return getState();
   }
@@ -1108,14 +1301,20 @@
           scale: shot.bulletSprite === "bullet_rocket" ? 1.1 : 1.05
         });
       }
+      const muzzle = FXC ? fx.muzzleFlashParams(FXC, meta.settings, fxScratch.muzzle) : null;
+      const muzzleBoost = muzzle && fxLevelSetting() !== "off";
+      const muzzleOffset = shot.muzzleOffset + (muzzleBoost ? muzzle.offset : 0);
       addEffect({
         id: nextId("effect"),
+        kind: "muzzle_flash",
         sprite: "effect_muzzle",
         anim: "burst",
-        x: vehicle.x + direction.x * shot.muzzleOffset,
-        y: vehicle.y + direction.y * shot.muzzleOffset,
-        scale: 1.05,
-        ttl: 0.12,
+        x: vehicle.x + direction.x * muzzleOffset,
+        y: vehicle.y + direction.y * muzzleOffset,
+        scale: 1.05 * (muzzleBoost ? muzzle.scale : 1),
+        brightness: muzzleBoost ? muzzle.brightness : 1,
+        flickerHz: muzzleBoost ? muzzle.flickerHz : 0,
+        ttl: muzzle ? Math.max(0.08, muzzle.frames / 24) : 0.12,
         age: 0,
         alpha: 0.9
       });
@@ -1343,6 +1542,13 @@
         if (distance(projectile, hazard) <= projectile.radius + hazard.radius) {
           hazard.hp -= projectile.damage;
           projectile.life = -1;
+          if (FXC && fxEnabled()) {
+            fxHitOpts.x = projectile.x;
+            fxHitOpts.y = projectile.y;
+            fxHitOpts.angle = projectile.rotation + Math.PI;
+            fxHitOpts.vehicleId = projectile.vehicleId;
+            fx.spawnHitSpark(fxState, FXC, fxHitOpts, fxRng);
+          }
           addEffect({
             id: nextId("effect"),
             sprite: "effect_hit",
@@ -1406,6 +1612,13 @@
             damageNumber: true,
             amount: damage
           });
+          if (FXC && fxEnabled()) {
+            fxHitOpts.x = projectile.x;
+            fxHitOpts.y = projectile.y;
+            fxHitOpts.angle = projectile.rotation + Math.PI;
+            fxHitOpts.vehicleId = projectile.vehicleId;
+            fx.spawnHitSpark(fxState, FXC, fxHitOpts, fxRng);
+          }
           addEffect({
             id: nextId("effect"),
             sprite: "effect_hit",
@@ -1474,6 +1687,9 @@
       state.gateIndex = 0;
       state.wavePlan = makeWavePlan(state.wave);
       activateWaveEnvironmentEvent();
+      state.waveBannerKind = state.wavePlan && state.wavePlan.boss ? "boss" : "wave";
+      state.waveBannerStart = state.time;
+      state.waveBannerNumber = state.wave;
       state.messages.push({ text: `第 ${state.wave} 波`, time: state.time, ttl: 1.4 });
       updatePartsPreview();
     }
@@ -1537,6 +1753,7 @@
     updateProjectiles(dt);
     updateEnemies(dt);
     updateGatesAndEffects(dt);
+    updateFx(dt);
     completeWaveIfReady();
     updatePartsPreview();
     if (state.vehicle.hp <= 0) finishRun();
@@ -2313,20 +2530,44 @@
     ctx.restore();
   }
 
+  // 補給箱重繪：像素木箱＋鐵帶＋補給圖示＋浮動＋光暈脈動（取代舊青色線框）。
   function drawSupplyDrop(drop) {
+    const visual = fx.supplyCrateVisual(FXC, stateTime() + drop.age * 0.35, fxScratch.crate);
+    const style = visual.style || { fill: "#8a5a2b", edge: "#5d3a18", slat: "#a97b46", strap: "#3f2a14", icon: "#ffd76a" };
+    const size = visual.size || 16;
+    const half = size * 0.5;
+    const y = drop.y + visual.bobY;
     ctx.save();
-    const pulse = Math.sin((stateTime() + drop.age) * 7) * 0.08 + 1;
-    ctx.translate(drop.x, drop.y);
-    ctx.scale(pulse, pulse);
-    ctx.fillStyle = "rgba(9, 12, 16, 0.78)";
-    ctx.strokeStyle = "#5ed4cb";
-    ctx.lineWidth = 1.5;
-    ctx.fillRect(-11, -10, 22, 20);
-    ctx.strokeRect(-11, -10, 22, 20);
-    ctx.fillStyle = "#5ed4cb";
-    ctx.fillRect(-7, -2, 14, 4);
-    ctx.fillRect(-2, -7, 4, 14);
+    if (visual.glowAlpha > 0 && fxLevelSetting() !== "off") {
+      ctx.globalAlpha = visual.glowAlpha;
+      ctx.fillStyle = visual.glowColor;
+      ctx.beginPath();
+      ctx.arc(drop.x, y, visual.glowRadius || 13, 0, TAU);
+      ctx.fill();
+      ctx.globalAlpha = Math.min(1, visual.glowAlpha * 1.6);
+      ctx.beginPath();
+      ctx.arc(drop.x, y, (visual.glowRadius || 13) * 0.55, 0, TAU);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.translate(Math.round(drop.x), Math.round(y));
+    ctx.fillStyle = style.fill;
+    ctx.fillRect(-half, -half, size, size);
+    ctx.fillStyle = style.slat;
+    ctx.fillRect(-half + 1, -half + 2, size - 2, 3);
+    ctx.fillRect(-half + 1, half - 5, size - 2, 3);
+    ctx.fillStyle = style.strap;
+    ctx.fillRect(-2, -half, 4, size);
+    ctx.fillRect(-half, -2, size, 4);
+    ctx.strokeStyle = style.edge;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(-half + 0.5, -half + 0.5, size - 1, size - 1);
+    ctx.fillStyle = style.icon;
+    ctx.fillRect(-1, -4, 2, 8);
+    ctx.fillRect(-4, -1, 8, 2);
     ctx.restore();
+    renderDebug.supplyCrateDrawn += 1;
+    renderDebug.supplyCrateStyle = "pixel_wood";
   }
 
   function drawSupplyPickup(effect) {
@@ -2358,6 +2599,192 @@
     ctx.stroke();
     drawWorldText(effect.text || "+1", 0, 14, { size: 7, color: "#5ed4cb", alpha: effect.alpha });
     ctx.restore();
+  }
+
+  // ── DSFx 渲染端 ──────────────────────────────────────────────
+
+  function drawFxParticle(p) {
+    ctx.fillStyle = p.color;
+    if (p.stretch > 1.01) {
+      // 速度向拉伸（風速線 / 流星 / 曳光）
+      const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy) || 1;
+      const nx = p.vx / speed;
+      const ny = p.vy / speed;
+      const len = Math.max(1, p.size * p.stretch * 0.5);
+      ctx.globalAlpha = p.alpha;
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = Math.max(0.5, p.size * 0.6);
+      ctx.beginPath();
+      ctx.moveTo(p.x - nx * len, p.y - ny * len);
+      ctx.lineTo(p.x + nx * len * 0.4, p.y + ny * len * 0.4);
+      ctx.stroke();
+    } else if (p.shape === "smoke" || p.shape === "dust" || p.shape === "foam") {
+      ctx.globalAlpha = p.alpha * (p.shape === "smoke" ? 0.42 : 0.6);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, Math.max(0.6, p.size * 0.5), 0, TAU);
+      ctx.fill();
+    } else if (p.shape === "debris" || p.shape === "shard") {
+      const s = Math.max(0.8, p.size);
+      ctx.globalAlpha = p.alpha;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation);
+      ctx.fillRect(-s * 0.5, -s * 0.5, s, p.shape === "shard" ? s * 0.6 : s);
+      ctx.restore();
+    } else {
+      const s = Math.max(0.6, p.size);
+      ctx.globalAlpha = p.alpha;
+      ctx.fillRect(p.x - s * 0.5, p.y - s * 0.5, s, s);
+    }
+  }
+
+  function drawFxParticles() {
+    if (!fxState || !fxEnabled()) return;
+    ctx.save();
+    fx.forEachActive(fxState, drawFxParticle);
+    ctx.restore();
+  }
+
+  function drawVehicleShadow(vehicleConfig, vehicle, shadow) {
+    if (!shadow) return;
+    const width = vehicleConfig.visualWidth || (vehicleConfig.visualHalfWidth || 30) * 2;
+    ctx.save();
+    ctx.globalAlpha *= shadow.alpha == null ? 0.3 : shadow.alpha;
+    ctx.fillStyle = shadow.color || "#000000";
+    ctx.beginPath();
+    ctx.ellipse(
+      vehicle.x,
+      // 以載具貼圖底緣為基準再加 offsetY，陰影才不會整顆藏在載具底下
+      vehicle.y + fxVehicleVisualHeight(vehicleConfig) * 0.28 + (shadow.offsetY || 0),
+      Math.max(6, width * (shadow.widthMul == null ? 0.9 : shadow.widthMul) * 0.5),
+      Math.max(2, width * (shadow.heightMul == null ? 0.2 : shadow.heightMul) * 0.5),
+      0,
+      0,
+      TAU
+    );
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function hexChannel(hex, index) {
+    return parseInt(hex.slice(1 + index * 2, 3 + index * 2), 16) || 0;
+  }
+
+  function drawVignette(environment, vignette) {
+    const key = `${environment}:${vignette.color}:${vignette.strength}`;
+    let gradient = fxVignetteCache[key];
+    if (!gradient) {
+      const r = hexChannel(vignette.color, 0);
+      const g = hexChannel(vignette.color, 1);
+      const b = hexChannel(vignette.color, 2);
+      gradient = ctx.createRadialGradient(W * 0.5, H * 0.46, H * 0.24, W * 0.5, H * 0.46, H * 0.66);
+      gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0)`);
+      gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 1)`);
+      fxVignetteCache[key] = gradient;
+    }
+    ctx.save();
+    ctx.globalAlpha = vignette.strength;
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+    renderDebug.vignetteDrawn = true;
+  }
+
+  function starDustLayer() {
+    if (fxStarLayer !== undefined) return fxStarLayer;
+    const layers = fx.environmentLayers(FXC, "space");
+    fxStarLayer = null;
+    for (let i = 0; i < layers.length; i += 1) {
+      if (Array.isArray(layers[i].parallax)) fxStarLayer = layers[i];
+    }
+    return fxStarLayer;
+  }
+
+  // 星塵視差：三層不同速度/密度/亮度的確定性星點，直繪不佔粒子池。
+  function drawStarDust() {
+    const layer = starDustLayer();
+    if (!layer) return;
+    const time = stateTime();
+    const density = fxState ? fxState.envDensityMul : 1;
+    ctx.save();
+    for (let li = 0; li < layer.parallax.length; li += 1) {
+      const band = layer.parallax[li];
+      const count = Math.max(4, Math.floor(W * band.density * density * 0.45));
+      ctx.globalAlpha = Math.min(1, band.alpha * 0.9);
+      ctx.fillStyle = layer.colors[li % layer.colors.length] || "#ffffff";
+      for (let i = 0; i < count; i += 1) {
+        const x = (i * 97 + li * 41) % W;
+        const y = (i * 61 + li * 149 + time * band.speed) % H;
+        ctx.fillRect(x, y, band.size, band.size);
+      }
+    }
+    ctx.restore();
+  }
+
+  // Boss 死亡：擴散衝擊環＋短暫白閃＋上下黑邊，構成純視覺慢放感（不動邏輯時序）。
+  function drawBossKillFx() {
+    if (!fxBossKillFx || !state) return;
+    const elapsed = state.time - fxBossKillFx.start;
+    const duration = 0.55;
+    if (elapsed < 0 || elapsed > duration) {
+      fxBossKillFx = null;
+      return;
+    }
+    if (fxLevelSetting() === "off") return;
+    const t = elapsed / duration;
+    const reduced = !!(meta.settings && meta.settings.reducedFlash);
+    ctx.save();
+    ctx.strokeStyle = "#ffe08a";
+    ctx.globalAlpha = (1 - t) * 0.55;
+    ctx.lineWidth = 2.5 * (1 - t) + 0.5;
+    ctx.beginPath();
+    ctx.arc(fxBossKillFx.x, fxBossKillFx.y, 12 + t * 92, 0, TAU);
+    ctx.stroke();
+    ctx.globalAlpha = (1 - t) * 0.32;
+    ctx.beginPath();
+    ctx.arc(fxBossKillFx.x, fxBossKillFx.y, 6 + t * 56, 0, TAU);
+    ctx.stroke();
+    if (!reduced) {
+      ctx.globalAlpha = Math.max(0, 0.26 * (1 - t * 1.7));
+      ctx.fillStyle = "#fff6e0";
+      ctx.fillRect(0, 0, W, H);
+    }
+    ctx.globalAlpha = 0.3 * (1 - t);
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, W, 24);
+    ctx.fillRect(0, H - 24, W, 24);
+    ctx.restore();
+  }
+
+  // 波次開場「第 N 波」大字與 Boss 紅色警告（flash/shake 受 reducedFlash 抑制）。
+  function drawWaveBanner() {
+    if (!FXC || !state || fxLevelSetting() === "off" || !state.waveBannerKind) return;
+    const banner = fx.waveBanner(
+      FXC,
+      state.waveBannerKind,
+      state.waveBannerNumber,
+      state.time - state.waveBannerStart,
+      meta.settings,
+      fxScratch.banner
+    );
+    if (!banner.active) return;
+    const shakeX = banner.shake ? Math.sin(state.time * 87) * banner.shake : 0;
+    const shakeY = banner.shake ? Math.cos(state.time * 71) * banner.shake : 0;
+    if (banner.flash > 0) {
+      ctx.save();
+      ctx.globalAlpha = banner.flash * 0.16 * banner.alpha;
+      ctx.fillStyle = banner.color;
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+    drawWorldText(banner.text, W * 0.5 + shakeX, H * 0.5 + banner.offsetY + shakeY, {
+      size: Math.round(17 * banner.scale),
+      alpha: banner.alpha,
+      color: banner.color,
+      stroke: banner.edge,
+      strokeWidth: 3
+    });
+    renderDebug.waveBannerDrawn = true;
   }
 
   function drawEnvironmentEventOverlay() {
@@ -2482,6 +2909,17 @@
         drawSupplyPickup(effect);
       } else if (effect.kind === "enemy_corpse") {
         drawEnemyCorpse(effect, timeMs);
+      } else if (effect.kind === "muzzle_flash") {
+        // 砲口閃焰放大增亮＋高頻閃爍（reducedFlash 時 flickerHz=0、縮回保守規格）
+        const flicker = effect.flickerHz > 0 ? 1 + 0.18 * Math.sin(stateTime() * effect.flickerHz * TAU) : 1;
+        const brightness = effect.brightness || 1;
+        const flashAlpha = Math.min(1, effect.alpha * brightness);
+        drawSprite(effect.sprite, effect.anim, timeMs, effect.x, effect.y, effect.scale * flicker, { alpha: flashAlpha });
+        if (brightness > 1) {
+          drawSprite(effect.sprite, effect.anim, timeMs, effect.x, effect.y, effect.scale * flicker * 0.68, {
+            alpha: Math.min(1, flashAlpha * 0.6)
+          });
+        }
       } else {
         drawSprite(effect.sprite, effect.anim, timeMs, effect.x, effect.y, effect.scale, { alpha: effect.alpha });
       }
@@ -2489,11 +2927,25 @@
 
     const vehicleConfig = getVehicleConfig(state.vehicleId);
     const vehicleAnim = state.vehicle.hp <= 0 ? "wreck" : state.vehicle.recentHitUntil > state.time ? "damage" : "move";
+    // 載具生命感：底部橢圓陰影＋怠速浮動＋移動傾斜（純視覺，不動邏輯座標）
+    const motion = FXC && fxLevelSetting() !== "off"
+      ? fx.vehicleMotion(FXC, currentEnvironment(), stateTime(), fxMoveX, fxScratch.motion)
+      : null;
+    if (motion && motion.shadow) drawVehicleShadow(vehicleConfig, state.vehicle, motion.shadow);
+    ctx.save();
+    if (motion) {
+      ctx.translate(state.vehicle.x, state.vehicle.y + motion.bobY);
+      ctx.rotate(fxTiltRad);
+      ctx.translate(-state.vehicle.x, -state.vehicle.y);
+    }
     drawVehicle(vehicleConfig, state.vehicle, timeMs, {
       alpha: 1,
       anim: vehicleAnim,
       hitFlash: state.vehicle.recentHitUntil > state.time
     });
+    ctx.restore();
+    drawFxParticles();
+    drawBossKillFx();
     drawAimGuide();
     drawSprite(
       "effect_muzzle",
@@ -2504,6 +2956,7 @@
       0.8,
       { alpha: state.input.dragging ? 0.62 : 0.35 }
     );
+    drawWaveBanner();
     drawMessages();
   }
 
@@ -2524,7 +2977,15 @@
       enemyRasterDrawn: 0,
       enemyFallbackDrawn: 0,
       enemyShadowDrawn: 0,
-      enemyImageStatus: {}
+      enemyImageStatus: {},
+      fxActive: fxState ? fxState.activeCount : 0,
+      fxMaxParticles: fxState ? fxState.maxParticles : 0,
+      fxQuality: fxState ? fxState.quality : "none",
+      fxLevel: fxLevelSetting(),
+      vignetteDrawn: false,
+      waveBannerDrawn: false,
+      supplyCrateDrawn: 0,
+      supplyCrateStyle: ""
     };
     const timeMs = ((state ? state.time : idleTime) || 0) * 1000;
     ctx.clearRect(0, 0, W, H);
@@ -2540,6 +3001,7 @@
       ctx.translate(Math.sin(state.time * 91) * amp, Math.cos(state.time * 73) * amp);
     }
     drawBackground(timeMs);
+    if (state && FXC && fxEnabled() && currentEnvironment() === "space") drawStarDust();
     if (state) drawEnvironmentEventOverlay();
     if (state) drawGame(timeMs);
     else drawIdlePreview(timeMs);
@@ -2549,6 +3011,11 @@
       !(meta.settings && meta.settings.reducedFlash) &&
       !(meta.settings && meta.settings.screenShake === false)
     ) ctx.restore();
+    if (state && FXC && fxLevelSetting() === "full") {
+      // per-environment 色彩分級薄疊；low 品質由 vignetteParams 回 null 整層關閉
+      const vignette = fx.vignetteParams(FXC, currentEnvironment(), performanceState.quality);
+      if (vignette) drawVignette(currentEnvironment(), vignette);
+    }
     displayCtx.clearRect(0, 0, DISPLAY_W, DISPLAY_H);
     displayCtx.imageSmoothingEnabled = false;
     displayCtx.drawImage(worldCanvas, 0, 0, W, H, 0, 0, DISPLAY_W, DISPLAY_H);

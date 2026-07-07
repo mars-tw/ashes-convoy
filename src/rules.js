@@ -119,6 +119,10 @@ function validPerformanceMode(mode) {
   return mode === "auto" || mode === "high" || mode === "low";
 }
 
+function validFxLevel(level) {
+  return level === "full" || level === "reduced" || level === "off";
+}
+
 function validFontSize(size) {
   return size === "small" || size === "medium" || size === "large";
 }
@@ -138,6 +142,7 @@ function sanitizeSettings(input, config) {
   });
   if (validDamageTextDensity(source.damageTextDensity)) output.damageTextDensity = source.damageTextDensity;
   if (validPerformanceMode(source.performanceMode)) output.performanceMode = source.performanceMode;
+  if (validFxLevel(source.fxLevel)) output.fxLevel = source.fxLevel;
   if (validFontSize(source.fontSize)) output.fontSize = source.fontSize;
   output.aimAssist = output.aimAssistLevel !== "off";
   return output;

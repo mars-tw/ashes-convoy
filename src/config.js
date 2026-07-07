@@ -4,7 +4,7 @@ const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 2;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R45", CACHE_VERSION: "ashes-convoy-r45-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R47", CACHE_VERSION: "ashes-convoy-r47-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -501,6 +501,563 @@ const WAVE = {
   clusterSizeMax: 7
 };
 
+const FX = {
+  // 特效品質分級：low 粒子上限為 high 的一半以下、發射率減半、關閉 vignette、環境層密度減半。
+  quality: {
+    high: { maxParticles: 96, emitRateMul: 1, vignette: true, trailEvery: 1, envDensityMul: 1 },
+    low: { maxParticles: 48, emitRateMul: 0.5, vignette: false, trailEvery: 2, envDensityMul: 0.5 }
+  },
+  shapes: ["spark", "smoke", "debris", "foam", "dust", "ember", "shard"],
+  // 擊殺爆發：依敵種類型（zombie 血綠碎塊＋骨屑 / mech 火花＋機油黑煙 / boss 多段大爆發）。
+  killBurst: {
+    zombie: [
+      {
+        shape: "debris",
+        count: 9,
+        speedMin: 24,
+        speedMax: 68,
+        angleCenter: -Math.PI / 2,
+        angleSpread: Math.PI * 1.6,
+        lifeMin: 0.3,
+        lifeMax: 0.62,
+        sizeMin: 1.5,
+        sizeMax: 3,
+        sizeEnd: 0.6,
+        colors: ["#6f8f3f", "#4c6b2a", "#39511f"],
+        gravity: 90,
+        drag: 2.2,
+        spin: 6
+      },
+      {
+        shape: "shard",
+        count: 5,
+        speedMin: 30,
+        speedMax: 82,
+        angleCenter: -Math.PI / 2,
+        angleSpread: Math.PI * 1.3,
+        lifeMin: 0.22,
+        lifeMax: 0.5,
+        sizeMin: 1,
+        sizeMax: 2,
+        sizeEnd: 0.5,
+        colors: ["#e8e2cc", "#cfc7ac"],
+        gravity: 110,
+        drag: 1.6,
+        spin: 9
+      }
+    ],
+    mech: [
+      {
+        shape: "spark",
+        count: 10,
+        speedMin: 50,
+        speedMax: 120,
+        angleCenter: -Math.PI / 2,
+        angleSpread: Math.PI * 1.7,
+        lifeMin: 0.12,
+        lifeMax: 0.35,
+        sizeMin: 1,
+        sizeMax: 2,
+        sizeEnd: 0.4,
+        colors: ["#ffd76a", "#ffae42", "#fff2b0"],
+        gravity: 30,
+        drag: 3,
+        spin: 0
+      },
+      {
+        shape: "smoke",
+        count: 4,
+        speedMin: 6,
+        speedMax: 18,
+        angleCenter: -Math.PI / 2,
+        angleSpread: 0.9,
+        lifeMin: 0.5,
+        lifeMax: 1,
+        sizeMin: 2.5,
+        sizeMax: 4,
+        sizeEnd: 7,
+        colors: ["#2c2c30", "#3a3a40"],
+        gravity: -14,
+        drag: 1,
+        spin: 1.5
+      }
+    ],
+    boss: [
+      {
+        shape: "ember",
+        count: 14,
+        delay: 0,
+        speedMin: 40,
+        speedMax: 130,
+        angleCenter: -Math.PI / 2,
+        angleSpread: Math.PI * 2,
+        lifeMin: 0.25,
+        lifeMax: 0.6,
+        sizeMin: 1.5,
+        sizeMax: 3.2,
+        sizeEnd: 0.5,
+        colors: ["#ffb46b", "#ff7a45", "#ffe08a"],
+        gravity: 40,
+        drag: 2.4,
+        spin: 4
+      },
+      {
+        shape: "debris",
+        count: 12,
+        delay: 0.16,
+        speedMin: 30,
+        speedMax: 100,
+        angleCenter: -Math.PI / 2,
+        angleSpread: Math.PI * 2,
+        lifeMin: 0.35,
+        lifeMax: 0.8,
+        sizeMin: 1.6,
+        sizeMax: 3.4,
+        sizeEnd: 0.7,
+        colors: ["#6f8f3f", "#54401f", "#4c6b2a"],
+        gravity: 100,
+        drag: 1.8,
+        spin: 7
+      },
+      {
+        shape: "smoke",
+        count: 8,
+        delay: 0.34,
+        speedMin: 8,
+        speedMax: 26,
+        angleCenter: -Math.PI / 2,
+        angleSpread: Math.PI * 0.9,
+        lifeMin: 0.6,
+        lifeMax: 1.2,
+        sizeMin: 3,
+        sizeMax: 5,
+        sizeEnd: 9,
+        colors: ["#3a3a40", "#2c2c30", "#514238"],
+        gravity: -12,
+        drag: 1,
+        spin: 1
+      }
+    ]
+  },
+  // 命中點小火花：顏色依載具彈色。
+  hitSpark: {
+    base: {
+      shape: "spark",
+      count: 4,
+      speedMin: 36,
+      speedMax: 92,
+      angleCenter: Math.PI / 2,
+      angleSpread: 1.1,
+      lifeMin: 0.08,
+      lifeMax: 0.2,
+      sizeMin: 0.8,
+      sizeMax: 1.8,
+      sizeEnd: 0.3,
+      colors: ["#ffd76a"],
+      gravity: 0,
+      drag: 5,
+      spin: 0
+    },
+    defaultColor: "#ffd76a",
+    colorsByVehicle: {
+      land_rig: "#ffd27f",
+      sky_barge: "#ffe9a8",
+      sea_ark: "#ffb46b",
+      void_runner: "#9fd8ff"
+    }
+  },
+  // 砲口閃焰強化：reducedFlash 開啟時退回保守參數並停用閃爍。
+  muzzleFlash: {
+    scale: 1.55,
+    brightness: 1.35,
+    frames: 3,
+    flickerHz: 24,
+    offset: 2,
+    reducedFlash: { scale: 1.05, brightness: 1, frames: 2, flickerHz: 0, offset: 2 }
+  },
+  // 環境動態層：land 車尾揚塵＋路面飛屑 / sea 船首 V 尾流白沫＋波光點 / air 雲影＋風速線 / space 引擎藍焰＋流星＋星塵視差。
+  environments: {
+    land: {
+      layers: [
+        {
+          id: "wheel_dust",
+          anchor: "vehicle_rear",
+          ratePerSec: 12,
+          shape: "dust",
+          count: 1,
+          speedMin: 4,
+          speedMax: 16,
+          angleCenter: Math.PI / 2,
+          angleSpread: 0.6,
+          lifeMin: 0.45,
+          lifeMax: 0.95,
+          sizeMin: 1.6,
+          sizeMax: 3.2,
+          sizeEnd: 5.5,
+          colors: ["#b09a72", "#8f7b57", "#7a6748"],
+          gravity: -6,
+          drag: 1.4,
+          spin: 0.6,
+          jitterX: 9,
+          jitterY: 2
+        },
+        {
+          id: "road_grit",
+          anchor: "road",
+          ratePerSec: 4,
+          shape: "debris",
+          count: 1,
+          speedMin: 20,
+          speedMax: 42,
+          angleCenter: Math.PI / 2,
+          angleSpread: 0.25,
+          lifeMin: 0.3,
+          lifeMax: 0.6,
+          sizeMin: 0.8,
+          sizeMax: 1.6,
+          sizeEnd: 0.8,
+          colors: ["#6d6156", "#57493c"],
+          gravity: 0,
+          drag: 0,
+          spin: 5,
+          jitterX: 55,
+          jitterY: 6
+        }
+      ]
+    },
+    sea: {
+      layers: [
+        {
+          id: "bow_foam_left",
+          anchor: "vehicle_bow",
+          anchorSide: -1,
+          ratePerSec: 14,
+          shape: "foam",
+          count: 1,
+          speedMin: 10,
+          speedMax: 30,
+          angleCenter: Math.PI * 0.78,
+          angleSpread: 0.35,
+          lifeMin: 0.45,
+          lifeMax: 1,
+          sizeMin: 2.2,
+          sizeMax: 4.2,
+          sizeEnd: 6,
+          colors: ["#eaf6f2", "#bfe3dc", "#8fc7c2"],
+          gravity: 0,
+          drag: 1.8,
+          spin: 0,
+          jitterX: 4,
+          jitterY: 3
+        },
+        {
+          id: "bow_foam_right",
+          anchor: "vehicle_bow",
+          anchorSide: 1,
+          ratePerSec: 14,
+          shape: "foam",
+          count: 1,
+          speedMin: 10,
+          speedMax: 30,
+          angleCenter: Math.PI * 0.22,
+          angleSpread: 0.35,
+          lifeMin: 0.45,
+          lifeMax: 1,
+          sizeMin: 2.2,
+          sizeMax: 4.2,
+          sizeEnd: 6,
+          colors: ["#eaf6f2", "#bfe3dc", "#8fc7c2"],
+          gravity: 0,
+          drag: 1.8,
+          spin: 0,
+          jitterX: 4,
+          jitterY: 3
+        },
+        {
+          id: "sun_glitter",
+          anchor: "water",
+          ratePerSec: 9,
+          shape: "spark",
+          count: 1,
+          speedMin: 0,
+          speedMax: 4,
+          angleCenter: Math.PI / 2,
+          angleSpread: 0.4,
+          lifeMin: 0.3,
+          lifeMax: 0.8,
+          sizeMin: 1,
+          sizeMax: 2,
+          sizeEnd: 0.3,
+          colors: ["#e9fbff", "#bfeef2"],
+          gravity: 0,
+          drag: 0,
+          spin: 0,
+          jitterX: 90,
+          jitterY: 140
+        }
+      ]
+    },
+    air: {
+      layers: [
+        {
+          id: "cloud_shadow",
+          anchor: "screen",
+          ratePerSec: 0.5,
+          shape: "smoke",
+          count: 1,
+          speedMin: 34,
+          speedMax: 52,
+          angleCenter: Math.PI / 2,
+          angleSpread: 0.05,
+          lifeMin: 3,
+          lifeMax: 5,
+          sizeMin: 14,
+          sizeMax: 26,
+          sizeEnd: 26,
+          colors: ["#9fb4c8", "#8aa2b8"],
+          gravity: 0,
+          drag: 0,
+          spin: 0,
+          jitterX: 80,
+          jitterY: 8
+        },
+        {
+          id: "wind_streak",
+          anchor: "screen",
+          ratePerSec: 7,
+          shape: "spark",
+          count: 1,
+          stretch: 6,
+          speedMin: 150,
+          speedMax: 240,
+          angleCenter: Math.PI / 2,
+          angleSpread: 0.03,
+          lifeMin: 0.25,
+          lifeMax: 0.5,
+          sizeMin: 0.6,
+          sizeMax: 1,
+          sizeEnd: 0.4,
+          colors: ["#f4fbff", "#dcecf7"],
+          gravity: 0,
+          drag: 0,
+          spin: 0,
+          jitterX: 90,
+          jitterY: 20
+        }
+      ]
+    },
+    space: {
+      layers: [
+        {
+          id: "engine_flame",
+          anchor: "vehicle_rear",
+          ratePerSec: 20,
+          shape: "ember",
+          count: 1,
+          speedMin: 26,
+          speedMax: 60,
+          angleCenter: Math.PI / 2,
+          angleSpread: 0.3,
+          lifeMin: 0.12,
+          lifeMax: 0.3,
+          sizeMin: 1.2,
+          sizeMax: 2.4,
+          sizeEnd: 0.4,
+          colors: ["#7fd4ff", "#4aa8ff", "#bfeaff"],
+          gravity: 0,
+          drag: 0.6,
+          spin: 0,
+          jitterX: 3,
+          jitterY: 2
+        },
+        {
+          id: "meteor",
+          anchor: "screen",
+          ratePerSec: 0.35,
+          shape: "shard",
+          count: 1,
+          stretch: 8,
+          speedMin: 180,
+          speedMax: 260,
+          angleCenter: Math.PI * 0.62,
+          angleSpread: 0.1,
+          lifeMin: 0.5,
+          lifeMax: 0.9,
+          sizeMin: 1,
+          sizeMax: 1.8,
+          sizeEnd: 0.4,
+          colors: ["#ffe9c8", "#ffb46b"],
+          gravity: 0,
+          drag: 0,
+          spin: 0,
+          jitterX: 100,
+          jitterY: 30
+        },
+        {
+          id: "star_dust",
+          anchor: "parallax",
+          ratePerSec: 0,
+          shape: "spark",
+          colors: ["#cfd6ff", "#ffffff", "#9fb0ff"],
+          parallax: [
+            { speed: 12, density: 0.5, size: 0.7, alpha: 0.5 },
+            { speed: 26, density: 0.3, size: 1, alpha: 0.75 },
+            { speed: 46, density: 0.18, size: 1.4, alpha: 1 }
+          ]
+        }
+      ]
+    }
+  },
+  // 載具生命感：影子橢圓（land/sea 貼地深、air/space 浮空淡＋下移偏移）、怠速浮動、移動傾斜、噴焰/排氣。
+  vehicle: {
+    shadow: {
+      land: { widthMul: 0.94, heightMul: 0.2, alpha: 0.45, offsetY: 3, color: "#000000" },
+      sea: { widthMul: 1, heightMul: 0.24, alpha: 0.35, offsetY: 4, color: "#04222a" },
+      air: { widthMul: 0.68, heightMul: 0.15, alpha: 0.18, offsetY: 16, color: "#000000" },
+      space: { widthMul: 0.56, heightMul: 0.13, alpha: 0.1, offsetY: 20, color: "#000000" }
+    },
+    idle: {
+      land: { amp: 0.5, hz: 2.4 },
+      sea: { amp: 1.8, hz: 0.8 },
+      air: { amp: 1.3, hz: 1.3 },
+      space: { amp: 1, hz: 1 }
+    },
+    tilt: {
+      land: { maxRad: 0.05, perUnit: 0.006, ease: 10 },
+      sea: { maxRad: 0.09, perUnit: 0.01, ease: 6 },
+      air: { maxRad: 0.16, perUnit: 0.016, ease: 8 },
+      space: { maxRad: 0.12, perUnit: 0.013, ease: 9 }
+    },
+    exhaust: {
+      land: {
+        shape: "smoke",
+        ratePerSec: 6,
+        count: 1,
+        speedMin: 5,
+        speedMax: 14,
+        angleCenter: Math.PI / 2,
+        angleSpread: 0.5,
+        lifeMin: 0.4,
+        lifeMax: 0.8,
+        sizeMin: 1.2,
+        sizeMax: 2.2,
+        sizeEnd: 4,
+        colors: ["#4a443c", "#5b544a"],
+        gravity: -8,
+        drag: 1.2,
+        spin: 0.8,
+        jitterX: 2,
+        jitterY: 1
+      },
+      sea: {
+        shape: "foam",
+        ratePerSec: 12,
+        count: 1,
+        speedMin: 8,
+        speedMax: 20,
+        angleCenter: Math.PI / 2,
+        angleSpread: 0.6,
+        lifeMin: 0.5,
+        lifeMax: 1,
+        sizeMin: 2.4,
+        sizeMax: 4.4,
+        sizeEnd: 7,
+        colors: ["#eaf6f2", "#bfe3dc"],
+        gravity: 0,
+        drag: 1.6,
+        spin: 0,
+        jitterX: 7,
+        jitterY: 2
+      },
+      air: {
+        shape: "smoke",
+        ratePerSec: 5,
+        count: 1,
+        speedMin: 20,
+        speedMax: 40,
+        angleCenter: Math.PI / 2,
+        angleSpread: 0.15,
+        lifeMin: 0.5,
+        lifeMax: 1,
+        sizeMin: 0.8,
+        sizeMax: 1.4,
+        sizeEnd: 2.6,
+        colors: ["#e8f2fa", "#cfe2f0"],
+        gravity: 0,
+        drag: 0.4,
+        spin: 0,
+        jitterX: 3,
+        jitterY: 1
+      },
+      space: {
+        shape: "ember",
+        ratePerSec: 18,
+        count: 1,
+        speedMin: 24,
+        speedMax: 54,
+        angleCenter: Math.PI / 2,
+        angleSpread: 0.25,
+        lifeMin: 0.1,
+        lifeMax: 0.26,
+        sizeMin: 1.1,
+        sizeMax: 2.2,
+        sizeEnd: 0.4,
+        colors: ["#7fd4ff", "#4aa8ff"],
+        gravity: 0,
+        drag: 0.5,
+        spin: 0,
+        jitterX: 2,
+        jitterY: 1
+      }
+    }
+  },
+  // vignette 色彩分級：land 暖褐 / sea 冷青 / air 亮白 / space 深紫。low 品質整層關閉。
+  vignette: {
+    land: { color: "#3a2415", strength: 0.32 },
+    sea: { color: "#0c2f33", strength: 0.3 },
+    air: { color: "#e8f1f8", strength: 0.16 },
+    space: { color: "#170b2e", strength: 0.4 }
+  },
+  // 補給箱重繪：像素木箱＋圖示＋浮動＋光暈（取代青色線框）。
+  supplyCrate: {
+    size: 16,
+    body: { fill: "#8a5a2b", edge: "#5d3a18", slat: "#a97b46", strap: "#3f2a14", icon: "#ffd76a" },
+    float: { amp: 1.5, hz: 1.1 },
+    glow: { color: "#ffd76a", radius: 13, alphaMax: 0.32, pulseHz: 1.5 }
+  },
+  // 波次開場「第 N 波」與 Boss 警告演出。reducedFlash 時 flash/shake 一律為 0。
+  waveBanner: {
+    wave: {
+      textTemplate: "第 {n} 波",
+      inTime: 0.35,
+      holdTime: 1.1,
+      outTime: 0.4,
+      offsetY: -46,
+      riseBy: 12,
+      maxScale: 1.18,
+      color: "#f2e6c8",
+      edge: "#3a2a18",
+      flashHz: 0,
+      shake: 0
+    },
+    boss: {
+      textTemplate: "警告：Boss 逼近",
+      inTime: 0.3,
+      holdTime: 1.7,
+      outTime: 0.5,
+      offsetY: -52,
+      riseBy: 8,
+      maxScale: 1.3,
+      color: "#ff6a5a",
+      edge: "#2a0d0d",
+      flashHz: 3,
+      shake: 2.4
+    }
+  },
+  // 震屏強度建議值（渲染端經 DSFx.resolveShake 套用 reducedFlash / screenShake 設定）。
+  shake: { hitAmp: 1.1, killAmp: 0.8, bossKillAmp: 3, max: 6 }
+};
+
 const PERFORMANCE = {
   maxEnemies: 72,
   maxProjectiles: 96,
@@ -513,13 +1070,15 @@ const PERFORMANCE = {
       maxEnemies: 72,
       maxEffects: 90,
       floatingTextMinInterval: 0,
-      enemyAnimScale: 1
+      enemyAnimScale: 1,
+      fx: FX.quality.high
     },
     low: {
       maxEnemies: 54,
       maxEffects: 48,
       floatingTextMinInterval: 0.08,
-      enemyAnimScale: 0.45
+      enemyAnimScale: 0.45,
+      fx: FX.quality.low
     }
   }
 };
@@ -833,6 +1392,7 @@ const META_DEFAULT = {
     screenShake: true,
     damageTextDensity: "all",
     performanceMode: "auto",
+    fxLevel: "full",
     fontSize: "medium",
     sound: true
   },
@@ -865,6 +1425,7 @@ const DSConfig = {
   QUESTS,
   GATES,
   WAVE,
+  FX,
   PERFORMANCE,
   DIFFICULTIES,
   ECONOMY,

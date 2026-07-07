@@ -678,6 +678,7 @@
     if (!els.aimAssistLevelSelect) return;
     els.aimAssistLevelSelect.value = meta.settings.aimAssistLevel || (meta.settings.aimAssist ? "medium" : "off");
     els.screenShakeToggle.checked = meta.settings.screenShake !== false;
+    if (els.fxLevelSelect) els.fxLevelSelect.value = meta.settings.fxLevel || "full";
     els.damageTextDensitySelect.value = meta.settings.damageTextDensity || "all";
     els.performanceModeSelect.value = meta.settings.performanceMode || "auto";
     els.fontSizeSelect.value = meta.settings.fontSize || "medium";
@@ -1290,6 +1291,7 @@
     els.resetBtn.addEventListener("click", clearStorage);
     els.aimAssistLevelSelect.addEventListener("change", () => updateSetting("aimAssistLevel", els.aimAssistLevelSelect.value));
     els.screenShakeToggle.addEventListener("change", () => updateSetting("screenShake", els.screenShakeToggle.checked));
+    els.fxLevelSelect.addEventListener("change", () => updateSetting("fxLevel", els.fxLevelSelect.value));
     els.damageTextDensitySelect.addEventListener("change", () => updateSetting("damageTextDensity", els.damageTextDensitySelect.value));
     els.performanceModeSelect.addEventListener("change", () => updateSetting("performanceMode", els.performanceModeSelect.value));
     els.fontSizeSelect.addEventListener("change", () => updateSetting("fontSize", els.fontSizeSelect.value));
@@ -1409,6 +1411,7 @@
       "settingsPanel",
       "aimAssistLevelSelect",
       "screenShakeToggle",
+      "fxLevelSelect",
       "damageTextDensitySelect",
       "performanceModeSelect",
       "fontSizeSelect",
