@@ -10,8 +10,8 @@ function assertFinitePositive(value, label) {
 
 assert.strictEqual(config.STORAGE_KEY, "ashes_convoy_meta_v1");
 assert.strictEqual(config.META_VERSION, 2);
-assert.strictEqual(config.APP_VERSION, "R44");
-assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r44-v1");
+assert.strictEqual(config.APP_VERSION, "R45");
+assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r45-v1");
 assert.strictEqual(config.LOGIC.width, 195);
 assert.strictEqual(config.LOGIC.height, 422);
 assert.strictEqual(config.LOGIC.displayWidth, 390);
@@ -43,7 +43,7 @@ vehicleIds.forEach((id) => {
   assertFinitePositive(vehicle.hp, `${id}.hp`);
   assert(Number.isFinite(vehicle.armor) && vehicle.armor >= 0, `${id}.armor must be non-negative`);
   assertFinitePositive(vehicle.visualWidth, `${id}.visualWidth`);
-  assert.strictEqual(vehicle.visualWidth, expectedVehicleVisualWidths[id], `${id} should use the R44 visual width`);
+  assert.strictEqual(vehicle.visualWidth, expectedVehicleVisualWidths[id], `${id} should use the R45 visual width`);
   assert(vehicle.visualWidth >= 56 && vehicle.visualWidth <= 64, `${id} raster width should be 56-64 world px`);
   assert.strictEqual(vehicle.visualHalfWidth * 2, vehicle.visualWidth, `${id} visual half width should match visual width`);
   assert(vehicle.visualHalfWidth * 2 < config.LOGIC.roadRight - config.LOGIC.roadLeft, `${id} should fit inside road`);

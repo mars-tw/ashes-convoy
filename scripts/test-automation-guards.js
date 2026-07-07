@@ -25,24 +25,26 @@ function parseSwArray(source, name) {
   return Array.from(match[1].matchAll(/"([^"]+)"/g)).map((item) => item[1]);
 }
 
-function localResource(value) {
+function localResource(value, options) {
   if (!value || value.startsWith("#") || value.startsWith("data:") || value.startsWith("mailto:")) return null;
   if (/^[a-z]+:\/\//i.test(value)) return null;
-  return value.replace(/^\.\//, "").split(/[?#]/)[0] || null;
+  const normalized = value.replace(/^\.\//, "");
+  return options && options.keepSearch ? normalized.split("#")[0] : normalized.split(/[?#]/)[0] || null;
 }
 
 function indexLocalResources(indexHtml) {
   const resources = new Set();
   for (const match of indexHtml.matchAll(/<(?:script|link)\b[^>]*(?:src|href)="([^"]+)"/g)) {
-    const resource = localResource(match[1]);
+    const resource = localResource(match[1], { keepSearch: true });
     if (resource) resources.add(resource);
   }
   return resources;
 }
 
 function fileExists(cachePath) {
-  if (cachePath === "./") return fs.existsSync(path.join(rootDir, "index.html"));
-  return fs.existsSync(path.join(rootDir, cachePath));
+  const cleanPath = cachePath.split(/[?#]/)[0];
+  if (cleanPath === "./") return fs.existsSync(path.join(rootDir, "index.html"));
+  return fs.existsSync(path.join(rootDir, cleanPath));
 }
 
 const swText = readText("sw.js");
@@ -52,10 +54,18 @@ const appShell = parseSwArray(swText, "APP_SHELL_PATHS");
 const assets = parseSwArray(swText, "ASSET_PATHS");
 const cached = new Set([...appShell, ...assets]);
 
-const expectedCached = new Set(["./", "index.html", "offline.html", "manifest.webmanifest"]);
-indexLocalResources(indexHtml).forEach((resource) => expectedCached.add(resource));
+const indexResources = indexLocalResources(indexHtml);
+indexResources.forEach((resource) => {
+  const url = new URL(resource, "https://example.test/");
+  assert.strictEqual(url.searchParams.get("v"), version.APP_VERSION, `${resource} should use ?v=${version.APP_VERSION}`);
+});
+
+const expectedCached = new Set(["./", "index.html", "offline.html"]);
+indexResources.forEach((resource) => expectedCached.add(resource));
 manifest.icons.forEach((icon) => expectedCached.add(icon.src));
-listFiles("src", ".js").forEach((resource) => expectedCached.add(resource));
+listFiles("src", ".js").forEach((resource) => {
+  assert(indexResources.has(`${resource}?v=${version.APP_VERSION}`), `index.html should version ${resource}`);
+});
 expectedCached.add(config.START_SCREEN.image);
 listFiles("assets/env", ".png").forEach((resource) => expectedCached.add(resource));
 Object.values(config.VEHICLES).forEach((vehicle) => expectedCached.add(vehicle.spriteImage));
@@ -73,7 +83,7 @@ expectedCached.forEach((resource) => {
   assert(fileExists(resource), `service worker cache entry does not exist: ${resource}`);
 });
 
-assert.strictEqual(version.APP_VERSION, "R44");
+assert.strictEqual(version.APP_VERSION, "R45");
 assert.strictEqual(version.CACHE_VERSION, `ashes-convoy-${version.APP_VERSION.toLowerCase()}-v1`);
 assert.strictEqual(config.APP_VERSION, version.APP_VERSION, "config APP_VERSION should use src/version.js");
 assert.strictEqual(config.CACHE_VERSION, version.CACHE_VERSION, "config CACHE_VERSION should use src/version.js");
@@ -81,6 +91,7 @@ assert(swText.includes('importScripts("src/version.js")'), "service worker shoul
 assert(swText.includes("DSVersion.CACHE_VERSION"), "service worker cache version should derive from DSVersion");
 assert(swText.includes("self.skipWaiting()"), "service worker should skip waiting during install");
 assert(swText.includes("self.clients.claim()"), "service worker should claim clients during activate");
+assert(swText.includes("cache.match(request);"), "service worker cache-first requests should preserve URL query versions");
 assert(!/ashes-convoy-r\d+-v\d+/i.test(swText), "service worker should not hard-code release cache versions");
 const uiText = readText("src/ui.js");
 assert(uiText.includes("config.APP_VERSION"), "settings version text should render config.APP_VERSION");
@@ -88,6 +99,7 @@ assert(uiText.includes("controllerchange"), "page should listen for service work
 assert(uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"), "page should gate service worker auto reload to 15 seconds");
 assert(uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"), "page should guard service worker auto reload by session");
 assert(uiText.includes("root.location.reload()"), "page should auto reload after a fresh service worker takes control");
+assert(indexHtml.includes("ashes_convoy_html_boot_reload_R45"), "HTML boot guard should cover pre-JS service worker skew");
 
 const userVisibleFiles = ["index.html", ...listFiles("src", ".js")];
 const mojibakePatterns = [

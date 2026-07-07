@@ -9,15 +9,15 @@ const APP_SHELL_PATHS = [
   "./",
   "index.html",
   "offline.html",
-  "manifest.webmanifest",
-  "src/version.js",
-  "src/sprites.js",
-  "src/sprite-renderer.js",
-  "src/shelter-scene.js",
-  "src/config.js",
-  "src/rules.js",
-  "src/game.js",
-  "src/ui.js"
+  "manifest.webmanifest?v=R45",
+  "src/version.js?v=R45",
+  "src/sprites.js?v=R45",
+  "src/sprite-renderer.js?v=R45",
+  "src/shelter-scene.js?v=R45",
+  "src/config.js?v=R45",
+  "src/rules.js?v=R45",
+  "src/game.js?v=R45",
+  "src/ui.js?v=R45"
 ];
 const ASSET_PATHS = [
   "assets/ui/start.png",
@@ -37,6 +37,7 @@ const ASSET_PATHS = [
   "assets/shelter/greenhouse.png",
   "assets/shelter/snow.png",
   "assets/shelter/workshop.png",
+  "assets/icons/icon-192.png?v=R45",
   "assets/icons/icon-192.png",
   "assets/icons/icon-512.png"
 ];
@@ -55,7 +56,8 @@ function pathKey(requestOrPath) {
   const scopePath = new URL(self.registration.scope).pathname;
   let pathname = url.pathname;
   if (pathname.startsWith(scopePath)) pathname = pathname.slice(scopePath.length);
-  return pathname.replace(/^\/+/, "") || "./";
+  const key = pathname.replace(/^\/+/, "") || "./";
+  return url.search ? `${key}${url.search}` : key;
 }
 
 function isHtmlRequest(request) {
@@ -69,7 +71,7 @@ function isCacheFirstRequest(request) {
 
 async function cacheFirst(request) {
   const cache = await caches.open(APP_CACHE);
-  const cached = await cache.match(request, { ignoreSearch: true });
+  const cached = await cache.match(request);
   if (cached) return cached;
   const response = await fetch(request);
   if (response && response.ok) cache.put(request, response.clone());

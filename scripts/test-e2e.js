@@ -282,8 +282,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js") && swText.includes("src/ui.js") && swText.includes("src/game.js") && swText.includes("src/rules.js"),
+      swCachesJs: swText.includes("src/version.js?v=R45") && swText.includes("src/ui.js?v=R45") && swText.includes("src/game.js?v=R45") && swText.includes("src/rules.js?v=R45"),
+      swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R45"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R45"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R45"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -292,12 +296,13 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest", "page should link the web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R45", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
   assert(pwa.swHasVersion && pwa.swImportsVersion && pwa.swHasSkipWaiting && pwa.swHasClientsClaim && pwa.swHasNetworkFirst && pwa.swHasCacheFirst, "service worker should define versioned network/cache strategies and immediate activation");
-  assert(pwa.swCachesJs && pwa.swHasOffline, "service worker should cache JS app shell and offline fallback");
+  assert(pwa.swCachesJs && pwa.swQuerySensitiveCache && pwa.swHasOffline, "service worker should cache versioned JS app shell and match query-sensitive requests");
+  assert(pwa.htmlHasVersionedScripts && pwa.htmlHasVersionedLinks && pwa.htmlBootGuard, "HTML should version local resources and include the pre-JS update guard");
   assert(pwa.uiHasControllerChange && pwa.uiHasAutoReloadWindow && pwa.uiHasSessionGuard && pwa.uiHasAutoReload, "page should auto reload once after early service worker controllerchange");
   assert.strictEqual(pwa.webdriver, true, "E2E should run under webdriver");
   assert.strictEqual(pwa.registrationCount, 0, "webdriver sessions should skip service worker registration");
@@ -327,6 +332,44 @@ async function checkLiveRegionsAndKeyboard(page) {
     focusSeen.some((id) => ["sortieBtn", "upgradeHotspotBtn", "vehicleHotspotBtn", "seriesHotspotBtn", "opsHotspotBtn"].includes(id)),
     `keyboard Tab smoke should reach shelter controls, saw ${focusSeen.join(",")}`
   );
+}
+
+async function assertControlReachable(page, selector, label) {
+  const locator = page.locator(selector).first();
+  await locator.scrollIntoViewIfNeeded();
+  const box = await locator.boundingBox();
+  assert(box, `${label} should have a bounding box`);
+  const viewport = page.viewportSize();
+  assert(viewport, "viewport should be available");
+  assert(box.x >= -1 && box.x + box.width <= viewport.width + 1, `${label} should be horizontally within viewport`);
+  assert(box.y >= -1 && box.y + box.height <= viewport.height + 1, `${label} should be vertically within viewport after scrolling`);
+}
+
+async function checkShortDesktopReachability(page) {
+  await page.waitForSelector("#garagePanel:not([hidden])");
+  for (const selector of ["#sortieBtn", "#upgradeHotspotBtn", "#vehicleHotspotBtn", "#seriesHotspotBtn", "#opsHotspotBtn", "#resetOverlayBtn"]) {
+    await assertControlReachable(page, selector, selector);
+  }
+  await page.click("#opsHotspotBtn");
+  await page.waitForSelector('#metaDrawer:not([hidden]) [data-meta-section="operations"]:not([hidden])');
+  for (const selector of [
+    "#aimAssistLevelSelect",
+    "#screenShakeToggle",
+    "#damageTextDensitySelect",
+    "#performanceModeSelect",
+    "#fontSizeSelect",
+    "#checkUpdateBtn",
+    "#exportSaveBtn",
+    "#importSaveBtn"
+  ]) {
+    await assertControlReachable(page, selector, selector);
+  }
+  await page.click("#checkUpdateBtn");
+  await assertControlReachable(page, "#checkUpdateBtn", "check update button after click");
+  await page.click("#exportSaveBtn");
+  await assertControlReachable(page, "#exportSaveBtn", "export save button after click");
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(() => document.getElementById("metaDrawer").hidden === true);
 }
 
 async function checkClearStorageButton(page) {
@@ -435,7 +478,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R44"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R45"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -1459,6 +1502,9 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await checkNewSaveVehicleLocks(page);
   await checkOldSaveRetention(page);
   await checkGarageUpgradeLines(page);
+  if (viewport.width === 1366 && viewport.height === 700) {
+    await checkShortDesktopReachability(page);
+  }
   await checkSettingsAndQuestBoard(page);
   await checkWaveProgressionRegression(page);
   await page.evaluate(() => window.__test.clearStorage());
@@ -1649,7 +1695,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r44")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r45")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -1667,7 +1713,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r44")), "R44 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r45")), "R45 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());
@@ -1696,7 +1742,8 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
   const viewports = [
     { width: 390, height: 844 },
     { width: 820, height: 1180 },
-    { width: 1280, height: 900 }
+    { width: 1280, height: 900 },
+    { width: 1366, height: 700 }
   ];
 
   try {
