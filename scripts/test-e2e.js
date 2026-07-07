@@ -266,6 +266,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
     const manifestResponse = await fetch(manifestLink.getAttribute("href"));
     const manifest = await manifestResponse.json();
     const swText = await fetch("sw.js").then((response) => response.text());
+    const uiText = await fetch("src/ui.js").then((response) => response.text());
     const registrations =
       "serviceWorker" in navigator && navigator.serviceWorker.getRegistrations
         ? await navigator.serviceWorker.getRegistrations()
@@ -277,10 +278,16 @@ async function checkPwaFilesAndSkipRegistration(page) {
       icons: manifest.icons.map((icon) => icon.sizes).sort(),
       swHasVersion: swText.includes("CACHE_VERSION"),
       swImportsVersion: swText.includes('importScripts("src/version.js")') && swText.includes("DSVersion.CACHE_VERSION"),
+      swHasSkipWaiting: swText.includes("self.skipWaiting()"),
+      swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
       swCachesJs: swText.includes("src/version.js") && swText.includes("src/ui.js") && swText.includes("src/game.js") && swText.includes("src/rules.js"),
       swHasOffline: swText.includes("offline.html"),
+      uiHasControllerChange: uiText.includes("controllerchange"),
+      uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
+      uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
+      uiHasAutoReload: uiText.includes("root.location.reload()"),
       webdriver: navigator.webdriver,
       registrationCount: registrations.length
     };
@@ -289,8 +296,9 @@ async function checkPwaFilesAndSkipRegistration(page) {
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
-  assert(pwa.swHasVersion && pwa.swImportsVersion && pwa.swHasNetworkFirst && pwa.swHasCacheFirst, "service worker should define versioned network/cache strategies");
+  assert(pwa.swHasVersion && pwa.swImportsVersion && pwa.swHasSkipWaiting && pwa.swHasClientsClaim && pwa.swHasNetworkFirst && pwa.swHasCacheFirst, "service worker should define versioned network/cache strategies and immediate activation");
   assert(pwa.swCachesJs && pwa.swHasOffline, "service worker should cache JS app shell and offline fallback");
+  assert(pwa.uiHasControllerChange && pwa.uiHasAutoReloadWindow && pwa.uiHasSessionGuard && pwa.uiHasAutoReload, "page should auto reload once after early service worker controllerchange");
   assert.strictEqual(pwa.webdriver, true, "E2E should run under webdriver");
   assert.strictEqual(pwa.registrationCount, 0, "webdriver sessions should skip service worker registration");
 }
@@ -427,7 +435,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R43"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R44"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -1641,7 +1649,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r43")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r44")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -1659,7 +1667,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r43")), "R43 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r44")), "R44 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

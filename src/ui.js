@@ -15,6 +15,11 @@
   let recommendedUpgradeTrack = "";
   let lastDrawerTrigger = null;
   let swRegistration = null;
+  let swControllerChangeBound = false;
+  let hadServiceWorkerControllerAtLoad = false;
+  const swAutoReloadStartedAt = Date.now();
+  const SW_AUTO_RELOAD_WINDOW_MS = 15000;
+  const SW_AUTO_RELOAD_SESSION_KEY = "ashes_convoy_sw_auto_reload";
   const gateChoiceButtons = new Map();
   let gateChoiceLayerSize = {
     width: config.LOGIC.displayWidth,
@@ -100,10 +105,45 @@
     setStatus("新版本可用，重新整理後套用。");
   }
 
+  function sessionValue(key) {
+    try {
+      return root.sessionStorage ? root.sessionStorage.getItem(key) : root[`__${key}`] || "";
+    } catch (error) {
+      return root[`__${key}`] || "";
+    }
+  }
+
+  function setSessionValue(key, value) {
+    try {
+      if (root.sessionStorage) root.sessionStorage.setItem(key, value);
+      else root[`__${key}`] = value;
+    } catch (error) {
+      root[`__${key}`] = value;
+    }
+  }
+
+  function installServiceWorkerControllerChangeHandler() {
+    if (swControllerChangeBound || !("serviceWorker" in root.navigator)) return;
+    swControllerChangeBound = true;
+    hadServiceWorkerControllerAtLoad = !!root.navigator.serviceWorker.controller;
+    root.navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (!hadServiceWorkerControllerAtLoad) return;
+      const guardValue = sessionValue(SW_AUTO_RELOAD_SESSION_KEY);
+      const elapsed = Date.now() - swAutoReloadStartedAt;
+      if (elapsed <= SW_AUTO_RELOAD_WINDOW_MS && guardValue !== config.CACHE_VERSION) {
+        setSessionValue(SW_AUTO_RELOAD_SESSION_KEY, config.CACHE_VERSION);
+        root.location.reload();
+        return;
+      }
+      showUpdateAvailable();
+    });
+  }
+
   function registerServiceWorker() {
     if (!("serviceWorker" in root.navigator)) return;
     const params = new URLSearchParams(root.location.search || "");
     if (root.navigator.webdriver && !params.has("swtest")) return;
+    installServiceWorkerControllerChangeHandler();
     root.navigator.serviceWorker.register("sw.js").then((registration) => {
       swRegistration = registration;
       if (registration.waiting) showUpdateAvailable();

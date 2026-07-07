@@ -73,14 +73,21 @@ expectedCached.forEach((resource) => {
   assert(fileExists(resource), `service worker cache entry does not exist: ${resource}`);
 });
 
-assert.strictEqual(version.APP_VERSION, "R43");
+assert.strictEqual(version.APP_VERSION, "R44");
 assert.strictEqual(version.CACHE_VERSION, `ashes-convoy-${version.APP_VERSION.toLowerCase()}-v1`);
 assert.strictEqual(config.APP_VERSION, version.APP_VERSION, "config APP_VERSION should use src/version.js");
 assert.strictEqual(config.CACHE_VERSION, version.CACHE_VERSION, "config CACHE_VERSION should use src/version.js");
 assert(swText.includes('importScripts("src/version.js")'), "service worker should import the shared version source");
 assert(swText.includes("DSVersion.CACHE_VERSION"), "service worker cache version should derive from DSVersion");
+assert(swText.includes("self.skipWaiting()"), "service worker should skip waiting during install");
+assert(swText.includes("self.clients.claim()"), "service worker should claim clients during activate");
 assert(!/ashes-convoy-r\d+-v\d+/i.test(swText), "service worker should not hard-code release cache versions");
-assert(readText("src/ui.js").includes("config.APP_VERSION"), "settings version text should render config.APP_VERSION");
+const uiText = readText("src/ui.js");
+assert(uiText.includes("config.APP_VERSION"), "settings version text should render config.APP_VERSION");
+assert(uiText.includes("controllerchange"), "page should listen for service worker controller changes");
+assert(uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"), "page should gate service worker auto reload to 15 seconds");
+assert(uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"), "page should guard service worker auto reload by session");
+assert(uiText.includes("root.location.reload()"), "page should auto reload after a fresh service worker takes control");
 
 const userVisibleFiles = ["index.html", ...listFiles("src", ".js")];
 const mojibakePatterns = [
