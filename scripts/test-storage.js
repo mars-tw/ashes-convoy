@@ -21,6 +21,9 @@ assert.strictEqual(freshAgain.settings.screenShake, true);
 assert.strictEqual(freshAgain.settings.damageTextDensity, "all");
 assert.strictEqual(freshAgain.settings.fontSize, "medium");
 assert.strictEqual(freshAgain.questStats.supplyCrates, 0);
+assert.strictEqual(freshAgain.trailerGoods, 0);
+assert.strictEqual(freshAgain.trailerRoom.slots.wall_left, null);
+assert.deepStrictEqual(freshAgain.trailerRoom.owned, {});
 
 const invalid = rules.migrateMeta("{not-json", { config });
 assert.deepStrictEqual(invalid, config.META_DEFAULT, "invalid JSON should fall back to default");
@@ -51,6 +54,12 @@ const dirty = {
   questStats: { variantKills: 3.8, eventCompletions: "2", supplyCrates: 4, environmentWins: { land: 1, ghost: 9 } },
   questBaselines: { "daily:test": { variantKills: 1, environmentWins: { land: 1 } } },
   questClaims: { "daily:test": true, ghost: "yes" },
+  trailerGoods: "17",
+  trailerRoom: {
+    owned: { supply_shelf: true, ghost_lamp: true, blueprint_board: false },
+    slots: { wall_left: "supply_shelf", wall_right: "ghost_lamp", desk: "blueprint_board" },
+    seenIntro: true
+  },
   bestByVehicle: {
     iron_crow: { wave: 6, score: 4000, kills: 42, bosses: 1, at: "2026-07-03T00:00:00.000Z" },
     sea_ark: { wave: 5, score: 3500, kills: 30, bosses: 1, at: "2026-07-03T00:00:00.000Z" },
@@ -121,6 +130,13 @@ assert.strictEqual(migrated.questStats.environmentWins.ghost, undefined);
 assert.strictEqual(migrated.questBaselines["daily:test"].variantKills, 1);
 assert.strictEqual(migrated.questClaims["daily:test"], true);
 assert.strictEqual(migrated.questClaims.ghost, undefined);
+assert.strictEqual(migrated.trailerGoods, 17);
+assert.strictEqual(migrated.trailerRoom.owned.supply_shelf, true);
+assert.strictEqual(migrated.trailerRoom.owned.ghost_lamp, undefined);
+assert.strictEqual(migrated.trailerRoom.slots.wall_left, "supply_shelf");
+assert.strictEqual(migrated.trailerRoom.slots.wall_right, null);
+assert.strictEqual(migrated.trailerRoom.slots.desk, null);
+assert.strictEqual(migrated.trailerRoom.seenIntro, true);
 assert.strictEqual(migrated.blueprints.rift_hauler, undefined);
 assert.strictEqual(migrated.blueprints.frost_wing, undefined);
 assert.strictEqual(migrated.bestByVehicle.iron_crow, undefined);

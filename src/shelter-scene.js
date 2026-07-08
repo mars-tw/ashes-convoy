@@ -4,7 +4,8 @@ const SHELTER_HOTSPOTS = {
   sortie: { x: 0.78, y: 0.69, w: 0.19, h: 0.21, label: "出勤" },
   upgrades: { x: 0.04, y: 0.17, w: 0.27, h: 0.25, label: "升級" },
   vehicle: { x: 0.07, y: 0.82, w: 0.26, h: 0.12, label: "載具" },
-  series: { x: 0.70, y: 0.34, w: 0.24, h: 0.16, label: "系列" }
+  series: { x: 0.70, y: 0.34, w: 0.24, h: 0.16, label: "系列" },
+  trailer: { x: 0.46, y: 0.79, w: 0.21, h: 0.12, label: "拖車" }
 };
 
 const BASE_W = 390;
@@ -294,8 +295,311 @@ function drawShelterScene(ctx, opts = {}) {
   return { contentRect, scale, hotspots: SHELTER_HOTSPOTS };
 }
 
+function drawTrailerRoomShell(ctx, r, s, timeMs) {
+  const x = (v) => r.x + v * s;
+  const y = (v) => r.y + v * s;
+  const wall = ctx.createLinearGradient(0, y(74), 0, y(656));
+  wall.addColorStop(0, "#16191d");
+  wall.addColorStop(0.42, "#302820");
+  wall.addColorStop(1, "#171515");
+  ctx.fillStyle = wall;
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+  ctx.fillStyle = "#211b17";
+  ctx.fillRect(x(22), y(78), 346 * s, 548 * s);
+  ctx.fillStyle = "#111316";
+  ctx.fillRect(x(22), y(626), 346 * s, 144 * s);
+  ctx.strokeStyle = "rgba(236,197,126,0.18)";
+  ctx.lineWidth = 2 * s;
+  ctx.strokeRect(x(22), y(78), 346 * s, 692 * s);
+  for (let i = 0; i < 8; i += 1) {
+    drawLine(ctx, x(36 + i * 45), y(88), x(18 + i * 48), y(628), "rgba(255,210,142,0.08)", 1 * s);
+  }
+  for (let i = 0; i < 7; i += 1) {
+    drawLine(ctx, x(26), y(646 + i * 17), x(366), y(640 + i * 20), "rgba(238,166,96,0.18)", 1.2 * s);
+  }
+
+  const wx = x(128);
+  const wy = y(118);
+  const ww = 134 * s;
+  const wh = 102 * s;
+  const sky = ctx.createLinearGradient(wx, wy, wx, wy + wh);
+  sky.addColorStop(0, "#20394b");
+  sky.addColorStop(1, "#101821");
+  ctx.fillStyle = sky;
+  ctx.fillRect(wx, wy, ww, wh);
+  ctx.fillStyle = "rgba(113,148,154,0.38)";
+  for (let i = 0; i < 5; i += 1) {
+    const px = wx + ((timeMs / 120 + i * 27) % 128) * s;
+    ctx.fillRect(px, wy + (22 + i * 13) * s, (20 + i * 3) * s, 2 * s);
+  }
+  [[161, 175, 11], [211, 183, 8], [236, 171, 7]].forEach(([zx, zy, scale]) => {
+    ctx.fillStyle = "rgba(18,25,23,0.74)";
+    ctx.fillRect(x(zx), y(zy), scale * 0.55 * s, scale * 1.55 * s);
+    ctx.fillRect(x(zx - 2), y(zy + 7), scale * 0.35 * s, scale * 0.35 * s);
+    ctx.fillRect(x(zx + 5), y(zy + 7), scale * 0.35 * s, scale * 0.35 * s);
+  });
+  ctx.strokeStyle = "#17120f";
+  ctx.lineWidth = 6 * s;
+  ctx.strokeRect(wx, wy, ww, wh);
+  drawLine(ctx, wx + ww * 0.5, wy, wx + ww * 0.5, wy + wh, "#17120f", 3 * s);
+
+  ctx.fillStyle = "#3d3027";
+  ctx.fillRect(x(78), y(468), 190 * s, 55 * s);
+  ctx.fillStyle = "#18181b";
+  ctx.fillRect(x(68), y(512), 214 * s, 28 * s);
+  ctx.fillStyle = "#75684f";
+  ctx.fillRect(x(88), y(454), 118 * s, 38 * s);
+  ctx.fillStyle = "#463d37";
+  ctx.fillRect(x(166), y(438), 62 * s, 52 * s);
+  ctx.fillStyle = "#d7a87a";
+  ctx.fillRect(x(191), y(430), 20 * s, 13 * s);
+  ctx.fillStyle = "#2d2322";
+  ctx.fillRect(x(183), y(441), 46 * s, 18 * s);
+  ctx.fillStyle = "rgba(255,220,150,0.18)";
+  ctx.fillRect(x(96), y(455), 102 * s, 7 * s);
+
+  ctx.fillStyle = "#8c7f61";
+  ctx.fillRect(x(48), y(574), 48 * s, 29 * s);
+  ctx.fillStyle = "#24211c";
+  ctx.fillRect(x(52), y(581), 38 * s, 2 * s);
+  ctx.fillRect(x(52), y(590), 28 * s, 2 * s);
+  ctx.fillStyle = "rgba(0,0,0,0.22)";
+  ctx.fillRect(x(30), y(621), 326 * s, 15 * s);
+}
+
+const TRAILER_ROOM_ASSETS = {
+  base: "assets/shelter/trailer/base_escape_pod.png",
+  furniture: {
+    supply_shelf: "assets/shelter/trailer/supply_shelf.png",
+    solar_radio: "assets/shelter/trailer/solar_radio.png",
+    patched_lights: "assets/shelter/trailer/patched_lights.png",
+    hydro_planter: "assets/shelter/trailer/hydro_planter.png",
+    water_filter: "assets/shelter/trailer/water_filter.png",
+    folding_workbench: "assets/shelter/trailer/folding_workbench.png",
+    blueprint_board: "assets/shelter/trailer/blueprint_board.png",
+    battery_bank: "assets/shelter/trailer/battery_bank.png"
+  },
+  anchors: {
+    wall_left: { x: 92, y: 138, w: 138, h: 120 },
+    wall_right: { x: 548, y: 145, w: 126, h: 136 },
+    window_sill: { x: 246, y: 304, w: 292, h: 114 },
+    bedside: { x: 560, y: 506, w: 112, h: 92 },
+    floor_left: { x: 94, y: 548, w: 132, h: 136 },
+    floor_right: { x: 526, y: 694, w: 168, h: 102 },
+    desk: { x: 380, y: 632, w: 268, h: 168 },
+    ceiling: { x: 160, y: 78, w: 460, h: 86 }
+  }
+};
+
+const trailerImageCache = new Map();
+
+function isImageReady(image) {
+  return !!(image && image.complete && image.naturalWidth > 0 && image.naturalHeight > 0);
+}
+
+function getTrailerImage(src) {
+  if (!src || typeof window === "undefined" || typeof window.Image !== "function") return null;
+  if (trailerImageCache.has(src)) return trailerImageCache.get(src);
+  const image = new window.Image();
+  image.decoding = "async";
+  image.onload = () => {
+    if (typeof window.dispatchEvent === "function" && typeof window.CustomEvent === "function") {
+      window.dispatchEvent(new window.CustomEvent("ashes-trailer-asset-ready", { detail: { src } }));
+    }
+  };
+  image.src = src;
+  trailerImageCache.set(src, image);
+  return image;
+}
+
+function fitContain(srcW, srcH, dstW, dstH) {
+  const scale = Math.min(dstW / srcW, dstH / srcH);
+  const w = srcW * scale;
+  const h = srcH * scale;
+  return {
+    x: (dstW - w) / 2,
+    y: (dstH - h) / 2,
+    w,
+    h,
+    scale
+  };
+}
+
+function drawImageInRect(ctx, image, rect) {
+  if (!isImageReady(image) || !rect) return false;
+  const scale = Math.min(rect.w / image.naturalWidth, rect.h / image.naturalHeight);
+  const w = image.naturalWidth * scale;
+  const h = image.naturalHeight * scale;
+  const x = rect.x + (rect.w - w) / 2;
+  const y = rect.y + (rect.h - h) / 2;
+  ctx.drawImage(image, x, y, w, h);
+  return true;
+}
+
+function drawEmptyTrailerHints(ctx, r, s) {
+  const x = (v) => r.x + v * s;
+  const y = (v) => r.y + v * s;
+  ctx.save();
+  ctx.strokeStyle = "rgba(236,197,126,0.16)";
+  ctx.lineWidth = 1.4 * s;
+  [[48, 158, 62, 72], [282, 154, 54, 70], [58, 346, 64, 44], [274, 356, 60, 46]].forEach(([px, py, w, h]) => {
+    ctx.strokeRect(x(px), y(py), w * s, h * s);
+  });
+  ctx.fillStyle = "rgba(229,195,132,0.18)";
+  ctx.fillRect(x(51), y(172), 54 * s, 4 * s);
+  ctx.fillRect(x(286), y(177), 46 * s, 4 * s);
+  ctx.restore();
+}
+
+function drawTrailerFurniture(ctx, r, s, id, timeMs) {
+  const x = (v) => r.x + v * s;
+  const y = (v) => r.y + v * s;
+  ctx.save();
+  if (id === "supply_shelf") {
+    ctx.fillStyle = "#574333";
+    ctx.fillRect(x(42), y(146), 88 * s, 8 * s);
+    ctx.fillRect(x(42), y(200), 88 * s, 8 * s);
+    ctx.fillStyle = "#82714d";
+    for (let i = 0; i < 6; i += 1) ctx.fillRect(x(48 + i * 13), y(162 + (i % 2) * 25), 8 * s, 20 * s);
+    ctx.fillStyle = "#49594b";
+    ctx.fillRect(x(105), y(159), 15 * s, 25 * s);
+    ctx.strokeStyle = "#7d6b46";
+    ctx.lineWidth = 2 * s;
+    ctx.strokeRect(x(60), y(210), 24 * s, 24 * s);
+  } else if (id === "solar_radio") {
+    ctx.fillStyle = "#1b2021";
+    ctx.fillRect(x(274), y(441), 52 * s, 28 * s);
+    ctx.fillStyle = "#a07b46";
+    ctx.fillRect(x(280), y(447), 18 * s, 12 * s);
+    ctx.fillStyle = "#67746a";
+    ctx.fillRect(x(302), y(445), 14 * s, 14 * s);
+    ctx.strokeStyle = "#c7a966";
+    ctx.lineWidth = 2 * s;
+    drawLine(ctx, x(316), y(440), x(333), y(417), "#c7a966", 2 * s);
+  } else if (id === "patched_lights") {
+    ctx.strokeStyle = "#5c4632";
+    ctx.lineWidth = 2 * s;
+    drawLine(ctx, x(58), y(118), x(338), y(136), "#5c4632", 2 * s);
+    for (let i = 0; i < 9; i += 1) {
+      const pulse = 0.65 + Math.sin(timeMs / 320 + i) * 0.25;
+      ctx.fillStyle = `rgba(231,181,91,${pulse})`;
+      ctx.fillRect(x(66 + i * 31), y(119 + (i % 2) * 7), 6 * s, 8 * s);
+    }
+  } else if (id === "hydro_planter") {
+    ctx.fillStyle = "#3c4735";
+    ctx.fillRect(x(126), y(236), 136 * s, 20 * s);
+    ctx.fillStyle = "#80906a";
+    for (let i = 0; i < 8; i += 1) {
+      ctx.fillRect(x(138 + i * 14), y(220 - (i % 3) * 4), 9 * s, 17 * s);
+      ctx.fillStyle = i % 2 ? "#6f7a51" : "#9a7f4a";
+    }
+    ctx.strokeStyle = "#6e7b72";
+    drawLine(ctx, x(134), y(254), x(250), y(254), "#6e7b72", 2 * s);
+  } else if (id === "water_filter") {
+    ctx.fillStyle = "#4b4637";
+    ctx.fillRect(x(48), y(538), 68 * s, 16 * s);
+    ctx.fillStyle = "rgba(122,164,174,0.52)";
+    ctx.fillRect(x(54), y(506), 17 * s, 32 * s);
+    ctx.fillRect(x(78), y(494), 21 * s, 44 * s);
+    ctx.fillStyle = "#8b7652";
+    ctx.fillRect(x(55), y(523), 15 * s, 7 * s);
+    ctx.fillRect(x(80), y(516), 18 * s, 10 * s);
+  } else if (id === "folding_workbench") {
+    ctx.fillStyle = "#5f4535";
+    ctx.fillRect(x(218), y(518), 105 * s, 35 * s);
+    ctx.fillStyle = "#8b7057";
+    ctx.fillRect(x(226), y(506), 92 * s, 18 * s);
+    ctx.fillStyle = "#22282b";
+    ctx.fillRect(x(238), y(493), 34 * s, 12 * s);
+    ctx.fillStyle = "#b89c6a";
+    ctx.fillRect(x(278), y(493), 30 * s, 20 * s);
+    ctx.fillStyle = "#4d6b64";
+    ctx.fillRect(x(231), y(513), 22 * s, 12 * s);
+  } else if (id === "blueprint_board") {
+    ctx.fillStyle = "#66523b";
+    ctx.fillRect(x(282), y(145), 58 * s, 72 * s);
+    ctx.fillStyle = "#c2b488";
+    ctx.fillRect(x(289), y(154), 44 * s, 24 * s);
+    ctx.fillRect(x(294), y(185), 35 * s, 21 * s);
+    ctx.strokeStyle = "#574b39";
+    drawLine(ctx, x(294), y(166), x(326), y(166), "#574b39", 1.5 * s);
+    drawLine(ctx, x(302), y(191), x(323), y(202), "#574b39", 1.5 * s);
+  } else if (id === "battery_bank") {
+    ctx.fillStyle = "#2a2f2c";
+    ctx.fillRect(x(275), y(574), 66 * s, 42 * s);
+    ctx.fillStyle = "#6d5d3f";
+    ctx.fillRect(x(282), y(582), 19 * s, 25 * s);
+    ctx.fillRect(x(307), y(582), 19 * s, 25 * s);
+    ctx.fillStyle = "#c99a52";
+    ctx.fillRect(x(286), y(577), 7 * s, 5 * s);
+    ctx.fillRect(x(312), y(577), 7 * s, 5 * s);
+    drawLine(ctx, x(300), y(589), x(307), y(589), "#c99a52", 2 * s);
+  }
+  ctx.restore();
+}
+
+function drawTrailerRoom(ctx, opts = {}) {
+  if (!ctx || typeof ctx.fillRect !== "function") {
+    throw new Error("DSShelterScene: drawTrailerRoom requires a 2D canvas context.");
+  }
+  const width = opts.width || (ctx.canvas && ctx.canvas.width) || BASE_W;
+  const height = opts.height || (ctx.canvas && ctx.canvas.height) || BASE_H;
+  const state = opts.roomState && typeof opts.roomState === "object" ? opts.roomState : {};
+  const room = state.room && typeof state.room === "object" ? state.room : {};
+  const slots = room.slots && typeof room.slots === "object" ? room.slots : {};
+  const equipped = Object.keys(slots).map((slotId) => slots[slotId]).filter(Boolean);
+  const baseImage = getTrailerImage(TRAILER_ROOM_ASSETS.base);
+  const baseReady = isImageReady(baseImage);
+  let assetsReady = baseReady;
+  let contentRect = { x: 0, y: 0, w: width, h: height };
+
+  ctx.save();
+  setSmoothing(ctx, false);
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = "#07090d";
+  ctx.fillRect(0, 0, width, height);
+  if (baseReady) {
+    contentRect = fitContain(baseImage.naturalWidth, baseImage.naturalHeight, width, height);
+    ctx.drawImage(baseImage, contentRect.x, contentRect.y, contentRect.w, contentRect.h);
+    Object.keys(slots).forEach((slotId) => {
+      const furnitureId = slots[slotId];
+      if (!furnitureId) return;
+      const src = TRAILER_ROOM_ASSETS.furniture[furnitureId];
+      const image = getTrailerImage(src);
+      const anchor = TRAILER_ROOM_ASSETS.anchors[slotId];
+      if (!anchor || !src) return;
+      const ready = isImageReady(image);
+      assetsReady = assetsReady && ready;
+      if (!ready) return;
+      drawImageInRect(ctx, image, {
+        x: contentRect.x + anchor.x * contentRect.scale,
+        y: contentRect.y + anchor.y * contentRect.scale,
+        w: anchor.w * contentRect.scale,
+        h: anchor.h * contentRect.scale
+      });
+    });
+  } else {
+    assetsReady = false;
+  }
+  ctx.restore();
+
+  return {
+    contentRect,
+    scale: contentRect.scale || 1,
+    starterState: equipped.length === 0,
+    equipped,
+    itemsDrawn: baseReady ? equipped.filter((id) => isImageReady(getTrailerImage(TRAILER_ROOM_ASSETS.furniture[id]))).length : 0,
+    assetsReady,
+    baseReady,
+    renderMode: "raster"
+  };
+}
+
 const DSShelterScene = {
   drawShelterScene,
+  drawTrailerRoom,
+  TRAILER_ROOM_ASSETS,
   SHELTER_HOTSPOTS
 };
 

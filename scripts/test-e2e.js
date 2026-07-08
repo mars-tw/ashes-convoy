@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const assert = require("assert");
 const fs = require("fs");
@@ -171,10 +171,10 @@ async function checkMetaHotspotsFit(page) {
       viewportOverflow: document.documentElement.scrollWidth - window.innerWidth
     };
   });
-  assert.strictEqual(result.buttons.length, 6, "meta screen should expose six overlay action buttons");
+  assert.strictEqual(result.buttons.length, 7, "meta screen should expose seven overlay action buttons");
   assert.deepStrictEqual(
     result.buttons.map((button) => button.id).sort(),
-    ["opsHotspotBtn", "resetOverlayBtn", "seriesHotspotBtn", "sortieBtn", "upgradeHotspotBtn", "vehicleHotspotBtn"],
+    ["opsHotspotBtn", "resetOverlayBtn", "seriesHotspotBtn", "sortieBtn", "trailerHotspotBtn", "upgradeHotspotBtn", "vehicleHotspotBtn"],
     "meta action buttons should match the key art controls"
   );
   assert(result.layer.left >= result.layer.appLeft - 1, "meta action layer should not overflow left");
@@ -282,12 +282,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R52") && swText.includes("src/ui.js?v=R52") && swText.includes("src/game.js?v=R52") && swText.includes("src/rules.js?v=R52"),
+      swCachesJs: swText.includes("src/version.js?v=R53") && swText.includes("src/ui.js?v=R53") && swText.includes("src/game.js?v=R53") && swText.includes("src/rules.js?v=R53"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R52"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R52"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R52"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R53"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R53"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R53"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -296,7 +296,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R52", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R53", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -411,6 +411,75 @@ async function checkSupplyChoiceOverlayReachability(page) {
   const state = await page.evaluate(() => window.__test.getState());
   assert.strictEqual(state.paused, false, "keyboard supply choice should resume play");
   assert.strictEqual(state.stats.supplyCratesCollected, 1, "keyboard supply choice should collect one cache");
+  await page.evaluate(() => {
+    window.__test.clearStorage();
+    window.__test.showGarage();
+  });
+}
+
+async function checkTrailerRoomSystem(page) {
+  await page.evaluate(() => {
+    window.__test.clearStorage();
+    window.__test.showGarage();
+  });
+  await waitForMetaBackground(page);
+  await page.click("#trailerHotspotBtn");
+  await page.waitForSelector("#trailerOverlay:not([hidden])");
+  await page.waitForFunction(() => {
+    const metrics = window.__test.getTrailerRoomMetrics();
+    return metrics && metrics.starterState === true && metrics.baseReady === true && metrics.renderMode === "raster";
+  });
+  const initial = await page.evaluate(() => ({
+    text: document.getElementById("trailerStarterText").textContent,
+    goods: document.getElementById("trailerGoodsText").textContent,
+    state: window.__test.getTrailerRoomState(),
+    metrics: window.__test.getTrailerRoomMetrics()
+  }));
+  assert(initial.text.includes("破爛逃生倉"), `initial trailer room should describe the broken pod: ${initial.text}`);
+  assert(initial.goods.includes("拾荒物資 0"), `initial goods should be zero: ${initial.goods}`);
+  assert.strictEqual(initial.state.items.filter((item) => item.owned).length, 0, "new save should not own trailer furniture");
+  assert.strictEqual(initial.metrics.itemsDrawn, 0, "starter room should draw no purchased furniture");
+  assert.strictEqual(initial.metrics.renderMode, "raster", "trailer room should render from raster assets");
+
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.trailerGoods = 20;
+    window.__test.setMeta(meta);
+  });
+  await page.waitForFunction(() => document.getElementById("trailerGoodsText").textContent.includes("20"));
+  const baseHp = await page.evaluate(() => {
+    const fresh = window.DSRules.migrateMeta(null, { config: window.DSConfig });
+    return window.DSRules.getVehicleStats("land_rig", fresh, window.DSConfig).maxHp;
+  });
+  await page.click('[data-trailer-buy="supply_shelf"]');
+  await page.waitForFunction(() => {
+    const state = window.__test.getTrailerRoomState();
+    return state.room.owned.supply_shelf === true && state.room.slots.wall_left === "supply_shelf";
+  });
+  const bought = await page.evaluate((base) => {
+    const meta = window.__test.getMeta();
+    const state = window.__test.getTrailerRoomState();
+    const stats = window.DSRules.getVehicleStats("land_rig", meta, window.DSConfig);
+    return {
+      goods: meta.trailerGoods,
+      slot: meta.trailerRoom.slots.wall_left,
+      owned: meta.trailerRoom.owned.supply_shelf,
+      maxHp: stats.maxHp,
+      baseHp: base,
+      bonusText: document.getElementById("trailerBonusText").textContent,
+      metrics: window.__test.getTrailerRoomMetrics(),
+      itemOwned: state.items.find((item) => item.id === "supply_shelf").owned
+    };
+  }, baseHp);
+  assert.strictEqual(bought.goods, 12, "buying supply shelf should spend eight scavenge goods");
+  assert.strictEqual(bought.slot, "supply_shelf", "purchased shelf should auto-equip into its slot");
+  assert.strictEqual(bought.owned, true);
+  assert.strictEqual(bought.itemOwned, true);
+  assert(bought.maxHp > bought.baseHp, "trailer furniture HP bonus should affect vehicle stats");
+  assert(bought.bonusText.includes("HP +0.6%"), `trailer bonus text should show the shelf effect: ${bought.bonusText}`);
+  assert(bought.metrics && bought.metrics.itemsDrawn >= 1 && bought.metrics.assetsReady, "furnished room should draw purchased raster furniture");
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(() => document.getElementById("trailerOverlay").hidden === true);
   await page.evaluate(() => {
     window.__test.clearStorage();
     window.__test.showGarage();
@@ -544,7 +613,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R52"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R53"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -1432,7 +1501,7 @@ async function checkEnvironmentEventsAndVariants(page) {
   assert(state.enemies.some((enemy) => enemy.variantId), "late wave generation should spawn tinted variants");
 }
 
-async function checkR52EnemyRosterBehaviors(page) {
+async function checkR53EnemyRosterBehaviors(page) {
   await page.evaluate(() => {
     window.__test.clearStorage();
     window.__test.startRun("land_rig");
@@ -1481,7 +1550,7 @@ async function checkR52EnemyRosterBehaviors(page) {
       statuses: debug.enemyImageStatus
     };
   });
-  assert.deepStrictEqual(result.enemyIds, ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith"].sort(), "R52 enemy roster should be spawnable");
+  assert.deepStrictEqual(result.enemyIds, ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith"].sort(), "R53 enemy roster should be spawnable");
   assert(result.enemyProjectiles >= 1, "spore spitter should fire enemy projectiles");
   assert(result.spitterCooldown > 0, "spore spitter should reset attack cooldown after firing");
   assert.strictEqual(result.bruteSlow, true, "tar brute should apply movement slow aura near the vehicle");
@@ -1814,6 +1883,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await checkNewSaveVehicleLocks(page);
   await checkOldSaveRetention(page);
   await checkGarageUpgradeLines(page);
+  await checkTrailerRoomSystem(page);
   if (viewport.width === 1366 && viewport.height === 700) {
     await checkShortDesktopReachability(page);
     await checkSupplyChoiceOverlayReachability(page);
@@ -1828,7 +1898,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
     await checkBossBlueprintDropAnimation(page);
     await unlockFleet(page);
     await checkEnvironmentEventsAndVariants(page);
-    await checkR52EnemyRosterBehaviors(page);
+    await checkR53EnemyRosterBehaviors(page);
     await checkEventCodexAndAchievements(page);
     await checkSupplyDropPickupAndSettlement(page);
     await unlockFleet(page);
@@ -2188,7 +2258,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r52")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r53")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -2206,7 +2276,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r52")), "R52 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r53")), "R53 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

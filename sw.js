@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 importScripts("src/version.js");
 
@@ -9,17 +9,17 @@ const APP_SHELL_PATHS = [
   "./",
   "index.html",
   "offline.html",
-  "manifest.webmanifest?v=R52",
-  "src/version.js?v=R52",
-  "src/sprites.js?v=R52",
-  "src/sprite-renderer.js?v=R52",
-  "src/shelter-scene.js?v=R52",
-  "src/config.js?v=R52",
-  "src/rules.js?v=R52",
-  "src/fx.js?v=R52",
-  "src/audio.js?v=R52",
-  "src/game.js?v=R52",
-  "src/ui.js?v=R52"
+  "manifest.webmanifest?v=R53",
+  "src/version.js?v=R53",
+  "src/sprites.js?v=R53",
+  "src/sprite-renderer.js?v=R53",
+  "src/shelter-scene.js?v=R53",
+  "src/config.js?v=R53",
+  "src/rules.js?v=R53",
+  "src/fx.js?v=R53",
+  "src/audio.js?v=R53",
+  "src/game.js?v=R53",
+  "src/ui.js?v=R53"
 ];
 const ASSET_PATHS = [
   "assets/ui/start.png",
@@ -44,7 +44,16 @@ const ASSET_PATHS = [
   "assets/shelter/greenhouse.png",
   "assets/shelter/snow.png",
   "assets/shelter/workshop.png",
-  "assets/icons/icon-192.png?v=R52",
+  "assets/shelter/trailer/base_escape_pod.png",
+  "assets/shelter/trailer/supply_shelf.png",
+  "assets/shelter/trailer/solar_radio.png",
+  "assets/shelter/trailer/patched_lights.png",
+  "assets/shelter/trailer/hydro_planter.png",
+  "assets/shelter/trailer/water_filter.png",
+  "assets/shelter/trailer/folding_workbench.png",
+  "assets/shelter/trailer/blueprint_board.png",
+  "assets/shelter/trailer/battery_bank.png",
+  "assets/icons/icon-192.png?v=R53",
   "assets/icons/icon-192.png",
   "assets/icons/icon-512.png"
 ];

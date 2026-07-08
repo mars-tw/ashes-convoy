@@ -1,11 +1,11 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-Hant-TW">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#111317" />
-    <link rel="manifest" href="manifest.webmanifest?v=R52" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R52" />
+    <link rel="manifest" href="manifest.webmanifest?v=R53" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R53" />
     <title>灰燼護航</title>
     <style>
       :root {
@@ -434,6 +434,181 @@
         margin-top: 2px;
         color: var(--muted);
         font-size: 10px;
+      }
+
+      .trailer-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 9;
+        display: grid;
+        grid-template-rows: minmax(260px, 46%) minmax(0, 1fr);
+        gap: 10px;
+        padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+        background: rgba(5, 7, 10, 0.94);
+        overflow: hidden;
+      }
+
+      .trailer-overlay[hidden] {
+        display: none;
+      }
+
+      .trailer-room-stage {
+        position: relative;
+        min-height: 0;
+        border: 1px solid rgba(240, 182, 74, 0.28);
+        border-radius: 8px;
+        overflow: hidden;
+        background: #0b0d10;
+      }
+
+      .trailer-room-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        image-rendering: pixelated;
+      }
+
+      .trailer-panel {
+        min-height: 0;
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr);
+        gap: 10px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(14, 17, 21, 0.96);
+        overflow: hidden;
+      }
+
+      .trailer-head {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        align-items: start;
+      }
+
+      .trailer-head h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .trailer-resources {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .trailer-room-body {
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 0.78fr 1.22fr;
+        gap: 10px;
+        overflow: hidden;
+      }
+
+      .trailer-column {
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        display: grid;
+        align-content: start;
+        gap: 8px;
+        padding-right: 2px;
+      }
+
+      .trailer-slot,
+      .trailer-furniture {
+        display: grid;
+        gap: 5px;
+        min-height: 58px;
+        padding: 9px;
+        border: 1px solid rgba(221, 211, 178, 0.2);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .trailer-slot.is-filled,
+      .trailer-furniture.is-owned {
+        border-color: rgba(135, 210, 125, 0.38);
+        background: rgba(135, 210, 125, 0.06);
+      }
+
+      .trailer-slot strong,
+      .trailer-furniture strong {
+        font-size: 13px;
+      }
+
+      .trailer-slot small,
+      .trailer-furniture small {
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .trailer-furniture {
+        grid-template-columns: 1fr auto;
+        align-items: center;
+      }
+
+      .trailer-furniture button {
+        min-width: 86px;
+        padding: 0 8px;
+        font-size: 12px;
+      }
+
+      @media (max-width: 430px), (max-height: 740px) {
+        .trailer-overlay {
+          grid-template-rows: minmax(220px, 38%) minmax(0, 1fr);
+        }
+
+        .trailer-room-body {
+          display: block;
+          grid-template-columns: 1fr;
+          overflow-y: auto;
+        }
+
+        .trailer-column {
+          overflow: visible;
+        }
+
+        .trailer-column + .trailer-column {
+          margin-top: 8px;
+        }
+      }
+
+      @media (max-height: 500px) {
+        .trailer-overlay {
+          grid-template-rows: 112px minmax(0, 1fr);
+          gap: 6px;
+          padding: max(6px, env(safe-area-inset-top)) 6px max(6px, env(safe-area-inset-bottom));
+        }
+
+        .trailer-panel {
+          grid-template-rows: auto auto minmax(76px, 1fr);
+          gap: 6px;
+          padding: 8px;
+        }
+
+        .trailer-head h2 {
+          font-size: 14px;
+        }
+
+        .trailer-head .subtle {
+          display: none;
+        }
+
+        .trailer-resources {
+          font-size: 10px;
+        }
+
+        .trailer-slot,
+        .trailer-furniture {
+          min-height: 50px;
+          padding: 7px;
+        }
       }
 
       .panel {
@@ -1158,6 +1333,29 @@
         </div>
       </div>
 
+      <div class="trailer-overlay" id="trailerOverlay" role="dialog" aria-modal="true" aria-labelledby="trailerRoomTitle" hidden>
+        <div class="trailer-room-stage">
+          <canvas id="trailerRoomCanvas" class="trailer-room-canvas" width="390" height="844" aria-label="拖車少女房間"></canvas>
+        </div>
+        <div class="trailer-panel">
+          <div class="trailer-head">
+            <div>
+              <h2 id="trailerRoomTitle">拖車少女房間</h2>
+              <p class="subtle" id="trailerStarterText">破爛逃生倉：目前只有床和舊報紙。</p>
+            </div>
+            <button id="closeTrailerRoomBtn" type="button" aria-label="關閉拖車房間">關閉</button>
+          </div>
+          <div class="trailer-resources">
+            <span id="trailerGoodsText">拾荒物資 0</span>
+            <span id="trailerBonusText">HP +0% · 傷害 +0% · 射速 +0% · 承傷 -0%</span>
+          </div>
+          <div class="trailer-room-body">
+            <div class="trailer-column" aria-label="房間插槽" id="trailerSlotList"></div>
+            <div class="trailer-column" aria-label="家具目錄" id="trailerFurnitureList"></div>
+          </div>
+        </div>
+      </div>
+
       <section class="panel meta-panel is-fallback" id="garagePanel">
         <img id="shelterImage" class="shelter-image" alt="" decoding="async" draggable="false" hidden />
         <canvas id="shelterCanvas" class="shelter-canvas" width="390" height="844" aria-label="避難所基地場景" hidden></canvas>
@@ -1173,6 +1371,7 @@
           <button class="hotspot-btn" id="upgradeHotspotBtn" type="button" aria-label="開啟升級工坊">升級</button>
           <button class="hotspot-btn" id="vehicleHotspotBtn" type="button" aria-label="開啟載具棚">載具</button>
           <button class="hotspot-btn" id="seriesHotspotBtn" type="button" aria-label="開啟成就牆">成就</button>
+          <button class="hotspot-btn" id="trailerHotspotBtn" type="button" aria-label="開啟拖車房間">拖車</button>
           <button class="hotspot-btn" id="opsHotspotBtn" type="button" aria-label="開啟任務與設定">任務/設定</button>
           <button class="hotspot-btn danger" id="resetOverlayBtn" type="button" aria-label="清除存檔">清存檔</button>
         </div>
@@ -1320,7 +1519,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R52";
+        var key = "ashes_convoy_html_boot_reload_R53";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -1337,15 +1536,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R52"></script>
-    <script src="src/sprites.js?v=R52"></script>
-    <script src="src/sprite-renderer.js?v=R52"></script>
-    <script src="src/shelter-scene.js?v=R52"></script>
-    <script src="src/config.js?v=R52"></script>
-    <script src="src/rules.js?v=R52"></script>
-    <script src="src/fx.js?v=R52"></script>
-    <script src="src/audio.js?v=R52"></script>
-    <script src="src/game.js?v=R52"></script>
-    <script src="src/ui.js?v=R52"></script>
+    <script src="src/version.js?v=R53"></script>
+    <script src="src/sprites.js?v=R53"></script>
+    <script src="src/sprite-renderer.js?v=R53"></script>
+    <script src="src/shelter-scene.js?v=R53"></script>
+    <script src="src/config.js?v=R53"></script>
+    <script src="src/rules.js?v=R53"></script>
+    <script src="src/fx.js?v=R53"></script>
+    <script src="src/audio.js?v=R53"></script>
+    <script src="src/game.js?v=R53"></script>
+    <script src="src/ui.js?v=R53"></script>
   </body>
 </html>

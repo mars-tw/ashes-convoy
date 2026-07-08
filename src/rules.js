@@ -179,6 +179,175 @@ function sanitizeQuestStats(input, config) {
   };
 }
 
+function trailerFurnitureIds(config) {
+  const cfg = getConfig(config);
+  return Object.keys((cfg.TRAILER_ROOM && cfg.TRAILER_ROOM.furniture) || {});
+}
+
+function trailerSlotIds(config) {
+  const cfg = getConfig(config);
+  return Object.keys((cfg.TRAILER_ROOM && cfg.TRAILER_ROOM.slots) || {});
+}
+
+function sanitizeTrailerRoom(input, config) {
+  const cfg = getConfig(config);
+  const source = input && typeof input === "object" && !Array.isArray(input) ? input : {};
+  const output = {
+    owned: {},
+    slots: {},
+    seenIntro: source.seenIntro === true
+  };
+  const furniture = (cfg.TRAILER_ROOM && cfg.TRAILER_ROOM.furniture) || {};
+  const slotIds = trailerSlotIds(cfg);
+  const ownedSource = source.owned && typeof source.owned === "object" && !Array.isArray(source.owned) ? source.owned : {};
+  trailerFurnitureIds(cfg).forEach((id) => {
+    if (ownedSource[id] === true) output.owned[id] = true;
+  });
+  const slotSource = source.slots && typeof source.slots === "object" && !Array.isArray(source.slots) ? source.slots : {};
+  slotIds.forEach((slotId) => {
+    const furnitureId = typeof slotSource[slotId] === "string" ? slotSource[slotId] : null;
+    const item = furniture[furnitureId];
+    output.slots[slotId] = item && item.slot === slotId && output.owned[furnitureId] === true ? furnitureId : null;
+  });
+  return output;
+}
+
+function rollScavengeDrop(options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const room = cfg.TRAILER_ROOM || {};
+  const rng = typeof opts.rng === "function" ? opts.rng : Math.random;
+  const killsSinceDrop = finiteNumber(opts.killsSinceDrop, 0, { min: 0, integer: true });
+  const pityKills = finiteNumber(room.pityKills, 9, { min: 1, integer: true });
+  const nextCount = killsSinceDrop + 1;
+  const guaranteed = nextCount >= pityKills;
+  const chance = finiteNumber(room.dropChancePerKill, 0, { min: 0, max: 1 });
+  const dropped = guaranteed || rng() < chance;
+  return {
+    dropped,
+    guaranteed,
+    goods: dropped ? finiteNumber(room.goodsPerDrop, 1, { min: 1, integer: true }) : 0,
+    killsSinceDrop: dropped ? 0 : nextCount
+  };
+}
+
+function scavengeGoodsBreakdownForRun(run, config) {
+  const cfg = getConfig(config);
+  const room = cfg.TRAILER_ROOM || {};
+  const killGoods = finiteNumber(run && run.scavengeGoods, 0, {
+    min: 0,
+    max: finiteNumber(room.maxGoodsPerRun, 28, { min: 1, integer: true }),
+    integer: true
+  });
+  const wavesCleared = finiteNumber(run && run.wavesCleared, 0, { min: 0, integer: true });
+  const bossesDefeated = finiteNumber(run && run.bossesDefeated, 0, { min: 0, integer: true });
+  const waveGoods = wavesCleared * finiteNumber(room.waveGoods, 0, { min: 0, integer: true });
+  const bossGoods = bossesDefeated * finiteNumber(room.bossGoods, 0, { min: 0, integer: true });
+  const cap = finiteNumber(room.maxGoodsPerRun, 28, { min: 1, integer: true });
+  const total = Math.min(cap, killGoods + waveGoods + bossGoods);
+  return {
+    killGoods,
+    waveGoods,
+    bossGoods,
+    capped: total < killGoods + waveGoods + bossGoods,
+    total
+  };
+}
+
+function calculateTrailerBonuses(meta, config) {
+  const cfg = getConfig(config);
+  const migrated = meta && meta.version === cfg.META_VERSION ? meta : migrateMeta(meta || cfg.META_DEFAULT, { config: cfg });
+  const room = sanitizeTrailerRoom(migrated.trailerRoom, cfg);
+  const furniture = (cfg.TRAILER_ROOM && cfg.TRAILER_ROOM.furniture) || {};
+  const bonuses = {
+    maxHpPct: 0,
+    damagePct: 0,
+    fireIntervalMul: 1,
+    damageTakenMul: 1
+  };
+  Object.keys(room.slots).forEach((slotId) => {
+    const furnitureId = room.slots[slotId];
+    if (!furnitureId || room.owned[furnitureId] !== true) return;
+    const effect = furniture[furnitureId] && furniture[furnitureId].effects;
+    if (!effect) return;
+    bonuses.maxHpPct += finiteNumber(effect.maxHpPct, 0, { min: 0, max: 0.05 });
+    bonuses.damagePct += finiteNumber(effect.damagePct, 0, { min: 0, max: 0.05 });
+    bonuses.fireIntervalMul *= finiteNumber(effect.fireIntervalMul, 1, { min: 0.9, max: 1 });
+    bonuses.damageTakenMul *= finiteNumber(effect.damageTakenMul, 1, { min: 0.9, max: 1 });
+  });
+  bonuses.maxHpPct = Math.min(0.04, bonuses.maxHpPct);
+  bonuses.damagePct = Math.min(0.04, bonuses.damagePct);
+  bonuses.fireIntervalMul = Math.max(0.94, bonuses.fireIntervalMul);
+  bonuses.damageTakenMul = Math.max(0.94, bonuses.damageTakenMul);
+  return bonuses;
+}
+
+function getTrailerRoomState(meta, config) {
+  const cfg = getConfig(config);
+  const migrated = migrateMeta(meta || cfg.META_DEFAULT, { config: cfg });
+  const room = sanitizeTrailerRoom(migrated.trailerRoom, cfg);
+  const furniture = (cfg.TRAILER_ROOM && cfg.TRAILER_ROOM.furniture) || {};
+  const items = trailerFurnitureIds(cfg).map((id) => {
+    const item = furniture[id];
+    const owned = room.owned[id] === true;
+    return Object.assign({}, deepClone(item), {
+      owned,
+      equipped: Object.keys(room.slots).some((slotId) => room.slots[slotId] === id),
+      affordable: migrated.trailerGoods >= finiteNumber(item.cost, 0, { min: 0, integer: true })
+    });
+  });
+  return {
+    goods: migrated.trailerGoods,
+    resourceName: (cfg.TRAILER_ROOM && cfg.TRAILER_ROOM.resourceName) || "拾荒物資",
+    room,
+    slots: deepClone((cfg.TRAILER_ROOM && cfg.TRAILER_ROOM.slots) || {}),
+    items,
+    bonuses: calculateTrailerBonuses(migrated, cfg)
+  };
+}
+
+function buyTrailerFurniture(options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const furnitureId = typeof opts.furnitureId === "string" ? opts.furnitureId : "";
+  const furniture = cfg.TRAILER_ROOM && cfg.TRAILER_ROOM.furniture ? cfg.TRAILER_ROOM.furniture[furnitureId] : null;
+  const meta = migrateMeta(opts.meta || cfg.META_DEFAULT, { config: cfg });
+  if (!furniture) return { meta, purchase: { ok: false, reason: "unknown", furnitureId } };
+  if (meta.trailerRoom.owned[furnitureId] === true) return { meta, purchase: { ok: false, reason: "owned", furnitureId } };
+  const cost = finiteNumber(furniture.cost, 0, { min: 0, integer: true });
+  if (meta.trailerGoods < cost) return { meta, purchase: { ok: false, reason: "goods", furnitureId, cost } };
+  const next = deepClone(meta);
+  next.trailerGoods -= cost;
+  next.trailerRoom.owned[furnitureId] = true;
+  next.trailerRoom.slots[furniture.slot] = furnitureId;
+  next.trailerRoom.seenIntro = true;
+  next.updatedAt = timestampFromNow(opts.now);
+  if (!next.createdAt) next.createdAt = next.updatedAt;
+  return {
+    meta: next,
+    purchase: { ok: true, furnitureId, slot: furniture.slot, cost, item: deepClone(furniture) }
+  };
+}
+
+function equipTrailerFurniture(options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const furnitureId = typeof opts.furnitureId === "string" ? opts.furnitureId : "";
+  const furniture = cfg.TRAILER_ROOM && cfg.TRAILER_ROOM.furniture ? cfg.TRAILER_ROOM.furniture[furnitureId] : null;
+  const meta = migrateMeta(opts.meta || cfg.META_DEFAULT, { config: cfg });
+  if (!furniture) return { meta, equip: { ok: false, reason: "unknown", furnitureId } };
+  if (meta.trailerRoom.owned[furnitureId] !== true) return { meta, equip: { ok: false, reason: "locked", furnitureId } };
+  const next = deepClone(meta);
+  next.trailerRoom.slots[furniture.slot] = furnitureId;
+  next.trailerRoom.seenIntro = true;
+  next.updatedAt = timestampFromNow(opts.now);
+  if (!next.createdAt) next.createdAt = next.updatedAt;
+  return {
+    meta: next,
+    equip: { ok: true, furnitureId, slot: furniture.slot, item: deepClone(furniture) }
+  };
+}
+
 function sanitizeQuestBaselines(input, config) {
   const cfg = getConfig(config);
   const source = input && typeof input === "object" && !Array.isArray(input) ? input : {};
@@ -1169,15 +1338,16 @@ function getVehicleStats(vehicleId, meta, config) {
   const hull = cfg.ECONOMY.upgradeTracks.hull;
   const weapon = cfg.ECONOMY.upgradeTracks.weapon;
   const special = collectVehicleUpgradeEffects(vehicle.id, levels, cfg);
-  const maxHp = Math.round(vehicle.hp * (1 + levels.hull * hull.hpMulPerLevel));
+  const trailer = calculateTrailerBonuses(meta, cfg);
+  const maxHp = Math.round(vehicle.hp * (1 + levels.hull * hull.hpMulPerLevel) * (1 + trailer.maxHpPct));
   const damageMul = 1 + levels.weapon * weapon.damageMulPerLevel;
   return {
     id: vehicle.id,
     maxHp,
     hp: maxHp,
     armor: vehicle.armor + special.armorAdd,
-    damageTakenMul: special.damageTakenMul,
-    damageMul: damageMul * special.damageMul,
+    damageTakenMul: special.damageTakenMul * trailer.damageTakenMul,
+    damageMul: damageMul * special.damageMul * (1 + trailer.damagePct),
     levels
   };
 }
@@ -1193,12 +1363,13 @@ function calculateShotStats(options) {
   const weaponTrack = cfg.ECONOMY.upgradeTracks.weapon;
   const energyTrack = cfg.ECONOMY.upgradeTracks.energy;
   const special = collectVehicleUpgradeEffects(vehicle.id, levels, cfg);
-  const damageMul = (1 + levels.weapon * weaponTrack.damageMulPerLevel) * special.damageMul;
+  const trailer = calculateTrailerBonuses(meta, cfg);
+  const damageMul = (1 + levels.weapon * weaponTrack.damageMulPerLevel) * special.damageMul * (1 + trailer.damagePct);
   const energyMul = Math.pow(1 - energyTrack.fireRateMulPerLevel, levels.energy);
   const damageAdd = Math.min(runMods.damageAdd, 2.5);
   const projectiles = clamp(weapon.baseProjectiles + runMods.projectileAdd, 1, weapon.baseProjectiles + 4);
   const minInterval = Math.max(0.08, weapon.fireInterval * 0.55);
-  const interval = Math.max(minInterval, weapon.fireInterval * runMods.fireIntervalMul * energyMul * special.fireIntervalMul);
+  const interval = Math.max(minInterval, weapon.fireInterval * runMods.fireIntervalMul * energyMul * special.fireIntervalMul * trailer.fireIntervalMul);
   return {
     weaponId: weapon.id,
     bulletSprite: weapon.bulletSprite,
@@ -1496,7 +1667,7 @@ function migrateMeta(raw, options) {
   meta.updatedAt = typeof input.updatedAt === "string" || typeof input.updatedAt === "number" ? input.updatedAt : base.updatedAt;
   meta.shelterTheme = normalizeShelterTheme(input.shelterTheme, cfg);
 
-  ["parts", "totalRuns", "totalKills", "totalBossKills", "bestWave", "bestScore", "bossBlueprintPity"].forEach((key) => {
+  ["parts", "totalRuns", "totalKills", "totalBossKills", "bestWave", "bestScore", "bossBlueprintPity", "trailerGoods"].forEach((key) => {
     meta[key] = finiteNumber(input[key], base[key], { min: 0, integer: true });
   });
 
@@ -1552,6 +1723,7 @@ function migrateMeta(raw, options) {
   meta.questBaselines = sanitizeQuestBaselines(input.questBaselines, cfg);
   meta.questClaims = boolTrueMap(input.questClaims);
   meta.claimedMilestones = boolTrueMap(input.claimedMilestones);
+  meta.trailerRoom = sanitizeTrailerRoom(input.trailerRoom, cfg);
   meta.settings = sanitizeSettings(input.settings, cfg);
   meta.tutorial = Object.assign({}, base.tutorial);
   if (input.tutorial && typeof input.tutorial === "object" && !Array.isArray(input.tutorial)) {
@@ -1594,6 +1766,7 @@ function settleRunRewards(options) {
   const supplyRewards = run.supplyRewards && typeof run.supplyRewards === "object" && !Array.isArray(run.supplyRewards)
     ? deepClone(run.supplyRewards)
     : {};
+  const scavengeBreakdown = scavengeGoodsBreakdownForRun(run, cfg);
   const eventStats = sanitizeEventStats(run.eventStats, cfg);
   const deathContext = sanitizeDeathContext(run.deathContext);
   const damageTakenBy = sanitizeCountMap(run.damageTakenBy);
@@ -1667,6 +1840,7 @@ function settleRunRewards(options) {
   const achievementParts = achievementResult.parts;
   const totalParts = parts + achievementParts;
   meta.parts += totalParts;
+  meta.trailerGoods += scavengeBreakdown.total;
 
   meta.lastRun = {
     vehicleId,
@@ -1681,6 +1855,8 @@ function settleRunRewards(options) {
     supplyParts,
     supplyCratesCollected,
     supplyRewards,
+    scavengeGoods: scavengeBreakdown.killGoods,
+    scavengeBreakdown,
     deathContext,
     damageTakenBy,
     variantKills,
@@ -1709,6 +1885,8 @@ function settleRunRewards(options) {
       blueprints: deepClone(blueprintResult.drops),
       unlockedVehicles: blueprintResult.unlocked.slice(),
       achievements: achievementResult.achievements,
+      scavengeGoods: scavengeBreakdown.total,
+      scavengeBreakdown,
       isBest
     }
   };
@@ -1785,6 +1963,13 @@ const DSRules = {
   chooseSupplyReward,
   stepSupplyDropMotion,
   applySupplyRewardById,
+  rollScavengeDrop,
+  scavengeGoodsBreakdownForRun,
+  sanitizeTrailerRoom,
+  calculateTrailerBonuses,
+  getTrailerRoomState,
+  buyTrailerFurniture,
+  equipTrailerFurniture,
   selectAimAssistTarget,
   aimAssistStrength,
   recommendUpgradeForRun,

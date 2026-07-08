@@ -141,6 +141,19 @@ const STATES = [
       await page.click("#opsHotspotBtn");
       await page.waitForSelector('#metaDrawer:not([hidden]) [data-meta-section="operations"]:not([hidden])');
     }
+  },
+  {
+    name: "meta-trailer-room",
+    prepare: async (page) => {
+      await page.evaluate(() => {
+        const meta = window.__test.getMeta();
+        meta.trailerGoods = 200;
+        window.__test.setMeta(meta);
+      });
+      await page.waitForSelector("#trailerHotspotBtn", { state: "visible" });
+      await page.click("#trailerHotspotBtn");
+      await page.waitForSelector("#trailerOverlay:not([hidden]) #trailerFurnitureList");
+    }
   }
 ];
 

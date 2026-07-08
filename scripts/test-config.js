@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const assert = require("assert");
 const fs = require("fs");
@@ -12,8 +12,8 @@ function assertFinitePositive(value, label) {
 
 assert.strictEqual(config.STORAGE_KEY, "ashes_convoy_meta_v1");
 assert.strictEqual(config.META_VERSION, 2);
-assert.strictEqual(config.APP_VERSION, "R52");
-assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r52-v1");
+assert.strictEqual(config.APP_VERSION, "R53");
+assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r53-v1");
 assert.strictEqual(config.LOGIC.width, 195);
 assert.strictEqual(config.LOGIC.height, 422);
 assert.strictEqual(config.LOGIC.displayWidth, 390);
@@ -81,7 +81,7 @@ const expectedEnemies = [
   "void_wraith",
   "boss_hive_titan"
 ];
-assert.deepStrictEqual(Object.keys(config.ENEMIES).sort(), expectedEnemies.slice().sort(), "enemy roster should match R52 roster");
+assert.deepStrictEqual(Object.keys(config.ENEMIES).sort(), expectedEnemies.slice().sort(), "enemy roster should match R53 roster");
 expectedEnemies.forEach((id) => {
   const enemy = config.ENEMIES[id];
   assert(enemy, `missing enemy ${id}`);
@@ -150,6 +150,38 @@ assert.strictEqual(config.SUPPLY_DROPS.horizontalDriftSpeed, 34);
 assert.strictEqual(config.SUPPLY_DROPS.magnetSpeed, 92);
 assert.strictEqual(config.SUPPLY_DROPS.ttl, 16);
 assert.deepStrictEqual(Object.keys(config.SUPPLY_DROPS.rewards).sort(), ["damage_boost", "parts_cache", "rate_boost", "repair_small"]);
+assert.strictEqual(config.TRAILER_ROOM.resourceName, "拾荒物資");
+assert.strictEqual(config.TRAILER_ROOM.dropChancePerKill, 0.16);
+assert.strictEqual(config.TRAILER_ROOM.pityKills, 9);
+assert.strictEqual(config.TRAILER_ROOM.waveGoods, 1);
+assert.strictEqual(config.TRAILER_ROOM.bossGoods, 4);
+assert.strictEqual(config.TRAILER_ROOM.maxGoodsPerRun, 28);
+assert.strictEqual(Object.keys(config.TRAILER_ROOM.slots).length, 8, "trailer room should expose eight fixed slots");
+assert.strictEqual(Object.keys(config.TRAILER_ROOM.furniture).length, 8, "R53 should ship the first eight furniture items");
+const trailerCostTotal = Object.values(config.TRAILER_ROOM.furniture).reduce((sum, item) => sum + item.cost, 0);
+assert.strictEqual(trailerCostTotal, 174, "first furniture wave should have a clear long-tail cost");
+const trailerFullEffects = Object.values(config.TRAILER_ROOM.furniture).reduce(
+  (sum, item) => {
+    sum.maxHpPct += item.effects.maxHpPct || 0;
+    sum.damagePct += item.effects.damagePct || 0;
+    sum.fireIntervalMul *= item.effects.fireIntervalMul || 1;
+    sum.damageTakenMul *= item.effects.damageTakenMul || 1;
+    return sum;
+  },
+  { maxHpPct: 0, damagePct: 0, fireIntervalMul: 1, damageTakenMul: 1 }
+);
+assert(trailerFullEffects.maxHpPct <= 0.02, "full trailer HP bonus should stay smaller than one hull upgrade");
+assert(trailerFullEffects.damagePct <= 0.025, "full trailer damage bonus should stay smaller than one weapon upgrade");
+assert(1 - trailerFullEffects.fireIntervalMul <= 0.025, "full trailer fire-rate bonus should stay minor");
+assert(1 - trailerFullEffects.damageTakenMul <= 0.012, "full trailer mitigation should stay minor");
+Object.values(config.TRAILER_ROOM.furniture).forEach((item) => {
+  assert(config.TRAILER_ROOM.slots[item.slot], `${item.id} should point to a valid trailer slot`);
+  assert(item.sprite && item.sprite.startsWith("assets/shelter/trailer/") && item.sprite.endsWith(".png"), `${item.id} should bind a trailer sprite`);
+  assert(fs.existsSync(path.join(__dirname, "..", item.sprite)), `${item.id} trailer sprite should exist`);
+  assert(item.name && item.description && item.effectText, `${item.id} should have visible room copy`);
+  assert(Number.isInteger(item.cost) && item.cost > 0, `${item.id} should have a positive cost`);
+  assert(["生存物資", "溫室生態", "工坊機械", "車隊維修"].includes(item.style), `${item.id} should fit the room style set`);
+});
 assert.strictEqual(config.QUESTS.dailyRewardParts, 5);
 assert.strictEqual(config.QUESTS.weeklyRewardParts, 15);
 assert.strictEqual(config.QUESTS.dailyPool.length, 4, "daily quest pool should stay lightweight");

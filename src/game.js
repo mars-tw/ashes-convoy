@@ -747,6 +747,21 @@
     }
   }
 
+  function maybeDropScavenge(enemy) {
+    const result = rules.rollScavengeDrop({
+      killsSinceDrop: state.stats.scavengeKillsSinceDrop,
+      rng: state.rng,
+      config
+    });
+    state.stats.scavengeKillsSinceDrop = result.killsSinceDrop;
+    if (!result.dropped) return;
+    state.stats.scavengeGoods += result.goods;
+    state.stats.scavengeDrops += 1;
+    const label = `拾荒物資 +${result.goods}`;
+    state.messages.push({ text: label, time: state.time, ttl: 1.3 });
+    addFloatingText(label, enemy.x, enemy.y - enemy.radius - 10, { color: "#d7b56b", size: 7, ttl: 0.65, vy: -13 });
+  }
+
   function openSupplyChoice(drop) {
     if (!drop || drop.picked || state.supplyChoice) return;
     drop.picked = true;
@@ -871,6 +886,9 @@
         supplyParts: 0,
         supplyRewards: {},
         lastSupplyReward: "",
+        scavengeKillsSinceDrop: 0,
+        scavengeDrops: 0,
+        scavengeGoods: 0,
         damageTakenBy: {},
         damageBySource: {},
         damageTimeline: {},
@@ -1253,6 +1271,7 @@
       });
     }
     maybeDropSupply(enemy);
+    maybeDropScavenge(enemy);
     updatePartsPreview();
   }
 
@@ -1282,6 +1301,8 @@
         supplyParts: state.stats.supplyParts,
         supplyCratesCollected: state.stats.supplyCratesCollected,
         supplyRewards: state.stats.supplyRewards,
+        scavengeGoods: state.stats.scavengeGoods,
+        scavengeDrops: state.stats.scavengeDrops,
         deathContext: state.stats.deathContext,
         damageTakenBy: state.stats.damageTakenBy,
         damageBySource: state.stats.damageBySource,

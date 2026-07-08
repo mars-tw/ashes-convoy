@@ -22,6 +22,8 @@
   const SW_AUTO_RELOAD_SESSION_KEY = "ashes_convoy_sw_auto_reload";
   const gateChoiceButtons = new Map();
   let lastSupplyChoiceKey = "";
+  let trailerRoomMetrics = null;
+  let trailerRedrawTimer = 0;
   let gateChoiceLayerSize = {
     width: config.LOGIC.displayWidth,
     height: config.LOGIC.displayHeight
@@ -255,7 +257,15 @@
   }
 
   function collectActionRects() {
-    const buttons = [els.sortieBtn, els.upgradeHotspotBtn, els.vehicleHotspotBtn, els.seriesHotspotBtn, els.opsHotspotBtn, els.resetOverlayBtn];
+    const buttons = [
+      els.sortieBtn,
+      els.upgradeHotspotBtn,
+      els.vehicleHotspotBtn,
+      els.seriesHotspotBtn,
+      els.trailerHotspotBtn,
+      els.opsHotspotBtn,
+      els.resetOverlayBtn
+    ];
     const panelRect = els.garagePanel.getBoundingClientRect();
     shelter.hotspotRects = {};
     buttons.forEach((button) => {
@@ -402,7 +412,8 @@
             reducedFlash: shelter.lastOpts.reducedFlash
           }
         : null,
-      lastDrawMs: shelter.lastDrawMs
+      lastDrawMs: shelter.lastDrawMs,
+      trailerRoomMetrics: trailerRoomMetrics ? rules.deepClone(trailerRoomMetrics) : null
     };
   }
 
@@ -692,6 +703,173 @@
     });
   }
 
+  function trailerPercent(value) {
+    return `${Math.round(value * 1000) / 10}%`;
+  }
+
+  function trailerBonusLine(state) {
+    const bonuses = state && state.bonuses ? state.bonuses : {};
+    const fireBonus = 1 - (bonuses.fireIntervalMul || 1);
+    const defenseBonus = 1 - (bonuses.damageTakenMul || 1);
+    return [
+      `HP +${trailerPercent(bonuses.maxHpPct || 0)}`,
+      `傷害 +${trailerPercent(bonuses.damagePct || 0)}`,
+      `射速 +${trailerPercent(Math.max(0, fireBonus))}`,
+      `承傷 -${trailerPercent(Math.max(0, defenseBonus))}`
+    ].join(" · ");
+  }
+
+  function drawTrailerRoomCanvas(state) {
+    if (!els.trailerRoomCanvas || !root.DSShelterScene || typeof root.DSShelterScene.drawTrailerRoom !== "function") return;
+    const canvas = els.trailerRoomCanvas;
+    const ctx = canvas.getContext("2d");
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.max(1, Math.min(2, root.devicePixelRatio || 1));
+    const width = Math.max(1, Math.round(rect.width * dpr));
+    const height = Math.max(1, Math.round(rect.height * dpr));
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+    }
+    trailerRoomMetrics = root.DSShelterScene.drawTrailerRoom(ctx, {
+      width,
+      height,
+      pixelRatio: dpr,
+      timeMs: root.performance && root.performance.now ? root.performance.now() : 0,
+      roomState: state
+    });
+    if (trailerRoomMetrics && trailerRoomMetrics.assetsReady === false && !trailerRedrawTimer) {
+      trailerRedrawTimer = root.setTimeout(() => {
+        trailerRedrawTimer = 0;
+        if (els.trailerOverlay && !els.trailerOverlay.hidden) renderTrailerRoom();
+      }, 80);
+    }
+  }
+
+  function renderTrailerRoom() {
+    if (!els.trailerOverlay) return;
+    const state = rules.getTrailerRoomState(meta, config);
+    if (els.trailerGoodsText) {
+      els.trailerGoodsText.textContent = `${state.resourceName} ${state.goods}`;
+    }
+    if (els.trailerBonusText) {
+      els.trailerBonusText.textContent = trailerBonusLine(state);
+    }
+    if (els.trailerStarterText) {
+      const ownedCount = Object.keys(state.room.owned || {}).length;
+      els.trailerStarterText.textContent =
+        ownedCount === 0
+          ? "破爛逃生倉：目前只有床和舊報紙。出勤拾荒後添購擺設，讓拖車慢慢變成自己的房間。"
+          : `已添購 ${ownedCount} 件擺設，房間能力正在疊加到目前載具。`;
+    }
+    if (els.trailerSlotList) {
+      els.trailerSlotList.textContent = "";
+      Object.keys(state.slots).forEach((slotId) => {
+        const slot = state.slots[slotId];
+        const furnitureId = state.room.slots[slotId];
+        const item = furnitureId ? config.TRAILER_ROOM.furniture[furnitureId] : null;
+        const node = root.document.createElement("div");
+        node.className = `trailer-slot${item ? " is-filled" : ""}`;
+        node.dataset.trailerSlot = slotId;
+        const title = root.document.createElement("strong");
+        title.textContent = slot.label;
+        const detail = root.document.createElement("small");
+        detail.textContent = item ? `${item.name} · ${item.effectText}` : "空位";
+        node.append(title, detail);
+        els.trailerSlotList.appendChild(node);
+      });
+    }
+    if (els.trailerFurnitureList) {
+      els.trailerFurnitureList.textContent = "";
+      state.items.forEach((item) => {
+        const node = root.document.createElement("div");
+        node.className = `trailer-furniture ${item.owned ? "is-owned" : ""}`;
+        node.dataset.trailerFurniture = item.id;
+        const text = root.document.createElement("div");
+        const title = root.document.createElement("strong");
+        title.textContent = `${item.name} · ${item.style}`;
+        const desc = root.document.createElement("small");
+        desc.textContent = `${item.description} ${item.effectText}`;
+        text.append(title, desc);
+        const button = root.document.createElement("button");
+        button.type = "button";
+        button.dataset.trailerBuy = item.id;
+        if (item.owned) {
+          button.textContent = item.equipped ? "已擺設" : "擺上";
+          button.disabled = item.equipped;
+          button.addEventListener("click", () => equipTrailerFurniture(item.id));
+        } else {
+          button.textContent = `${item.cost} ${state.resourceName}`;
+          button.disabled = !item.affordable;
+          button.addEventListener("click", () => buyTrailerFurniture(item.id));
+        }
+        node.append(text, button);
+        els.trailerFurnitureList.appendChild(node);
+      });
+    }
+    drawTrailerRoomCanvas(state);
+    return state;
+  }
+
+  function openTrailerRoom(trigger) {
+    if (!els.trailerOverlay) return;
+    if (trigger && typeof trigger.focus === "function") lastDrawerTrigger = trigger;
+    renderTrailerRoom();
+    els.trailerOverlay.hidden = false;
+    root.requestAnimationFrame(() => {
+      renderTrailerRoom();
+      if (els.closeTrailerRoomBtn && typeof els.closeTrailerRoomBtn.focus === "function") els.closeTrailerRoomBtn.focus();
+    });
+  }
+
+  function closeTrailerRoom() {
+    if (!els.trailerOverlay) return;
+    els.trailerOverlay.hidden = true;
+    if (lastDrawerTrigger && typeof lastDrawerTrigger.focus === "function") lastDrawerTrigger.focus();
+  }
+
+  function buyTrailerFurniture(furnitureId) {
+    const result = rules.buyTrailerFurniture({
+      meta,
+      furnitureId,
+      now: nowIso,
+      config
+    });
+    meta = migrateUiMeta(result.meta);
+    saveMeta();
+    game.setMeta(meta);
+    if (result.purchase.ok) {
+      setStatus(`${result.purchase.item.name} 已添購並擺上拖車`);
+    } else if (result.purchase.reason === "goods") {
+      setStatus("拾荒物資不足，先出勤蒐集掉落物。");
+    } else {
+      setStatus("這件擺設目前不能購買。");
+    }
+    renderGarage();
+    renderTrailerRoom();
+    return result;
+  }
+
+  function equipTrailerFurniture(furnitureId) {
+    const result = rules.equipTrailerFurniture({
+      meta,
+      furnitureId,
+      now: nowIso,
+      config
+    });
+    meta = migrateUiMeta(result.meta);
+    saveMeta();
+    game.setMeta(meta);
+    if (result.equip.ok) {
+      setStatus(`${result.equip.item.name} 已擺上拖車`);
+    } else {
+      setStatus("這件擺設尚未擁有。");
+    }
+    renderGarage();
+    renderTrailerRoom();
+    return result;
+  }
+
   function renderSettings() {
     if (!els.aimAssistLevelSelect) return;
     els.aimAssistLevelSelect.value = meta.settings.aimAssistLevel || (meta.settings.aimAssist ? "medium" : "off");
@@ -882,7 +1060,7 @@
 
   function renderGarage() {
     applyFontSize();
-    els.garageMeta.textContent = `廢土零件 ${meta.parts} · 最遠第 ${meta.bestWave} 波 · 擊殺 ${meta.totalKills}`;
+    els.garageMeta.textContent = `廢土零件 ${meta.parts} · 拾荒物資 ${meta.trailerGoods || 0} · 最遠第 ${meta.bestWave} 波 · 擊殺 ${meta.totalKills}`;
     updateStartImageUi();
     renderVehicles();
     renderUpgrades();
@@ -898,6 +1076,7 @@
     } else if (!els.metaDrawer.hidden && shelter.drawerKind) {
       setSectionVisibility(shelter.drawerKind);
     }
+    if (els.trailerOverlay && !els.trailerOverlay.hidden) renderTrailerRoom();
   }
 
   function renderGateChoices(state) {
@@ -1358,10 +1537,15 @@
     els.upgradeHotspotBtn.addEventListener("click", () => openMetaDrawer("upgrades", els.upgradeHotspotBtn));
     els.vehicleHotspotBtn.addEventListener("click", () => openMetaDrawer("vehicle", els.vehicleHotspotBtn));
     els.seriesHotspotBtn.addEventListener("click", () => openMetaDrawer("achievements", els.seriesHotspotBtn));
+    els.trailerHotspotBtn.addEventListener("click", () => openTrailerRoom(els.trailerHotspotBtn));
     els.opsHotspotBtn.addEventListener("click", () => openMetaDrawer("operations", els.opsHotspotBtn));
     els.resetOverlayBtn.addEventListener("click", clearStorage);
     els.closeMetaDrawer.addEventListener("click", closeMetaDrawer);
+    els.closeTrailerRoomBtn.addEventListener("click", closeTrailerRoom);
     root.addEventListener("resize", syncGateChoiceLayerSize);
+    root.addEventListener("ashes-trailer-asset-ready", () => {
+      if (els.trailerOverlay && !els.trailerOverlay.hidden) renderTrailerRoom();
+    });
     els.pauseBtn.addEventListener("click", () => game.togglePause());
     els.resumeBtn.addEventListener("click", () => {
       game.resume();
@@ -1396,6 +1580,11 @@
     root.document.addEventListener("keydown", (event) => {
       if (handleSupplyChoiceKey(event)) return;
       if (event.key !== "Escape") return;
+      if (els.trailerOverlay && !els.trailerOverlay.hidden) {
+        event.preventDefault();
+        closeTrailerRoom();
+        return;
+      }
       if (!els.metaDrawer.hidden && hasFullMetaBackground()) {
         event.preventDefault();
         closeMetaDrawer();
@@ -1454,6 +1643,18 @@
         openMetaDrawer(kind);
         return getShelterState();
       },
+      openTrailerRoom: () => {
+        openTrailerRoom(els.trailerHotspotBtn);
+        return rules.getTrailerRoomState(meta, config);
+      },
+      closeTrailerRoom: () => {
+        closeTrailerRoom();
+        return rules.getTrailerRoomState(meta, config);
+      },
+      buyTrailerFurniture: (furnitureId) => buyTrailerFurniture(furnitureId),
+      equipTrailerFurniture: (furnitureId) => equipTrailerFurniture(furnitureId),
+      getTrailerRoomState: () => rules.deepClone(rules.getTrailerRoomState(meta, config)),
+      getTrailerRoomMetrics: () => (trailerRoomMetrics ? rules.deepClone(trailerRoomMetrics) : null),
       getShelterState,
       getLastSettlement: () => rules.deepClone(lastSettlement)
     });
@@ -1491,8 +1692,17 @@
       "upgradeHotspotBtn",
       "vehicleHotspotBtn",
       "seriesHotspotBtn",
+      "trailerHotspotBtn",
       "opsHotspotBtn",
       "resetOverlayBtn",
+      "trailerOverlay",
+      "trailerRoomCanvas",
+      "trailerGoodsText",
+      "trailerBonusText",
+      "trailerStarterText",
+      "trailerSlotList",
+      "trailerFurnitureList",
+      "closeTrailerRoomBtn",
       "metaDrawer",
       "metaDrawerTitle",
       "closeMetaDrawer",

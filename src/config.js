@@ -487,6 +487,124 @@ const SUPPLY_DROPS = {
   }
 };
 
+const TRAILER_ROOM = {
+  resourceName: "拾荒物資",
+  dropChancePerKill: 0.16,
+  pityKills: 9,
+  goodsPerDrop: 1,
+  waveGoods: 1,
+  bossGoods: 4,
+  maxGoodsPerRun: 28,
+  slots: {
+    wall_left: { id: "wall_left", label: "左牆層架" },
+    wall_right: { id: "wall_right", label: "右牆掛件" },
+    window_sill: { id: "window_sill", label: "窗台" },
+    bedside: { id: "bedside", label: "床邊" },
+    floor_left: { id: "floor_left", label: "左地面" },
+    floor_right: { id: "floor_right", label: "右地面" },
+    desk: { id: "desk", label: "工作桌" },
+    ceiling: { id: "ceiling", label: "天花板" }
+  },
+  furniture: {
+    supply_shelf: {
+      id: "supply_shelf",
+      name: "物資層架",
+      style: "生存物資",
+      slot: "wall_left",
+      rarity: "common",
+      cost: 8,
+      sprite: "assets/shelter/trailer/supply_shelf.png",
+      description: "罐頭、水瓶與繩索整理在手邊，逃生艙開始像個能活下去的地方。",
+      effectText: "車體 HP +0.6%",
+      effects: { maxHpPct: 0.006 }
+    },
+    solar_radio: {
+      id: "solar_radio",
+      name: "太陽能收音機",
+      style: "生存物資",
+      slot: "bedside",
+      rarity: "common",
+      cost: 12,
+      sprite: "assets/shelter/trailer/solar_radio.png",
+      description: "回收太陽能板接上舊收音機，讓火控節奏更穩。",
+      effectText: "射擊間隔 -0.8%",
+      effects: { fireIntervalMul: 0.992 }
+    },
+    patched_lights: {
+      id: "patched_lights",
+      name: "修補串燈",
+      style: "生存物資",
+      slot: "ceiling",
+      rarity: "common",
+      cost: 14,
+      sprite: "assets/shelter/trailer/patched_lights.png",
+      description: "低耗電暖光串燈，夜間維修時少犯錯。",
+      effectText: "承受傷害 -0.4%",
+      effects: { damageTakenMul: 0.996 }
+    },
+    hydro_planter: {
+      id: "hydro_planter",
+      name: "水耕菜架",
+      style: "溫室生態",
+      slot: "window_sill",
+      rarity: "uncommon",
+      cost: 18,
+      sprite: "assets/shelter/trailer/hydro_planter.png",
+      description: "水耕番茄與生菜補充長途出勤的體力。",
+      effectText: "車體 HP +0.8%",
+      effects: { maxHpPct: 0.008 }
+    },
+    water_filter: {
+      id: "water_filter",
+      name: "濾水罐組",
+      style: "溫室生態",
+      slot: "floor_left",
+      rarity: "uncommon",
+      cost: 24,
+      sprite: "assets/shelter/trailer/water_filter.png",
+      description: "玻璃罐、砂石與活性碳組成的小型循環水站。",
+      effectText: "承受傷害 -0.5%",
+      effects: { damageTakenMul: 0.995 }
+    },
+    folding_workbench: {
+      id: "folding_workbench",
+      name: "折疊工坊",
+      style: "工坊機械",
+      slot: "desk",
+      rarity: "uncommon",
+      cost: 28,
+      sprite: "assets/shelter/trailer/folding_workbench.png",
+      description: "格紋桌布上堆著電路板、工具與半拆彈匣。",
+      effectText: "武器傷害 +1.2%",
+      effects: { damagePct: 0.012 }
+    },
+    blueprint_board: {
+      id: "blueprint_board",
+      name: "藍圖釘板",
+      style: "工坊機械",
+      slot: "wall_right",
+      rarity: "rare",
+      cost: 32,
+      sprite: "assets/shelter/trailer/blueprint_board.png",
+      description: "牆上釘著地圖、剪刀膠帶與載具管線草圖。",
+      effectText: "射擊間隔 -1.2%",
+      effects: { fireIntervalMul: 0.988 }
+    },
+    battery_bank: {
+      id: "battery_bank",
+      name: "回收電池箱",
+      style: "車隊維修",
+      slot: "floor_right",
+      rarity: "rare",
+      cost: 38,
+      sprite: "assets/shelter/trailer/battery_bank.png",
+      description: "拆自廢車的電池並聯，替武器穩壓供電。",
+      effectText: "武器傷害 +0.8%",
+      effects: { damagePct: 0.008 }
+    }
+  }
+};
+
 const QUESTS = {
   dailyRewardParts: 5,
   weeklyRewardParts: 15,
@@ -1513,6 +1631,21 @@ const META_DEFAULT = {
   questBaselines: {},
   questClaims: {},
   claimedMilestones: {},
+  trailerGoods: 0,
+  trailerRoom: {
+    owned: {},
+    slots: {
+      wall_left: null,
+      wall_right: null,
+      window_sill: null,
+      bedside: null,
+      floor_left: null,
+      floor_right: null,
+      desk: null,
+      ceiling: null
+    },
+    seenIntro: false
+  },
   settings: {
     aimAssist: true,
     aimAssistLevel: "medium",
@@ -1550,6 +1683,7 @@ const DSConfig = {
   ENEMY_VARIANTS,
   ENVIRONMENT_EVENTS,
   SUPPLY_DROPS,
+  TRAILER_ROOM,
   QUESTS,
   GATES,
   WAVE,

@@ -149,6 +149,73 @@ const rightSupply = simulateSupplyReachability(config.LOGIC.width);
 assert(rightSupply.endDx < rightSupply.startDx * 0.45, "right edge supply should drift toward the vehicle x position");
 assert(rightSupply.reached, `right edge supply should become reachable before ttl, min distance ${rightSupply.minDistance}`);
 
+const noScavenge = rules.rollScavengeDrop({ killsSinceDrop: 0, rng: () => 0.99, config });
+assert.strictEqual(noScavenge.dropped, false, "high roll should not drop scavenge goods before pity");
+assert.strictEqual(noScavenge.killsSinceDrop, 1);
+const pityScavenge = rules.rollScavengeDrop({ killsSinceDrop: 8, rng: () => 0.99, config });
+assert.strictEqual(pityScavenge.dropped, true, "ninth kill should guarantee one scavenge good");
+assert.strictEqual(pityScavenge.goods, 1);
+assert.strictEqual(pityScavenge.killsSinceDrop, 0);
+const scavengeBreakdown = rules.scavengeGoodsBreakdownForRun(
+  { wavesCleared: 5, bossesDefeated: 1, scavengeGoods: 7 },
+  config
+);
+assert.deepStrictEqual(
+  scavengeBreakdown,
+  { killGoods: 7, waveGoods: 5, bossGoods: 4, capped: false, total: 16 },
+  "scavenge settlement should separate kill, wave and boss sources"
+);
+
+let trailerMeta = rules.migrateMeta({ version: config.META_VERSION, trailerGoods: 200 }, { config });
+const trailerInitial = rules.getTrailerRoomState(trailerMeta, config);
+assert.strictEqual(trailerInitial.goods, 200);
+assert.strictEqual(trailerInitial.items.filter((item) => item.owned).length, 0);
+const unknownFurniture = rules.buyTrailerFurniture({ meta: trailerMeta, furnitureId: "ghost_sofa", config });
+assert.strictEqual(unknownFurniture.purchase.ok, false);
+assert.strictEqual(unknownFurniture.purchase.reason, "unknown");
+const poorFurniture = rules.buyTrailerFurniture({ meta: rules.migrateMeta(null, { config }), furnitureId: "supply_shelf", config });
+assert.strictEqual(poorFurniture.purchase.ok, false);
+assert.strictEqual(poorFurniture.purchase.reason, "goods");
+const buyShelf = rules.buyTrailerFurniture({ meta: trailerMeta, furnitureId: "supply_shelf", now: () => "2026-07-08T00:00:00.000Z", config });
+assert.strictEqual(buyShelf.purchase.ok, true);
+assert.strictEqual(buyShelf.meta.trailerGoods, 192);
+assert.strictEqual(buyShelf.meta.trailerRoom.owned.supply_shelf, true);
+assert.strictEqual(buyShelf.meta.trailerRoom.slots.wall_left, "supply_shelf");
+assert.strictEqual(buyShelf.meta.trailerRoom.seenIntro, true);
+const lockedEquip = rules.equipTrailerFurniture({ meta: trailerMeta, furnitureId: "blueprint_board", config });
+assert.strictEqual(lockedEquip.equip.ok, false);
+assert.strictEqual(lockedEquip.equip.reason, "locked");
+trailerMeta = buyShelf.meta;
+["solar_radio", "patched_lights", "hydro_planter", "water_filter", "folding_workbench", "blueprint_board", "battery_bank"].forEach((id) => {
+  trailerMeta = rules.buyTrailerFurniture({ meta: trailerMeta, furnitureId: id, config }).meta;
+});
+const trailerState = rules.getTrailerRoomState(trailerMeta, config);
+assert.strictEqual(trailerState.items.filter((item) => item.owned).length, 8);
+assert.strictEqual(trailerState.room.slots.desk, "folding_workbench");
+const trailerBonuses = rules.calculateTrailerBonuses(trailerMeta, config);
+assert(Math.abs(trailerBonuses.maxHpPct - 0.014) < 0.0001, "trailer max HP bonus should sum equipped HP furniture");
+assert(Math.abs(trailerBonuses.damagePct - 0.02) < 0.0001, "trailer damage bonus should sum equipped weapon furniture");
+assert(trailerBonuses.fireIntervalMul < 0.981 && trailerBonuses.fireIntervalMul > 0.979, "trailer fire interval bonus should multiply");
+assert(trailerBonuses.damageTakenMul < 0.992 && trailerBonuses.damageTakenMul > 0.990, "trailer defense bonus should multiply");
+const baseVehicleStats = rules.getVehicleStats("land_rig", rules.migrateMeta(null, { config }), config);
+const trailerVehicleStats = rules.getVehicleStats("land_rig", trailerMeta, config);
+assert(trailerVehicleStats.maxHp > baseVehicleStats.maxHp, "trailer HP furniture should affect vehicle stats");
+assert(trailerVehicleStats.damageTakenMul < baseVehicleStats.damageTakenMul, "trailer defense furniture should affect vehicle mitigation");
+const trailerBaseShot = rules.calculateShotStats({ vehicleId: "land_rig", meta: rules.migrateMeta(null, { config }), runMods: rules.defaultRunMods(), config });
+const trailerBoostedShot = rules.calculateShotStats({ vehicleId: "land_rig", meta: trailerMeta, runMods: rules.defaultRunMods(), config });
+assert(trailerBoostedShot.damage > trailerBaseShot.damage, "trailer workbench furniture should raise shot damage");
+assert(trailerBoostedShot.fireInterval < trailerBaseShot.fireInterval, "trailer radio/blueprint furniture should lower fire interval");
+const settledScavenge = rules.settleRunRewards({
+  meta: rules.migrateMeta(null, { config }),
+  run: { vehicleId: "land_rig", wavesCleared: 5, kills: 12, bossesDefeated: 1, score: 1000, scavengeGoods: 6 },
+  rng: () => 0.99,
+  now: () => "2026-07-08T00:00:00.000Z",
+  config
+});
+assert.strictEqual(settledScavenge.meta.trailerGoods, 15, "settlement should bank scavenge goods separately from parts");
+assert.strictEqual(settledScavenge.meta.lastRun.scavengeBreakdown.total, 15);
+assert.strictEqual(settledScavenge.reward.scavengeGoods, 15);
+
 const eventStats = rules.mergeEventStats(
   { meteor_shower: { encounters: 1, completions: 0 } },
   { meteor_shower: { encounters: 1, completions: 1 } },
