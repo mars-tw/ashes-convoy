@@ -282,12 +282,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R54") && swText.includes("src/ui.js?v=R54") && swText.includes("src/game.js?v=R54") && swText.includes("src/rules.js?v=R54"),
+      swCachesJs: swText.includes("src/version.js?v=R55") && swText.includes("src/ui.js?v=R55") && swText.includes("src/game.js?v=R55") && swText.includes("src/rules.js?v=R55"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R54"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R54"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R54"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R55"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R55"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R55"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -296,7 +296,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R54", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R55", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -356,6 +356,7 @@ async function checkShortDesktopReachability(page) {
     "#aimAssistLevelSelect",
     "#screenShakeToggle",
     "#soundToggle",
+    "#showRunTrailerToggle",
     "#fxLevelSelect",
     "#damageTextDensitySelect",
     "#performanceModeSelect",
@@ -575,15 +576,22 @@ async function checkSettingsAndQuestBoard(page) {
   const questCount = await page.locator("#questList .quest-card").count();
   assert.strictEqual(questCount, 2, "operations panel should show one daily and one weekly quest");
 
+  let meta;
   await page.selectOption("#aimAssistLevelSelect", "high");
   await page.locator("#screenShakeToggle").uncheck();
+  assert.strictEqual(await page.locator("#showRunTrailerToggle").isChecked(), true, "run trailer setting should default on");
+  await page.locator("#showRunTrailerToggle").uncheck();
+  meta = await page.evaluate(() => window.__test.getMeta());
+  assert.strictEqual(meta.settings.showRunTrailer, false, "run trailer toggle off should persist");
+  await page.locator("#showRunTrailerToggle").check();
   await page.selectOption("#damageTextDensitySelect", "large");
   await page.selectOption("#performanceModeSelect", "low");
   await page.selectOption("#fontSizeSelect", "large");
-  let meta = await page.evaluate(() => window.__test.getMeta());
+  meta = await page.evaluate(() => window.__test.getMeta());
   assert.strictEqual(meta.settings.aimAssistLevel, "high", "aim assist level should persist from settings panel");
   assert.strictEqual(meta.settings.aimAssist, true, "high aim assist should keep compatibility boolean enabled");
   assert.strictEqual(meta.settings.screenShake, false, "screen shake toggle should persist");
+  assert.strictEqual(meta.settings.showRunTrailer, true, "run trailer toggle on should persist");
   assert.strictEqual(meta.settings.damageTextDensity, "large", "damage text density should persist");
   assert.strictEqual(meta.settings.performanceMode, "low", "performance mode should persist");
   assert.strictEqual(meta.settings.fontSize, "large", "font size setting should persist");
@@ -617,7 +625,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R54"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R55"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -1026,6 +1034,39 @@ async function checkAdaptivePerformance(page) {
       hazards: [],
       vehicle: { hp: state.vehicle.maxHp, weaponCooldown: 0 }
     });
+    window.__test.step(16);
+  });
+}
+
+async function checkRunTrailerRendering(page) {
+  await page.waitForFunction(() => {
+    const debug = window.__test.getRenderDebug();
+    return debug.runTrailerImageStatus === "loaded" && debug.runTrailerRasterDrawn === true && debug.runTrailerPose;
+  });
+  const rendered = await page.evaluate(() => ({
+    state: window.__test.getState(),
+    debug: window.__test.getRenderDebug(),
+    setting: window.__test.getMeta().settings.showRunTrailer
+  }));
+  assert.strictEqual(rendered.setting, true, "run trailer setting should be enabled by default");
+  assert.strictEqual(rendered.debug.runTrailerRasterDrawn, true, "land run should draw the raster trailer sprite");
+  assert(rendered.debug.runTrailerPose.y > rendered.state.vehicle.y + 20, `run trailer should render behind the vehicle: ${JSON.stringify(rendered.debug.runTrailerPose)}`);
+  assert(rendered.debug.runTrailerPose.targetY > rendered.state.vehicle.y, "run trailer target should stay behind the vehicle");
+
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.settings.showRunTrailer = false;
+    window.__test.setMeta(meta);
+    window.__test.step(16);
+  });
+  const hidden = await page.evaluate(() => window.__test.getRenderDebug());
+  assert.strictEqual(hidden.runTrailerRasterDrawn, false, "disabled run trailer setting should skip raster draw");
+  assert.strictEqual(hidden.runTrailerFallbackDrawn, false, "disabled run trailer setting should skip fallback draw");
+
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.settings.showRunTrailer = true;
+    window.__test.setMeta(meta);
     window.__test.step(16);
   });
 }
@@ -1503,7 +1544,7 @@ async function checkEnvironmentEventsAndVariants(page) {
   assert(state.enemies.some((enemy) => enemy.variantId), "late wave generation should spawn tinted variants");
 }
 
-async function checkR54EnemyRosterBehaviors(page) {
+async function checkR55EnemyRosterBehaviors(page) {
   await page.evaluate(() => {
     window.__test.clearStorage();
     window.__test.startRun("land_rig");
@@ -1552,7 +1593,7 @@ async function checkR54EnemyRosterBehaviors(page) {
       statuses: debug.enemyImageStatus
     };
   });
-  assert.deepStrictEqual(result.enemyIds, ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith"].sort(), "R54 enemy roster should be spawnable");
+  assert.deepStrictEqual(result.enemyIds, ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith"].sort(), "R55 enemy roster should be spawnable");
   assert(result.enemyProjectiles >= 1, "spore spitter should fire enemy projectiles");
   assert(result.spitterCooldown > 0, "spore spitter should reset attack cooldown after firing");
   assert.strictEqual(result.bruteSlow, true, "tar brute should apply movement slow aura near the vehicle");
@@ -1900,7 +1941,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
     await checkBossBlueprintDropAnimation(page);
     await unlockFleet(page);
     await checkEnvironmentEventsAndVariants(page);
-    await checkR54EnemyRosterBehaviors(page);
+    await checkR55EnemyRosterBehaviors(page);
     await checkEventCodexAndAchievements(page);
     await checkSupplyDropPickupAndSettlement(page);
     await unlockFleet(page);
@@ -1917,6 +1958,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
   }
   await page.evaluate(() => window.__test.step(180));
   await expectCanvasHasPixels(page);
+  await checkRunTrailerRendering(page);
   await checkInitialPromptAndMessages(page);
   await checkOpeningHordeGateAndFps(page);
   await checkAimAssistToggle(page);
@@ -2260,7 +2302,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r54")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r55")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -2278,7 +2320,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r54")), "R54 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r55")), "R55 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());
@@ -2297,13 +2339,13 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
         await Promise.all(keys.map((key) => caches.delete(key)));
       }
     }).catch(() => {});
-    await context.close();
+    await context.close().catch(() => {});
   }
 }
 
 (async () => {
   const { server, url } = await startServer();
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({ args: ["--disable-gpu", "--disable-accelerated-2d-canvas"] });
   const viewports = [
     { width: 390, height: 844 },
     { width: 820, height: 1180 },
@@ -2324,7 +2366,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     await runServiceWorkerOfflineScenario(browser, url);
     console.log("E2E tests PASS");
   } finally {
-    await browser.close();
+    await browser.close().catch(() => {});
     await new Promise((resolve) => server.close(resolve));
   }
 })().catch((error) => {

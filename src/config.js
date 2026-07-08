@@ -4,7 +4,7 @@ const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 2;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R52", CACHE_VERSION: "ashes-convoy-r52-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R55", CACHE_VERSION: "ashes-convoy-r55-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -26,6 +26,23 @@ const ENVIRONMENT_BACKGROUNDS = {
   air: "assets/env/air.png",
   sea: "assets/env/sea.png",
   space: "assets/env/space.png"
+};
+
+const RUN_TRAILER = {
+  byEnvironment: {
+    land: {
+      spriteImage: "assets/vehicles/trailer.png",
+      visualWidth: 23,
+      offsetY: 42,
+      followLerp: 0.16,
+      maxSwayRad: 0.12,
+      swayPerPixel: 0.012,
+      bobAmp: 0.45,
+      bobHz: 2.1,
+      bobPhase: 0.37,
+      shadow: { widthMul: 0.92, heightMul: 0.22, alpha: 0.28, offsetY: 9, color: "#000000" }
+    }
+  }
 };
 
 const VEHICLES = {
@@ -1651,6 +1668,7 @@ const META_DEFAULT = {
     aimAssistLevel: "medium",
     reducedFlash: false,
     screenShake: true,
+    showRunTrailer: true,
     damageTextDensity: "all",
     performanceMode: "auto",
     fxLevel: "full",
@@ -1677,6 +1695,7 @@ const DSConfig = {
   CACHE_VERSION,
   LOGIC,
   ENVIRONMENT_BACKGROUNDS,
+  RUN_TRAILER,
   VEHICLES,
   WEAPONS,
   ENEMIES,

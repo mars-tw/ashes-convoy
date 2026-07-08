@@ -137,7 +137,7 @@ function sanitizeSettings(input, config) {
   } else if (typeof source.aimAssist === "boolean") {
     output.aimAssistLevel = source.aimAssist ? "medium" : "off";
   }
-  ["reducedFlash", "screenShake", "sound"].forEach((key) => {
+  ["reducedFlash", "screenShake", "sound", "showRunTrailer"].forEach((key) => {
     if (typeof source[key] === "boolean") output[key] = source[key];
   });
   if (validDamageTextDensity(source.damageTextDensity)) output.damageTextDensity = source.damageTextDensity;
@@ -437,6 +437,32 @@ function createSeededRng(seed) {
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
+}
+
+function resolveTrailerFollowPose(options) {
+  const opts = options || {};
+  const spec = opts.trailerConfig && typeof opts.trailerConfig === "object" ? opts.trailerConfig : {};
+  const vehicle = opts.vehicle && typeof opts.vehicle === "object" ? opts.vehicle : {};
+  const previous = opts.previous && typeof opts.previous === "object" ? opts.previous : null;
+  const targetX = finiteNumber(vehicle.x, 0) + finiteNumber(spec.offsetX, 0);
+  const targetY = finiteNumber(vehicle.y, 0) + finiteNumber(spec.offsetY, 40);
+  const prevX = previous ? finiteNumber(previous.x, targetX) : targetX;
+  const prevY = previous ? finiteNumber(previous.y, targetY) : targetY;
+  const dt = finiteNumber(opts.dt, 1 / 60, { min: 0, max: 0.25 });
+  const baseLerp = finiteNumber(spec.followLerp, 0.16, { min: 0.01, max: 1 });
+  const alpha = previous && dt > 0 ? 1 - Math.pow(1 - baseLerp, dt * 60) : previous ? 0 : 1;
+  const x = prevX + (targetX - prevX) * alpha;
+  const y = prevY + (targetY - prevY) * alpha;
+  const simplified = opts.simplified === true;
+  const maxSwayRad = simplified ? 0 : finiteNumber(spec.maxSwayRad, 0.1, { min: 0, max: 0.35 });
+  const swayPerPixel = simplified ? 0 : finiteNumber(spec.swayPerPixel, 0.01, { min: 0, max: 0.08 });
+  const rotation = clamp((targetX - x) * swayPerPixel, -maxSwayRad, maxSwayRad);
+  const bobAmp = simplified ? 0 : finiteNumber(spec.bobAmp, 0, { min: 0, max: 6 });
+  const bobHz = finiteNumber(spec.bobHz, 1, { min: 0, max: 12 });
+  const bobPhase = finiteNumber(spec.bobPhase, 0, { min: -10, max: 10 });
+  const time = finiteNumber(opts.time, 0);
+  const bobY = bobAmp > 0 && bobHz > 0 ? Math.sin((time * bobHz + bobPhase) * Math.PI * 2) * bobAmp : 0;
+  return { x, y, targetX, targetY, rotation, bobY, alpha };
 }
 
 function getConfig(config) {
@@ -1965,6 +1991,7 @@ const DSRules = {
   applySupplyRewardById,
   rollScavengeDrop,
   scavengeGoodsBreakdownForRun,
+  resolveTrailerFollowPose,
   sanitizeTrailerRoom,
   calculateTrailerBonuses,
   getTrailerRoomState,

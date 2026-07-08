@@ -1,8 +1,12 @@
 "use strict";
 
+const fs = require("fs");
+const path = require("path");
+const zlib = require("zlib");
 const { PALETTES, SPRITES, SPRITE_SPECS } = require("../src/sprites.js");
 const { SHELTER_HOTSPOTS } = require("../src/shelter-scene.js");
 
+const rootDir = path.resolve(__dirname, "..");
 const errors = [];
 
 function fail(message) {
@@ -11,6 +15,97 @@ function fail(message) {
 
 function check(condition, message) {
   if (!condition) fail(message);
+}
+
+function paeth(left, up, upLeft) {
+  const p = left + up - upLeft;
+  const pa = Math.abs(p - left);
+  const pb = Math.abs(p - up);
+  const pc = Math.abs(p - upLeft);
+  if (pa <= pb && pa <= pc) return left;
+  return pb <= pc ? up : upLeft;
+}
+
+function readPng(relativePath) {
+  const buffer = fs.readFileSync(path.join(rootDir, relativePath));
+  const signature = buffer.subarray(0, 8).toString("hex");
+  check(signature === "89504e470d0a1a0a", `${relativePath} must be a PNG file`);
+  let offset = 8;
+  const idat = [];
+  const png = { relativePath, width: 0, height: 0, bitDepth: 0, colorType: 0, idat };
+  while (offset + 12 <= buffer.length) {
+    const length = buffer.readUInt32BE(offset);
+    const type = buffer.subarray(offset + 4, offset + 8).toString("ascii");
+    const dataStart = offset + 8;
+    const dataEnd = dataStart + length;
+    const data = buffer.subarray(dataStart, dataEnd);
+    if (type === "IHDR") {
+      png.width = data.readUInt32BE(0);
+      png.height = data.readUInt32BE(4);
+      png.bitDepth = data[8];
+      png.colorType = data[9];
+    } else if (type === "IDAT") {
+      idat.push(data);
+    } else if (type === "IEND") {
+      break;
+    }
+    offset = dataEnd + 4;
+  }
+  check(png.width > 0 && png.height > 0, `${relativePath} must have a valid IHDR`);
+  check(idat.length > 0, `${relativePath} must contain IDAT data`);
+  return png;
+}
+
+function pngBytesPerPixel(png) {
+  if (png.bitDepth !== 8) return 0;
+  if (png.colorType === 2) return 3;
+  if (png.colorType === 6) return 4;
+  return 0;
+}
+
+function inflatePngRows(png) {
+  const bpp = pngBytesPerPixel(png);
+  check(bpp > 0, `${png.relativePath} must be 8-bit RGB/RGBA PNG`);
+  const stride = png.width * bpp;
+  const raw = zlib.inflateSync(Buffer.concat(png.idat));
+  const out = Buffer.alloc(png.height * stride);
+  let src = 0;
+  for (let y = 0; y < png.height; y += 1) {
+    const filter = raw[src];
+    src += 1;
+    for (let x = 0; x < stride; x += 1) {
+      const left = x >= bpp ? out[y * stride + x - bpp] : 0;
+      const up = y > 0 ? out[(y - 1) * stride + x] : 0;
+      const upLeft = y > 0 && x >= bpp ? out[(y - 1) * stride + x - bpp] : 0;
+      let predictor = 0;
+      if (filter === 1) predictor = left;
+      else if (filter === 2) predictor = up;
+      else if (filter === 3) predictor = Math.floor((left + up) / 2);
+      else if (filter === 4) predictor = paeth(left, up, upLeft);
+      else check(filter === 0, `${png.relativePath} uses unsupported PNG filter ${filter}`);
+      out[y * stride + x] = (raw[src] + predictor) & 255;
+      src += 1;
+    }
+  }
+  return out;
+}
+
+function checkPngContract(asset) {
+  const png = readPng(asset.path);
+  check(png.width === asset.width && png.height === asset.height, `${asset.path} must be ${asset.width}x${asset.height}, got ${png.width}x${png.height}`);
+  if (!asset.alphaBinary) return;
+  check(png.colorType === 6, `${asset.path} must be RGBA for transparent sprite rendering`);
+  const rows = inflatePngRows(png);
+  let transparent = 0;
+  let opaque = 0;
+  let invalid = 0;
+  for (let i = 3; i < rows.length; i += 4) {
+    if (rows[i] === 0) transparent += 1;
+    else if (rows[i] === 255) opaque += 1;
+    else invalid += 1;
+  }
+  check(invalid === 0, `${asset.path} alpha must be binary 0/255, got ${invalid} antialiased pixels`);
+  check(transparent > 0 && opaque > 0, `${asset.path} should contain both transparent padding and opaque subject pixels`);
 }
 
 function isObject(value) {
@@ -144,6 +239,19 @@ const expectedFrameCount = Object.values(SPRITE_SPECS)
 
 check(Object.keys(SPRITES).length === Object.keys(SPRITE_SPECS).length, `SPRITES must contain exactly ${Object.keys(SPRITE_SPECS).length} spec sprites, got ${Object.keys(SPRITES).length}`);
 check(frameCount === expectedFrameCount, `frame count must be ${expectedFrameCount}, got ${frameCount}`);
+
+[
+  { path: "assets/shelter/trailer/base_escape_pod.png", width: 780, height: 900 },
+  { path: "assets/shelter/trailer/supply_shelf.png", width: 260, height: 210, alphaBinary: true },
+  { path: "assets/shelter/trailer/solar_radio.png", width: 180, height: 140, alphaBinary: true },
+  { path: "assets/shelter/trailer/patched_lights.png", width: 300, height: 110, alphaBinary: true },
+  { path: "assets/shelter/trailer/hydro_planter.png", width: 300, height: 160, alphaBinary: true },
+  { path: "assets/shelter/trailer/water_filter.png", width: 180, height: 170, alphaBinary: true },
+  { path: "assets/shelter/trailer/folding_workbench.png", width: 300, height: 210, alphaBinary: true },
+  { path: "assets/shelter/trailer/blueprint_board.png", width: 200, height: 210, alphaBinary: true },
+  { path: "assets/shelter/trailer/battery_bank.png", width: 220, height: 150, alphaBinary: true },
+  { path: "assets/vehicles/trailer.png", width: 709, height: 1291, alphaBinary: true }
+].forEach(checkPngContract);
 
 if (errors.length > 0) {
   console.error("Sprite contract FAIL");

@@ -264,12 +264,12 @@ async function runMatrix(browser, baseUrl) {
 
 (async () => {
   const { server, url } = await startServer();
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({ args: ["--disable-gpu", "--disable-accelerated-2d-canvas"] });
   try {
     await runMatrix(browser, url);
     console.log("RWD matrix tests PASS");
   } finally {
-    await browser.close();
+    await browser.close().catch(() => {});
     await new Promise((resolve) => server.close(resolve));
   }
 })().catch((error) => {

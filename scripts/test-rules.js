@@ -205,6 +205,43 @@ const trailerBaseShot = rules.calculateShotStats({ vehicleId: "land_rig", meta: 
 const trailerBoostedShot = rules.calculateShotStats({ vehicleId: "land_rig", meta: trailerMeta, runMods: rules.defaultRunMods(), config });
 assert(trailerBoostedShot.damage > trailerBaseShot.damage, "trailer workbench furniture should raise shot damage");
 assert(trailerBoostedShot.fireInterval < trailerBaseShot.fireInterval, "trailer radio/blueprint furniture should lower fire interval");
+const runTrailerSpec = {
+  offsetY: 42,
+  followLerp: 0.16,
+  maxSwayRad: 0.12,
+  swayPerPixel: 0.012,
+  bobAmp: 1,
+  bobHz: 1,
+  bobPhase: 0.25
+};
+const runTrailerInitial = rules.resolveTrailerFollowPose({
+  vehicle: { x: 100, y: 300 },
+  time: 0,
+  trailerConfig: runTrailerSpec
+});
+assert.strictEqual(runTrailerInitial.x, 100, "run trailer should start at the target x without a previous pose");
+assert.strictEqual(runTrailerInitial.y, 342, "run trailer should apply the configured rear offset");
+assert(Math.abs(runTrailerInitial.bobY - 1) < 0.0001, "run trailer bob should use injected time/phase");
+const runTrailerLagged = rules.resolveTrailerFollowPose({
+  vehicle: { x: 130, y: 300 },
+  previous: runTrailerInitial,
+  dt: 1 / 60,
+  time: 0.1,
+  trailerConfig: runTrailerSpec
+});
+assert(runTrailerLagged.x > 100 && runTrailerLagged.x < 130, "run trailer should lag behind sudden vehicle x movement");
+assert.strictEqual(runTrailerLagged.targetY, 342, "run trailer target y should stay behind the vehicle");
+assert(runTrailerLagged.rotation > 0 && runTrailerLagged.rotation <= runTrailerSpec.maxSwayRad, "run trailer should sway toward the target");
+const runTrailerSimple = rules.resolveTrailerFollowPose({
+  vehicle: { x: 130, y: 300 },
+  previous: runTrailerInitial,
+  dt: 1 / 60,
+  time: 0.1,
+  trailerConfig: runTrailerSpec,
+  simplified: true
+});
+assert.strictEqual(runTrailerSimple.rotation, 0, "simplified trailer pose should remove sway");
+assert.strictEqual(runTrailerSimple.bobY, 0, "simplified trailer pose should remove idle bob");
 const settledScavenge = rules.settleRunRewards({
   meta: rules.migrateMeta(null, { config }),
   run: { vehicleId: "land_rig", wavesCleared: 5, kills: 12, bossesDefeated: 1, score: 1000, scavengeGoods: 6 },

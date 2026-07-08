@@ -12,8 +12,8 @@ function assertFinitePositive(value, label) {
 
 assert.strictEqual(config.STORAGE_KEY, "ashes_convoy_meta_v1");
 assert.strictEqual(config.META_VERSION, 2);
-assert.strictEqual(config.APP_VERSION, "R54");
-assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r54-v1");
+assert.strictEqual(config.APP_VERSION, "R55");
+assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r55-v1");
 assert.strictEqual(config.LOGIC.width, 195);
 assert.strictEqual(config.LOGIC.height, 422);
 assert.strictEqual(config.LOGIC.displayWidth, 390);
@@ -26,6 +26,11 @@ assert.deepStrictEqual(config.ENVIRONMENT_BACKGROUNDS, {
   sea: "assets/env/sea.png",
   space: "assets/env/space.png"
 });
+assert(config.RUN_TRAILER && config.RUN_TRAILER.byEnvironment.land, "land environment should define a visible run trailer");
+assert.strictEqual(config.RUN_TRAILER.byEnvironment.land.spriteImage, "assets/vehicles/trailer.png");
+assert(fs.existsSync(path.join(__dirname, "..", config.RUN_TRAILER.byEnvironment.land.spriteImage)), "run trailer sprite should exist");
+assertFinitePositive(config.RUN_TRAILER.byEnvironment.land.visualWidth, "RUN_TRAILER.land.visualWidth");
+assertFinitePositive(config.RUN_TRAILER.byEnvironment.land.offsetY, "RUN_TRAILER.land.offsetY");
 assert.deepStrictEqual(config.SHELTER_THEMES, {}, "shelter reference themes should not be used by the start screen");
 const roadRatio = (config.LOGIC.roadRight - config.LOGIC.roadLeft) / config.LOGIC.width;
 assert(roadRatio >= 0.55 && roadRatio <= 0.65, `road ratio should be 55-65%, got ${roadRatio}`);
@@ -81,7 +86,7 @@ const expectedEnemies = [
   "void_wraith",
   "boss_hive_titan"
 ];
-assert.deepStrictEqual(Object.keys(config.ENEMIES).sort(), expectedEnemies.slice().sort(), "enemy roster should match R54 roster");
+assert.deepStrictEqual(Object.keys(config.ENEMIES).sort(), expectedEnemies.slice().sort(), "enemy roster should match R55 roster");
 expectedEnemies.forEach((id) => {
   const enemy = config.ENEMIES[id];
   assert(enemy, `missing enemy ${id}`);
@@ -157,7 +162,7 @@ assert.strictEqual(config.TRAILER_ROOM.waveGoods, 1);
 assert.strictEqual(config.TRAILER_ROOM.bossGoods, 4);
 assert.strictEqual(config.TRAILER_ROOM.maxGoodsPerRun, 28);
 assert.strictEqual(Object.keys(config.TRAILER_ROOM.slots).length, 8, "trailer room should expose eight fixed slots");
-assert.strictEqual(Object.keys(config.TRAILER_ROOM.furniture).length, 8, "R54 should ship the first eight furniture items");
+assert.strictEqual(Object.keys(config.TRAILER_ROOM.furniture).length, 8, "R55 should keep the first eight furniture items");
 const trailerCostTotal = Object.values(config.TRAILER_ROOM.furniture).reduce((sum, item) => sum + item.cost, 0);
 assert.strictEqual(trailerCostTotal, 174, "first furniture wave should have a clear long-tail cost");
 const trailerFullEffects = Object.values(config.TRAILER_ROOM.furniture).reduce(
@@ -195,6 +200,7 @@ assert.strictEqual(config.META_DEFAULT.unlockedVehicles.void_runner, false);
 assert.strictEqual(config.META_DEFAULT.blueprintWishlist, "sky_barge");
 assert.strictEqual(config.META_DEFAULT.settings.aimAssistLevel, "medium");
 assert.strictEqual(config.META_DEFAULT.settings.screenShake, true);
+assert.strictEqual(config.META_DEFAULT.settings.showRunTrailer, true);
 assert.strictEqual(config.META_DEFAULT.settings.damageTextDensity, "all");
 assert.strictEqual(config.META_DEFAULT.settings.performanceMode, "auto");
 assert.strictEqual(config.META_DEFAULT.settings.fontSize, "medium");

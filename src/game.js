@@ -44,10 +44,15 @@
     enemyRasterDrawn: 0,
     enemyFallbackDrawn: 0,
     enemyShadowDrawn: 0,
+    runTrailerRasterDrawn: false,
+    runTrailerFallbackDrawn: false,
+    runTrailerImageStatus: "none",
+    runTrailerPose: null,
     enemyImageStatus: {}
   };
   const environmentImages = {};
   const vehicleImages = {};
+  const runTrailerImages = {};
   const enemyImages = {};
   const enemySpriteOptions = { flipX: false, alpha: 1 };
 
@@ -314,6 +319,42 @@
 
   function vehicleImageStatus(vehicleId) {
     const record = vehicleImages[vehicleId];
+    if (!record) return "none";
+    if (record.status === "loaded" && record.image.complete && record.image.naturalWidth > 0) return "loaded";
+    return record.status;
+  }
+
+  function runTrailerSpec(vehicleConfig) {
+    const runTrailer = config.RUN_TRAILER || {};
+    const byEnvironment = runTrailer.byEnvironment || {};
+    return vehicleConfig && vehicleConfig.environment ? byEnvironment[vehicleConfig.environment] || null : null;
+  }
+
+  function preloadRunTrailerImages() {
+    if (typeof root.Image !== "function") return;
+    const byEnvironment = (config.RUN_TRAILER && config.RUN_TRAILER.byEnvironment) || {};
+    Object.keys(byEnvironment).forEach((environment) => {
+      const spec = byEnvironment[environment];
+      const src = spec && spec.spriteImage;
+      if (!src || runTrailerImages[src]) return;
+      const record = { image: new root.Image(), status: "loading", src };
+      record.image.onload = () => {
+        record.status = "loaded";
+        draw();
+      };
+      record.image.onerror = () => {
+        record.status = "failed";
+        draw();
+      };
+      record.image.decoding = "async";
+      record.image.src = src;
+      runTrailerImages[src] = record;
+    });
+  }
+
+  function runTrailerImageStatus(spec) {
+    const src = spec && spec.spriteImage;
+    const record = src ? runTrailerImages[src] : null;
     if (!record) return "none";
     if (record.status === "loaded" && record.image.complete && record.image.naturalWidth > 0) return "loaded";
     return record.status;
@@ -860,6 +901,8 @@
         weaponCooldown: 0,
         recentHitUntil: 0
       },
+      runTrailerPose: null,
+      runTrailerUpdatedAt: 0,
       runMods: rules.defaultRunMods(),
       enemies: [],
       hazards: [],
@@ -2881,6 +2924,102 @@
     ctx.restore();
   }
 
+  function drawRunTrailerShadow(pose, width, height, shadow) {
+    if (!shadow) return;
+    ctx.save();
+    ctx.globalAlpha *= shadow.alpha == null ? 0.24 : shadow.alpha;
+    ctx.fillStyle = shadow.color || "#000000";
+    ctx.beginPath();
+    ctx.ellipse(
+      pose.x,
+      pose.y + pose.bobY + height * 0.26 + (shadow.offsetY || 0),
+      Math.max(5, width * (shadow.widthMul == null ? 0.9 : shadow.widthMul) * 0.5),
+      Math.max(2, width * (shadow.heightMul == null ? 0.22 : shadow.heightMul) * 0.5),
+      0,
+      0,
+      TAU
+    );
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawRunTrailerFallback(pose, width, height, spec) {
+    const scale = width / 23;
+    drawRunTrailerShadow(pose, width, height, spec.shadow);
+    ctx.save();
+    ctx.translate(pose.x, pose.y + pose.bobY);
+    ctx.rotate(pose.rotation);
+    ctx.globalAlpha *= spec.alpha == null ? 0.92 : spec.alpha;
+    ctx.fillStyle = "#3b3328";
+    ctx.fillRect(-10 * scale, -18 * scale, 20 * scale, 31 * scale);
+    ctx.fillStyle = "#6f6047";
+    ctx.fillRect(-8 * scale, -15 * scale, 16 * scale, 19 * scale);
+    ctx.fillStyle = "#1a2328";
+    ctx.fillRect(-5 * scale, -8 * scale, 10 * scale, 7 * scale);
+    ctx.fillStyle = "#9b2e25";
+    ctx.fillRect(-7 * scale, 9 * scale, 4 * scale, 2 * scale);
+    ctx.fillRect(3 * scale, 9 * scale, 4 * scale, 2 * scale);
+    ctx.fillStyle = "#151210";
+    ctx.fillRect(-13 * scale, 6 * scale, 4 * scale, 9 * scale);
+    ctx.fillRect(9 * scale, 6 * scale, 4 * scale, 9 * scale);
+    ctx.strokeStyle = "#94836a";
+    ctx.lineWidth = Math.max(1, 1.2 * scale);
+    ctx.beginPath();
+    ctx.moveTo(0, -18 * scale);
+    ctx.lineTo(0, -25 * scale);
+    ctx.stroke();
+    ctx.restore();
+    renderDebug.runTrailerFallbackDrawn = true;
+  }
+
+  function drawRunTrailer(vehicleConfig, vehicle) {
+    if (!state || meta.settings.showRunTrailer === false) return;
+    const spec = runTrailerSpec(vehicleConfig);
+    if (!spec || !spec.spriteImage) return;
+    const previousUpdateAt = Number.isFinite(state.runTrailerUpdatedAt) ? state.runTrailerUpdatedAt : state.time;
+    const dt = Math.max(0, state.time - previousUpdateAt);
+    const pose = rules.resolveTrailerFollowPose({
+      vehicle,
+      previous: state.runTrailerPose,
+      dt,
+      time: stateTime(),
+      trailerConfig: spec,
+      simplified: performanceState.quality === "low" || fxLevelSetting() === "off"
+    });
+    state.runTrailerPose = pose;
+    state.runTrailerUpdatedAt = state.time;
+
+    const status = runTrailerImageStatus(spec);
+    const width = spec.visualWidth || 23;
+    const record = runTrailerImages[spec.spriteImage];
+    const height =
+      record && record.image && record.image.naturalWidth > 0
+        ? width * (record.image.naturalHeight / record.image.naturalWidth)
+        : width * 1.82;
+    renderDebug.runTrailerImageStatus = status;
+    renderDebug.runTrailerPose = {
+      x: Math.round(pose.x * 10) / 10,
+      y: Math.round(pose.y * 10) / 10,
+      targetY: Math.round(pose.targetY * 10) / 10,
+      rotation: Math.round(pose.rotation * 1000) / 1000
+    };
+
+    if (record && status === "loaded") {
+      drawRunTrailerShadow(pose, width, height, spec.shadow);
+      ctx.save();
+      ctx.translate(pose.x, pose.y + pose.bobY);
+      ctx.rotate(pose.rotation);
+      ctx.globalAlpha *= spec.alpha == null ? 0.94 : spec.alpha;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(record.image, -width * 0.5, -height * 0.5, width, height);
+      ctx.restore();
+      renderDebug.runTrailerRasterDrawn = true;
+      return;
+    }
+
+    drawRunTrailerFallback(pose, width, height, spec);
+  }
+
   function hexChannel(hex, index) {
     return parseInt(hex.slice(1 + index * 2, 3 + index * 2), 16) || 0;
   }
@@ -3148,6 +3287,7 @@
       ? fx.vehicleMotion(FXC, currentEnvironment(), stateTime(), fxMoveX, fxScratch.motion)
       : null;
     if (motion && motion.shadow) drawVehicleShadow(vehicleConfig, state.vehicle, motion.shadow);
+    drawRunTrailer(vehicleConfig, state.vehicle);
     ctx.save();
     if (motion) {
       ctx.translate(state.vehicle.x, state.vehicle.y + motion.bobY);
@@ -3186,6 +3326,10 @@
       vehicleRasterDrawn: false,
       vehicleFallbackDrawn: false,
       vehicleImageStatus: "none",
+      runTrailerRasterDrawn: false,
+      runTrailerFallbackDrawn: false,
+      runTrailerImageStatus: "none",
+      runTrailerPose: null,
       backgroundRasterDrawn: false,
       backgroundFallbackDrawn: false,
       backgroundImageStatus: "none",
@@ -3283,6 +3427,7 @@
     renderer.preRenderSprites({ pixelRatio: 1, smoothing: false });
     preloadEnvironmentImages();
     preloadVehicleImages();
+    preloadRunTrailerImages();
     preloadEnemyImages();
     bindInput();
     // 音效解鎖：首次 pointerdown / keydown resume AudioContext（autoplay 政策）

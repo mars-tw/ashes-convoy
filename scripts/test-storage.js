@@ -18,6 +18,7 @@ assert.strictEqual(freshAgain.eventStats.sandstorm.encounters, 0);
 assert.strictEqual(freshAgain.eventStats.meteor_shower.completions, 0);
 assert.strictEqual(freshAgain.settings.aimAssistLevel, "medium");
 assert.strictEqual(freshAgain.settings.screenShake, true);
+assert.strictEqual(freshAgain.settings.showRunTrailer, true);
 assert.strictEqual(freshAgain.settings.damageTextDensity, "all");
 assert.strictEqual(freshAgain.settings.fontSize, "medium");
 assert.strictEqual(freshAgain.questStats.supplyCrates, 0);
@@ -47,7 +48,7 @@ const dirty = {
   },
   achievements: { first_boss: true, bogus: false },
   claimedMilestones: { a: true, b: "true" },
-  settings: { aimAssist: false, reducedFlash: true, screenShake: false, damageTextDensity: "large", performanceMode: "low", fontSize: "large", sound: "yes" },
+  settings: { aimAssist: false, reducedFlash: true, screenShake: false, showRunTrailer: false, damageTextDensity: "large", performanceMode: "low", fontSize: "large", sound: "yes" },
   tutorial: { seenIntro: true, seenGate: "yes", seenGarage: false },
   blueprints: { rift_hauler: 5.5, frost_wing: -2 },
   eventStats: { sandstorm: { encounters: 2.8, completions: 1 }, ghost_event: { encounters: 9, completions: 9 } },
@@ -109,6 +110,7 @@ assert.strictEqual(migrated.settings.aimAssist, false);
 assert.strictEqual(migrated.settings.aimAssistLevel, "off");
 assert.strictEqual(migrated.settings.reducedFlash, true);
 assert.strictEqual(migrated.settings.screenShake, false);
+assert.strictEqual(migrated.settings.showRunTrailer, false);
 assert.strictEqual(migrated.settings.damageTextDensity, "large");
 assert.strictEqual(migrated.settings.performanceMode, "low");
 assert.strictEqual(migrated.settings.fontSize, "large");
