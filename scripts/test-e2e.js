@@ -282,12 +282,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R55") && swText.includes("src/ui.js?v=R55") && swText.includes("src/game.js?v=R55") && swText.includes("src/rules.js?v=R55"),
+      swCachesJs: swText.includes("src/version.js?v=R56") && swText.includes("src/ui.js?v=R56") && swText.includes("src/game.js?v=R56") && swText.includes("src/rules.js?v=R56"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R55"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R55"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R55"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R56"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R56"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R56"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -296,7 +296,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R55", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R56", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -397,7 +397,7 @@ async function checkSupplyChoiceOverlayReachability(page) {
   const buttons = page.locator("#supplyChoiceOverlay .supply-choice-btn");
   await expectCanvasHasPixels(page);
   const count = await buttons.count();
-  assert.strictEqual(count, 4, "short desktop supply choice should show four options");
+  assert.strictEqual(count, 5, "short desktop supply choice should show five options");
   for (let i = 0; i < count; i += 1) {
     const box = await buttons.nth(i).boundingBox();
     const viewport = page.viewportSize();
@@ -625,7 +625,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R55"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R56"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -1544,7 +1544,7 @@ async function checkEnvironmentEventsAndVariants(page) {
   assert(state.enemies.some((enemy) => enemy.variantId), "late wave generation should spawn tinted variants");
 }
 
-async function checkR55EnemyRosterBehaviors(page) {
+async function checkR56EnemyRosterBehaviors(page) {
   await page.evaluate(() => {
     window.__test.clearStorage();
     window.__test.startRun("land_rig");
@@ -1593,7 +1593,7 @@ async function checkR55EnemyRosterBehaviors(page) {
       statuses: debug.enemyImageStatus
     };
   });
-  assert.deepStrictEqual(result.enemyIds, ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith"].sort(), "R55 enemy roster should be spawnable");
+  assert.deepStrictEqual(result.enemyIds, ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith"].sort(), "R56 enemy roster should be spawnable");
   assert(result.enemyProjectiles >= 1, "spore spitter should fire enemy projectiles");
   assert(result.spitterCooldown > 0, "spore spitter should reset attack cooldown after firing");
   assert.strictEqual(result.bruteSlow, true, "tar brute should apply movement slow aura near the vehicle");
@@ -1726,7 +1726,7 @@ async function checkSupplyDropPickupAndSettlement(page) {
       box: node.getBoundingClientRect().toJSON()
     }))
   );
-  assert.strictEqual(choices.length, 4, "supply choice overlay should show all four reward options");
+  assert.strictEqual(choices.length, 5, "supply choice overlay should show all five reward options");
   const viewport = page.viewportSize();
   choices.forEach((choice) => {
     assert(choice.box.width >= 44 && choice.box.height >= 44, `${choice.rewardId} should be a 44px+ touch target`);
@@ -1865,7 +1865,7 @@ async function deathSettlementUpgradeAndReload(page) {
   });
   await page.waitForSelector("#settlementPanel:not([hidden])");
   const settlementText = await page.locator("#settlementSummary").innerText();
-  assert(settlementText.includes("149"), `settlement should show 149 total parts after achievement bonuses: ${settlementText}`);
+  assert(settlementText.includes("181"), `settlement should show 181 total parts after achievement and milestone bonuses: ${settlementText}`);
   assert(settlementText.includes("新紀錄"), `settlement should call out new records: ${settlementText}`);
   const settlementRows = await page.locator("#settlementList .settlement-item").evaluateAll((nodes) =>
     nodes.map((node) => node.innerText.replace(/\s+/g, " ").trim())
@@ -1873,8 +1873,10 @@ async function deathSettlementUpgradeAndReload(page) {
   assert(settlementRows.some((row) => row.includes("+40") && row.includes("波次零件")), `settlement should show wave parts breakdown: ${settlementRows.join(" | ")}`);
   assert(settlementRows.some((row) => row.includes("+21") && row.includes("擊殺零件")), `settlement should show kill parts breakdown: ${settlementRows.join(" | ")}`);
   assert(settlementRows.some((row) => row.includes("+48") && row.includes("Boss 零件")), `settlement should show boss parts breakdown: ${settlementRows.join(" | ")}`);
+  assert(settlementRows.some((row) => row.includes("+32") && row.includes("里程碑零件")), `settlement should show milestone parts breakdown: ${settlementRows.join(" | ")}`);
   const badges = await page.locator("#settlementBadges .settlement-badge").evaluateAll((nodes) => nodes.map((node) => node.innerText));
   assert(badges.some((text) => text.includes("首殺 Boss")), `settlement should show first boss achievement: ${badges.join(" | ")}`);
+  assert(badges.some((text) => text.includes("突破第 8 波")), `settlement should show milestone claim badges: ${badges.join(" | ")}`);
   const recommendation = await page.locator("#settlementRecommendation").evaluate((node) => ({
     hidden: node.hidden,
     text: node.innerText
@@ -1885,7 +1887,7 @@ async function deathSettlementUpgradeAndReload(page) {
     `settlement recommendation should include a reason: ${recommendation.text}`
   );
   let meta = await page.evaluate(() => window.__test.getMeta());
-  assert(meta.parts >= 109, "settlement should persist earned parts");
+  assert(meta.parts >= 181, "settlement should persist earned parts");
   const garageCta = await page.locator("#garageBtn").evaluate((button) => ({ text: button.textContent, className: button.className }));
   assert(garageCta.text.includes("進車庫升級") && garageCta.className.includes("primary"), "affordable settlement should make garage the primary CTA");
 
@@ -1941,7 +1943,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
     await checkBossBlueprintDropAnimation(page);
     await unlockFleet(page);
     await checkEnvironmentEventsAndVariants(page);
-    await checkR55EnemyRosterBehaviors(page);
+    await checkR56EnemyRosterBehaviors(page);
     await checkEventCodexAndAchievements(page);
     await checkSupplyDropPickupAndSettlement(page);
     await unlockFleet(page);
@@ -2302,7 +2304,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r55")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r56")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -2320,7 +2322,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r55")), "R55 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r56")), "R56 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

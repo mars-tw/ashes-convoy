@@ -9,17 +9,17 @@ const APP_SHELL_PATHS = [
   "./",
   "index.html",
   "offline.html",
-  "manifest.webmanifest?v=R55",
-  "src/version.js?v=R55",
-  "src/sprites.js?v=R55",
-  "src/sprite-renderer.js?v=R55",
-  "src/shelter-scene.js?v=R55",
-  "src/config.js?v=R55",
-  "src/rules.js?v=R55",
-  "src/fx.js?v=R55",
-  "src/audio.js?v=R55",
-  "src/game.js?v=R55",
-  "src/ui.js?v=R55"
+  "manifest.webmanifest?v=R56",
+  "src/version.js?v=R56",
+  "src/sprites.js?v=R56",
+  "src/sprite-renderer.js?v=R56",
+  "src/shelter-scene.js?v=R56",
+  "src/config.js?v=R56",
+  "src/rules.js?v=R56",
+  "src/fx.js?v=R56",
+  "src/audio.js?v=R56",
+  "src/game.js?v=R56",
+  "src/ui.js?v=R56"
 ];
 const ASSET_PATHS = [
   "assets/ui/start.png",
@@ -54,7 +54,11 @@ const ASSET_PATHS = [
   "assets/shelter/trailer/folding_workbench.png",
   "assets/shelter/trailer/blueprint_board.png",
   "assets/shelter/trailer/battery_bank.png",
-  "assets/icons/icon-192.png?v=R55",
+  "assets/shelter/trailer/field_medkit.png",
+  "assets/shelter/trailer/mycelium_rack.png",
+  "assets/shelter/trailer/reload_bench.png",
+  "assets/shelter/trailer/welding_kit.png",
+  "assets/icons/icon-192.png?v=R56",
   "assets/icons/icon-192.png",
   "assets/icons/icon-512.png"
 ];

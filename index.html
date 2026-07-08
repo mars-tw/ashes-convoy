@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#111317" />
-    <link rel="manifest" href="manifest.webmanifest?v=R55" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R55" />
+    <link rel="manifest" href="manifest.webmanifest?v=R56" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R56" />
     <title>灰燼護航</title>
     <style>
       :root {
@@ -163,6 +163,19 @@
         width: 100%;
         border-radius: inherit;
         background: linear-gradient(90deg, var(--danger), var(--accent));
+      }
+
+      .shield-bar {
+        height: 5px;
+        background: rgba(94, 212, 203, 0.14);
+      }
+
+      .shield-bar[hidden] {
+        display: none;
+      }
+
+      .shield-bar > i {
+        background: linear-gradient(90deg, #2f8792, var(--accent-2));
       }
 
       .pill {
@@ -768,9 +781,30 @@
         background: rgba(94, 212, 203, 0.06);
       }
 
-      .achievement-list {
+      .achievement-list,
+      .milestone-list {
         display: grid;
         gap: 8px;
+      }
+
+      .milestone-list {
+        margin-bottom: 10px;
+      }
+
+      .milestone-progress {
+        width: 100%;
+        height: 6px;
+        overflow: hidden;
+        border: 1px solid rgba(94, 212, 203, 0.22);
+        border-radius: 999px;
+        background: rgba(4, 8, 11, 0.42);
+      }
+
+      .milestone-progress > i {
+        display: block;
+        width: 0;
+        height: 100%;
+        background: linear-gradient(90deg, rgba(94, 212, 203, 0.84), rgba(240, 182, 74, 0.9));
       }
 
       .quest-list,
@@ -889,6 +923,11 @@
       .achievement.is-done {
         border-color: rgba(135, 210, 125, 0.45);
         background: rgba(135, 210, 125, 0.08);
+      }
+
+      .achievement.is-ready {
+        border-color: rgba(94, 212, 203, 0.5);
+        background: rgba(94, 212, 203, 0.08);
       }
 
       .achievement strong {
@@ -1315,6 +1354,7 @@
               <span id="hudHpText">HP 0 / 0</span>
             </div>
             <div class="bar"><i id="hpBar"></i></div>
+            <div class="bar shield-bar" id="shieldBarWrap" hidden><i id="shieldBar"></i></div>
           </div>
           <div class="pill" id="hudWave">第 1 波</div>
           <button id="pauseBtn" type="button" aria-label="暫停">暫停</button>
@@ -1416,6 +1456,7 @@
             </section>
             <section class="meta-section" data-meta-section="achievements">
               <h2>成就牆</h2>
+              <div class="milestone-list" id="milestoneList"></div>
               <div class="event-codex-list" id="eventCodexList"></div>
               <div class="achievement-list" id="achievementList"></div>
               <footer class="series-footer" aria-label="阿軒的小遊戲系列">
@@ -1547,7 +1588,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R55";
+        var key = "ashes_convoy_html_boot_reload_R56";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -1564,15 +1605,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R55"></script>
-    <script src="src/sprites.js?v=R55"></script>
-    <script src="src/sprite-renderer.js?v=R55"></script>
-    <script src="src/shelter-scene.js?v=R55"></script>
-    <script src="src/config.js?v=R55"></script>
-    <script src="src/rules.js?v=R55"></script>
-    <script src="src/fx.js?v=R55"></script>
-    <script src="src/audio.js?v=R55"></script>
-    <script src="src/game.js?v=R55"></script>
-    <script src="src/ui.js?v=R55"></script>
+    <script src="src/version.js?v=R56"></script>
+    <script src="src/sprites.js?v=R56"></script>
+    <script src="src/sprite-renderer.js?v=R56"></script>
+    <script src="src/shelter-scene.js?v=R56"></script>
+    <script src="src/config.js?v=R56"></script>
+    <script src="src/rules.js?v=R56"></script>
+    <script src="src/fx.js?v=R56"></script>
+    <script src="src/audio.js?v=R56"></script>
+    <script src="src/game.js?v=R56"></script>
+    <script src="src/ui.js?v=R56"></script>
   </body>
 </html>

@@ -855,6 +855,14 @@
       age: 0,
       alpha: 1
     });
+    if (result.shieldGained > 0) {
+      addFloatingText(`護盾 +${result.shieldGained}`, state.vehicle.x, state.vehicle.y - 58, {
+        color: "#5ed4cb",
+        size: 8,
+        ttl: 0.7,
+        vy: -12
+      });
+    }
     updatePartsPreview();
     emitState();
     return getState();
@@ -887,6 +895,7 @@
         hp: vehicleStats.maxHp,
         maxHp: vehicleStats.maxHp,
         shield: 0,
+        maxShield: Math.round(vehicleStats.maxHp * 0.6),
         armor: vehicleStats.armor,
         damageTakenMul: vehicleStats.damageTakenMul,
         radius: vehicleConfig.radius,
@@ -899,7 +908,8 @@
         assistAimY: 300,
         aimAssistTarget: null,
         weaponCooldown: 0,
-        recentHitUntil: 0
+        recentHitUntil: 0,
+        slipstreamReadyAt: 0
       },
       runTrailerPose: null,
       runTrailerUpdatedAt: 0,
@@ -958,6 +968,7 @@
       waveBannerKind: "wave",
       waveBannerStart: 0,
       waveBannerNumber: 1,
+      lastBroadsideEchoAt: -1000000,
       messages: []
     };
 
@@ -1249,13 +1260,39 @@
 
   function damageVehicle(amount, source) {
     if (!state) startRun(meta.selectedVehicle);
-    const result = rules.applyVehicleDamage(state.vehicle, amount, state.vehicle.armor);
+    const passive = getVehicleConfig(state.vehicleId).passive;
+    const passiveDamage = rules.resolveSlipstreamDamage({
+      vehicle: state.vehicle,
+      passive,
+      incoming: amount,
+      time: state.time
+    });
+    state.vehicle = passiveDamage.vehicle;
+    if (passiveDamage.triggered) {
+      addEffect({
+        id: nextId("effect"),
+        sprite: "effect_shield",
+        anim: "pulse",
+        x: state.vehicle.x,
+        y: state.vehicle.y - 16,
+        scale: 1.05,
+        ttl: 0.38,
+        age: 0,
+        alpha: 0.78
+      });
+      addFloatingText("滑流", state.vehicle.x, state.vehicle.y - 56, {
+        color: "#9ad7ff",
+        size: 8,
+        ttl: 0.55,
+        vy: -12
+      });
+    }
+    const result = rules.applyVehicleDamage(state.vehicle, passiveDamage.incomingDamage, state.vehicle.armor);
     state.vehicle = result.vehicle;
     addDamageTaken(source, result.damage);
     recordRecentDamage(source, result.damage);
     playSound("hurt");
     state.vehicle.recentHitUntil = state.time + 0.28;
-    const passive = getVehicleConfig(state.vehicleId).passive;
     if (passive && passive.id === "revenge_fire") state.vehicle.recentHitUntil = state.time + passive.duration;
     pulseShake(fx.resolveShake(FXC, 1.2 + (FXC && FXC.shake ? FXC.shake.hitAmp * 0.5 : 0), meta.settings), 0.18);
     if (state.vehicle.hp <= 0) {
@@ -1270,6 +1307,49 @@
     }
     emitState();
     return result;
+  }
+
+  function applyBroadsideEcho(enemy) {
+    const passive = getVehicleConfig(state.vehicleId).passive;
+    const echo = rules.resolveBroadsideEcho({
+      enemy,
+      enemies: state.enemies,
+      passive,
+      time: state.time,
+      lastTriggeredAt: state.lastBroadsideEchoAt,
+      rng: state.rng
+    });
+    if (!echo.triggered) return;
+    state.lastBroadsideEchoAt = echo.lastTriggeredAt;
+    addEffect({
+      id: nextId("effect"),
+      sprite: "effect_explosion_small",
+      anim: "burst",
+      x: echo.x,
+      y: echo.y,
+      scale: 1.2,
+      ttl: 0.34,
+      age: 0,
+      alpha: 0.82
+    });
+    echo.hits.forEach((hit) => {
+      const target = state.enemies.find((item) => item.id === hit.id);
+      if (!target || target.dead) return;
+      target.hp -= hit.damage;
+      target.hitFlash = 0.12;
+      state.stats.damageDealt += hit.damage;
+      recordDamageTimeline(hit.damage);
+      addDamageSource("broadside_echo", hit.damage);
+      addFloatingText(Math.round(hit.damage), target.x, target.y - target.radius, {
+        color: "#9ad7ff",
+        size: 7,
+        ttl: 0.45,
+        vy: -11,
+        damageNumber: true,
+        amount: hit.damage
+      });
+      if (target.hp <= 0) killEnemy(target, "broadside_echo");
+    });
   }
 
   function killEnemy(enemy, cause) {
@@ -1297,6 +1377,7 @@
       resolveBossBlueprintDrop(enemy);
       state.messages.push({ text: "Boss 已擊破", time: state.time, ttl: 1.8 });
     }
+    applyBroadsideEcho(enemy);
     if (cause !== "burst") {
       addEffect({
         id: nextId("effect"),
@@ -2176,17 +2257,24 @@
           ? "+25%"
           : gate.gateId === "multishot_plus"
             ? "+1"
-            : "維修";
+            : gate.gateId === "barrier"
+              ? "+15%"
+              : "維修";
     ctx.save();
     ctx.globalAlpha *= 0.9;
     ctx.fillStyle = "rgba(7, 9, 13, 0.72)";
-    ctx.strokeStyle = gate.gateId === "repair" ? "rgba(135,210,125,0.82)" : "rgba(240,182,74,0.82)";
+    ctx.strokeStyle =
+      gate.gateId === "repair"
+        ? "rgba(135,210,125,0.82)"
+        : gate.gateId === "barrier"
+          ? "rgba(94,212,203,0.82)"
+          : "rgba(240,182,74,0.82)";
     ctx.lineWidth = 1;
     ctx.fillRect(gate.x - 25, gate.y - 33, 50, 30);
     ctx.strokeRect(gate.x - 25, gate.y - 33, 50, 30);
     ctx.restore();
     drawWorldText(gateConfig.shortLabel, gate.x, gate.y - 24, { size: 10, color: "#f4ead8" });
-    drawWorldText(valueText, gate.x, gate.y - 11, { size: 12, color: gate.gateId === "repair" ? "#87d27d" : "#f0b64a" });
+    drawWorldText(valueText, gate.x, gate.y - 11, { size: 12, color: gate.gateId === "repair" ? "#87d27d" : gate.gateId === "barrier" ? "#5ed4cb" : "#f0b64a" });
     drawWorldText("選擇後套用", gate.x, gate.y + 24, { size: 5, color: "#f4ead8", alpha: 0.72 });
     renderDebug.gateLabelsDrawn += 1;
   }
@@ -2627,6 +2715,17 @@
     drawSprite(sprite, opts.anim || "move", timeMs, vehicle.x, vehicle.y, fallbackScale, { alpha: opts.alpha == null ? 1 : opts.alpha });
     renderDebug.vehicleFallbackDrawn = true;
     renderDebug.vehicleImageStatus = record ? record.status : "none";
+  }
+
+  function drawVehicleShield(vehicle, timeMs) {
+    const shield = Number.isFinite(vehicle.shield) ? vehicle.shield : 0;
+    const maxShield = Number.isFinite(vehicle.maxShield) ? vehicle.maxShield : Math.round((vehicle.maxHp || 0) * 0.6);
+    if (shield <= 0 || maxShield <= 0) return;
+    const pct = Math.max(0.2, Math.min(1, shield / maxShield));
+    drawSprite("effect_shield", "pulse", timeMs, vehicle.x, vehicle.y - 15, 1.05 + pct * 0.18, {
+      alpha: 0.22 + pct * 0.38
+    });
+    renderDebug.vehicleShieldDrawn = true;
   }
 
   function enemyVisualWidth(enemy, enemyConfig) {
@@ -3299,6 +3398,7 @@
       anim: vehicleAnim,
       hitFlash: state.vehicle.recentHitUntil > state.time
     });
+    drawVehicleShield(state.vehicle, timeMs);
     ctx.restore();
     drawFxParticles();
     drawBossKillFx();
@@ -3325,6 +3425,7 @@
       environment: currentEnvironment(),
       vehicleRasterDrawn: false,
       vehicleFallbackDrawn: false,
+      vehicleShieldDrawn: false,
       vehicleImageStatus: "none",
       runTrailerRasterDrawn: false,
       runTrailerFallbackDrawn: false,

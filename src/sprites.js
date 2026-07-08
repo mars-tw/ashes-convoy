@@ -141,6 +141,7 @@ const SPRITE_SPECS = {
   gate_rate: { stage: 1, type: "gate", w: 32, h: 48, anims: { idle: 4, break: 4 } },
   gate_multishot: { stage: 1, type: "gate", w: 32, h: 48, anims: { idle: 4, break: 4 } },
   gate_repair: { stage: 1, type: "gate", w: 32, h: 48, anims: { idle: 4, break: 4 } },
+  gate_barrier: { stage: 1, type: "gate", w: 32, h: 48, anims: { idle: 4, break: 4 } },
   tile_road: { stage: 1, type: "terrain", w: 32, h: 32, anims: { idle: 1 } },
   tile_wasteland: { stage: 1, type: "terrain", w: 32, h: 32, anims: { idle: 1 } },
   bg_ruins_strip: { stage: 1, type: "background", w: 128, h: 32, anims: { scroll: 1 } },
@@ -707,7 +708,7 @@ function shieldFrame(step) {
 }
 
 function gateFrame(kind, state, step) {
-  const icon = { damage: "E", rate: "F", multishot: "G", repair: "H" }[kind];
+  const icon = { damage: "E", rate: "F", multishot: "G", repair: "H", barrier: "G" }[kind];
   return makeFrame(32, 48, (g) => {
     outlineRect(g, 4, 5, 24, 38, "A", "B");
     outlineRect(g, 7, 9, 18, 28, "A", "C");
@@ -730,6 +731,11 @@ function gateFrame(kind, state, step) {
       drawLine(g, 16, 23, 11, 30, "I");
       drawLine(g, 16, 23, 16, 31, "I");
       drawLine(g, 16, 23, 21, 30, "I");
+    } else if (kind === "barrier") {
+      paint(g, 11, 14, [".IIIIIIII.", "IAAAAAAAAI", "IAIGGGIAI", "IAIGIGIAI", ".AIGGGIA.", "..AIIIA..", "...AAA..."]);
+      drawLine(g, 16, 15, 16, 30, "G");
+      drawLine(g, 10, 21, 22, 21, "I");
+      drawLine(g, 12, 29, 20, 29, "I");
     } else {
       rect(g, 14, 16, 5, 16, "I");
       rect(g, 9, 21, 15, 5, "I");
@@ -1497,6 +1503,25 @@ const SPRITES = {
     },
     { idle: { frames: sequence("idle", 4), fps: 5, loop: true }, break: { frames: sequence("break", 4), fps: 10, loop: false } },
     ["repair"]
+  ),
+  gate_barrier: makeSprite(
+    "gate_barrier",
+    "gate",
+    "gate",
+    { x: 16, y: 43 },
+    { x: 4, y: 5, w: 24, h: 39 },
+    {
+      idle_0: gateFrame("barrier", "idle", 0),
+      idle_1: gateFrame("barrier", "idle", 1),
+      idle_2: gateFrame("barrier", "idle", 2),
+      idle_3: gateFrame("barrier", "idle", 3),
+      break_0: gateFrame("barrier", "break", 0),
+      break_1: gateFrame("barrier", "break", 1),
+      break_2: gateFrame("barrier", "break", 2),
+      break_3: gateFrame("barrier", "break", 3)
+    },
+    { idle: { frames: sequence("idle", 4), fps: 5, loop: true }, break: { frames: sequence("break", 4), fps: 10, loop: false } },
+    ["barrier"]
   ),
   tile_road: makeSprite(
     "tile_road",

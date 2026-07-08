@@ -42,8 +42,21 @@ assert(airSpawn.speed >= rules.scaledEnemyStats(airSpawn.enemyId, 3, config).spe
 const variantWave = rules.generateWave({ wave: 8, vehicleId: "land_rig", rng: () => 0, config });
 const variantSpawn = variantWave.spawns.find((spawn) => spawn.variantId);
 assert(variantSpawn, "late waves should be able to mix enemy variants");
-assert(["runner_frenzy", "shambler_hardened"].includes(variantSpawn.variantId), `unexpected variant ${variantSpawn.variantId}`);
+assert(config.ENEMY_VARIANTS[variantSpawn.variantId], `unexpected variant ${variantSpawn.variantId}`);
 assert(variantSpawn.tint || variantSpawn.filter, "variant spawns should carry canvas tint/filter metadata");
+["swarm_venom", "bloater_volatile", "spitter_corrosive", "husk_bulwark"].forEach((variantId) => {
+  const variant = config.ENEMY_VARIANTS[variantId];
+  const base = config.ENEMIES[variant.baseEnemy];
+  const spawn = rules.applyEnemyVariantToSpawn(
+    { enemyId: base.id, hp: base.hp, speed: base.speed },
+    variant.minWave,
+    () => 0,
+    config
+  );
+  assert.strictEqual(spawn.variantId, variantId, `${variantId} should be selectable at its min wave`);
+  assert(spawn.hp >= Math.round(base.hp * 0.7) && spawn.hp <= Math.round(base.hp * 1.45), `${variantId} hp should stay inside the variant envelope`);
+  assert(spawn.speed >= base.speed * 0.75 && spawn.speed <= base.speed * 1.2, `${variantId} speed should stay inside the variant envelope`);
+});
 
 const noSupply = rules.rollSupplyDrop({ killsSinceDrop: 0, rng: () => 0.99, config });
 assert.strictEqual(noSupply.dropped, false, "high roll should not drop a supply cache before pity");
@@ -53,6 +66,15 @@ assert.strictEqual(pitySupply.dropped, true, "25th kill should guarantee a suppl
 assert.strictEqual(pitySupply.guaranteed, true);
 assert.strictEqual(pitySupply.killsSinceDrop, 0);
 assert.strictEqual(rules.chooseSupplyReward(() => 0, config).id, "rate_boost", "supply rewards should be deterministic with injected rng");
+const shieldSupply = rules.applySupplyRewardById({
+  rewardId: "overshield",
+  vehicle: { hp: 160, maxHp: 200, shield: 110, maxShield: 120 },
+  stats: {},
+  config
+});
+assert.strictEqual(shieldSupply.vehicle.maxShield, 120, "overshield should preserve the max shield cap");
+assert.strictEqual(shieldSupply.vehicle.shield, 120, "overshield should grant shield but cap at 60% max HP");
+assert.strictEqual(shieldSupply.shieldGained, 24, "overshield should calculate 12% max HP");
 
 const wave1Pool = rules.enemyPoolForWave(1, config).map((enemy) => enemy.id).sort();
 assert.deepStrictEqual(wave1Pool, ["runner", "shambler"], "wave 1 pool should preserve the original opening enemies");
@@ -333,6 +355,20 @@ const claimedAgain = rules.claimQuestReward({ meta: claimedQuest.meta, instanceI
 assert.strictEqual(claimedAgain.claim.ok, false, "quest rewards should be gated once per instance");
 assert.strictEqual(claimedAgain.claim.reason, "claimed");
 
+const milestoneMeta = rules.migrateMeta({ version: config.META_VERSION, bestWave: 8 }, { config });
+const milestoneProgress = rules.getMilestoneProgress(milestoneMeta, config);
+assert.deepStrictEqual(
+  milestoneProgress.filter((entry) => entry.ready).map((entry) => entry.id),
+  ["wave_3", "wave_5", "wave_8"],
+  "best wave 8 should make the first three milestones ready"
+);
+const milestoneClaim = rules.applyMilestoneRewards(milestoneMeta, config);
+assert.deepStrictEqual(milestoneClaim.milestones, ["wave_3", "wave_5", "wave_8"]);
+assert.strictEqual(milestoneClaim.parts, 32, "first three milestones should grant 32 parts");
+const milestoneRepeat = rules.applyMilestoneRewards(milestoneClaim.meta, config);
+assert.deepStrictEqual(milestoneRepeat.milestones, [], "milestone rewards should be idempotent");
+assert.strictEqual(milestoneRepeat.parts, 0);
+
 const encodedSave = rules.encodeSaveMeta(Object.assign({}, config.META_DEFAULT, { parts: 42 }), { config });
 assert.strictEqual(typeof encodedSave, "string");
 assert(encodedSave.length > 20, "encoded save should be a base64 payload");
@@ -385,6 +421,77 @@ const repaired = rules.applyGateEffect({
   config
 });
 assert.strictEqual(repaired.vehicle.hp, 136, "repair gate should heal 18% max hp");
+const shieldInput = { hp: 100, maxHp: 200, shield: 0, maxShield: 120 };
+const barrierGate = rules.applyGateEffect({
+  gateId: "barrier",
+  runMods: baseMods,
+  vehicle: shieldInput,
+  vehicleLevels: { hull: 0, weapon: 0, energy: 0, gate: 0 },
+  config
+});
+assert.strictEqual(shieldInput.shield, 0, "shield gate should not mutate input vehicle");
+assert.strictEqual(barrierGate.vehicle.maxShield, 120, "barrier gate should set max shield to 60% max HP");
+assert.strictEqual(barrierGate.vehicle.shield, 30, "barrier gate should grant 15% max HP as shield");
+const shieldedDamage = rules.applyVehicleDamage({ hp: 100, maxHp: 200, shield: 15, maxShield: 120 }, 20, 0);
+assert.strictEqual(shieldedDamage.vehicle.shield, 0, "vehicle shield should absorb incoming damage first");
+assert.strictEqual(shieldedDamage.vehicle.hp, 95, "remaining damage should spill into HP after shield breaks");
+
+const slipstreamInput = { hp: 100, maxHp: 100, shield: 0, slipstreamReadyAt: 0 };
+const slipstream = rules.resolveSlipstreamDamage({
+  vehicle: slipstreamInput,
+  passive: config.VEHICLES.sky_barge.passive,
+  incoming: 100,
+  time: 1,
+  config
+});
+assert.strictEqual(slipstreamInput.slipstreamReadyAt, 0, "slipstream resolver should not mutate input vehicle");
+assert.strictEqual(slipstream.triggered, true, "slipstream should trigger when off cooldown");
+assert.strictEqual(slipstream.incomingDamage, 45, "slipstream should reduce one incoming hit to 45%");
+assert.strictEqual(slipstream.vehicle.slipstreamReadyAt, 3.5, "slipstream should advance its cooldown");
+const slipstreamCooling = rules.resolveSlipstreamDamage({
+  vehicle: slipstream.vehicle,
+  passive: config.VEHICLES.sky_barge.passive,
+  incoming: 100,
+  time: 2
+});
+assert.strictEqual(slipstreamCooling.triggered, false, "slipstream should not trigger before cooldown");
+assert.strictEqual(slipstreamCooling.incomingDamage, 100);
+
+const echoEnemies = [
+  { id: "source", enemyId: "runner", x: 50, y: 50, maxHp: 20, hp: 0 },
+  { id: "capped", enemyId: "bloater", x: 70, y: 50, maxHp: 200, hp: 200 },
+  { id: "scaled", enemyId: "shambler", x: 50, y: 88, maxHp: 60, hp: 60 },
+  { id: "far", enemyId: "runner", x: 120, y: 50, maxHp: 40, hp: 40 },
+  { id: "boss", enemyId: "boss_hive_titan", x: 60, y: 60, maxHp: 500, hp: 500, boss: true }
+];
+const echo = rules.resolveBroadsideEcho({
+  enemy: echoEnemies[0],
+  enemies: echoEnemies,
+  passive: config.VEHICLES.sea_ark.passive,
+  time: 1,
+  lastTriggeredAt: 0,
+  rng: () => 0
+});
+assert.strictEqual(echo.triggered, true, "broadside echo should trigger on non-boss kills when chance passes");
+assert.deepStrictEqual(echo.hits.map((hit) => hit.id).sort(), ["capped", "scaled"], "broadside echo should only hit nearby non-boss enemies");
+assert.strictEqual(echo.hits.find((hit) => hit.id === "capped").damage, 40, "broadside echo damage should respect cap");
+assert.strictEqual(echo.hits.find((hit) => hit.id === "scaled").damage, 21, "broadside echo damage should scale from target max HP");
+assert.strictEqual(echoEnemies[1].hp, 200, "broadside echo resolver should not mutate enemies");
+assert.strictEqual(
+  rules.resolveBroadsideEcho({ enemy: Object.assign({}, echoEnemies[0], { boss: true }), enemies: echoEnemies, passive: config.VEHICLES.sea_ark.passive, time: 2, lastTriggeredAt: 0, rng: () => 0 }).triggered,
+  false,
+  "broadside echo should not trigger from boss kills"
+);
+assert.strictEqual(
+  rules.resolveBroadsideEcho({ enemy: echoEnemies[0], enemies: echoEnemies, passive: config.VEHICLES.sea_ark.passive, time: 2, lastTriggeredAt: 0, rng: () => 0.99 }).triggered,
+  false,
+  "broadside echo should respect chance"
+);
+assert.strictEqual(
+  rules.resolveBroadsideEcho({ enemy: echoEnemies[0], enemies: echoEnemies, passive: config.VEHICLES.sea_ark.passive, time: 1.1, lastTriggeredAt: 1, rng: () => 0 }).triggered,
+  false,
+  "broadside echo should respect min interval"
+);
 
 const enemy = { id: "e1", hp: 10 };
 const damaged = rules.damageEnemy(enemy, 12);

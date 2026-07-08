@@ -12,8 +12,11 @@ function assertFinitePositive(value, label) {
 
 assert.strictEqual(config.STORAGE_KEY, "ashes_convoy_meta_v1");
 assert.strictEqual(config.META_VERSION, 2);
-assert.strictEqual(config.APP_VERSION, "R55");
-assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r55-v1");
+assert.strictEqual(config.APP_VERSION, "R56");
+assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r56-v1");
+const indexHtml = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+assert(indexHtml.includes("manifest.webmanifest?v=R56"), "index.html should version the web manifest for R56");
+assert(indexHtml.includes("assets/icons/icon-192.png?v=R56"), "index.html should version the app icon for R56");
 assert.strictEqual(config.LOGIC.width, 195);
 assert.strictEqual(config.LOGIC.height, 422);
 assert.strictEqual(config.LOGIC.displayWidth, 390);
@@ -86,7 +89,7 @@ const expectedEnemies = [
   "void_wraith",
   "boss_hive_titan"
 ];
-assert.deepStrictEqual(Object.keys(config.ENEMIES).sort(), expectedEnemies.slice().sort(), "enemy roster should match R55 roster");
+assert.deepStrictEqual(Object.keys(config.ENEMIES).sort(), expectedEnemies.slice().sort(), "enemy roster should match R56 roster");
 expectedEnemies.forEach((id) => {
   const enemy = config.ENEMIES[id];
   assert(enemy, `missing enemy ${id}`);
@@ -124,7 +127,7 @@ assert.strictEqual(config.ENEMIES.boss_hive_titan.firstWave, 5);
 assert(Array.isArray(config.ENEMIES.boss_hive_titan.phases));
 assert(config.ENEMIES.boss_hive_titan.phases.length >= 2);
 
-["damage_plus", "rate_plus", "multishot_plus", "repair"].forEach((id) => {
+["damage_plus", "rate_plus", "multishot_plus", "repair", "barrier"].forEach((id) => {
   const gate = config.GATES[id];
   assert(gate, `missing gate ${id}`);
   assert.strictEqual(gate.id, id);
@@ -154,7 +157,7 @@ assert.strictEqual(config.SUPPLY_DROPS.crateSpeed, 24);
 assert.strictEqual(config.SUPPLY_DROPS.horizontalDriftSpeed, 34);
 assert.strictEqual(config.SUPPLY_DROPS.magnetSpeed, 92);
 assert.strictEqual(config.SUPPLY_DROPS.ttl, 16);
-assert.deepStrictEqual(Object.keys(config.SUPPLY_DROPS.rewards).sort(), ["damage_boost", "parts_cache", "rate_boost", "repair_small"]);
+assert.deepStrictEqual(Object.keys(config.SUPPLY_DROPS.rewards).sort(), ["damage_boost", "overshield", "parts_cache", "rate_boost", "repair_small"]);
 assert.strictEqual(config.TRAILER_ROOM.resourceName, "拾荒物資");
 assert.strictEqual(config.TRAILER_ROOM.dropChancePerKill, 0.16);
 assert.strictEqual(config.TRAILER_ROOM.pityKills, 9);
@@ -162,9 +165,9 @@ assert.strictEqual(config.TRAILER_ROOM.waveGoods, 1);
 assert.strictEqual(config.TRAILER_ROOM.bossGoods, 4);
 assert.strictEqual(config.TRAILER_ROOM.maxGoodsPerRun, 28);
 assert.strictEqual(Object.keys(config.TRAILER_ROOM.slots).length, 8, "trailer room should expose eight fixed slots");
-assert.strictEqual(Object.keys(config.TRAILER_ROOM.furniture).length, 8, "R55 should keep the first eight furniture items");
+assert.strictEqual(Object.keys(config.TRAILER_ROOM.furniture).length, 12, "R56 should expand the trailer furniture catalog");
 const trailerCostTotal = Object.values(config.TRAILER_ROOM.furniture).reduce((sum, item) => sum + item.cost, 0);
-assert.strictEqual(trailerCostTotal, 174, "first furniture wave should have a clear long-tail cost");
+assert.strictEqual(trailerCostTotal, 270, "trailer furniture should have a clear long-tail cost");
 const trailerFullEffects = Object.values(config.TRAILER_ROOM.furniture).reduce(
   (sum, item) => {
     sum.maxHpPct += item.effects.maxHpPct || 0;
@@ -175,10 +178,10 @@ const trailerFullEffects = Object.values(config.TRAILER_ROOM.furniture).reduce(
   },
   { maxHpPct: 0, damagePct: 0, fireIntervalMul: 1, damageTakenMul: 1 }
 );
-assert(trailerFullEffects.maxHpPct <= 0.02, "full trailer HP bonus should stay smaller than one hull upgrade");
-assert(trailerFullEffects.damagePct <= 0.025, "full trailer damage bonus should stay smaller than one weapon upgrade");
-assert(1 - trailerFullEffects.fireIntervalMul <= 0.025, "full trailer fire-rate bonus should stay minor");
-assert(1 - trailerFullEffects.damageTakenMul <= 0.012, "full trailer mitigation should stay minor");
+assert(trailerFullEffects.maxHpPct <= 0.03, "full trailer HP bonus should stay smaller than one hull upgrade");
+assert(trailerFullEffects.damagePct <= 0.035, "full trailer damage bonus should stay smaller than one weapon upgrade");
+assert(1 - trailerFullEffects.fireIntervalMul <= 0.05, "full trailer fire-rate bonus should stay minor");
+assert(1 - trailerFullEffects.damageTakenMul <= 0.025, "full trailer mitigation should stay minor");
 Object.values(config.TRAILER_ROOM.furniture).forEach((item) => {
   assert(config.TRAILER_ROOM.slots[item.slot], `${item.id} should point to a valid trailer slot`);
   assert(item.sprite && item.sprite.startsWith("assets/shelter/trailer/") && item.sprite.endsWith(".png"), `${item.id} should bind a trailer sprite`);
@@ -217,10 +220,16 @@ Object.values(config.ENVIRONMENT_EVENTS).forEach((event) => {
 });
 assert.strictEqual(config.ENEMY_VARIANTS.runner_frenzy.baseEnemy, "runner");
 assert.strictEqual(config.ENEMY_VARIANTS.shambler_hardened.baseEnemy, "shambler");
+assert.strictEqual(config.ENEMY_VARIANTS.swarm_venom.baseEnemy, "swarm_mite");
+assert.strictEqual(config.ENEMY_VARIANTS.bloater_volatile.baseEnemy, "bloater");
+assert.strictEqual(config.ENEMY_VARIANTS.spitter_corrosive.baseEnemy, "spore_spitter");
+assert.strictEqual(config.ENEMY_VARIANTS.husk_bulwark.baseEnemy, "shield_husk");
 Object.values(config.ENEMY_VARIANTS).forEach((variant) => {
   assert(variant.hpMul > 0 && variant.speedMul > 0, `${variant.id} needs stat multipliers`);
   assert(variant.tint || variant.filter, `${variant.id} needs a canvas-only visual difference`);
 });
+assert.strictEqual(config.VEHICLES.sky_barge.passive.id, "slipstream");
+assert.strictEqual(config.VEHICLES.sea_ark.passive.id, "broadside_echo");
 
 ["hull", "weapon"].forEach((trackId) => {
   const track = config.ECONOMY.upgradeTracks[trackId];
@@ -249,5 +258,12 @@ const eventAchievementTotal = Object.values(config.ACHIEVEMENTS)
 assert.strictEqual(Object.keys(config.ACHIEVEMENTS).length, 14, "R22 should define fourteen achievements");
 assert.strictEqual(achievementRewardTotal, 72, "R22 achievement rewards should include the event set");
 assert(eventAchievementTotal <= config.ECONOMY.upgradeTracks.hull.costs[0], "event achievements should add at most one Lv1 hull upgrade");
+const milestoneRewardTotal = Object.values(config.MILESTONES).reduce((sum, milestone) => sum + milestone.rewardParts, 0);
+assert.strictEqual(Object.keys(config.MILESTONES).length, 6, "R56 should define six wave milestones");
+assert.strictEqual(milestoneRewardTotal, 140, "R56 milestone rewards should total 140 parts");
+Object.values(config.MILESTONES).forEach((milestone) => {
+  assert.strictEqual(milestone.metric, "bestWave", `${milestone.id} should track bestWave`);
+  assert(Number.isInteger(milestone.target) && milestone.target > 0, `${milestone.id} should have a wave target`);
+});
 
 console.log("Config tests PASS");

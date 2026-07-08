@@ -216,7 +216,7 @@ function rollScavengeDrop(options) {
   const opts = options || {};
   const cfg = getConfig(opts.config);
   const room = cfg.TRAILER_ROOM || {};
-  const rng = typeof opts.rng === "function" ? opts.rng : Math.random;
+  const rng = typeof opts.rng === "function" ? opts.rng : createSeededRng("scavenge-drop-fallback");
   const killsSinceDrop = finiteNumber(opts.killsSinceDrop, 0, { min: 0, integer: true });
   const pityKills = finiteNumber(room.pityKills, 9, { min: 1, integer: true });
   const nextCount = killsSinceDrop + 1;
@@ -676,11 +676,12 @@ function variantChanceForWave(wave, config) {
 
 function applyEnemyVariantToSpawn(spawn, wave, rng, config) {
   const cfg = getConfig(config);
+  const roll = typeof rng === "function" ? rng : createSeededRng(`variant-${wave}-${spawn && spawn.enemyId ? spawn.enemyId : "spawn"}`);
   const variants = Object.values(cfg.ENEMY_VARIANTS || {}).filter((variant) => {
     return variant.baseEnemy === spawn.enemyId && wave >= finiteNumber(variant.minWave, 3, { min: 1, integer: true });
   });
-  if (!variants.length || rng() >= variantChanceForWave(wave, cfg)) return spawn;
-  const variant = variants[Math.floor(rng() * variants.length) % variants.length];
+  if (!variants.length || roll() >= variantChanceForWave(wave, cfg)) return spawn;
+  const variant = variants[Math.floor(roll() * variants.length) % variants.length];
   const next = Object.assign({}, spawn);
   next.variantId = variant.id;
   next.variantLabel = variant.label;
@@ -694,7 +695,7 @@ function applyEnemyVariantToSpawn(spawn, wave, rng, config) {
 function chooseEnvironmentEvent(options) {
   const opts = options || {};
   const cfg = getConfig(opts.config);
-  const rng = typeof opts.rng === "function" ? opts.rng : Math.random;
+  const rng = typeof opts.rng === "function" ? opts.rng : createSeededRng(`environment-event-${opts.wave || 1}-${opts.vehicleId || ""}`);
   const wave = finiteNumber(opts.wave, 1, { min: 1, integer: true });
   const vehicle = cfg.VEHICLES[opts.vehicleId] || cfg.VEHICLES[defaultVehicleId(cfg)];
   const event = cfg.ENVIRONMENT_EVENTS && cfg.ENVIRONMENT_EVENTS[vehicle.environment];
@@ -721,7 +722,7 @@ function rollSupplyDrop(options) {
   const opts = options || {};
   const cfg = getConfig(opts.config);
   const supply = cfg.SUPPLY_DROPS || {};
-  const rng = typeof opts.rng === "function" ? opts.rng : Math.random;
+  const rng = typeof opts.rng === "function" ? opts.rng : createSeededRng("supply-drop-fallback");
   const killsSinceDrop = finiteNumber(opts.killsSinceDrop, 0, { min: 0, integer: true });
   const pityKills = finiteNumber(supply.pityKills, 25, { min: 1, integer: true });
   const nextCount = killsSinceDrop + 1;
@@ -737,7 +738,7 @@ function rollSupplyDrop(options) {
 
 function chooseSupplyReward(rng, config) {
   const cfg = getConfig(config);
-  const roll = typeof rng === "function" ? rng : Math.random;
+  const roll = typeof rng === "function" ? rng : createSeededRng("supply-reward-fallback");
   const rewards = Object.values((cfg.SUPPLY_DROPS && cfg.SUPPLY_DROPS.rewards) || {});
   if (!rewards.length) return null;
   const total = rewards.reduce((sum, reward) => sum + Math.max(0, reward.weight || 0), 0) || rewards.length;
@@ -834,6 +835,7 @@ function applySupplyRewardById(options) {
     reward: deepClone(reward),
     buff: null,
     heal: 0,
+    shieldGained: 0,
     partsGained: 0
   };
 
@@ -857,6 +859,14 @@ function applySupplyRewardById(options) {
     const hp = finiteNumber(vehicle.hp, 0, { min: 0 });
     result.heal = Math.round(maxHp * finiteNumber(reward.repairPct, 0, { min: 0, max: 1 }));
     vehicle.hp = Math.min(maxHp, hp + result.heal);
+  } else if (reward.type === "shield" && vehicle) {
+    const maxHp = finiteNumber(vehicle.maxHp, 0, { min: 0 });
+    const shieldCap = Math.round(maxHp * 0.6);
+    const maxShield = finiteNumber(vehicle.maxShield, shieldCap, { min: 0, max: shieldCap });
+    const current = finiteNumber(vehicle.shield, 0, { min: 0, max: maxShield });
+    result.shieldGained = Math.round(maxHp * finiteNumber(reward.shieldPct, 0, { min: 0, max: 1 }));
+    vehicle.maxShield = maxShield;
+    vehicle.shield = Math.min(maxShield, current + result.shieldGained);
   } else if (reward.type === "parts") {
     const cap = (cfg.SUPPLY_DROPS && cfg.SUPPLY_DROPS.partsCapPerRun) || 12;
     const current = finiteNumber(stats.supplyParts, 0, { min: 0, max: cap, integer: true });
@@ -1435,6 +1445,13 @@ function applyGateEffect(options) {
   } else if (effect.type === "repairPct" && changedVehicle) {
     const heal = Math.round(changedVehicle.maxHp * effect.pct * gateMul);
     changedVehicle.hp = Math.min(changedVehicle.maxHp, changedVehicle.hp + heal);
+  } else if (effect.type === "shieldPct" && changedVehicle) {
+    const maxHp = finiteNumber(changedVehicle.maxHp, 0, { min: 0 });
+    const shieldCap = Math.round(maxHp * finiteNumber(effect.maxShieldMul, 0.6, { min: 0, max: 1 }));
+    const current = finiteNumber(changedVehicle.shield, 0, { min: 0, max: shieldCap });
+    const gained = Math.round(maxHp * finiteNumber(effect.pct, 0, { min: 0, max: 1 }));
+    changedVehicle.maxShield = shieldCap;
+    changedVehicle.shield = Math.min(shieldCap, current + gained);
   }
 
   return { runMods, vehicle: changedVehicle, gateId: gate.id };
@@ -1463,6 +1480,78 @@ function applyVehicleDamage(vehicle, incoming, armor) {
     next.hp = Math.max(0, finiteNumber(next.hp, 0, { min: 0 }) - damage);
   }
   return { vehicle: next, damage };
+}
+
+function resolveSlipstreamDamage(options) {
+  const opts = options || {};
+  const vehicle = opts.vehicle ? deepClone(opts.vehicle) : {};
+  const passive = opts.passive && typeof opts.passive === "object" ? opts.passive : {};
+  const incoming = finiteNumber(opts.incoming, 0, { min: 0 });
+  const time = finiteNumber(opts.time, 0, { min: 0 });
+  const readyAt = finiteNumber(vehicle.slipstreamReadyAt, 0, { min: 0 });
+  let incomingDamage = incoming;
+  let triggered = false;
+
+  if (passive.id === "slipstream" && time >= readyAt) {
+    incomingDamage = incoming * finiteNumber(passive.damageTakenMul, 1, { min: 0, max: 1 });
+    vehicle.slipstreamReadyAt = time + finiteNumber(passive.dodgeCooldown, 0, { min: 0 });
+    triggered = true;
+  } else if (!Number.isFinite(vehicle.slipstreamReadyAt)) {
+    vehicle.slipstreamReadyAt = readyAt;
+  }
+
+  return {
+    vehicle,
+    incomingDamage,
+    triggered,
+    readyAt: finiteNumber(vehicle.slipstreamReadyAt, readyAt, { min: 0 })
+  };
+}
+
+function resolveBroadsideEcho(options) {
+  const opts = options || {};
+  const passive = opts.passive && typeof opts.passive === "object" ? opts.passive : {};
+  const source = opts.enemy && typeof opts.enemy === "object" ? opts.enemy : {};
+  const enemies = Array.isArray(opts.enemies) ? opts.enemies.map((enemy) => deepClone(enemy)) : [];
+  const time = finiteNumber(opts.time, 0, { min: 0 });
+  const lastTriggeredAt = finiteNumber(opts.lastTriggeredAt, -1000000);
+  const rng = typeof opts.rng === "function" ? opts.rng : () => 1;
+  const minInterval = finiteNumber(passive.minInterval, 0, { min: 0 });
+  const result = {
+    triggered: false,
+    lastTriggeredAt,
+    hits: [],
+    x: finiteNumber(source.x, 0),
+    y: finiteNumber(source.y, 0)
+  };
+
+  if (passive.id !== "broadside_echo") return result;
+  if (source.boss === true) return result;
+  if (time - lastTriggeredAt < minInterval) return result;
+  if (rng() >= finiteNumber(passive.chance, 0, { min: 0, max: 1 })) return result;
+
+  const radius = finiteNumber(passive.radius, 0, { min: 0 });
+  const dmgPct = finiteNumber(passive.dmgPct, 0, { min: 0, max: 2 });
+  const dmgCap = finiteNumber(passive.dmgCap, 0, { min: 0 });
+  const sx = result.x;
+  const sy = result.y;
+  enemies.forEach((enemy) => {
+    if (!enemy || enemy.dead || enemy.boss === true || enemy.id === source.id) return;
+    const dx = finiteNumber(enemy.x, 0) - sx;
+    const dy = finiteNumber(enemy.y, 0) - sy;
+    if (Math.sqrt(dx * dx + dy * dy) > radius) return;
+    const maxHp = finiteNumber(enemy.maxHp, finiteNumber(enemy.hp, 0, { min: 0 }), { min: 0 });
+    const damage = Math.min(dmgCap, maxHp * dmgPct);
+    if (damage <= 0) return;
+    result.hits.push({
+      id: enemy.id,
+      enemyId: enemy.enemyId || "",
+      damage
+    });
+  });
+  result.triggered = true;
+  result.lastTriggeredAt = time;
+  return result;
 }
 
 function rewardPartsBreakdownForRun(run, config) {
@@ -1566,7 +1655,7 @@ function applyBlueprintDrops(meta, bossesDefeated, rng, config) {
   const drops = {};
   const unlocked = [];
   const bossCount = finiteNumber(bossesDefeated, 0, { min: 0, integer: true });
-  const roll = typeof rng === "function" ? rng : Math.random;
+  const roll = typeof rng === "function" ? rng : createSeededRng("blueprint-drop-fallback");
 
   for (let i = 0; i < bossCount; i += 1) {
     const target = firstLockedBlueprintVehicle(next, cfg);
@@ -1656,6 +1745,35 @@ function getAchievementProgress(meta, config) {
   });
 }
 
+function milestoneMetricValue(meta, milestone) {
+  const metric = milestone.metric || "";
+  if (metric === "bestWave") return Math.min(milestone.target, meta.bestWave);
+  return 0;
+}
+
+function getMilestoneProgress(meta, config) {
+  const cfg = getConfig(config);
+  const milestones = cfg.MILESTONES || {};
+  const migrated = migrateMeta(meta || cfg.META_DEFAULT, { config: cfg });
+  return Object.keys(milestones).map((id) => {
+    const milestone = milestones[id];
+    const value = milestoneMetricValue(migrated, milestone);
+    const claimed = migrated.claimedMilestones[id] === true;
+    const ready = value >= milestone.target;
+    return {
+      id,
+      label: milestone.label,
+      description: milestone.description,
+      rewardParts: milestone.rewardParts,
+      value: ready || claimed ? milestone.target : value,
+      target: milestone.target,
+      ready,
+      claimed,
+      done: ready || claimed
+    };
+  });
+}
+
 function applyAchievementRewards(meta, config) {
   const cfg = getConfig(config);
   const next = deepClone(meta);
@@ -1670,6 +1788,25 @@ function applyAchievementRewards(meta, config) {
     }
   });
   return { meta: next, achievements: unlocked, parts };
+}
+
+function applyMilestoneRewards(meta, config) {
+  const cfg = getConfig(config);
+  const next = deepClone(meta);
+  if (!next.claimedMilestones || typeof next.claimedMilestones !== "object" || Array.isArray(next.claimedMilestones)) {
+    next.claimedMilestones = {};
+  }
+  const progress = getMilestoneProgress(next, cfg);
+  const claimed = [];
+  let parts = 0;
+  progress.forEach((entry) => {
+    if (entry.ready && next.claimedMilestones[entry.id] !== true) {
+      next.claimedMilestones[entry.id] = true;
+      claimed.push(entry.id);
+      parts += cfg.MILESTONES[entry.id].rewardParts;
+    }
+  });
+  return { meta: next, milestones: claimed, parts };
 }
 
 function migrateMeta(raw, options) {
@@ -1863,8 +2000,11 @@ function settleRunRewards(options) {
 
   const achievementResult = applyAchievementRewards(meta, cfg);
   meta.achievements = achievementResult.meta.achievements;
+  const milestoneResult = applyMilestoneRewards(achievementResult.meta, cfg);
+  meta.claimedMilestones = milestoneResult.meta.claimedMilestones;
   const achievementParts = achievementResult.parts;
-  const totalParts = parts + achievementParts;
+  const milestoneParts = milestoneResult.parts;
+  const totalParts = parts + achievementParts + milestoneParts;
   meta.parts += totalParts;
   meta.trailerGoods += scavengeBreakdown.total;
 
@@ -1894,10 +2034,12 @@ function settleRunRewards(options) {
     earnedParts: totalParts,
     runParts: parts,
     achievementParts,
+    milestoneParts,
     partsBreakdown,
     blueprintDrops: deepClone(blueprintResult.drops),
     unlockedVehicles: blueprintResult.unlocked.slice(),
     unlockedAchievements: achievementResult.achievements.slice(),
+    unlockedMilestones: milestoneResult.milestones.slice(),
     at
   };
 
@@ -1907,10 +2049,12 @@ function settleRunRewards(options) {
       parts,
       totalParts,
       achievementParts,
+      milestoneParts,
       partsBreakdown,
       blueprints: deepClone(blueprintResult.drops),
       unlockedVehicles: blueprintResult.unlocked.slice(),
       achievements: achievementResult.achievements,
+      milestones: milestoneResult.milestones,
       scavengeGoods: scavengeBreakdown.total,
       scavengeBreakdown,
       isBest
@@ -1984,6 +2128,8 @@ const DSRules = {
   enemyPoolForWave,
   variantChanceForWave,
   applyEnemyVariantToSpawn,
+  resolveSlipstreamDamage,
+  resolveBroadsideEcho,
   chooseEnvironmentEvent,
   rollSupplyDrop,
   chooseSupplyReward,
@@ -2023,6 +2169,8 @@ const DSRules = {
   rewardPartsBreakdownForRun,
   rewardPartsForRun,
   getAchievementProgress,
+  getMilestoneProgress,
+  applyMilestoneRewards,
   getEventCodexProgress,
   sanitizeEventStats,
   mergeEventStats,

@@ -438,6 +438,7 @@
     if (gateId === "damage_plus") return "+35%";
     if (gateId === "rate_plus") return "+25%";
     if (gateId === "multishot_plus") return "+1";
+    if (gateId === "barrier") return "+15%";
     return "維修";
   }
 
@@ -447,6 +448,7 @@
     if (reward.type === "damage") return `${Math.round((reward.damageAdd || 0) * 100)}% 傷害加成`;
     if (reward.type === "repair") return `${Math.round((reward.repairPct || 0) * 100)}% 立即維修`;
     if (reward.type === "parts") return `零件 +${reward.parts || 0}`;
+    if (reward.type === "shield") return `${Math.round((reward.shieldPct || 0) * 100)}% 護盾`;
     return reward.type || "";
   }
 
@@ -455,6 +457,7 @@
     if (reward.type === "rate" || reward.type === "damage") return `${reward.duration || 10} 秒`;
     if (reward.type === "repair") return "立即生效";
     if (reward.type === "parts") return "本局結算列入補給收益";
+    if (reward.type === "shield") return "立即加到護盾上限";
     return "";
   }
 
@@ -666,6 +669,28 @@
       desc.textContent = `${entry.description} · 獎勵 ${entry.rewardParts} 零件`;
       item.append(title, desc);
       els.achievementList.appendChild(item);
+    });
+  }
+
+  function renderMilestones() {
+    if (!els.milestoneList || typeof rules.getMilestoneProgress !== "function") return;
+    const progress = rules.getMilestoneProgress(meta, config);
+    els.milestoneList.textContent = "";
+    progress.forEach((entry) => {
+      const item = root.document.createElement("div");
+      item.className = `achievement milestone${entry.claimed ? " is-done" : entry.ready ? " is-ready" : ""}`;
+      const title = root.document.createElement("strong");
+      title.innerHTML = `<span>${entry.label}</span><span>${entry.claimed ? "已領取" : entry.ready ? "可領取" : `${entry.value}/${entry.target}`}</span>`;
+      const progressBar = root.document.createElement("div");
+      progressBar.className = "milestone-progress";
+      const progressFill = root.document.createElement("i");
+      const pct = entry.claimed ? 1 : Math.max(0, Math.min(1, entry.value / Math.max(1, entry.target)));
+      progressFill.style.width = `${Math.round(pct * 100)}%`;
+      progressBar.appendChild(progressFill);
+      const desc = root.document.createElement("small");
+      desc.textContent = `${entry.description} · 獎勵 ${entry.rewardParts} 零件`;
+      item.append(title, progressBar, desc);
+      els.milestoneList.appendChild(item);
     });
   }
 
@@ -1068,6 +1093,7 @@
     renderUpgrades();
     renderEventCodex();
     renderAchievements();
+    renderMilestones();
     renderQuestBoard();
     renderSettings();
     if (meta.recovery && meta.recovery.pending) {
@@ -1248,9 +1274,18 @@
     renderSupplyChoice(state);
     const vehicle = config.VEHICLES[state.vehicleId];
     const hpPct = state.vehicle.maxHp > 0 ? Math.max(0, state.vehicle.hp / state.vehicle.maxHp) : 0;
+    const maxShield = Number.isFinite(state.vehicle.maxShield) ? state.vehicle.maxShield : Math.round((state.vehicle.maxHp || 0) * 0.6);
+    const shield = Math.max(0, Number.isFinite(state.vehicle.shield) ? state.vehicle.shield : 0);
+    const shieldPct = maxShield > 0 ? Math.max(0, Math.min(1, shield / maxShield)) : 0;
     els.hudVehicle.textContent = vehicle.name;
-    els.hudHpText.textContent = `HP ${Math.ceil(state.vehicle.hp)} / ${state.vehicle.maxHp}`;
+    els.hudHpText.textContent = shield > 0
+      ? `HP ${Math.ceil(state.vehicle.hp)} / ${state.vehicle.maxHp} · 盾 ${Math.ceil(shield)}`
+      : `HP ${Math.ceil(state.vehicle.hp)} / ${state.vehicle.maxHp}`;
     els.hpBar.style.width = `${Math.round(hpPct * 100)}%`;
+    if (els.shieldBar && els.shieldBarWrap) {
+      els.shieldBarWrap.hidden = shield <= 0;
+      els.shieldBar.style.width = `${Math.round(shieldPct * 100)}%`;
+    }
     els.hudWave.textContent = `第 ${state.wave} 波`;
     els.hudKills.textContent = `擊殺 ${state.stats.kills}`;
     els.hudParts.textContent = `零件 ${state.stats.partsPreview}`;
@@ -1320,6 +1355,7 @@
       ["零件", `${run.earnedParts}`],
       ["行動零件", `+${run.runParts == null ? breakdown.total : run.runParts}`],
       ["成就零件", `+${run.achievementParts || 0}`],
+      ["里程碑零件", `+${run.milestoneParts || 0}`],
       ["波次零件", `+${breakdown.waveParts}`],
       ["擊殺零件", `+${breakdown.killParts}`],
       ["Boss 零件", `+${breakdown.bossParts}`],
@@ -1341,6 +1377,7 @@
     });
 
     const achievements = run.unlockedAchievements || (reward && reward.achievements) || [];
+    const milestones = run.unlockedMilestones || (reward && reward.milestones) || [];
     els.settlementBadges.textContent = "";
     const blueprintDrops = run.blueprintDrops || (reward && reward.blueprints) || {};
     Object.keys(blueprintDrops).forEach((vehicleId) => {
@@ -1365,12 +1402,30 @@
         els.settlementBadges.appendChild(badge);
       });
     }
+    if (milestones.length) {
+      milestones.forEach((id) => {
+        const milestone = config.MILESTONES && config.MILESTONES[id];
+        const badge = root.document.createElement("div");
+        badge.className = "settlement-badge";
+        badge.textContent = `里程碑達成：${milestone ? milestone.label : id}（+${milestone ? milestone.rewardParts : 0} 零件）`;
+        els.settlementBadges.appendChild(badge);
+      });
+    }
     const nextProgress = rules.getAchievementProgress(meta, config).find((entry) => !entry.done);
     if (nextProgress) {
       const badge = root.document.createElement("div");
       badge.className = "settlement-badge";
       badge.textContent = `下一成就：${nextProgress.label} ${nextProgress.value}/${nextProgress.target}`;
       els.settlementBadges.appendChild(badge);
+    }
+    if (typeof rules.getMilestoneProgress === "function") {
+      const nextMilestone = rules.getMilestoneProgress(meta, config).find((entry) => !entry.claimed);
+      if (nextMilestone) {
+        const badge = root.document.createElement("div");
+        badge.className = "settlement-badge";
+        badge.textContent = `下一里程碑：${nextMilestone.label} ${nextMilestone.value}/${nextMilestone.target}`;
+        els.settlementBadges.appendChild(badge);
+      }
     }
     if (els.settlementBadges.childElementCount > 0) {
       els.settlementBadges.hidden = false;
@@ -1702,6 +1757,8 @@
       "hudVehicle",
       "hudHpText",
       "hpBar",
+      "shieldBarWrap",
+      "shieldBar",
       "hudWave",
       "hudKills",
       "hudParts",
@@ -1751,6 +1808,7 @@
       "upgradeList",
       "eventCodexList",
       "achievementList",
+      "milestoneList",
       "questList",
       "settingsPanel",
       "aimAssistLevelSelect",

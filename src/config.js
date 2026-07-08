@@ -4,7 +4,7 @@ const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 2;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R55", CACHE_VERSION: "ashes-convoy-r55-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R56", CACHE_VERSION: "ashes-convoy-r56-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -84,6 +84,7 @@ const VEHICLES = {
     visualHalfWidth: 13,
     moveResponsiveness: 0.28,
     aimResponsiveness: 0.22,
+    passive: { id: "slipstream", dodgeCooldown: 2.5, damageTakenMul: 0.45 },
     role: "高機動脆皮",
     stage: 4
   },
@@ -104,6 +105,7 @@ const VEHICLES = {
     visualHalfWidth: 15.5,
     moveResponsiveness: 0.18,
     aimResponsiveness: 0.14,
+    passive: { id: "broadside_echo", chance: 0.25, radius: 40, dmgPct: 0.35, dmgCap: 40, minInterval: 0.4 },
     role: "濺射清場",
     stage: 4
   },
@@ -411,6 +413,46 @@ const ENEMY_VARIANTS = {
     tint: "rgba(210, 214, 214, 0.3)",
     filter: "grayscale(0.85) brightness(0.9) contrast(1.18)",
     minWave: 4
+  },
+  swarm_venom: {
+    id: "swarm_venom",
+    baseEnemy: "swarm_mite",
+    label: "毒牙蟲",
+    hpMul: 1.2,
+    speedMul: 1.15,
+    tint: "rgba(120, 200, 80, 0.32)",
+    filter: "sepia(1) saturate(2) hue-rotate(40deg)",
+    minWave: 5
+  },
+  bloater_volatile: {
+    id: "bloater_volatile",
+    baseEnemy: "bloater",
+    label: "易爆腫囊",
+    hpMul: 0.75,
+    speedMul: 1.1,
+    tint: "rgba(255, 140, 40, 0.34)",
+    filter: "saturate(1.6) contrast(1.1)",
+    minWave: 6
+  },
+  spitter_corrosive: {
+    id: "spitter_corrosive",
+    baseEnemy: "spore_spitter",
+    label: "腐蝕吐射",
+    hpMul: 1.3,
+    speedMul: 0.9,
+    tint: "rgba(150, 90, 180, 0.3)",
+    filter: "hue-rotate(-40deg) saturate(1.5)",
+    minWave: 6
+  },
+  husk_bulwark: {
+    id: "husk_bulwark",
+    baseEnemy: "shield_husk",
+    label: "重甲盾殼",
+    hpMul: 1.4,
+    speedMul: 0.8,
+    tint: "rgba(200, 205, 210, 0.3)",
+    filter: "grayscale(0.7) brightness(0.92) contrast(1.2)",
+    minWave: 7
   }
 };
 
@@ -500,6 +542,13 @@ const SUPPLY_DROPS = {
       weight: 1,
       type: "parts",
       parts: 3
+    },
+    overshield: {
+      id: "overshield",
+      label: "護盾補給",
+      weight: 1,
+      type: "shield",
+      shieldPct: 0.12
     }
   }
 };
@@ -618,6 +667,54 @@ const TRAILER_ROOM = {
       description: "拆自廢車的電池並聯，替武器穩壓供電。",
       effectText: "武器傷害 +0.8%",
       effects: { damagePct: 0.008 }
+    },
+    field_medkit: {
+      id: "field_medkit",
+      name: "野戰急救箱",
+      style: "生存物資",
+      slot: "bedside",
+      rarity: "common",
+      cost: 12,
+      sprite: "assets/shelter/trailer/field_medkit.png",
+      description: "止血帶、消毒棉與臨時縫合包塞在鐵箱裡，撞擊後比較不慌。",
+      effectText: "承受傷害 -0.4%",
+      effects: { damageTakenMul: 0.996 }
+    },
+    mycelium_rack: {
+      id: "mycelium_rack",
+      name: "菌菇培養架",
+      style: "溫室生態",
+      slot: "window_sill",
+      rarity: "uncommon",
+      cost: 20,
+      sprite: "assets/shelter/trailer/mycelium_rack.png",
+      description: "密封玻璃盒裡養著夜光菌絲，替長途出勤補上乾糧與濕度。",
+      effectText: "射擊間隔 -1%",
+      effects: { fireIntervalMul: 0.99 }
+    },
+    reload_bench: {
+      id: "reload_bench",
+      name: "彈藥重裝台",
+      style: "工坊機械",
+      slot: "desk",
+      rarity: "uncommon",
+      cost: 30,
+      sprite: "assets/shelter/trailer/reload_bench.png",
+      description: "壓彈器、量杯與拆開的彈匣固定在桌面，讓火控補彈更順。",
+      effectText: "射擊間隔 -1%",
+      effects: { fireIntervalMul: 0.99 }
+    },
+    welding_kit: {
+      id: "welding_kit",
+      name: "焊補工具箱",
+      style: "車隊維修",
+      slot: "floor_right",
+      rarity: "rare",
+      cost: 34,
+      sprite: "assets/shelter/trailer/welding_kit.png",
+      description: "小型焊槍、焊條與補強片排在耐熱布上，車體破口能當場封住。",
+      effectText: "車體 HP +0.8%",
+      effects: { maxHpPct: 0.008 }
     }
   }
 };
@@ -732,6 +829,15 @@ const GATES = {
     sprite: "gate_repair",
     coreHp: 40,
     effect: { type: "repairPct", pct: 0.18 },
+    stage: 1
+  },
+  barrier: {
+    id: "barrier",
+    label: "能量護盾",
+    shortLabel: "護盾",
+    sprite: "gate_barrier",
+    coreHp: 50,
+    effect: { type: "shieldPct", pct: 0.15, maxShieldMul: 0.6 },
     stage: 1
   }
 };
@@ -1588,6 +1694,57 @@ const ACHIEVEMENTS = {
   }
 };
 
+const MILESTONES = {
+  wave_3: {
+    id: "wave_3",
+    label: "突破第 3 波",
+    description: "最遠抵達第 3 波，建立護航基準。",
+    metric: "bestWave",
+    target: 3,
+    rewardParts: 6
+  },
+  wave_5: {
+    id: "wave_5",
+    label: "突破第 5 波",
+    description: "最遠抵達第 5 波，證明車隊能撐過首輪高壓。",
+    metric: "bestWave",
+    target: 5,
+    rewardParts: 10
+  },
+  wave_8: {
+    id: "wave_8",
+    label: "突破第 8 波",
+    description: "最遠抵達第 8 波，足以回收更深處的零件。",
+    metric: "bestWave",
+    target: 8,
+    rewardParts: 16
+  },
+  wave_12: {
+    id: "wave_12",
+    label: "突破第 12 波",
+    description: "最遠抵達第 12 波，車隊已能處理持續變異潮。",
+    metric: "bestWave",
+    target: 12,
+    rewardParts: 24
+  },
+  wave_16: {
+    id: "wave_16",
+    label: "突破第 16 波",
+    description: "最遠抵達第 16 波，路線記錄足以支援長程改裝。",
+    metric: "bestWave",
+    target: 16,
+    rewardParts: 34
+  },
+  wave_20: {
+    id: "wave_20",
+    label: "突破第 20 波",
+    description: "最遠抵達第 20 波，完成末日護航的里程碑。",
+    metric: "bestWave",
+    target: 20,
+    rewardParts: 50
+  }
+};
+
 const START_SCREEN = {
   image: "assets/ui/start.png",
   alt: "灰燼護航開始畫面"
@@ -1711,6 +1868,7 @@ const DSConfig = {
   DIFFICULTIES,
   ECONOMY,
   ACHIEVEMENTS,
+  MILESTONES,
   START_SCREEN,
   SHELTER_THEMES,
   META_DEFAULT

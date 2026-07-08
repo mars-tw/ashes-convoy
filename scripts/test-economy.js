@@ -51,28 +51,33 @@ const result = rules.settleRunRewards({
 assert.strictEqual(JSON.stringify(meta), before, "settleRunRewards must not mutate input meta");
 assert.strictEqual(result.reward.parts, 53);
 assert.strictEqual(result.reward.achievementParts, 24);
-assert.strictEqual(result.reward.totalParts, 77);
+assert.strictEqual(result.reward.milestoneParts, 16);
+assert.strictEqual(result.reward.totalParts, 93);
 assert.strictEqual(result.reward.partsBreakdown.waveParts, 20);
 assert.strictEqual(result.reward.partsBreakdown.killParts, 9);
 assert.strictEqual(result.reward.partsBreakdown.bossParts, 24);
 assert.strictEqual(result.reward.blueprints.sky_barge, 1, "first boss should drop one sky barge blueprint with a low rng roll");
 assert.strictEqual(result.reward.blueprints.parts, undefined, "blueprints must not convert to parts");
-assert.strictEqual(result.meta.parts, 77);
+assert.strictEqual(result.meta.parts, 93);
 assert.strictEqual(result.meta.totalRuns, 1);
 assert.strictEqual(result.meta.totalKills, 55);
 assert.strictEqual(result.meta.totalBossKills, 1);
 assert.strictEqual(result.meta.questStats.environmentWins.land, 1, "clearing 3+ waves should advance environment quest stats");
 assert.strictEqual(result.meta.blueprints.sky_barge, 1);
 assert.strictEqual(result.meta.unlockedVehicles.sky_barge, false);
-assert.strictEqual(result.meta.lastRun.earnedParts, 77);
+assert.strictEqual(result.meta.lastRun.earnedParts, 93);
 assert.strictEqual(result.meta.lastRun.runParts, 53);
 assert.strictEqual(result.meta.lastRun.achievementParts, 24);
+assert.strictEqual(result.meta.lastRun.milestoneParts, 16);
 assert.strictEqual(result.meta.lastRun.partsBreakdown.total, 53);
 assert.strictEqual(result.meta.achievements.first_boss, true);
 assert(result.reward.achievements.includes("first_boss"));
 assert(result.reward.achievements.includes("first_kill"));
 assert(result.reward.achievements.includes("wave_5"));
 assert(result.reward.achievements.includes("sortie_land"));
+assert.deepStrictEqual(result.reward.milestones, ["wave_3", "wave_5"]);
+assert.strictEqual(result.meta.claimedMilestones.wave_3, true);
+assert.strictEqual(result.meta.claimedMilestones.wave_5, true);
 
 const second = rules.settleRunRewards({
   meta: result.meta,
@@ -84,6 +89,7 @@ const second = rules.settleRunRewards({
 assert(!second.reward.achievements.includes("first_boss"), "first boss achievement must not repeat");
 assert.strictEqual(second.reward.parts, 53, "main currency formula must not depend on rng");
 assert.strictEqual(second.reward.achievementParts, 8, "second run should only pay the newly reached 100-kill achievement");
+assert.strictEqual(second.reward.milestoneParts, 0, "claimed milestones must not repeat");
 assert.deepStrictEqual(second.reward.achievements, ["total_kills_100"]);
 
 const pity = rules.settleRunRewards({

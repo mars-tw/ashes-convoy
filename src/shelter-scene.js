@@ -378,7 +378,11 @@ const TRAILER_ROOM_ASSETS = {
     water_filter: "assets/shelter/trailer/water_filter.png",
     folding_workbench: "assets/shelter/trailer/folding_workbench.png",
     blueprint_board: "assets/shelter/trailer/blueprint_board.png",
-    battery_bank: "assets/shelter/trailer/battery_bank.png"
+    battery_bank: "assets/shelter/trailer/battery_bank.png",
+    field_medkit: "assets/shelter/trailer/field_medkit.png",
+    mycelium_rack: "assets/shelter/trailer/mycelium_rack.png",
+    reload_bench: "assets/shelter/trailer/reload_bench.png",
+    welding_kit: "assets/shelter/trailer/welding_kit.png"
   },
   anchors: {
     wall_left: { x: 92, y: 138, w: 138, h: 120 },

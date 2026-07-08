@@ -250,6 +250,10 @@ check(frameCount === expectedFrameCount, `frame count must be ${expectedFrameCou
   { path: "assets/shelter/trailer/folding_workbench.png", width: 300, height: 210, alphaBinary: true },
   { path: "assets/shelter/trailer/blueprint_board.png", width: 200, height: 210, alphaBinary: true },
   { path: "assets/shelter/trailer/battery_bank.png", width: 220, height: 150, alphaBinary: true },
+  { path: "assets/shelter/trailer/field_medkit.png", width: 180, height: 140, alphaBinary: true },
+  { path: "assets/shelter/trailer/mycelium_rack.png", width: 300, height: 160, alphaBinary: true },
+  { path: "assets/shelter/trailer/reload_bench.png", width: 300, height: 210, alphaBinary: true },
+  { path: "assets/shelter/trailer/welding_kit.png", width: 220, height: 150, alphaBinary: true },
   { path: "assets/vehicles/trailer.png", width: 709, height: 1291, alphaBinary: true }
 ].forEach(checkPngContract);
 
