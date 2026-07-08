@@ -10,8 +10,8 @@ function assertFinitePositive(value, label) {
 
 assert.strictEqual(config.STORAGE_KEY, "ashes_convoy_meta_v1");
 assert.strictEqual(config.META_VERSION, 2);
-assert.strictEqual(config.APP_VERSION, "R50");
-assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r50-v1");
+assert.strictEqual(config.APP_VERSION, "R51");
+assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r51-v1");
 assert.strictEqual(config.LOGIC.width, 195);
 assert.strictEqual(config.LOGIC.height, 422);
 assert.strictEqual(config.LOGIC.displayWidth, 390);
@@ -122,6 +122,10 @@ assert.strictEqual(config.SUPPLY_DROPS.chancePerKill, 0.05);
 assert.strictEqual(config.SUPPLY_DROPS.pityKills, 25);
 assert.strictEqual(config.SUPPLY_DROPS.partsPerCache, 3);
 assert.strictEqual(config.SUPPLY_DROPS.partsCapPerRun, 12);
+assert.strictEqual(config.SUPPLY_DROPS.crateSpeed, 24);
+assert.strictEqual(config.SUPPLY_DROPS.horizontalDriftSpeed, 34);
+assert.strictEqual(config.SUPPLY_DROPS.magnetSpeed, 92);
+assert.strictEqual(config.SUPPLY_DROPS.ttl, 16);
 assert.deepStrictEqual(Object.keys(config.SUPPLY_DROPS.rewards).sort(), ["damage_boost", "parts_cache", "rate_boost", "repair_small"]);
 assert.strictEqual(config.QUESTS.dailyRewardParts, 5);
 assert.strictEqual(config.QUESTS.weeklyRewardParts, 15);

@@ -4,7 +4,7 @@ const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 2;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R50", CACHE_VERSION: "ashes-convoy-r50-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R51", CACHE_VERSION: "ashes-convoy-r51-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -322,7 +322,10 @@ const SUPPLY_DROPS = {
   pityKills: 25,
   partsPerCache: 3,
   partsCapPerRun: 12,
-  crateSpeed: 18,
+  crateSpeed: 24,
+  horizontalDriftSpeed: 34,
+  magnetSpeed: 92,
+  ttl: 16,
   pickupRadius: 34,
   magnetRadius: 92,
   rewards: {

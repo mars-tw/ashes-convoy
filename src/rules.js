@@ -471,6 +471,42 @@ function chooseSupplyReward(rng, config) {
   return deepClone(rewards[rewards.length - 1]);
 }
 
+function stepSupplyDropMotion(options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const supply = cfg.SUPPLY_DROPS || {};
+  const drop = deepClone(opts.drop || {});
+  const vehicle = opts.vehicle || {};
+  const dt = finiteNumber(opts.dt, 0, { min: 0, max: 1 });
+  const vehicleX = finiteNumber(vehicle.x, cfg.LOGIC.width * 0.5);
+  const vehicleY = finiteNumber(vehicle.y, cfg.LOGIC.vehicleY);
+  const startX = finiteNumber(drop.x, vehicleX);
+  const startY = finiteNumber(drop.y, vehicleY);
+  const dx = vehicleX - startX;
+  const dy = vehicleY - startY;
+  const distanceBefore = Math.sqrt(dx * dx + dy * dy);
+  const magnetRadius = finiteNumber(supply.magnetRadius, 92, { min: 0 });
+  const magnetSpeed = finiteNumber(supply.magnetSpeed, 82, { min: 0 });
+  const driftSpeed = finiteNumber(supply.horizontalDriftSpeed, 0, { min: 0 });
+  const fallSpeed = finiteNumber(drop.vy, finiteNumber(supply.crateSpeed, 18, { min: 0 }), { min: 0 });
+
+  if (distanceBefore <= magnetRadius && distanceBefore > 0) {
+    const step = Math.min(magnetSpeed * dt, distanceBefore);
+    drop.x = startX + (dx / distanceBefore) * step;
+    drop.y = startY + (dy / distanceBefore) * step;
+  } else {
+    const xStep = Math.min(Math.abs(dx), driftSpeed * dt);
+    drop.x = startX + Math.sign(dx) * xStep;
+    drop.y = startY + fallSpeed * dt;
+  }
+  drop.age = finiteNumber(drop.age, 0, { min: 0 }) + dt;
+
+  const afterDx = vehicleX - drop.x;
+  const afterDy = vehicleY - drop.y;
+  const distanceAfter = Math.sqrt(afterDx * afterDx + afterDy * afterDy);
+  return { drop, distanceBefore, distanceAfter };
+}
+
 function applySupplyRewardById(options) {
   const opts = options || {};
   const cfg = getConfig(opts.config);
@@ -1661,6 +1697,7 @@ const DSRules = {
   chooseEnvironmentEvent,
   rollSupplyDrop,
   chooseSupplyReward,
+  stepSupplyDropMotion,
   applySupplyRewardById,
   selectAimAssistTarget,
   aimAssistStrength,

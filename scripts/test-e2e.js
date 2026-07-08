@@ -282,12 +282,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R50") && swText.includes("src/ui.js?v=R50") && swText.includes("src/game.js?v=R50") && swText.includes("src/rules.js?v=R50"),
+      swCachesJs: swText.includes("src/version.js?v=R51") && swText.includes("src/ui.js?v=R51") && swText.includes("src/game.js?v=R51") && swText.includes("src/rules.js?v=R51"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R50"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R50"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R50"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R51"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R51"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R51"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -296,7 +296,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R50", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R51", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -544,7 +544,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R50"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R51"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -1496,6 +1496,39 @@ async function checkEventCodexAndAchievements(page) {
 }
 
 async function checkSupplyDropPickupAndSettlement(page) {
+  for (const edgeX of [0, 195]) {
+    await page.evaluate((x) => {
+      window.__test.clearStorage();
+      window.__test.startRun("land_rig");
+      const state = window.__test.getState();
+      window.__test.setState({
+        enemies: [],
+        projectiles: [],
+        gates: [],
+        supplyDrops: [
+          { id: `edge_supply_${x}`, x, y: state.vehicle.y - 150, vx: 0, vy: window.DSConfig.SUPPLY_DROPS.crateSpeed, radius: 12, age: 0, ttl: window.DSConfig.SUPPLY_DROPS.ttl, picked: false }
+        ],
+        supplyBuffs: [],
+        supplyChoice: null,
+        vehicle: { weaponCooldown: 999 }
+      });
+      for (let i = 0; i < 220; i += 1) {
+        const current = window.__test.getState();
+        if (current.supplyChoice || current.supplyDrops.length === 0) break;
+        window.__test.step(100);
+      }
+    }, edgeX);
+    await page.waitForSelector('#supplyChoiceOverlay:not([hidden]) .supply-choice-btn[data-reward-id="parts_cache"]');
+    const edgeResult = await page.evaluate(() => ({
+      state: window.__test.getState(),
+      ttl: window.DSConfig.SUPPLY_DROPS.ttl
+    }));
+    assert(edgeResult.state.supplyChoice, `edge supply at x=${edgeX} should open the choice overlay before expiring`);
+    assert(edgeResult.state.supplyChoice.openedAt < edgeResult.ttl, `edge supply at x=${edgeX} should be reached inside ttl`);
+    await page.click('#supplyChoiceOverlay .supply-choice-btn[data-reward-id="parts_cache"]');
+    await page.waitForFunction(() => document.getElementById("supplyChoiceOverlay").hidden === true);
+  }
+
   await page.evaluate(() => {
     window.__test.clearStorage();
     window.__test.startRun("land_rig");
@@ -2097,7 +2130,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r50")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r51")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -2115,7 +2148,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r50")), "R50 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r51")), "R51 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

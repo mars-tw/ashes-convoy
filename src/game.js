@@ -727,7 +727,7 @@
       vy: (config.SUPPLY_DROPS && config.SUPPLY_DROPS.crateSpeed) || 18,
       radius: 12,
       age: 0,
-      ttl: 11,
+      ttl: (config.SUPPLY_DROPS && config.SUPPLY_DROPS.ttl) || 11,
       picked: false
     });
     addFloatingText("補給", x, y - 14, { color: "#5ed4cb", size: 8, ttl: 0.55, vy: -12 });
@@ -1563,20 +1563,12 @@
     state.supplyBuffs = state.supplyBuffs.filter((buff) => buff.until > state.time);
     if (!state.supplyDrops.length) return;
     const pickupRadius = (config.SUPPLY_DROPS && config.SUPPLY_DROPS.pickupRadius) || 34;
-    const magnetRadius = (config.SUPPLY_DROPS && config.SUPPLY_DROPS.magnetRadius) || 92;
     for (let i = 0; i < state.supplyDrops.length; i += 1) {
       const drop = state.supplyDrops[i];
       if (state.supplyChoice) break;
       if (drop.picked) continue;
-      drop.age += dt;
-      const toVehicle = normalize(state.vehicle.x - drop.x, state.vehicle.y - drop.y);
-      const d = distance(drop, state.vehicle);
-      if (d <= magnetRadius) {
-        drop.x += toVehicle.x * 82 * dt;
-        drop.y += toVehicle.y * 82 * dt;
-      } else {
-        drop.y += drop.vy * dt;
-      }
+      const motion = rules.stepSupplyDropMotion({ drop, vehicle: state.vehicle, dt, config });
+      Object.assign(drop, motion.drop);
       if (distance(drop, state.vehicle) <= pickupRadius + state.vehicle.radius) {
         openSupplyChoice(drop);
         break;

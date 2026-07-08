@@ -54,6 +54,36 @@ assert.strictEqual(pitySupply.guaranteed, true);
 assert.strictEqual(pitySupply.killsSinceDrop, 0);
 assert.strictEqual(rules.chooseSupplyReward(() => 0, config).id, "rate_boost", "supply rewards should be deterministic with injected rng");
 
+function simulateSupplyReachability(startX) {
+  const vehicle = { x: config.LOGIC.width * 0.5, y: config.LOGIC.vehicleY, radius: config.VEHICLES.land_rig.radius };
+  let drop = {
+    x: startX,
+    y: vehicle.y - 150,
+    vy: config.SUPPLY_DROPS.crateSpeed,
+    radius: 12,
+    age: 0,
+    ttl: config.SUPPLY_DROPS.ttl,
+    picked: false
+  };
+  const startDx = Math.abs(vehicle.x - drop.x);
+  let minDistance = Infinity;
+  for (let i = 0; i < Math.ceil(drop.ttl / 0.1); i += 1) {
+    const result = rules.stepSupplyDropMotion({ drop, vehicle, dt: 0.1, config });
+    drop = result.drop;
+    minDistance = Math.min(minDistance, result.distanceAfter);
+    if (result.distanceAfter <= config.SUPPLY_DROPS.pickupRadius + vehicle.radius) {
+      return { reached: true, startDx, endDx: Math.abs(vehicle.x - drop.x), age: drop.age, minDistance };
+    }
+  }
+  return { reached: false, startDx, endDx: Math.abs(vehicle.x - drop.x), age: drop.age, minDistance };
+}
+const leftSupply = simulateSupplyReachability(0);
+assert(leftSupply.endDx < leftSupply.startDx * 0.45, "left edge supply should drift toward the vehicle x position");
+assert(leftSupply.reached, `left edge supply should become reachable before ttl, min distance ${leftSupply.minDistance}`);
+const rightSupply = simulateSupplyReachability(config.LOGIC.width);
+assert(rightSupply.endDx < rightSupply.startDx * 0.45, "right edge supply should drift toward the vehicle x position");
+assert(rightSupply.reached, `right edge supply should become reachable before ttl, min distance ${rightSupply.minDistance}`);
+
 const eventStats = rules.mergeEventStats(
   { meteor_shower: { encounters: 1, completions: 0 } },
   { meteor_shower: { encounters: 1, completions: 1 } },
