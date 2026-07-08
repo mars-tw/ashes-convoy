@@ -9,17 +9,17 @@ const APP_SHELL_PATHS = [
   "./",
   "index.html",
   "offline.html",
-  "manifest.webmanifest?v=R48",
-  "src/version.js?v=R48",
-  "src/sprites.js?v=R48",
-  "src/sprite-renderer.js?v=R48",
-  "src/shelter-scene.js?v=R48",
-  "src/config.js?v=R48",
-  "src/rules.js?v=R48",
-  "src/fx.js?v=R48",
-  "src/audio.js?v=R48",
-  "src/game.js?v=R48",
-  "src/ui.js?v=R48"
+  "manifest.webmanifest?v=R49",
+  "src/version.js?v=R49",
+  "src/sprites.js?v=R49",
+  "src/sprite-renderer.js?v=R49",
+  "src/shelter-scene.js?v=R49",
+  "src/config.js?v=R49",
+  "src/rules.js?v=R49",
+  "src/fx.js?v=R49",
+  "src/audio.js?v=R49",
+  "src/game.js?v=R49",
+  "src/ui.js?v=R49"
 ];
 const ASSET_PATHS = [
   "assets/ui/start.png",
@@ -39,7 +39,7 @@ const ASSET_PATHS = [
   "assets/shelter/greenhouse.png",
   "assets/shelter/snow.png",
   "assets/shelter/workshop.png",
-  "assets/icons/icon-192.png?v=R48",
+  "assets/icons/icon-192.png?v=R49",
   "assets/icons/icon-192.png",
   "assets/icons/icon-512.png"
 ];

@@ -4,7 +4,7 @@ const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 2;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R48", CACHE_VERSION: "ashes-convoy-r48-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R49", CACHE_VERSION: "ashes-convoy-r49-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -41,9 +41,9 @@ const VEHICLES = {
     hp: 520,
     armor: 10,
     weapon: "rig_cannon",
-    radius: 15,
-    visualWidth: 60,
-    visualHalfWidth: 30,
+    radius: 8,
+    visualWidth: 30,
+    visualHalfWidth: 15,
     moveResponsiveness: 0.14,
     aimResponsiveness: 0.12,
     passive: { id: "revenge_fire", damageMul: 0.1, duration: 2 },
@@ -62,9 +62,9 @@ const VEHICLES = {
     hp: 300,
     armor: 3,
     weapon: "sky_autocannon",
-    radius: 12,
-    visualWidth: 56,
-    visualHalfWidth: 28,
+    radius: 7,
+    visualWidth: 26,
+    visualHalfWidth: 13,
     moveResponsiveness: 0.28,
     aimResponsiveness: 0.22,
     role: "高機動脆皮",
@@ -82,9 +82,9 @@ const VEHICLES = {
     hp: 420,
     armor: 6,
     weapon: "ark_cannon",
-    radius: 14,
-    visualWidth: 64,
-    visualHalfWidth: 32,
+    radius: 9,
+    visualWidth: 31,
+    visualHalfWidth: 15.5,
     moveResponsiveness: 0.18,
     aimResponsiveness: 0.14,
     role: "濺射清場",
@@ -102,9 +102,9 @@ const VEHICLES = {
     hp: 360,
     armor: 4,
     weapon: "void_lance",
-    radius: 13,
-    visualWidth: 58,
-    visualHalfWidth: 29,
+    radius: 8,
+    visualWidth: 28,
+    visualHalfWidth: 14,
     moveResponsiveness: 0.21,
     aimResponsiveness: 0.24,
     passive: { id: "armor_break_focus", armorBreakPerHit: 0.025, maxStacks: 6 },
@@ -126,7 +126,7 @@ const WEAPONS = {
     splash: 0,
     baseProjectiles: 1,
     sideDamageMul: 0.55,
-    muzzleOffset: 47
+    muzzleOffset: 23
   },
   sky_autocannon: {
     id: "sky_autocannon",
@@ -140,7 +140,7 @@ const WEAPONS = {
     splash: 0,
     baseProjectiles: 1,
     sideDamageMul: 0.55,
-    muzzleOffset: 44
+    muzzleOffset: 20
   },
   ark_cannon: {
     id: "ark_cannon",
@@ -154,7 +154,7 @@ const WEAPONS = {
     splash: 58,
     baseProjectiles: 1,
     sideDamageMul: 0.5,
-    muzzleOffset: 52
+    muzzleOffset: 25
   },
   void_lance: {
     id: "void_lance",
@@ -168,7 +168,7 @@ const WEAPONS = {
     splash: 0,
     baseProjectiles: 1,
     sideDamageMul: 0.55,
-    muzzleOffset: 41
+    muzzleOffset: 20
   }
 };
 
@@ -183,9 +183,9 @@ const ENEMIES = {
     contactDamage: 8,
     budgetCost: 2,
     score: 10,
-    radius: 10,
-    scale: 2,
-    visualWidth: 20,
+    radius: 8,
+    scale: 1.6,
+    visualWidth: 16,
     firstWave: 1,
     tags: ["ground"],
     stage: 1
@@ -200,9 +200,9 @@ const ENEMIES = {
     contactDamage: 6,
     budgetCost: 2,
     score: 12,
-    radius: 9,
-    scale: 1.9,
-    visualWidth: 18,
+    radius: 7,
+    scale: 1.45,
+    visualWidth: 14,
     firstWave: 1,
     tags: ["ground", "fast"],
     stage: 1
@@ -217,8 +217,8 @@ const ENEMIES = {
     contactDamage: 16,
     budgetCost: 5,
     score: 28,
-    radius: 18,
-    scale: 1.55,
+    radius: 17,
+    scale: 1.5,
     visualWidth: 34,
     firstWave: 2,
     deathBurst: { radius: 62, damage: 22 },

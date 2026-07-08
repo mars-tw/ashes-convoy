@@ -10,8 +10,8 @@ function assertFinitePositive(value, label) {
 
 assert.strictEqual(config.STORAGE_KEY, "ashes_convoy_meta_v1");
 assert.strictEqual(config.META_VERSION, 2);
-assert.strictEqual(config.APP_VERSION, "R48");
-assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r48-v1");
+assert.strictEqual(config.APP_VERSION, "R49");
+assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r49-v1");
 assert.strictEqual(config.LOGIC.width, 195);
 assert.strictEqual(config.LOGIC.height, 422);
 assert.strictEqual(config.LOGIC.displayWidth, 390);
@@ -28,7 +28,8 @@ assert.deepStrictEqual(config.SHELTER_THEMES, {}, "shelter reference themes shou
 const roadRatio = (config.LOGIC.roadRight - config.LOGIC.roadLeft) / config.LOGIC.width;
 assert(roadRatio >= 0.55 && roadRatio <= 0.65, `road ratio should be 55-65%, got ${roadRatio}`);
 const vehicleIds = ["land_rig", "sky_barge", "sea_ark", "void_runner"];
-const expectedVehicleVisualWidths = { land_rig: 60, sky_barge: 56, sea_ark: 64, void_runner: 58 };
+const expectedVehicleVisualWidths = { land_rig: 30, sky_barge: 26, sea_ark: 31, void_runner: 28 };
+const expectedVehicleRadii = { land_rig: 8, sky_barge: 7, sea_ark: 9, void_runner: 8 };
 assert.strictEqual(config.META_DEFAULT.selectedVehicle, "land_rig");
 
 vehicleIds.forEach((id) => {
@@ -43,9 +44,14 @@ vehicleIds.forEach((id) => {
   assertFinitePositive(vehicle.hp, `${id}.hp`);
   assert(Number.isFinite(vehicle.armor) && vehicle.armor >= 0, `${id}.armor must be non-negative`);
   assertFinitePositive(vehicle.visualWidth, `${id}.visualWidth`);
-  assert.strictEqual(vehicle.visualWidth, expectedVehicleVisualWidths[id], `${id} should use the R45 visual width`);
-  assert(vehicle.visualWidth >= 56 && vehicle.visualWidth <= 64, `${id} raster width should be 56-64 world px`);
+  assert.strictEqual(vehicle.visualWidth, expectedVehicleVisualWidths[id], `${id} should use the R49 Raiden-scale visual width`);
+  assert.strictEqual(vehicle.radius, expectedVehicleRadii[id], `${id} should use the R49 tightened hit radius`);
+  assert(vehicle.visualWidth >= 24 && vehicle.visualWidth <= 31, `${id} raster width should be 24-31 world px`);
+  const screenRatio = vehicle.visualWidth / config.LOGIC.width;
+  assert(screenRatio >= 0.12 && screenRatio <= 0.16, `${id} should occupy 12-16% of canvas width, got ${screenRatio}`);
   assert.strictEqual(vehicle.visualHalfWidth * 2, vehicle.visualWidth, `${id} visual half width should match visual width`);
+  const hitRatio = vehicle.radius / vehicle.visualHalfWidth;
+  assert(hitRatio >= 0.5 && hitRatio <= 0.65, `${id} hit radius should be 50-65% of visual half width, got ${hitRatio}`);
   assert(vehicle.visualHalfWidth * 2 < config.LOGIC.roadRight - config.LOGIC.roadLeft, `${id} should fit inside road`);
   assert.strictEqual(vehicle.stage, 4);
 });
@@ -76,9 +82,13 @@ Object.entries(config.WEAPONS).forEach(([id, weapon]) => {
   assert(enemy.visualWidth >= enemy.radius * 1.8 && enemy.visualWidth <= enemy.radius * 2.2, `${id} visual width should align with collision radius`);
   assert.strictEqual(enemy.stage, 1);
 });
-assert(config.ENEMIES.shambler.scale >= 1.9 && config.ENEMIES.shambler.radius >= 10, "shambler should be visually enlarged");
-assert(config.ENEMIES.runner.scale >= 1.8 && config.ENEMIES.runner.radius >= 9, "runner should be visually enlarged");
-assert(config.ENEMIES.bloater.scale >= 1.5 && config.ENEMIES.bloater.radius >= 18, "bloater should be visually enlarged");
+assert(config.ENEMIES.runner.visualWidth < config.VEHICLES.sky_barge.visualWidth, "runner should read as smaller than the smallest vehicle");
+assert(config.ENEMIES.shambler.visualWidth < config.VEHICLES.land_rig.visualWidth, "shambler should read as smaller than the land rig");
+assert(config.ENEMIES.bloater.visualWidth > config.VEHICLES.sea_ark.visualWidth, "bloater should read as an elite larger than the player");
+assert(config.ENEMIES.boss_hive_titan.visualWidth > config.ENEMIES.bloater.visualWidth * 2, "boss should remain clearly massive");
+assert(config.ENEMIES.shambler.scale >= 1.5 && config.ENEMIES.shambler.radius >= 8, "shambler should remain readable at R49 scale");
+assert(config.ENEMIES.runner.scale >= 1.4 && config.ENEMIES.runner.radius >= 7, "runner should remain readable at R49 scale");
+assert(config.ENEMIES.bloater.scale >= 1.5 && config.ENEMIES.bloater.radius >= 17, "bloater should remain an elite body");
 assert(config.ENEMIES.boss_hive_titan.scale >= 1.8 && config.ENEMIES.boss_hive_titan.radius >= 40, "boss should be enlarged");
 
 assert.strictEqual(config.ENEMIES.boss_hive_titan.boss, true);

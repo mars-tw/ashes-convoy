@@ -282,12 +282,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R48") && swText.includes("src/ui.js?v=R48") && swText.includes("src/game.js?v=R48") && swText.includes("src/rules.js?v=R48"),
+      swCachesJs: swText.includes("src/version.js?v=R49") && swText.includes("src/ui.js?v=R49") && swText.includes("src/game.js?v=R49") && swText.includes("src/rules.js?v=R49"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R48"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R48"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R48"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R49"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R49"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R49"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -296,7 +296,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R48", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R49", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -501,7 +501,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R48"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R49"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -679,7 +679,12 @@ async function checkVehicleFleetSelectionAndCombat(page) {
         backgroundFallback: debug.backgroundFallbackDrawn,
         backgroundStatus: debug.backgroundImageStatus,
         backgroundPath: debug.backgroundImagePath,
-        visualWidth: window.DSConfig.VEHICLES[id].visualWidth
+        visualWidth: window.DSConfig.VEHICLES[id].visualWidth,
+        radius: window.DSConfig.VEHICLES[id].radius,
+        visualHalfWidth: window.DSConfig.VEHICLES[id].visualHalfWidth,
+        bulletRadii: state.projectiles.map((projectile) => projectile.radius),
+        bulletScales: state.projectiles.map((projectile) => projectile.scale),
+        enemyWidths: Object.fromEntries(Object.entries(window.DSConfig.ENEMIES).map(([enemyId, enemy]) => [enemyId, enemy.visualWidth]))
       };
     }, vehicleId);
     assert.strictEqual(result.vehicleId, vehicleId, `${vehicleId} should be the active vehicle`);
@@ -688,7 +693,14 @@ async function checkVehicleFleetSelectionAndCombat(page) {
     assert(result.backgroundRaster, `${vehicleId} should draw its raster environment background`);
     assert.strictEqual(result.backgroundStatus, "loaded", `${vehicleId} environment background should be loaded`);
     assert(result.backgroundPath.includes(`assets/env/${result.expectedEnvironment}.png`), `${vehicleId} should use environment background asset: ${result.backgroundPath}`);
-    assert(result.visualWidth >= 56 && result.visualWidth <= 64, `${vehicleId} visual width should be reduced to 56-64 world px`);
+    assert(result.visualWidth >= 24 && result.visualWidth <= 31, `${vehicleId} visual width should be reduced to 24-31 world px`);
+    const hitRatio = result.radius / result.visualHalfWidth;
+    assert(hitRatio >= 0.5 && hitRatio <= 0.65, `${vehicleId} hit radius should be 50-65% of visual half width, got ${hitRatio}`);
+    assert(result.enemyWidths.runner < result.visualWidth, `${vehicleId} should remain larger than runner fodder`);
+    assert(result.enemyWidths.bloater > result.visualWidth, `${vehicleId} should remain smaller than elite bloater`);
+    assert(result.enemyWidths.boss_hive_titan > result.enemyWidths.bloater * 2, `${vehicleId} should keep boss scale dominance`);
+    assert(result.bulletRadii.every((radius) => radius >= 6), `${vehicleId} bullets should stay readable after player scale reduction`);
+    assert(result.bulletScales.every((scale) => scale >= 1.05), `${vehicleId} bullet sprite scale should not shrink`);
     assert(result.kills >= 1, `${vehicleId} should be able to shoot and kill`);
   }
   await page.evaluate(() => window.__test.showGarage());
@@ -2022,7 +2034,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r48")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r49")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -2040,7 +2052,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r48")), "R48 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r49")), "R49 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());
