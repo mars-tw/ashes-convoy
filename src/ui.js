@@ -21,6 +21,7 @@
   const SW_AUTO_RELOAD_WINDOW_MS = 15000;
   const SW_AUTO_RELOAD_SESSION_KEY = "ashes_convoy_sw_auto_reload";
   const gateChoiceButtons = new Map();
+  let lastSupplyChoiceKey = "";
   let gateChoiceLayerSize = {
     width: config.LOGIC.displayWidth,
     height: config.LOGIC.displayHeight
@@ -426,6 +427,23 @@
     if (gateId === "rate_plus") return "+25%";
     if (gateId === "multishot_plus") return "+1";
     return "維修";
+  }
+
+  function supplyRewardValueText(reward) {
+    if (!reward) return "";
+    if (reward.type === "rate") return `${Math.round((1 - (reward.fireIntervalMul || 1)) * 100)}% 裝填加速`;
+    if (reward.type === "damage") return `${Math.round((reward.damageAdd || 0) * 100)}% 傷害加成`;
+    if (reward.type === "repair") return `${Math.round((reward.repairPct || 0) * 100)}% 立即維修`;
+    if (reward.type === "parts") return `零件 +${reward.parts || 0}`;
+    return reward.type || "";
+  }
+
+  function supplyRewardDetailText(reward) {
+    if (!reward) return "";
+    if (reward.type === "rate" || reward.type === "damage") return `${reward.duration || 10} 秒`;
+    if (reward.type === "repair") return "立即生效";
+    if (reward.type === "parts") return "本局結算列入補給收益";
+    return "";
   }
 
   function syncGateChoiceLayerSize() {
@@ -923,6 +941,71 @@
     els.gateChoiceLayer.hidden = false;
   }
 
+  function renderSupplyChoice(state) {
+    if (!els.supplyChoiceOverlay || !els.supplyChoiceList) return;
+    const choice = state && state.supplyChoice;
+    if (!choice) {
+      els.supplyChoiceOverlay.hidden = true;
+      els.supplyChoiceList.textContent = "";
+      lastSupplyChoiceKey = "";
+      return;
+    }
+    const rewardIds = Array.isArray(choice.rewardIds)
+      ? choice.rewardIds
+      : Object.keys((config.SUPPLY_DROPS && config.SUPPLY_DROPS.rewards) || {});
+    const key = `${choice.dropId}:${rewardIds.join(",")}`;
+    if (lastSupplyChoiceKey !== key) {
+      els.supplyChoiceList.textContent = "";
+      rewardIds.forEach((rewardId, index) => {
+        const reward = config.SUPPLY_DROPS.rewards[rewardId];
+        if (!reward) return;
+        const button = root.document.createElement("button");
+        button.type = "button";
+        button.className = "supply-choice-btn";
+        button.dataset.rewardId = rewardId;
+        button.setAttribute("aria-label", `${reward.label} ${supplyRewardValueText(reward)}`);
+        button.innerHTML = `<b>${index + 1}. ${reward.label}</b><span>${supplyRewardValueText(reward)}</span><small>${supplyRewardDetailText(reward)}</small>`;
+        button.addEventListener("click", () => {
+          game.chooseSupplyReward(rewardId);
+        });
+        els.supplyChoiceList.appendChild(button);
+      });
+      lastSupplyChoiceKey = key;
+      root.requestAnimationFrame(() => {
+        const first = els.supplyChoiceList.querySelector(".supply-choice-btn");
+        if (first && typeof first.focus === "function") first.focus();
+      });
+    }
+    els.supplyChoiceOverlay.hidden = false;
+  }
+
+  function handleSupplyChoiceKey(event) {
+    if (!els.supplyChoiceOverlay || els.supplyChoiceOverlay.hidden) return false;
+    const buttons = Array.from(els.supplyChoiceList.querySelectorAll(".supply-choice-btn"));
+    if (!buttons.length) return false;
+    const activeIndex = Math.max(0, buttons.indexOf(root.document.activeElement));
+    function focusAt(index) {
+      buttons[(index + buttons.length) % buttons.length].focus();
+    }
+    if (/^[1-4]$/.test(event.key)) {
+      const button = buttons[Number(event.key) - 1];
+      if (button) button.click();
+    } else if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+      focusAt(activeIndex + 1);
+    } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+      focusAt(activeIndex - 1);
+    } else if (event.key === "Enter" || event.key === " ") {
+      (buttons[activeIndex] || buttons[0]).click();
+    } else if (event.key === "Escape") {
+      // Supply choices are mandatory once picked up.
+    } else {
+      return false;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    return true;
+  }
+
   function renderEventBanner(state) {
     if (!els.eventBanner) return;
     const banner = state && state.eventBanner;
@@ -943,11 +1026,13 @@
       els.hud.classList.remove("is-visible");
       renderGateChoices(null);
       renderEventBanner(null);
+      renderSupplyChoice(null);
       return;
     }
     els.hud.classList.add("is-visible");
     renderGateChoices(state);
     renderEventBanner(state);
+    renderSupplyChoice(state);
     const vehicle = config.VEHICLES[state.vehicleId];
     const hpPct = state.vehicle.maxHp > 0 ? Math.max(0, state.vehicle.hp / state.vehicle.maxHp) : 0;
     els.hudVehicle.textContent = vehicle.name;
@@ -1248,12 +1333,14 @@
   function onState(state) {
     latestState = state;
     if (state.mode === "playing") {
+      els.pausePanel.hidden = true;
       renderHud(state);
       renderPerformanceDiagnostics(state);
     } else if (state.mode === "paused") {
       renderHud(state);
       renderPerformanceDiagnostics(state);
-      showPause();
+      if (state.supplyChoice) els.pausePanel.hidden = true;
+      else showPause();
     }
   }
 
@@ -1307,6 +1394,7 @@
       selectVehicle(next);
     });
     root.document.addEventListener("keydown", (event) => {
+      if (handleSupplyChoiceKey(event)) return;
       if (event.key !== "Escape") return;
       if (!els.metaDrawer.hidden && hasFullMetaBackground()) {
         event.preventDefault();
@@ -1390,6 +1478,10 @@
       "eventBannerTitle",
       "eventBannerBody",
       "gateChoiceLayer",
+      "supplyChoiceOverlay",
+      "supplyChoiceTitle",
+      "supplyChoiceHint",
+      "supplyChoiceList",
       "pauseBtn",
       "garagePanel",
       "shelterCanvas",

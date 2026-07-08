@@ -118,6 +118,13 @@
     return fxState;
   }
 
+  function syncFxStateForSettings() {
+    const quality = fxPoolQuality();
+    if (!fxPools[quality]) fxPools[quality] = fx.createFxState({ quality, fxConfig: FXC });
+    fxState = fxPools[quality];
+    return fxState;
+  }
+
   function fxEnabled() {
     return !!fxState && fxLevelSetting() !== "off";
   }
@@ -470,6 +477,7 @@
       input: rules.deepClone(state.input),
       eventBanner: state.eventBanner ? rules.deepClone(state.eventBanner) : null,
       lastGateChoice: state.lastGateChoice ? rules.deepClone(state.lastGateChoice) : null,
+      supplyChoice: state.supplyChoice ? rules.deepClone(state.supplyChoice) : null,
       enemies: state.enemies.map(publicEntity),
       hazards: state.hazards.map(publicEntity),
       supplyDrops: state.supplyDrops.map(publicEntity),
@@ -738,53 +746,62 @@
     }
   }
 
-  function addSupplyRewardCount(rewardId) {
-    if (!state.stats.supplyRewards[rewardId]) state.stats.supplyRewards[rewardId] = 0;
-    state.stats.supplyRewards[rewardId] += 1;
+  function openSupplyChoice(drop) {
+    if (!drop || drop.picked || state.supplyChoice) return;
+    drop.picked = true;
+    state.supplyChoice = {
+      dropId: drop.id,
+      x: drop.x,
+      y: drop.y,
+      openedAt: state.time,
+      rewardIds: Object.keys((config.SUPPLY_DROPS && config.SUPPLY_DROPS.rewards) || {})
+    };
+    state.paused = true;
+    state.mode = "playing";
+    state.input.dragging = false;
+    state.input.lastPointer = null;
+    pushEventBanner("補給箱", "選擇一項補給", { kind: "supply", ttl: 1.6 });
+    emitState();
   }
 
-  function applySupplyReward(drop) {
-    if (!drop || drop.picked) return;
-    const reward = rules.chooseSupplyReward(state.rng, config);
-    if (!reward) return;
-    drop.picked = true;
-    state.stats.supplyCratesCollected += 1;
-    state.stats.lastSupplyReward = reward.id;
-    addSupplyRewardCount(reward.id);
-    if (reward.type === "rate" || reward.type === "damage") {
-      state.supplyBuffs.push({
-        id: nextId("buff"),
-        rewardId: reward.id,
-        label: reward.label,
-        type: reward.type,
-        fireIntervalMul: reward.fireIntervalMul || 1,
-        damageAdd: reward.damageAdd || 0,
-        until: state.time + (reward.duration || 10)
-      });
-    } else if (reward.type === "repair") {
-      const heal = Math.round(state.vehicle.maxHp * (reward.repairPct || 0));
-      state.vehicle.hp = Math.min(state.vehicle.maxHp, state.vehicle.hp + heal);
-    } else if (reward.type === "parts") {
-      const cap = (config.SUPPLY_DROPS && config.SUPPLY_DROPS.partsCapPerRun) || 12;
-      const gain = Math.min(reward.parts || 0, Math.max(0, cap - state.stats.supplyParts));
-      state.stats.supplyParts += gain;
-    }
-    state.messages.push({ text: `補給箱：${reward.label}`, time: state.time, ttl: 1.8 });
-    pushEventBanner("補給箱", reward.label, { kind: "supply", ttl: 1.5 });
+  function chooseSupplyReward(rewardId) {
+    if (!state || state.over || !state.supplyChoice) return getState();
+    const choice = state.supplyChoice;
+    const result = rules.applySupplyRewardById({
+      rewardId,
+      time: state.time,
+      vehicle: state.vehicle,
+      supplyBuffs: state.supplyBuffs,
+      stats: state.stats,
+      buffId: nextId("buff"),
+      config
+    });
+    if (!result.ok) return getState();
+    state.vehicle = result.vehicle || state.vehicle;
+    state.supplyBuffs = result.supplyBuffs;
+    state.stats = Object.assign(state.stats, result.stats);
+    state.supplyChoice = null;
+    state.paused = false;
+    state.mode = "playing";
+    state.messages.push({ text: `補給箱：${result.reward.label}`, time: state.time, ttl: 1.8 });
+    pushEventBanner("補給箱", result.reward.label, { kind: "supply", ttl: 1.5 });
     playSound("pickup");
     addEffect({
       id: nextId("effect"),
       kind: "supply_pickup",
-      x: drop.x,
-      y: drop.y,
-      text: reward.label,
+      x: choice.x,
+      y: choice.y,
+      text: result.reward.label,
       color: "#5ed4cb",
       ttl: 0.55,
       age: 0,
       alpha: 1
     });
     updatePartsPreview();
+    emitState();
+    return getState();
   }
+
 
   function makeInitialState(vehicleId, nextMeta, seed) {
     const safeMeta = rules.migrateMeta(nextMeta || meta, { config });
@@ -831,6 +848,7 @@
       hazards: [],
       supplyDrops: [],
       supplyBuffs: [],
+      supplyChoice: null,
       projectiles: [],
       gates: [],
       effects: [],
@@ -890,6 +908,12 @@
 
   function setMeta(nextMeta) {
     meta = rules.migrateMeta(nextMeta || meta, { config });
+    if (state) {
+      updatePerformanceQuality(1 / 60);
+      if (FXC) syncFxStateForSettings();
+      if (FXC && fxLevelSetting() === "off" && fxState) fx.resetFxState(fxState);
+      draw();
+    }
     emitState();
   }
 
@@ -903,6 +927,7 @@
 
   function pause() {
     if (!state || state.over) return;
+    if (state.supplyChoice) return;
     state.paused = true;
     state.mode = "paused";
     emitState();
@@ -910,6 +935,10 @@
 
   function resume() {
     if (!state || state.over) return;
+    if (state.supplyChoice) {
+      emitState();
+      return;
+    }
     state.paused = false;
     state.mode = "playing";
     emitState();
@@ -917,6 +946,7 @@
 
   function togglePause() {
     if (!state || state.over) return;
+    if (state.supplyChoice) return;
     if (state.paused) resume();
     else pause();
   }
@@ -1534,8 +1564,10 @@
     if (!state.supplyDrops.length) return;
     const pickupRadius = (config.SUPPLY_DROPS && config.SUPPLY_DROPS.pickupRadius) || 34;
     const magnetRadius = (config.SUPPLY_DROPS && config.SUPPLY_DROPS.magnetRadius) || 92;
-    state.supplyDrops.forEach((drop) => {
-      if (drop.picked) return;
+    for (let i = 0; i < state.supplyDrops.length; i += 1) {
+      const drop = state.supplyDrops[i];
+      if (state.supplyChoice) break;
+      if (drop.picked) continue;
       drop.age += dt;
       const toVehicle = normalize(state.vehicle.x - drop.x, state.vehicle.y - drop.y);
       const d = distance(drop, state.vehicle);
@@ -1545,8 +1577,11 @@
       } else {
         drop.y += drop.vy * dt;
       }
-      if (distance(drop, state.vehicle) <= pickupRadius + state.vehicle.radius) applySupplyReward(drop);
-    });
+      if (distance(drop, state.vehicle) <= pickupRadius + state.vehicle.radius) {
+        openSupplyChoice(drop);
+        break;
+      }
+    }
     state.supplyDrops = state.supplyDrops.filter((drop) => !drop.picked && drop.age < drop.ttl && drop.y < H + 40);
   }
 
@@ -1917,6 +1952,7 @@
       }
     });
     root.addEventListener("keydown", (event) => {
+      if (state && state.supplyChoice) return;
       if (event.key === "Escape") {
         togglePause();
       } else if (event.key === "r" || event.key === "R") {
@@ -3132,6 +3168,7 @@
       spawnEnemy,
       spawnGate,
       grantGate,
+      chooseSupplyReward,
       chooseGate,
       damageVehicle,
       killAllEnemies,
@@ -3156,6 +3193,7 @@
     spawnEnemy,
     spawnGate,
     grantGate,
+    chooseSupplyReward,
     chooseGate,
     damageVehicle,
     killAllEnemies,

@@ -471,6 +471,88 @@ function chooseSupplyReward(rng, config) {
   return deepClone(rewards[rewards.length - 1]);
 }
 
+function applySupplyRewardById(options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const reward = cfg.SUPPLY_DROPS && cfg.SUPPLY_DROPS.rewards
+    ? cfg.SUPPLY_DROPS.rewards[opts.rewardId]
+    : null;
+  const vehicle = opts.vehicle ? deepClone(opts.vehicle) : null;
+  const supplyBuffs = Array.isArray(opts.supplyBuffs) ? deepClone(opts.supplyBuffs) : [];
+  const stats = opts.stats ? deepClone(opts.stats) : {};
+  if (!stats.supplyRewards || typeof stats.supplyRewards !== "object" || Array.isArray(stats.supplyRewards)) {
+    stats.supplyRewards = {};
+  } else {
+    stats.supplyRewards = deepClone(stats.supplyRewards);
+  }
+  stats.supplyParts = finiteNumber(stats.supplyParts, 0, {
+    min: 0,
+    max: (cfg.SUPPLY_DROPS && cfg.SUPPLY_DROPS.partsCapPerRun) || 12,
+    integer: true
+  });
+  stats.supplyCratesCollected = finiteNumber(stats.supplyCratesCollected, 0, { min: 0, integer: true });
+  stats.lastSupplyReward = stats.lastSupplyReward || "";
+
+  if (!reward) {
+    return {
+      ok: false,
+      reason: "unknown_reward",
+      rewardId: opts.rewardId || "",
+      vehicle,
+      supplyBuffs,
+      stats,
+      reward: null,
+      buff: null,
+      heal: 0,
+      partsGained: 0
+    };
+  }
+
+  const now = finiteNumber(opts.time, 0, { min: 0 });
+  const rewardId = reward.id;
+  const result = {
+    ok: true,
+    reason: "",
+    rewardId,
+    vehicle,
+    supplyBuffs,
+    stats,
+    reward: deepClone(reward),
+    buff: null,
+    heal: 0,
+    partsGained: 0
+  };
+
+  stats.supplyCratesCollected += 1;
+  stats.lastSupplyReward = rewardId;
+  stats.supplyRewards[rewardId] = finiteNumber(stats.supplyRewards[rewardId], 0, { min: 0, integer: true }) + 1;
+
+  if (reward.type === "rate" || reward.type === "damage") {
+    result.buff = {
+      id: opts.buffId || `supply_${rewardId}`,
+      rewardId,
+      label: reward.label,
+      type: reward.type,
+      fireIntervalMul: reward.fireIntervalMul || 1,
+      damageAdd: reward.damageAdd || 0,
+      until: now + finiteNumber(reward.duration, 10, { min: 0 })
+    };
+    supplyBuffs.push(deepClone(result.buff));
+  } else if (reward.type === "repair" && vehicle) {
+    const maxHp = finiteNumber(vehicle.maxHp, 0, { min: 0 });
+    const hp = finiteNumber(vehicle.hp, 0, { min: 0 });
+    result.heal = Math.round(maxHp * finiteNumber(reward.repairPct, 0, { min: 0, max: 1 }));
+    vehicle.hp = Math.min(maxHp, hp + result.heal);
+  } else if (reward.type === "parts") {
+    const cap = (cfg.SUPPLY_DROPS && cfg.SUPPLY_DROPS.partsCapPerRun) || 12;
+    const current = finiteNumber(stats.supplyParts, 0, { min: 0, max: cap, integer: true });
+    result.partsGained = Math.min(finiteNumber(reward.parts, 0, { min: 0, integer: true }), Math.max(0, cap - current));
+    stats.supplyParts = current + result.partsGained;
+  }
+
+  return result;
+}
+
 function selectAimAssistTarget(options) {
   const opts = options || {};
   const cfg = getConfig(opts.config);
@@ -1579,6 +1661,7 @@ const DSRules = {
   chooseEnvironmentEvent,
   rollSupplyDrop,
   chooseSupplyReward,
+  applySupplyRewardById,
   selectAimAssistTarget,
   aimAssistStrength,
   recommendUpgradeForRun,

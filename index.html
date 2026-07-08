@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#111317" />
-    <link rel="manifest" href="manifest.webmanifest?v=R49" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R49" />
+    <link rel="manifest" href="manifest.webmanifest?v=R50" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R50" />
     <title>灰燼護航</title>
     <style>
       :root {
@@ -349,6 +349,89 @@
       }
 
       .gate-choice-btn small {
+        color: var(--muted);
+        font-size: 10px;
+      }
+
+      .supply-choice-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 8;
+        display: grid;
+        place-items: center;
+        padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+        background: rgba(4, 6, 10, 0.56);
+        pointer-events: auto;
+      }
+
+      .supply-choice-overlay[hidden] {
+        display: none;
+      }
+
+      .supply-choice-panel {
+        width: min(356px, 100%);
+        max-height: min(calc(100dvh - 24px), calc(100% - 24px));
+        overflow-y: auto;
+        padding: 12px;
+        border: 1px solid rgba(94, 212, 203, 0.55);
+        border-radius: 8px;
+        background: rgba(9, 12, 16, 0.92);
+        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.48);
+      }
+
+      .supply-choice-head {
+        display: grid;
+        gap: 3px;
+        margin-bottom: 10px;
+      }
+
+      .supply-choice-head strong {
+        color: var(--accent-2);
+        font-size: 16px;
+      }
+
+      .supply-choice-head span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .supply-choice-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(142px, 1fr));
+        gap: 8px;
+      }
+
+      .supply-choice-btn {
+        min-height: 68px;
+        padding: 9px 10px;
+        text-align: left;
+        border-color: rgba(94, 212, 203, 0.72);
+        background: rgba(13, 24, 28, 0.82);
+        touch-action: manipulation;
+      }
+
+      .supply-choice-btn b,
+      .supply-choice-btn span,
+      .supply-choice-btn small {
+        display: block;
+        overflow-wrap: anywhere;
+      }
+
+      .supply-choice-btn b {
+        color: var(--text);
+        font-size: 14px;
+      }
+
+      .supply-choice-btn span {
+        margin-top: 3px;
+        color: var(--accent-2);
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .supply-choice-btn small {
+        margin-top: 2px;
         color: var(--muted);
         font-size: 10px;
       }
@@ -1065,6 +1148,15 @@
         <span id="eventBannerBody"></span>
       </div>
       <div class="gate-choice-layer" id="gateChoiceLayer" hidden></div>
+      <div class="supply-choice-overlay" id="supplyChoiceOverlay" role="dialog" aria-modal="true" aria-labelledby="supplyChoiceTitle" hidden>
+        <div class="supply-choice-panel">
+          <div class="supply-choice-head">
+            <strong id="supplyChoiceTitle">補給箱</strong>
+            <span id="supplyChoiceHint">選擇一項補給後繼續出勤</span>
+          </div>
+          <div class="supply-choice-list" id="supplyChoiceList"></div>
+        </div>
+      </div>
 
       <section class="panel meta-panel is-fallback" id="garagePanel">
         <img id="shelterImage" class="shelter-image" alt="" decoding="async" draggable="false" hidden />
@@ -1228,7 +1320,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R49";
+        var key = "ashes_convoy_html_boot_reload_R50";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -1245,15 +1337,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R49"></script>
-    <script src="src/sprites.js?v=R49"></script>
-    <script src="src/sprite-renderer.js?v=R49"></script>
-    <script src="src/shelter-scene.js?v=R49"></script>
-    <script src="src/config.js?v=R49"></script>
-    <script src="src/rules.js?v=R49"></script>
-    <script src="src/fx.js?v=R49"></script>
-    <script src="src/audio.js?v=R49"></script>
-    <script src="src/game.js?v=R49"></script>
-    <script src="src/ui.js?v=R49"></script>
+    <script src="src/version.js?v=R50"></script>
+    <script src="src/sprites.js?v=R50"></script>
+    <script src="src/sprite-renderer.js?v=R50"></script>
+    <script src="src/shelter-scene.js?v=R50"></script>
+    <script src="src/config.js?v=R50"></script>
+    <script src="src/rules.js?v=R50"></script>
+    <script src="src/fx.js?v=R50"></script>
+    <script src="src/audio.js?v=R50"></script>
+    <script src="src/game.js?v=R50"></script>
+    <script src="src/ui.js?v=R50"></script>
   </body>
 </html>

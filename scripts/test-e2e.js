@@ -282,12 +282,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R49") && swText.includes("src/ui.js?v=R49") && swText.includes("src/game.js?v=R49") && swText.includes("src/rules.js?v=R49"),
+      swCachesJs: swText.includes("src/version.js?v=R50") && swText.includes("src/ui.js?v=R50") && swText.includes("src/game.js?v=R50") && swText.includes("src/rules.js?v=R50"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R49"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R49"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R49"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R50"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R50"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R50"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -296,7 +296,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R49", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R50", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -372,6 +372,49 @@ async function checkShortDesktopReachability(page) {
   await assertControlReachable(page, "#exportSaveBtn", "export save button after click");
   await page.keyboard.press("Escape");
   await page.waitForFunction(() => document.getElementById("metaDrawer").hidden === true);
+}
+
+async function checkSupplyChoiceOverlayReachability(page) {
+  await page.evaluate(() => {
+    window.__test.clearStorage();
+    window.__test.startRun("land_rig");
+    const state = window.__test.getState();
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      supplyDrops: [
+        { id: "short_supply", x: state.vehicle.x, y: state.vehicle.y - 4, vx: 0, vy: 0, radius: 12, age: 0, ttl: 30, picked: false }
+      ],
+      supplyBuffs: [],
+      supplyChoice: null,
+      vehicle: { weaponCooldown: 999 }
+    });
+    window.__test.step(80);
+  });
+  await page.waitForSelector('#supplyChoiceOverlay:not([hidden]) .supply-choice-btn');
+  const buttons = page.locator("#supplyChoiceOverlay .supply-choice-btn");
+  await expectCanvasHasPixels(page);
+  const count = await buttons.count();
+  assert.strictEqual(count, 4, "short desktop supply choice should show four options");
+  for (let i = 0; i < count; i += 1) {
+    const box = await buttons.nth(i).boundingBox();
+    const viewport = page.viewportSize();
+    assert(box, `supply choice ${i} should have a bounding box`);
+    assert(box.width >= 44 && box.height >= 44, `supply choice ${i} should remain touch sized`);
+    assert(box.x >= -1 && box.x + box.width <= viewport.width + 1, `supply choice ${i} should fit horizontally`);
+    assert(box.y >= -1 && box.y + box.height <= viewport.height + 1, `supply choice ${i} should fit vertically`);
+  }
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await page.waitForFunction(() => document.getElementById("supplyChoiceOverlay").hidden === true);
+  const state = await page.evaluate(() => window.__test.getState());
+  assert.strictEqual(state.paused, false, "keyboard supply choice should resume play");
+  assert.strictEqual(state.stats.supplyCratesCollected, 1, "keyboard supply choice should collect one cache");
+  await page.evaluate(() => {
+    window.__test.clearStorage();
+    window.__test.showGarage();
+  });
 }
 
 async function checkClearStorageButton(page) {
@@ -501,7 +544,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R49"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R50"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -899,6 +942,7 @@ async function checkAdaptivePerformance(page) {
     window.__test.setMeta(meta);
     const state = window.__test.getState();
     window.__test.setState({
+      rng: () => 0.99,
       enemies: [],
       projectiles: [],
       gates: [],
@@ -918,6 +962,7 @@ async function checkFxIntegration(page) {
 
   // 1) run 中 fx 粒子活躍數 > 0（環境層/排氣/曳光/擊殺爆發共同供給）
   await page.evaluate(() => {
+    window.__test.startRun("land_rig");
     const meta = window.__test.getMeta();
     meta.settings.performanceMode = "high";
     meta.settings.fxLevel = "full";
@@ -972,6 +1017,11 @@ async function checkFxIntegration(page) {
     const meta = window.__test.getMeta();
     meta.settings.fxLevel = "reduced";
     window.__test.setMeta(meta);
+    const state = window.__test.getState();
+    window.__test.setState({
+      projectiles: [],
+      vehicle: { aimX: state.vehicle.x, aimY: state.vehicle.y - 180, weaponCooldown: 0 }
+    });
     window.__test.step(400);
   });
   debug = await page.evaluate(() => window.__test.getRenderDebug());
@@ -1031,7 +1081,8 @@ async function checkFxIntegration(page) {
       gates: [],
       hazards: [],
       supplyDrops: [],
-      vehicle: { hp: state.vehicle.maxHp, weaponCooldown: 0 }
+      supplyChoice: null,
+      vehicle: { hp: state.vehicle.maxHp, aimX: state.vehicle.x, aimY: 300, assistAimX: state.vehicle.x, assistAimY: 300, weaponCooldown: 0 }
     });
     window.__test.step(16);
   });
@@ -1450,36 +1501,47 @@ async function checkSupplyDropPickupAndSettlement(page) {
     window.__test.startRun("land_rig");
     const state = window.__test.getState();
     window.__test.setState({
-      rng: () => 0,
       enemies: [],
       projectiles: [],
       gates: [],
-      supplyDrops: [],
+      supplyDrops: [
+        { id: "choice_supply", x: state.vehicle.x, y: state.vehicle.y - 4, vx: 0, vy: 0, radius: 12, age: 0, ttl: 30, picked: false }
+      ],
       supplyBuffs: [],
-      vehicle: { aimX: state.vehicle.x, aimY: state.vehicle.y - 90, weaponCooldown: 0 }
+      supplyChoice: null,
+      vehicle: { weaponCooldown: 999 }
     });
-    const aimed = window.__test.getState();
-    window.__test.spawnEnemy("shambler", {
-      x: aimed.vehicle.x,
-      y: aimed.vehicle.y - 90,
-      hp: 1,
-      speed: 0
-    });
-    window.__test.step(1200);
+    window.__test.step(80);
   });
   let state = await page.evaluate(() => window.__test.getState());
-  assert(state.stats.supplyCratesDropped >= 1, "forced low roll kill should drop a supply cache");
-  assert(
-    state.stats.supplyCratesCollected >= 1 || state.supplyDrops.length >= 1,
-    "supply cache should be visible or already collected"
+  assert.strictEqual(state.paused, true, "touching a supply cache should pause for a choice");
+  assert(state.supplyChoice, "touching a supply cache should open supply choice state");
+  assert.strictEqual(state.stats.supplyCratesCollected, 0, "touching a supply cache should not apply a random reward");
+  await page.waitForSelector('#supplyChoiceOverlay:not([hidden]) .supply-choice-btn[data-reward-id="damage_boost"]');
+  const choices = await page.locator("#supplyChoiceOverlay .supply-choice-btn").evaluateAll((nodes) =>
+    nodes.map((node) => ({
+      rewardId: node.dataset.rewardId,
+      box: node.getBoundingClientRect().toJSON()
+    }))
   );
+  assert.strictEqual(choices.length, 4, "supply choice overlay should show all four reward options");
+  const viewport = page.viewportSize();
+  choices.forEach((choice) => {
+    assert(choice.box.width >= 44 && choice.box.height >= 44, `${choice.rewardId} should be a 44px+ touch target`);
+    assert(choice.box.left >= -1 && choice.box.right <= viewport.width + 1, `${choice.rewardId} should be horizontally reachable`);
+    assert(choice.box.top >= -1 && choice.box.bottom <= viewport.height + 1, `${choice.rewardId} should be vertically reachable`);
+  });
 
-  await page.evaluate(() => window.__test.step(2600));
+  await page.click('#supplyChoiceOverlay .supply-choice-btn[data-reward-id="damage_boost"]');
+  await page.waitForFunction(() => document.getElementById("supplyChoiceOverlay").hidden === true);
   state = await page.evaluate(() => window.__test.getState());
-  assert(state.stats.supplyCratesCollected >= 1, "vehicle should pick up the supply cache");
-  assert(state.supplyBuffs.some((buff) => buff.rewardId === "rate_boost"), "first supply reward should apply rate boost");
-  assert(state.effectiveRunMods.fireIntervalMul < 1, "rate boost should reduce effective fire interval");
-  assert.strictEqual(state.stats.lastSupplyReward, "rate_boost", "pickup should record feedback reward");
+  assert.strictEqual(state.paused, false, "choosing a supply reward should resume the run");
+  assert.strictEqual(state.supplyChoice, null, "choosing a supply reward should clear supply choice state");
+  assert.strictEqual(state.supplyDrops.length, 0, "picked supply cache should disappear");
+  assert.strictEqual(state.stats.supplyCratesCollected, 1, "chosen supply reward should count one collected cache");
+  assert(state.supplyBuffs.some((buff) => buff.rewardId === "damage_boost"), "chosen damage reward should apply damage boost");
+  assert(state.effectiveRunMods.damageAdd >= 0.2, "damage boost should increase effective damage");
+  assert.strictEqual(state.stats.lastSupplyReward, "damage_boost", "pickup should record chosen reward");
 
   await page.evaluate(() => {
     window.__test.damageVehicle(12, { type: "enemy", enemyId: "shambler" });
@@ -1664,6 +1726,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await checkGarageUpgradeLines(page);
   if (viewport.width === 1366 && viewport.height === 700) {
     await checkShortDesktopReachability(page);
+    await checkSupplyChoiceOverlayReachability(page);
   }
   await checkSettingsAndQuestBoard(page);
   await checkWaveProgressionRegression(page);
@@ -2034,7 +2097,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r49")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r50")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -2052,7 +2115,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r49")), "R49 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r50")), "R50 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());
