@@ -4,7 +4,7 @@ const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 2;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R51", CACHE_VERSION: "ashes-convoy-r51-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R52", CACHE_VERSION: "ashes-convoy-r52-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -223,6 +223,131 @@ const ENEMIES = {
     firstWave: 2,
     deathBurst: { radius: 62, damage: 22 },
     tags: ["ground", "burst"],
+    stage: 1
+  },
+  spore_spitter: {
+    id: "spore_spitter",
+    name: "孢囊吐射者",
+    spriteImage: "assets/zombies/spore_spitter.png",
+    sprite: "zombie_spore_spitter",
+    hp: 34,
+    speed: 18,
+    contactDamage: 7,
+    budgetCost: 4,
+    score: 20,
+    radius: 9,
+    scale: 1.45,
+    visualWidth: 18,
+    firstWave: 3,
+    poolWeight: 0.52,
+    behavior: {
+      type: "ranged",
+      range: 128,
+      keepDistance: 126,
+      cooldown: 2.35,
+      windup: 0.35,
+      projectileSpeed: 56,
+      projectileDamage: 10,
+      projectileRadius: 5,
+      projectileLife: 3.2
+    },
+    tags: ["ground", "ranged"],
+    stage: 1
+  },
+  shield_husk: {
+    id: "shield_husk",
+    name: "盾殼屍",
+    spriteImage: "assets/zombies/shield_husk.png",
+    sprite: "zombie_shield_husk",
+    hp: 52,
+    speed: 20,
+    contactDamage: 10,
+    budgetCost: 4,
+    score: 24,
+    radius: 11,
+    scale: 1.5,
+    visualWidth: 22,
+    firstWave: 3,
+    poolWeight: 0.46,
+    behavior: {
+      type: "shield",
+      shieldHp: 28,
+      frontDamageMul: 0.32,
+      shieldBreakFlash: 0.32
+    },
+    tags: ["ground", "shield"],
+    stage: 1
+  },
+  swarm_mite: {
+    id: "swarm_mite",
+    name: "碎牙蟲群",
+    spriteImage: "assets/zombies/swarm_mite.png",
+    sprite: "zombie_swarm_mite",
+    hp: 9,
+    speed: 52,
+    contactDamage: 3,
+    budgetCost: 1,
+    score: 6,
+    radius: 5,
+    scale: 1.15,
+    visualWidth: 10,
+    firstWave: 2,
+    poolWeight: 0.8,
+    behavior: {
+      type: "swarm",
+      zigzagAmp: 12,
+      zigzagFreq: 4.8
+    },
+    tags: ["ground", "swarm", "fast"],
+    stage: 1
+  },
+  tar_brute: {
+    id: "tar_brute",
+    name: "瀝青肉盾",
+    spriteImage: "assets/zombies/tar_brute.png",
+    sprite: "zombie_tar_brute",
+    hp: 155,
+    speed: 11,
+    contactDamage: 18,
+    budgetCost: 7,
+    score: 38,
+    radius: 20,
+    scale: 1.55,
+    visualWidth: 40,
+    firstWave: 4,
+    poolWeight: 0.32,
+    behavior: {
+      type: "brute",
+      slowRadius: 52,
+      slowMul: 0.68
+    },
+    tags: ["ground", "elite", "slow_aura"],
+    stage: 1
+  },
+  void_wraith: {
+    id: "void_wraith",
+    name: "虛空漂影",
+    spriteImage: "assets/zombies/void_wraith.png",
+    sprite: "zombie_void_wraith",
+    hp: 42,
+    speed: 28,
+    contactDamage: 9,
+    budgetCost: 4,
+    score: 26,
+    radius: 10,
+    scale: 1.45,
+    visualWidth: 20,
+    firstWave: 6,
+    poolWeight: 0.34,
+    behavior: {
+      type: "phase",
+      strafeAmp: 22,
+      strafeFreq: 2.2,
+      phaseCycle: 3.2,
+      phaseDuration: 0.82,
+      phaseDamageMul: 0.45
+    },
+    tags: ["phase", "floating"],
     stage: 1
   },
   boss_hive_titan: {

@@ -1,6 +1,8 @@
 "use strict";
 
 const assert = require("assert");
+const fs = require("fs");
+const path = require("path");
 const config = require("../src/config.js");
 
 function assertFinitePositive(value, label) {
@@ -10,8 +12,8 @@ function assertFinitePositive(value, label) {
 
 assert.strictEqual(config.STORAGE_KEY, "ashes_convoy_meta_v1");
 assert.strictEqual(config.META_VERSION, 2);
-assert.strictEqual(config.APP_VERSION, "R51");
-assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r51-v1");
+assert.strictEqual(config.APP_VERSION, "R52");
+assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r52-v1");
 assert.strictEqual(config.LOGIC.width, 195);
 assert.strictEqual(config.LOGIC.height, 422);
 assert.strictEqual(config.LOGIC.displayWidth, 390);
@@ -68,7 +70,19 @@ Object.entries(config.WEAPONS).forEach(([id, weapon]) => {
   assertFinitePositive(weapon.projectileSpeed, `${id}.projectileSpeed`);
 });
 
-["shambler", "runner", "bloater", "boss_hive_titan"].forEach((id) => {
+const expectedEnemies = [
+  "shambler",
+  "runner",
+  "bloater",
+  "spore_spitter",
+  "shield_husk",
+  "swarm_mite",
+  "tar_brute",
+  "void_wraith",
+  "boss_hive_titan"
+];
+assert.deepStrictEqual(Object.keys(config.ENEMIES).sort(), expectedEnemies.slice().sort(), "enemy roster should match R52 roster");
+expectedEnemies.forEach((id) => {
   const enemy = config.ENEMIES[id];
   assert(enemy, `missing enemy ${id}`);
   assert.strictEqual(enemy.id, id);
@@ -78,10 +92,19 @@ Object.entries(config.WEAPONS).forEach(([id, weapon]) => {
   assertFinitePositive(enemy.budgetCost, `${id}.budgetCost`);
   assertFinitePositive(enemy.score, `${id}.score`);
   assert(enemy.spriteImage && enemy.spriteImage.startsWith("assets/zombies/") && enemy.spriteImage.endsWith(".png"), `${id} must bind a raster zombie image`);
+  assert(fs.existsSync(path.join(__dirname, "..", enemy.spriteImage)), `${id} raster image should exist`);
   assertFinitePositive(enemy.visualWidth, `${id}.visualWidth`);
   assert(enemy.visualWidth >= enemy.radius * 1.8 && enemy.visualWidth <= enemy.radius * 2.2, `${id} visual width should align with collision radius`);
   assert.strictEqual(enemy.stage, 1);
 });
+assert.strictEqual(config.ENEMIES.spore_spitter.behavior.type, "ranged");
+assert.strictEqual(config.ENEMIES.shield_husk.behavior.type, "shield");
+assert.strictEqual(config.ENEMIES.swarm_mite.behavior.type, "swarm");
+assert.strictEqual(config.ENEMIES.tar_brute.behavior.type, "brute");
+assert.strictEqual(config.ENEMIES.void_wraith.behavior.type, "phase");
+assert(config.ENEMIES.spore_spitter.firstWave >= 3, "ranged enemy should not appear in the opening waves");
+assert(config.ENEMIES.swarm_mite.budgetCost === 1 && config.ENEMIES.swarm_mite.hp < config.ENEMIES.runner.hp, "swarm mite should be cheap and fragile");
+assert(config.ENEMIES.tar_brute.hp > config.ENEMIES.bloater.hp && config.ENEMIES.tar_brute.speed < config.ENEMIES.bloater.speed, "tar brute should be a slow meat shield");
 assert(config.ENEMIES.runner.visualWidth < config.VEHICLES.sky_barge.visualWidth, "runner should read as smaller than the smallest vehicle");
 assert(config.ENEMIES.shambler.visualWidth < config.VEHICLES.land_rig.visualWidth, "shambler should read as smaller than the land rig");
 assert(config.ENEMIES.bloater.visualWidth > config.VEHICLES.sea_ark.visualWidth, "bloater should read as an elite larger than the player");

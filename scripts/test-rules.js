@@ -54,6 +54,71 @@ assert.strictEqual(pitySupply.guaranteed, true);
 assert.strictEqual(pitySupply.killsSinceDrop, 0);
 assert.strictEqual(rules.chooseSupplyReward(() => 0, config).id, "rate_boost", "supply rewards should be deterministic with injected rng");
 
+const wave1Pool = rules.enemyPoolForWave(1, config).map((enemy) => enemy.id).sort();
+assert.deepStrictEqual(wave1Pool, ["runner", "shambler"], "wave 1 pool should preserve the original opening enemies");
+const wave3Pool = rules.enemyPoolForWave(3, config).map((enemy) => enemy.id);
+assert(wave3Pool.includes("swarm_mite") && wave3Pool.includes("spore_spitter") && wave3Pool.includes("shield_husk"), "wave 3 should introduce swarm/ranged/shield enemies");
+assert(!wave3Pool.includes("tar_brute") && !wave3Pool.includes("void_wraith"), "elite and phase enemies should enter later");
+
+const rangedShot = rules.resolveEnemyRangedAttack({
+  enemy: {
+    enemyId: "spore_spitter",
+    x: 96,
+    y: 245,
+    radius: config.ENEMIES.spore_spitter.radius,
+    attackCooldown: 0,
+    behavior: config.ENEMIES.spore_spitter.behavior
+  },
+  vehicle: { x: 98, y: config.LOGIC.vehicleY, radius: config.VEHICLES.land_rig.radius },
+  dt: 0.1,
+  config
+});
+assert.strictEqual(rangedShot.fire, true, "spore spitter should fire when in range and off cooldown");
+assert(rangedShot.projectile && rangedShot.projectile.vy > 0 && rangedShot.projectile.damage === config.ENEMIES.spore_spitter.behavior.projectileDamage, "ranged shot should target the vehicle with configured damage");
+const rangedCooldown = rules.resolveEnemyRangedAttack({
+  enemy: {
+    enemyId: "spore_spitter",
+    x: 96,
+    y: 245,
+    attackCooldown: 1,
+    behavior: config.ENEMIES.spore_spitter.behavior
+  },
+  vehicle: { x: 98, y: config.LOGIC.vehicleY },
+  dt: 0.1,
+  config
+});
+assert.strictEqual(rangedCooldown.fire, false, "spore spitter should respect cooldown");
+
+const shieldDamage = rules.resolveEnemyIncomingDamage({
+  enemy: { enemyId: "shield_husk", hp: 52, shieldHp: 28, behavior: config.ENEMIES.shield_husk.behavior },
+  damage: 20,
+  projectile: { vy: -220 },
+  config
+});
+assert.strictEqual(shieldDamage.shieldHp, 8, "shield should absorb incoming front damage first");
+assert.strictEqual(Math.round(shieldDamage.appliedDamage * 10) / 10, 6.4, "shielded front hit should leak reduced hp damage");
+assert.strictEqual(Math.round(shieldDamage.hp * 10) / 10, 45.6, "shield husk hp should only receive leaked damage");
+const phaseDamage = rules.resolveEnemyIncomingDamage({
+  enemy: { enemyId: "void_wraith", hp: 42, phaseActive: true, behavior: config.ENEMIES.void_wraith.behavior },
+  damage: 20,
+  projectile: { vy: -220 },
+  config
+});
+assert.strictEqual(phaseDamage.appliedDamage, 9, "phase enemy should reduce damage while phased");
+
+let mixedNew = 0;
+let mixedTotal = 0;
+for (let seed = 0; seed < 20; seed += 1) {
+  const plan = rules.generateWave({ wave: 6, vehicleId: "land_rig", rng: rules.createSeededRng(`r52-mix-${seed}`), config });
+  const nonBoss = plan.spawns.filter((spawn) => spawn.enemyId !== "boss_hive_titan");
+  mixedTotal += nonBoss.length;
+  mixedNew += nonBoss.filter((spawn) => ["spore_spitter", "shield_husk", "swarm_mite", "tar_brute", "void_wraith"].includes(spawn.enemyId)).length;
+  const cost = nonBoss.reduce((sum, spawn) => sum + config.ENEMIES[spawn.enemyId].budgetCost, 0);
+  assert(cost / Math.max(1, nonBoss.length) <= 4.2, "wave 6 average enemy budget cost should stay controlled");
+}
+const newShare = mixedNew / mixedTotal;
+assert(newShare > 0.12 && newShare < 0.62, `new enemy share should be present but not dominate, got ${newShare}`);
+
 function simulateSupplyReachability(startX) {
   const vehicle = { x: config.LOGIC.width * 0.5, y: config.LOGIC.vehicleY, radius: config.VEHICLES.land_rig.radius };
   let drop = {

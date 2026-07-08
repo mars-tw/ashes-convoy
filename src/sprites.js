@@ -122,6 +122,11 @@ const SPRITE_SPECS = {
   zombie_shambler: { stage: 1, type: "enemy", w: 16, h: 16, anims: { idle: 1, walk: 4, hit: 1, death: 3 } },
   zombie_runner: { stage: 1, type: "enemy", w: 16, h: 16, anims: { idle: 1, walk: 4, hit: 1, death: 3 } },
   zombie_bloater: { stage: 1, type: "enemy", w: 24, h: 24, anims: { idle: 1, walk: 4, hit: 1, death: 4, burst: 4 } },
+  zombie_spore_spitter: { stage: 1, type: "enemy", w: 18, h: 18, anims: { idle: 1, walk: 4, attack: 2, hit: 1, death: 3 } },
+  zombie_shield_husk: { stage: 1, type: "enemy", w: 22, h: 22, anims: { idle: 1, walk: 4, hit: 1, death: 3 } },
+  zombie_swarm_mite: { stage: 1, type: "enemy", w: 12, h: 12, anims: { idle: 1, walk: 4, hit: 1, death: 3 } },
+  zombie_tar_brute: { stage: 1, type: "enemy", w: 28, h: 28, anims: { idle: 1, walk: 4, hit: 1, death: 4 } },
+  zombie_void_wraith: { stage: 1, type: "enemy", w: 20, h: 20, anims: { idle: 2, walk: 4, hit: 1, death: 3 } },
   boss_hive_titan: { stage: 1, type: "boss", w: 48, h: 48, anims: { idle: 1, walk: 6, attack: 4, rage: 3, hit: 1, death: 5 } },
   vehicle_iron_crow: { stage: 1, type: "vehicle", w: 64, h: 36, anims: { idle: 2, move: 4, damage: 2, wreck: 3 } },
   vehicle_dawn_skiff: { stage: 1, type: "vehicle", w: 48, h: 48, anims: { idle: 4, move: 4, damage: 2, wreck: 3 } },
@@ -381,6 +386,109 @@ function bloaterFrame(kind, step) {
       paint(g, 10, 17, ["DCD", ".D."]);
       setPixel(g, 18, 19, "A");
     }
+  });
+}
+
+function sporeSpitterFrame(kind, step) {
+  return makeFrame(18, 18, (g) => {
+    if (kind === "death") {
+      ellipse(g, 9, 12 + step, 5, Math.max(2, 4 - step), "A", step < 2 ? "C" : "E", "B");
+      if (step < 2) ellipse(g, 9, 6 + step, 4, 3, "A", "C", "B");
+      paint(g, 5 - step, 13, ["AIEA", ".AA."]);
+      paint(g, 11 + step, 13, ["AIEA", ".AA."]);
+      return;
+    }
+    const sway = kind === "walk" && step % 2 ? 1 : 0;
+    ellipse(g, 9 + sway, 10, 5, 5, "A", "C", "B");
+    ellipse(g, 9 + sway, 5, 4, 3, "A", "C", "B");
+    paint(g, 7 + sway, 5, kind === "attack" ? ["IHI"] : ["FIF"]);
+    ellipse(g, 9 + sway, 9, kind === "attack" ? 4 : 3, kind === "attack" ? 3 : 2, "A", "I", "D");
+    drawLine(g, 5, 10, 2 + (step % 2), 13, "A");
+    drawLine(g, 13, 10, 16 - (step % 2), 13, "A");
+    paint(g, 6, 14, step % 2 ? ["A..A", ".A.A"] : [".A.A", "A..A"]);
+    if (kind === "hit") paint(g, 5, 5, ["E.E.E", ".EEE."]);
+    if (kind === "attack") paint(g, 8, 1 + step, ["I", "H"]);
+    if (kind === "walk") setPixel(g, 3 + step, 16 - (step % 2), step % 2 ? "I" : "F");
+  });
+}
+
+function shieldHuskFrame(kind, step) {
+  return makeFrame(22, 22, (g) => {
+    if (kind === "death") {
+      ellipse(g, 11, 14 + step, 6, Math.max(2, 5 - step), "A", "B", "H");
+      outlineRect(g, 7 - step, 12, 8, 5, "A", "C");
+      paint(g, 6, 18, ["AEEAA", ".AA.."]);
+      return;
+    }
+    const sway = kind === "walk" && step % 2 ? -1 : 0;
+    ellipse(g, 11 + sway, 9, 5, 5, "A", "C", "B");
+    ellipse(g, 11 + sway, 5, 3, 3, "A", "C", "B");
+    outlineRect(g, 5 + sway, 8, 12, 8, "A", "H");
+    paint(g, 7 + sway, 10, ["CCCCCCCC", "CHHCHHCC", "CCCCCCCC"]);
+    drawLine(g, 5, 13, 2, 17 - (step % 2), "A");
+    drawLine(g, 17, 13, 20, 17 + (step % 2), "A");
+    paint(g, 8, 17, step % 2 ? ["A..A", ".A.A"] : [".A.A", "A..A"]);
+    if (kind === "hit") paint(g, 7, 8, ["EEEE", ".EE."]);
+    if (kind === "walk") setPixel(g, 6 + step, 6 + (step % 2), step % 2 ? "F" : "D");
+  });
+}
+
+function swarmMiteFrame(kind, step) {
+  return makeFrame(12, 12, (g) => {
+    if (kind === "death") {
+      paint(g, 3 - step, 7 + step, ["AEEA", ".AA."]);
+      paint(g, 7 + step, 6 + step, ["EA", "A."]);
+      return;
+    }
+    const skitter = kind === "walk" ? (step % 2 ? 1 : -1) : 0;
+    ellipse(g, 6 + skitter, 6, 4, 3, "A", "C", "B");
+    ellipse(g, 6 + skitter, 4, 2, 2, "A", "D", "C");
+    paint(g, 4 + skitter, 4, ["E.E"]);
+    drawLine(g, 3, 6, 0, 4 + (step % 2), "A");
+    drawLine(g, 9, 6, 11, 4 + (step % 2), "A");
+    drawLine(g, 3, 8, 0, 10 - (step % 2), "A");
+    drawLine(g, 9, 8, 11, 10 - (step % 2), "A");
+    if (kind === "hit") paint(g, 4, 4, ["EEE", ".E."]);
+    if (kind === "walk") setPixel(g, 2 + step, 2 + (step % 2), step % 2 ? "D" : "F");
+  });
+}
+
+function tarBruteFrame(kind, step) {
+  return makeFrame(28, 28, (g) => {
+    if (kind === "death") {
+      ellipse(g, 14, 18 + step, 9, Math.max(3, 7 - step), "A", "B", "H");
+      paint(g, 7, 22, ["AEEEIIEEA", ".AABBAA."]);
+      if (step < 2) ellipse(g, 14, 8 + step, 5, 4, "A", "C", "B");
+      return;
+    }
+    const sway = kind === "walk" && step % 2 ? 1 : 0;
+    ellipse(g, 14 + sway, 15, 9, 9, "A", "B", "H");
+    ellipse(g, 14 + sway, 7, 5, 4, "A", "C", "B");
+    paint(g, 11 + sway, 7, ["F.E.F"]);
+    paint(g, 10 + sway, 13, ["HHIHH", "HBIHH", "HHHHH"]);
+    drawLine(g, 6, 13, 2, 20 - (step % 2), "A");
+    drawLine(g, 22, 13, 26, 20 + (step % 2), "A");
+    paint(g, 8, 24, step % 2 ? ["AA....AA", ".A....A."] : [".A....A.", "AA....AA"]);
+    if (kind === "hit") paint(g, 9, 11, ["E..E..E", ".EEEE."]);
+    if (kind === "walk") setPixel(g, 10 + step, 21 - (step % 2), step % 2 ? "G" : "F");
+  });
+}
+
+function voidWraithFrame(kind, step) {
+  return makeFrame(20, 20, (g) => {
+    if (kind === "death") {
+      ellipse(g, 10, 10 + step, Math.max(2, 6 - step), Math.max(2, 7 - step), "A", step < 2 ? "H" : "G", "F");
+      paint(g, 5 - step, 15, ["H.G.H", ".A.A."]);
+      return;
+    }
+    const bob = kind === "idle" ? step : step % 3 - 1;
+    ellipse(g, 10, 9 + bob, 6, 7, "A", "H", "F");
+    ellipse(g, 10, 8 + bob, 3, 3, "A", "G", "E");
+    paint(g, 8, 7 + bob, ["E.E"]);
+    drawLine(g, 5, 11 + bob, 2, 15 + (step % 2), "H");
+    drawLine(g, 15, 11 + bob, 18, 15 - (step % 2), "H");
+    paint(g, 7, 15 + bob, step % 2 ? ["H.H.H", ".A.A."] : [".H.H.", "A.A.A"]);
+    if (kind === "hit") paint(g, 6, 7, ["G.G.G", ".GGG."]);
   });
 }
 
@@ -1016,6 +1124,136 @@ const SPRITES = {
       death: { frames: sequence("death", 4), fps: 7, loop: false },
       burst: { frames: sequence("burst", 4), fps: 12, loop: false }
     }
+  ),
+  zombie_spore_spitter: makeSprite(
+    "zombie_spore_spitter",
+    "enemy",
+    "zombie",
+    { x: 9, y: 16 },
+    { x: 3, y: 2, w: 12, h: 15 },
+    {
+      idle_0: sporeSpitterFrame("idle", 0),
+      walk_0: sporeSpitterFrame("walk", 0),
+      walk_1: sporeSpitterFrame("walk", 1),
+      walk_2: sporeSpitterFrame("walk", 2),
+      walk_3: sporeSpitterFrame("walk", 3),
+      attack_0: sporeSpitterFrame("attack", 0),
+      attack_1: sporeSpitterFrame("attack", 1),
+      hit_0: sporeSpitterFrame("hit", 0),
+      death_0: sporeSpitterFrame("death", 0),
+      death_1: sporeSpitterFrame("death", 1),
+      death_2: sporeSpitterFrame("death", 2)
+    },
+    {
+      idle: { frames: ["idle_0"], fps: 1, loop: true },
+      walk: { frames: sequence("walk", 4), fps: 5, loop: true },
+      attack: { frames: sequence("attack", 2), fps: 7, loop: false },
+      hit: { frames: ["hit_0"], fps: 1, loop: false },
+      death: { frames: sequence("death", 3), fps: 8, loop: false }
+    },
+    ["ranged"]
+  ),
+  zombie_shield_husk: makeSprite(
+    "zombie_shield_husk",
+    "enemy",
+    "metal",
+    { x: 11, y: 20 },
+    { x: 3, y: 2, w: 16, h: 18 },
+    {
+      idle_0: shieldHuskFrame("idle", 0),
+      walk_0: shieldHuskFrame("walk", 0),
+      walk_1: shieldHuskFrame("walk", 1),
+      walk_2: shieldHuskFrame("walk", 2),
+      walk_3: shieldHuskFrame("walk", 3),
+      hit_0: shieldHuskFrame("hit", 0),
+      death_0: shieldHuskFrame("death", 0),
+      death_1: shieldHuskFrame("death", 1),
+      death_2: shieldHuskFrame("death", 2)
+    },
+    {
+      idle: { frames: ["idle_0"], fps: 1, loop: true },
+      walk: { frames: sequence("walk", 4), fps: 5, loop: true },
+      hit: { frames: ["hit_0"], fps: 1, loop: false },
+      death: { frames: sequence("death", 3), fps: 7, loop: false }
+    },
+    ["shield"]
+  ),
+  zombie_swarm_mite: makeSprite(
+    "zombie_swarm_mite",
+    "enemy",
+    "zombie",
+    { x: 6, y: 11 },
+    { x: 1, y: 2, w: 10, h: 9 },
+    {
+      idle_0: swarmMiteFrame("idle", 0),
+      walk_0: swarmMiteFrame("walk", 0),
+      walk_1: swarmMiteFrame("walk", 1),
+      walk_2: swarmMiteFrame("walk", 2),
+      walk_3: swarmMiteFrame("walk", 3),
+      hit_0: swarmMiteFrame("hit", 0),
+      death_0: swarmMiteFrame("death", 0),
+      death_1: swarmMiteFrame("death", 1),
+      death_2: swarmMiteFrame("death", 2)
+    },
+    {
+      idle: { frames: ["idle_0"], fps: 1, loop: true },
+      walk: { frames: sequence("walk", 4), fps: 14, loop: true },
+      hit: { frames: ["hit_0"], fps: 1, loop: false },
+      death: { frames: sequence("death", 3), fps: 10, loop: false }
+    },
+    ["swarm"]
+  ),
+  zombie_tar_brute: makeSprite(
+    "zombie_tar_brute",
+    "enemy",
+    "hive",
+    { x: 14, y: 26 },
+    { x: 3, y: 2, w: 22, h: 24 },
+    {
+      idle_0: tarBruteFrame("idle", 0),
+      walk_0: tarBruteFrame("walk", 0),
+      walk_1: tarBruteFrame("walk", 1),
+      walk_2: tarBruteFrame("walk", 2),
+      walk_3: tarBruteFrame("walk", 3),
+      hit_0: tarBruteFrame("hit", 0),
+      death_0: tarBruteFrame("death", 0),
+      death_1: tarBruteFrame("death", 1),
+      death_2: tarBruteFrame("death", 2),
+      death_3: tarBruteFrame("death", 3)
+    },
+    {
+      idle: { frames: ["idle_0"], fps: 1, loop: true },
+      walk: { frames: sequence("walk", 4), fps: 4, loop: true },
+      hit: { frames: ["hit_0"], fps: 1, loop: false },
+      death: { frames: sequence("death", 4), fps: 7, loop: false }
+    },
+    ["brute"]
+  ),
+  zombie_void_wraith: makeSprite(
+    "zombie_void_wraith",
+    "enemy",
+    "energy",
+    { x: 10, y: 18 },
+    { x: 3, y: 1, w: 14, h: 17 },
+    {
+      idle_0: voidWraithFrame("idle", 0),
+      idle_1: voidWraithFrame("idle", 1),
+      walk_0: voidWraithFrame("walk", 0),
+      walk_1: voidWraithFrame("walk", 1),
+      walk_2: voidWraithFrame("walk", 2),
+      walk_3: voidWraithFrame("walk", 3),
+      hit_0: voidWraithFrame("hit", 0),
+      death_0: voidWraithFrame("death", 0),
+      death_1: voidWraithFrame("death", 1),
+      death_2: voidWraithFrame("death", 2)
+    },
+    {
+      idle: { frames: sequence("idle", 2), fps: 2, loop: true },
+      walk: { frames: sequence("walk", 4), fps: 6, loop: true },
+      hit: { frames: ["hit_0"], fps: 1, loop: false },
+      death: { frames: sequence("death", 3), fps: 8, loop: false }
+    },
+    ["phase"]
   ),
   boss_hive_titan: makeSprite(
     "boss_hive_titan",

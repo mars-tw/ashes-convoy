@@ -339,6 +339,89 @@ function scaledEnemyStats(enemyId, wave, config) {
   };
 }
 
+function enemyBehavior(enemy, enemyConfig) {
+  const fromEnemy = enemy && enemy.behavior && typeof enemy.behavior === "object" ? enemy.behavior : null;
+  const fromConfig = enemyConfig && enemyConfig.behavior && typeof enemyConfig.behavior === "object" ? enemyConfig.behavior : null;
+  return fromEnemy || fromConfig || {};
+}
+
+function resolveEnemyRangedAttack(options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const enemy = opts.enemy || {};
+  const vehicle = opts.vehicle || {};
+  const enemyConfig = cfg.ENEMIES[enemy.enemyId] || opts.enemyConfig || {};
+  const behavior = enemyBehavior(enemy, enemyConfig);
+  const dt = finiteNumber(opts.dt, 0, { min: 0, max: 1 });
+  const cooldownSeconds = finiteNumber(behavior.cooldown, 2.4, { min: 0.1 });
+  const nextCooldown = Math.max(0, finiteNumber(enemy.attackCooldown, cooldownSeconds, { min: 0 }) - dt);
+  const enemyX = finiteNumber(enemy.x, cfg.LOGIC.width * 0.5);
+  const enemyY = finiteNumber(enemy.y, 0);
+  const vehicleX = finiteNumber(vehicle.x, cfg.LOGIC.width * 0.5);
+  const vehicleY = finiteNumber(vehicle.y, cfg.LOGIC.vehicleY);
+  const dx = vehicleX - enemyX;
+  const dy = vehicleY - enemyY;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  const range = finiteNumber(behavior.range, 0, { min: 0 });
+  const canFire = behavior.type === "ranged" && range > 0 && distance <= range && enemyY > 20 && enemyY < vehicleY - 28;
+  if (!canFire || nextCooldown > 0 || distance <= 0) {
+    return { fire: false, cooldown: nextCooldown, projectile: null, distance };
+  }
+  const speed = finiteNumber(behavior.projectileSpeed, 52, { min: 1 });
+  return {
+    fire: true,
+    cooldown: cooldownSeconds,
+    distance,
+    projectile: {
+      x: enemyX,
+      y: enemyY + finiteNumber(enemy.radius, enemyConfig.radius || 8, { min: 1 }) * 0.45,
+      vx: (dx / distance) * speed,
+      vy: (dy / distance) * speed,
+      damage: finiteNumber(behavior.projectileDamage, Math.max(1, enemyConfig.contactDamage || 6), { min: 1 }),
+      radius: finiteNumber(behavior.projectileRadius, 5, { min: 1 }),
+      life: finiteNumber(behavior.projectileLife, 3, { min: 0.2 }),
+      kind: "acid"
+    }
+  };
+}
+
+function resolveEnemyIncomingDamage(options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const enemy = opts.enemy || {};
+  const enemyConfig = cfg.ENEMIES[enemy.enemyId] || opts.enemyConfig || {};
+  const behavior = enemyBehavior(enemy, enemyConfig);
+  const projectile = opts.projectile || {};
+  const rawDamage = finiteNumber(opts.damage, 0, { min: 0 });
+  let hp = finiteNumber(enemy.hp, 0, { min: 0 });
+  let shieldHp = finiteNumber(enemy.shieldHp, finiteNumber(behavior.shieldHp, 0, { min: 0 }), { min: 0 });
+  let appliedDamage = rawDamage;
+  let shieldDamage = 0;
+  let shieldBroken = false;
+  const frontHit = finiteNumber(projectile.vy, -1) < 0;
+
+  if (behavior.type === "shield" && shieldHp > 0 && frontHit) {
+    const before = shieldHp;
+    shieldDamage = Math.min(before, rawDamage);
+    shieldHp = Math.max(0, before - rawDamage);
+    appliedDamage = rawDamage * finiteNumber(behavior.frontDamageMul, 0.35, { min: 0, max: 1 });
+    shieldBroken = before > 0 && shieldHp <= 0;
+  }
+
+  if (behavior.type === "phase" && enemy.phaseActive === true) {
+    appliedDamage *= finiteNumber(behavior.phaseDamageMul, 0.5, { min: 0, max: 1 });
+  }
+
+  hp = Math.max(0, hp - appliedDamage);
+  return {
+    hp,
+    shieldHp,
+    appliedDamage,
+    shieldDamage,
+    shieldBroken
+  };
+}
+
 function enemyPoolForWave(wave, config) {
   const cfg = getConfig(config);
   return Object.values(cfg.ENEMIES).filter((enemy) => {
@@ -894,7 +977,7 @@ function generateWave(options) {
   const pool = enemyPoolForWave(wave, cfg).map((enemy) => ({
     enemyId: enemy.id,
     cost: enemy.budgetCost,
-    weight: enemy.id === "bloater" ? 0.65 : enemy.id === "runner" ? 1.15 : 1
+    weight: Number.isFinite(enemy.poolWeight) ? enemy.poolWeight : enemy.id === "bloater" ? 0.65 : enemy.id === "runner" ? 1.15 : 1
   }));
 
   const targetCount = bossWave
@@ -1692,6 +1775,9 @@ const DSRules = {
   bossHpScale,
   waveDuration,
   scaledEnemyStats,
+  resolveEnemyRangedAttack,
+  resolveEnemyIncomingDamage,
+  enemyPoolForWave,
   variantChanceForWave,
   applyEnemyVariantToSpawn,
   chooseEnvironmentEvent,
