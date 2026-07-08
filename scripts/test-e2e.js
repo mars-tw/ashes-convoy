@@ -456,6 +456,10 @@ async function checkTrailerRoomSystem(page) {
     const state = window.__test.getTrailerRoomState();
     return state.room.owned.supply_shelf === true && state.room.slots.wall_left === "supply_shelf";
   });
+  await page.waitForFunction(() => {
+    const metrics = window.__test.getTrailerRoomMetrics();
+    return metrics && metrics.itemsDrawn >= 1 && metrics.assetsReady === true;
+  });
   const bought = await page.evaluate((base) => {
     const meta = window.__test.getMeta();
     const state = window.__test.getTrailerRoomState();
