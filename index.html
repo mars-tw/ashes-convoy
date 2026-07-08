@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#111317" />
-    <link rel="manifest" href="manifest.webmanifest?v=R53" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R53" />
+    <link rel="manifest" href="manifest.webmanifest?v=R54" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R54" />
     <title>灰燼護航</title>
     <style>
       :root {
@@ -353,7 +353,8 @@
         font-size: 10px;
       }
 
-      .supply-choice-overlay {
+      .supply-choice-overlay,
+      .gate-choice-overlay {
         position: absolute;
         inset: 0;
         z-index: 8;
@@ -364,7 +365,8 @@
         pointer-events: auto;
       }
 
-      .supply-choice-overlay[hidden] {
+      .supply-choice-overlay[hidden],
+      .gate-choice-overlay[hidden] {
         display: none;
       }
 
@@ -434,6 +436,19 @@
         margin-top: 2px;
         color: var(--muted);
         font-size: 10px;
+      }
+
+      .gate-choice-overlay .supply-choice-panel {
+        border-color: rgba(240, 182, 74, 0.62);
+      }
+
+      .gate-option-btn {
+        border-color: rgba(240, 182, 74, 0.74);
+        background: rgba(31, 22, 12, 0.84);
+      }
+
+      .gate-option-btn span {
+        color: var(--accent);
       }
 
       .trailer-overlay {
@@ -1323,6 +1338,15 @@
         <span id="eventBannerBody"></span>
       </div>
       <div class="gate-choice-layer" id="gateChoiceLayer" hidden></div>
+      <div class="gate-choice-overlay" id="gateChoiceOverlay" role="dialog" aria-modal="true" aria-labelledby="gateChoiceTitle" hidden>
+        <div class="supply-choice-panel">
+          <div class="supply-choice-head">
+            <strong id="gateChoiceTitle">增益門</strong>
+            <span id="gateChoiceHint">選擇一項增益後繼續出勤</span>
+          </div>
+          <div class="supply-choice-list" id="gateChoiceList"></div>
+        </div>
+      </div>
       <div class="supply-choice-overlay" id="supplyChoiceOverlay" role="dialog" aria-modal="true" aria-labelledby="supplyChoiceTitle" hidden>
         <div class="supply-choice-panel">
           <div class="supply-choice-head">
@@ -1519,7 +1543,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R53";
+        var key = "ashes_convoy_html_boot_reload_R54";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -1536,15 +1560,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R53"></script>
-    <script src="src/sprites.js?v=R53"></script>
-    <script src="src/sprite-renderer.js?v=R53"></script>
-    <script src="src/shelter-scene.js?v=R53"></script>
-    <script src="src/config.js?v=R53"></script>
-    <script src="src/rules.js?v=R53"></script>
-    <script src="src/fx.js?v=R53"></script>
-    <script src="src/audio.js?v=R53"></script>
-    <script src="src/game.js?v=R53"></script>
-    <script src="src/ui.js?v=R53"></script>
+    <script src="src/version.js?v=R54"></script>
+    <script src="src/sprites.js?v=R54"></script>
+    <script src="src/sprite-renderer.js?v=R54"></script>
+    <script src="src/shelter-scene.js?v=R54"></script>
+    <script src="src/config.js?v=R54"></script>
+    <script src="src/rules.js?v=R54"></script>
+    <script src="src/fx.js?v=R54"></script>
+    <script src="src/audio.js?v=R54"></script>
+    <script src="src/game.js?v=R54"></script>
+    <script src="src/ui.js?v=R54"></script>
   </body>
 </html>

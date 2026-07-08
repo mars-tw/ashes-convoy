@@ -9,17 +9,17 @@ const APP_SHELL_PATHS = [
   "./",
   "index.html",
   "offline.html",
-  "manifest.webmanifest?v=R53",
-  "src/version.js?v=R53",
-  "src/sprites.js?v=R53",
-  "src/sprite-renderer.js?v=R53",
-  "src/shelter-scene.js?v=R53",
-  "src/config.js?v=R53",
-  "src/rules.js?v=R53",
-  "src/fx.js?v=R53",
-  "src/audio.js?v=R53",
-  "src/game.js?v=R53",
-  "src/ui.js?v=R53"
+  "manifest.webmanifest?v=R54",
+  "src/version.js?v=R54",
+  "src/sprites.js?v=R54",
+  "src/sprite-renderer.js?v=R54",
+  "src/shelter-scene.js?v=R54",
+  "src/config.js?v=R54",
+  "src/rules.js?v=R54",
+  "src/fx.js?v=R54",
+  "src/audio.js?v=R54",
+  "src/game.js?v=R54",
+  "src/ui.js?v=R54"
 ];
 const ASSET_PATHS = [
   "assets/ui/start.png",
@@ -53,7 +53,7 @@ const ASSET_PATHS = [
   "assets/shelter/trailer/folding_workbench.png",
   "assets/shelter/trailer/blueprint_board.png",
   "assets/shelter/trailer/battery_bank.png",
-  "assets/icons/icon-192.png?v=R53",
+  "assets/icons/icon-192.png?v=R54",
   "assets/icons/icon-192.png",
   "assets/icons/icon-512.png"
 ];

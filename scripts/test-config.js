@@ -12,8 +12,8 @@ function assertFinitePositive(value, label) {
 
 assert.strictEqual(config.STORAGE_KEY, "ashes_convoy_meta_v1");
 assert.strictEqual(config.META_VERSION, 2);
-assert.strictEqual(config.APP_VERSION, "R53");
-assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r53-v1");
+assert.strictEqual(config.APP_VERSION, "R54");
+assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r54-v1");
 assert.strictEqual(config.LOGIC.width, 195);
 assert.strictEqual(config.LOGIC.height, 422);
 assert.strictEqual(config.LOGIC.displayWidth, 390);
@@ -81,7 +81,7 @@ const expectedEnemies = [
   "void_wraith",
   "boss_hive_titan"
 ];
-assert.deepStrictEqual(Object.keys(config.ENEMIES).sort(), expectedEnemies.slice().sort(), "enemy roster should match R53 roster");
+assert.deepStrictEqual(Object.keys(config.ENEMIES).sort(), expectedEnemies.slice().sort(), "enemy roster should match R54 roster");
 expectedEnemies.forEach((id) => {
   const enemy = config.ENEMIES[id];
   assert(enemy, `missing enemy ${id}`);
@@ -157,7 +157,7 @@ assert.strictEqual(config.TRAILER_ROOM.waveGoods, 1);
 assert.strictEqual(config.TRAILER_ROOM.bossGoods, 4);
 assert.strictEqual(config.TRAILER_ROOM.maxGoodsPerRun, 28);
 assert.strictEqual(Object.keys(config.TRAILER_ROOM.slots).length, 8, "trailer room should expose eight fixed slots");
-assert.strictEqual(Object.keys(config.TRAILER_ROOM.furniture).length, 8, "R53 should ship the first eight furniture items");
+assert.strictEqual(Object.keys(config.TRAILER_ROOM.furniture).length, 8, "R54 should ship the first eight furniture items");
 const trailerCostTotal = Object.values(config.TRAILER_ROOM.furniture).reduce((sum, item) => sum + item.cost, 0);
 assert.strictEqual(trailerCostTotal, 174, "first furniture wave should have a clear long-tail cost");
 const trailerFullEffects = Object.values(config.TRAILER_ROOM.furniture).reduce(

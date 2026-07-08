@@ -21,6 +21,7 @@
   const SW_AUTO_RELOAD_WINDOW_MS = 15000;
   const SW_AUTO_RELOAD_SESSION_KEY = "ashes_convoy_sw_auto_reload";
   const gateChoiceButtons = new Map();
+  let lastGateChoiceKey = "";
   let lastSupplyChoiceKey = "";
   let trailerRoomMetrics = null;
   let trailerRedrawTimer = 0;
@@ -1081,43 +1082,46 @@
 
   function renderGateChoices(state) {
     if (!els.gateChoiceLayer) return;
-    const gates = state && state.mode === "playing" ? state.gates.filter((gate) => !gate.broken) : [];
-    if (!gates.length) {
-      els.gateChoiceLayer.hidden = true;
-      clearGateChoiceButtons();
+    els.gateChoiceLayer.hidden = true;
+    clearGateChoiceButtons();
+  }
+
+  function renderGateChoiceOverlay(state) {
+    if (!els.gateChoiceOverlay || !els.gateChoiceList) return;
+    const choice = state && state.gateChoice;
+    if (!choice) {
+      els.gateChoiceOverlay.hidden = true;
+      els.gateChoiceList.textContent = "";
+      lastGateChoiceKey = "";
       return;
     }
-    syncGateChoiceLayerSize();
-    const activeIds = new Set();
-    gates.forEach((gate) => {
-      const gateConfig = config.GATES[gate.gateId];
-      if (!gateConfig) return;
-      activeIds.add(gate.id);
-      let record = gateChoiceButtons.get(gate.id);
-      if (!record) {
-      const button = root.document.createElement("button");
-      button.type = "button";
-      button.className = "gate-choice-btn";
-      button.dataset.gateId = gate.gateId;
-      button.dataset.entityId = gate.id;
-      button.style.left = "0";
-      button.style.top = "0";
-      button.innerHTML = `<b>${gateConfig.shortLabel}</b><span>${gateValueText(gate.gateId)}</span><small>點選取得</small>`;
-      const onClick = (event) => {
-        event.preventDefault();
-        game.chooseGate(gate.id);
-      };
-      button.addEventListener("click", onClick);
-      record = { button, onClick };
-      gateChoiceButtons.set(gate.id, record);
-      els.gateChoiceLayer.appendChild(button);
-      }
-      updateGateChoiceButtonPosition(record.button, gate);
-    });
-    Array.from(gateChoiceButtons.keys()).forEach((entityId) => {
-      if (!activeIds.has(entityId)) removeGateChoiceButton(entityId);
-    });
-    els.gateChoiceLayer.hidden = false;
+    const gateIds = Array.isArray(choice.gateIds) && choice.gateIds.length
+      ? choice.gateIds
+      : (choice.options || []).map((option) => option.gateId).filter(Boolean);
+    const key = `${choice.pairId}:${gateIds.join(",")}`;
+    if (lastGateChoiceKey !== key) {
+      els.gateChoiceList.textContent = "";
+      gateIds.forEach((gateId, index) => {
+        const gate = config.GATES[gateId];
+        if (!gate) return;
+        const button = root.document.createElement("button");
+        button.type = "button";
+        button.className = "supply-choice-btn gate-option-btn";
+        button.dataset.gateId = gateId;
+        button.setAttribute("aria-label", `${gate.label} ${gateValueText(gateId)}`);
+        button.innerHTML = `<b>${index + 1}. ${gate.label}</b><span>${gateValueText(gateId)}</span><small>選擇後立即套用</small>`;
+        button.addEventListener("click", () => {
+          game.chooseGate(gateId);
+        });
+        els.gateChoiceList.appendChild(button);
+      });
+      lastGateChoiceKey = key;
+      root.requestAnimationFrame(() => {
+        const first = els.gateChoiceList.querySelector(".gate-option-btn");
+        if (first && typeof first.focus === "function") first.focus();
+      });
+    }
+    els.gateChoiceOverlay.hidden = false;
   }
 
   function renderSupplyChoice(state) {
@@ -1156,6 +1160,33 @@
       });
     }
     els.supplyChoiceOverlay.hidden = false;
+  }
+
+  function handleGateChoiceKey(event) {
+    if (!els.gateChoiceOverlay || els.gateChoiceOverlay.hidden) return false;
+    const buttons = Array.from(els.gateChoiceList.querySelectorAll(".gate-option-btn"));
+    if (!buttons.length) return false;
+    const activeIndex = Math.max(0, buttons.indexOf(root.document.activeElement));
+    function focusAt(index) {
+      buttons[(index + buttons.length) % buttons.length].focus();
+    }
+    if (/^[1-2]$/.test(event.key)) {
+      const button = buttons[Number(event.key) - 1];
+      if (button) button.click();
+    } else if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+      focusAt(activeIndex + 1);
+    } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+      focusAt(activeIndex - 1);
+    } else if (event.key === "Enter" || event.key === " ") {
+      (buttons[activeIndex] || buttons[0]).click();
+    } else if (event.key === "Escape") {
+      // Gate choices are mandatory once presented.
+    } else {
+      return false;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    return true;
   }
 
   function handleSupplyChoiceKey(event) {
@@ -1204,12 +1235,14 @@
     if (!state || (state.mode !== "playing" && state.mode !== "paused")) {
       els.hud.classList.remove("is-visible");
       renderGateChoices(null);
+      renderGateChoiceOverlay(null);
       renderEventBanner(null);
       renderSupplyChoice(null);
       return;
     }
     els.hud.classList.add("is-visible");
     renderGateChoices(state);
+    renderGateChoiceOverlay(state);
     renderEventBanner(state);
     renderSupplyChoice(state);
     const vehicle = config.VEHICLES[state.vehicleId];
@@ -1518,7 +1551,7 @@
     } else if (state.mode === "paused") {
       renderHud(state);
       renderPerformanceDiagnostics(state);
-      if (state.supplyChoice) els.pausePanel.hidden = true;
+      if (state.supplyChoice || state.gateChoice) els.pausePanel.hidden = true;
       else showPause();
     }
   }
@@ -1578,6 +1611,7 @@
       selectVehicle(next);
     });
     root.document.addEventListener("keydown", (event) => {
+      if (handleGateChoiceKey(event)) return;
       if (handleSupplyChoiceKey(event)) return;
       if (event.key !== "Escape") return;
       if (els.trailerOverlay && !els.trailerOverlay.hidden) {
@@ -1679,6 +1713,10 @@
       "eventBannerTitle",
       "eventBannerBody",
       "gateChoiceLayer",
+      "gateChoiceOverlay",
+      "gateChoiceTitle",
+      "gateChoiceHint",
+      "gateChoiceList",
       "supplyChoiceOverlay",
       "supplyChoiceTitle",
       "supplyChoiceHint",

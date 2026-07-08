@@ -282,12 +282,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R53") && swText.includes("src/ui.js?v=R53") && swText.includes("src/game.js?v=R53") && swText.includes("src/rules.js?v=R53"),
+      swCachesJs: swText.includes("src/version.js?v=R54") && swText.includes("src/ui.js?v=R54") && swText.includes("src/game.js?v=R54") && swText.includes("src/rules.js?v=R54"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R53"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R53"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R53"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R54"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R54"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R54"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -296,7 +296,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R53", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R54", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -617,7 +617,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R53"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R54"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -922,6 +922,8 @@ async function checkAimAssistToggle(page) {
       enemies: [],
       projectiles: [],
       gates: [],
+      gateChoice: null,
+      paused: false,
       vehicle: {
         aimX: state.vehicle.x,
         aimY: state.vehicle.y - 170,
@@ -953,6 +955,8 @@ async function checkAimAssistToggle(page) {
       enemies: [],
       projectiles: [],
       gates: [],
+      gateChoice: null,
+      paused: false,
       vehicle: {
         aimX: state.vehicle.x,
         aimY: state.vehicle.y - 170,
@@ -973,7 +977,7 @@ async function checkAimAssistToggle(page) {
     meta.settings.aimAssistLevel = "medium";
     meta.settings.aimAssist = true;
     window.__test.setMeta(meta);
-    window.__test.setState({ enemies: [], projectiles: [], gates: [] });
+    window.__test.setState({ enemies: [], projectiles: [], gates: [], gateChoice: null, paused: false });
   });
   const disabled = await page.evaluate(() => window.__test.getState().vehicle);
   assert(Math.abs(disabled.assistAimX - disabled.aimX) < 1, "disabled aim assist should leave aim untouched");
@@ -1217,6 +1221,8 @@ async function checkOpeningHordeGateAndFps(page) {
       enemies: [],
       projectiles: [],
       gates: [],
+      gateChoice: null,
+      paused: false,
       vehicle: { hp: state.vehicle.maxHp, shield: 0, weaponCooldown: 0 }
     });
   });
@@ -1255,10 +1261,13 @@ async function killEnemiesAndEarnPreviewParts(page) {
 
 async function shootGate(page) {
   await page.evaluate(() => {
+    window.__test.startRun("land_rig");
     const state = window.__test.getState();
     window.__test.setState({
       projectiles: [],
       gates: [],
+      gateChoice: null,
+      paused: false,
       vehicle: { aimX: state.vehicle.x, aimY: state.vehicle.y - 210, weaponCooldown: 0 }
     });
     window.__test.spawnGate("damage_plus", {
@@ -1269,33 +1278,30 @@ async function shootGate(page) {
     window.__test.step(850);
   });
   const state = await page.evaluate(() => window.__test.getState());
-  assert(state.stats.gatesTaken >= 1, "shooting a gate core should count as taking a gate");
-  assert(state.runMods.damageAdd > 0, "damage gate should apply immediately");
+  assert.strictEqual(state.stats.gatesTaken, 0, "shooting a gate core should no longer choose a gate");
+  assert.strictEqual(state.runMods.damageAdd, 0, "projectile contact should not apply a gate mod");
+  assert(state.gates.some((gate) => gate.gateId === "damage_plus" && gate.hp === 1), "projectile contact should not damage gate hp");
 }
 
 async function tapGateChoice(page) {
   await page.evaluate(() => {
     window.__test.startRun("land_rig");
     const state = window.__test.getState();
-    window.__test.setState({ gates: [], projectiles: [], enemies: [], vehicle: { weaponCooldown: 999 } });
-    window.__test.spawnGate("rate_plus", {
-      id: "tap-left",
-      pairId: "tap-pair",
-      x: window.DSConfig.LOGIC.roadLeft + 29,
-      y: 132,
-      hp: 99
+    window.__test.setState({
+      gates: [],
+      projectiles: [],
+      enemies: [],
+      gateChoice: null,
+      paused: false,
+      vehicle: { hp: state.vehicle.maxHp - 80, weaponCooldown: 999 }
     });
-    window.__test.spawnGate("repair", {
-      id: "tap-right",
-      pairId: "tap-pair",
-      x: window.DSConfig.LOGIC.roadRight - 29,
-      y: 132,
-      hp: 99
-    });
-    window.__test.setState({ vehicle: { hp: state.vehicle.maxHp - 80 } });
+    window.__test.spawnGatePair(["rate_plus", "repair"]);
   });
-  await page.waitForSelector('#gateChoiceLayer:not([hidden]) .gate-choice-btn[data-gate-id="rate_plus"]');
-  const buttons = await page.locator("#gateChoiceLayer .gate-choice-btn").evaluateAll((nodes) =>
+  await page.waitForSelector('#gateChoiceOverlay:not([hidden]) .gate-option-btn[data-gate-id="rate_plus"]');
+  const opened = await page.evaluate(() => window.__test.getState());
+  assert.strictEqual(opened.paused, true, "gate choice overlay should pause the run");
+  assert(opened.gateChoice && opened.gateChoice.gateIds.includes("rate_plus"), "gate choice state should list the rate option");
+  const buttons = await page.locator("#gateChoiceOverlay .gate-option-btn").evaluateAll((nodes) =>
     nodes.map((node) => {
       const rect = node.getBoundingClientRect();
       return {
@@ -1305,36 +1311,28 @@ async function tapGateChoice(page) {
         height: rect.height,
         left: rect.left,
         right: rect.right,
-        viewportWidth: window.innerWidth
+        top: rect.top,
+        bottom: rect.bottom,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight
       };
     })
   );
-  assert.strictEqual(buttons.length, 2, "gate choice layer should expose two direct tap choices");
+  assert.strictEqual(buttons.length, 2, "gate choice overlay should expose two choices");
   buttons.forEach((button) => {
-    assert(button.width >= 44 && button.height >= 44, `${button.id} gate tap target should be at least 44px`);
+    assert(button.width >= 44 && button.height >= 44, `${button.id} gate choice target should be at least 44px`);
     assert(button.left >= 0 && button.right <= button.viewportWidth, `${button.id} gate button should not overflow horizontally`);
-    assert(button.text.includes("點選"), `${button.id} gate button should explain direct selection`);
+    assert(button.top >= 0 && button.bottom <= button.viewportHeight, `${button.id} gate button should not overflow vertically`);
+    assert(button.text.length > 0, `${button.id} gate button should show a label and effect`);
   });
-  const rateHandle = await page.$('#gateChoiceLayer .gate-choice-btn[data-gate-id="rate_plus"]');
-  assert(rateHandle, "rate gate button should be available for stability check");
-  const stable = await page.evaluate((node) => {
-    const beforeTransform = getComputedStyle(node).transform;
-    window.__gateChoiceStableNode = node;
-    window.__test.step(2000);
-    const after = document.querySelector('#gateChoiceLayer .gate-choice-btn[data-gate-id="rate_plus"]');
-    return {
-      connected: node.isConnected,
-      sameNode: after === node && window.__gateChoiceStableNode === node,
-      beforeTransform,
-      afterTransform: getComputedStyle(node).transform
-    };
-  }, rateHandle);
-  await rateHandle.dispose();
-  assert(stable.connected && stable.sameNode, "gate button DOM node should stay attached and identical over 2 seconds");
-  assert.notStrictEqual(stable.beforeTransform, stable.afterTransform, "gate button should move by transform without node replacement");
-  await page.click('#gateChoiceLayer .gate-choice-btn[data-gate-id="rate_plus"]');
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowLeft");
+  await page.click('#gateChoiceOverlay .gate-option-btn[data-gate-id="rate_plus"]');
+  await page.waitForFunction(() => document.getElementById("gateChoiceOverlay").hidden === true);
   await page.waitForFunction(() => window.__test.getState().stats.gatesTaken >= 1);
   const state = await page.evaluate(() => window.__test.getState());
+  assert.strictEqual(state.paused, false, "choosing a gate should resume play");
+  assert.strictEqual(state.gateChoice, null, "choosing a gate should clear gate choice state");
   assert(state.runMods.fireIntervalMul < 1, "tapping a rate gate should apply the rate mod immediately");
   assert.strictEqual(state.gates.length, 0, "choosing one gate should remove the pair");
   assert(state.lastGateChoice && state.lastGateChoice.gateId === "rate_plus", "chosen gate should be recorded for feedback");
@@ -1505,7 +1503,7 @@ async function checkEnvironmentEventsAndVariants(page) {
   assert(state.enemies.some((enemy) => enemy.variantId), "late wave generation should spawn tinted variants");
 }
 
-async function checkR53EnemyRosterBehaviors(page) {
+async function checkR54EnemyRosterBehaviors(page) {
   await page.evaluate(() => {
     window.__test.clearStorage();
     window.__test.startRun("land_rig");
@@ -1554,7 +1552,7 @@ async function checkR53EnemyRosterBehaviors(page) {
       statuses: debug.enemyImageStatus
     };
   });
-  assert.deepStrictEqual(result.enemyIds, ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith"].sort(), "R53 enemy roster should be spawnable");
+  assert.deepStrictEqual(result.enemyIds, ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith"].sort(), "R54 enemy roster should be spawnable");
   assert(result.enemyProjectiles >= 1, "spore spitter should fire enemy projectiles");
   assert(result.spitterCooldown > 0, "spore spitter should reset attack cooldown after firing");
   assert.strictEqual(result.bruteSlow, true, "tar brute should apply movement slow aura near the vehicle");
@@ -1902,7 +1900,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
     await checkBossBlueprintDropAnimation(page);
     await unlockFleet(page);
     await checkEnvironmentEventsAndVariants(page);
-    await checkR53EnemyRosterBehaviors(page);
+    await checkR54EnemyRosterBehaviors(page);
     await checkEventCodexAndAchievements(page);
     await checkSupplyDropPickupAndSettlement(page);
     await unlockFleet(page);
@@ -2262,7 +2260,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r53")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r54")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -2280,7 +2278,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r53")), "R53 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r54")), "R54 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

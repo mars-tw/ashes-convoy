@@ -477,6 +477,7 @@
       input: rules.deepClone(state.input),
       eventBanner: state.eventBanner ? rules.deepClone(state.eventBanner) : null,
       lastGateChoice: state.lastGateChoice ? rules.deepClone(state.lastGateChoice) : null,
+      gateChoice: state.gateChoice ? rules.deepClone(state.gateChoice) : null,
       supplyChoice: state.supplyChoice ? rules.deepClone(state.supplyChoice) : null,
       enemies: state.enemies.map(publicEntity),
       hazards: state.hazards.map(publicEntity),
@@ -763,7 +764,7 @@
   }
 
   function openSupplyChoice(drop) {
-    if (!drop || drop.picked || state.supplyChoice) return;
+    if (!drop || drop.picked || state.supplyChoice || state.gateChoice) return;
     drop.picked = true;
     state.supplyChoice = {
       dropId: drop.id,
@@ -865,6 +866,7 @@
       enemyProjectiles: [],
       supplyDrops: [],
       supplyBuffs: [],
+      gateChoice: null,
       supplyChoice: null,
       projectiles: [],
       gates: [],
@@ -947,7 +949,7 @@
 
   function pause() {
     if (!state || state.over) return;
-    if (state.supplyChoice) return;
+    if (state.supplyChoice || state.gateChoice) return;
     state.paused = true;
     state.mode = "paused";
     emitState();
@@ -955,7 +957,7 @@
 
   function resume() {
     if (!state || state.over) return;
-    if (state.supplyChoice) {
+    if (state.supplyChoice || state.gateChoice) {
       emitState();
       return;
     }
@@ -966,7 +968,7 @@
 
   function togglePause() {
     if (!state || state.over) return;
-    if (state.supplyChoice) return;
+    if (state.supplyChoice || state.gateChoice) return;
     if (state.paused) resume();
     else pause();
   }
@@ -1104,12 +1106,40 @@
     const gateHalf = 32 * 1.75 * 0.5;
     const left = spawnGate(ids[0], { pairId, x: config.LOGIC.roadLeft + gateHalf + 1, y: 104, silent: true });
     const right = spawnGate(ids[1], { pairId, x: config.LOGIC.roadRight - gateHalf - 1, y: 104, silent: true });
+    openGateChoice(pairId, [left, right]);
     emitState();
     return [left, right];
   }
 
-  function grantGate(gateId) {
+  function openGateChoice(pairId, gates) {
+    if (!state || state.over || state.gateChoice) return;
+    const options = (gates || [])
+      .map((gate) => state.gates.find((item) => item.id === gate.id || item.gateId === gate.gateId))
+      .filter(Boolean)
+      .map((gate) => ({
+        id: gate.id,
+        gateId: gate.gateId,
+        label: gate.label,
+        x: gate.x,
+        y: gate.y
+      }));
+    if (!options.length) return;
+    state.gateChoice = {
+      pairId,
+      openedAt: state.time,
+      gateIds: options.map((gate) => gate.gateId),
+      options
+    };
+    state.paused = true;
+    state.mode = "playing";
+    state.input.dragging = false;
+    state.input.lastPointer = null;
+    pushEventBanner("增益門", "選擇一項增益後繼續出勤", { kind: "gate", ttl: 1.6 });
+  }
+
+  function grantGate(gateId, options) {
     if (!state) startRun(meta.selectedVehicle);
+    const opts = options || {};
     const result = rules.applyGateEffect({
       gateId,
       runMods: state.runMods,
@@ -1136,14 +1166,17 @@
       ttl: 0.75,
       vy: -14
     });
-    emitState();
+    if (!opts.silent) emitState();
     return rules.deepClone({ runMods: state.runMods, vehicle: state.vehicle });
   }
 
-  function triggerGate(gate) {
+  function resolveGateChoice(gate) {
     if (!gate || gate.broken) return;
     gate.broken = true;
-    grantGate(gate.gateId);
+    state.gateChoice = null;
+    state.paused = false;
+    state.mode = "playing";
+    grantGate(gate.gateId, { silent: true });
     addEffect({
       id: nextId("effect"),
       sprite: "effect_shield",
@@ -1159,9 +1192,13 @@
   }
 
   function chooseGate(gateId) {
-    if (!state || state.over || state.paused) return getState();
-    const gate = state.gates.find((item) => item.id === gateId || item.gateId === gateId);
-    if (gate) triggerGate(gate);
+    if (!state || state.over || !state.gateChoice) return getState();
+    const activePairId = state.gateChoice.pairId;
+    const gate = state.gates.find((item) => {
+      if (item.pairId !== activePairId) return false;
+      return item.id === gateId || item.gateId === gateId;
+    });
+    if (gate) resolveGateChoice(gate);
     draw();
     emitState();
     return getState();
@@ -1741,28 +1778,6 @@
         }
       }
 
-      for (let i = 0; i < state.gates.length; i += 1) {
-        const gate = state.gates[i];
-        if (gate.broken) continue;
-        if (distance(projectile, gate) <= projectile.radius + gate.radius) {
-          gate.hp -= projectile.damage;
-          projectile.life = -1;
-          addEffect({
-            id: nextId("effect"),
-            sprite: "effect_hit",
-            anim: "burst",
-            x: projectile.x,
-            y: projectile.y,
-            scale: 1,
-            ttl: 0.2,
-            age: 0,
-            alpha: 0.85
-          });
-          if (gate.hp <= 0) triggerGate(gate);
-          return;
-        }
-      }
-
       for (let i = 0; i < state.enemies.length; i += 1) {
         const enemy = state.enemies[i];
         if (enemy.dead) continue;
@@ -2035,16 +2050,6 @@
     state.vehicle.aimY = rules.clamp(point.y, config.LOGIC.aimMinY, state.vehicle.y - 40);
   }
 
-  function gateAtPoint(point) {
-    if (!state || !point) return null;
-    return (
-      state.gates.find((gate) => {
-        if (gate.broken) return false;
-        return distance(point, gate) <= (gate.touchRadius || gate.radius || 24);
-      }) || null
-    );
-  }
-
   function pointFromEvent(event) {
     const rect = canvas.getBoundingClientRect();
     return {
@@ -2059,14 +2064,6 @@
     canvas.addEventListener("pointerdown", (event) => {
       if (!state || state.over || state.paused) return;
       const point = pointFromEvent(event);
-      const gate = gateAtPoint(point);
-      if (gate) {
-        triggerGate(gate);
-        draw();
-        emitState();
-        event.preventDefault();
-        return;
-      }
       canvas.setPointerCapture(event.pointerId);
       state.input.dragging = true;
       state.input.lastPointer = event.pointerId;
@@ -2094,7 +2091,7 @@
       }
     });
     root.addEventListener("keydown", (event) => {
-      if (state && state.supplyChoice) return;
+      if (state && (state.supplyChoice || state.gateChoice)) return;
       if (event.key === "Escape") {
         togglePause();
       } else if (event.key === "r" || event.key === "R") {
@@ -2103,10 +2100,6 @@
         state.vehicle.followX = rules.clamp((state.vehicle.followX || state.vehicle.x) - 18, 26, W - 26);
       } else if (state && !state.paused && !state.over && event.key === "ArrowRight") {
         state.vehicle.followX = rules.clamp((state.vehicle.followX || state.vehicle.x) + 18, 26, W - 26);
-      } else if (state && !state.paused && !state.over && (event.key === "1" || event.key === "2")) {
-        const index = Number(event.key) - 1;
-        const gate = state.gates[index];
-        if (gate) triggerGate(gate);
       }
     });
   }
@@ -2151,7 +2144,7 @@
     ctx.restore();
     drawWorldText(gateConfig.shortLabel, gate.x, gate.y - 24, { size: 10, color: "#f4ead8" });
     drawWorldText(valueText, gate.x, gate.y - 11, { size: 12, color: gate.gateId === "repair" ? "#87d27d" : "#f0b64a" });
-    drawWorldText("點選/射擊", gate.x, gate.y + 24, { size: 5, color: "#f4ead8", alpha: 0.72 });
+    drawWorldText("選擇後套用", gate.x, gate.y + 24, { size: 5, color: "#f4ead8", alpha: 0.72 });
     renderDebug.gateLabelsDrawn += 1;
   }
 
@@ -3331,6 +3324,7 @@
       step,
       spawnEnemy,
       spawnGate,
+      spawnGatePair,
       grantGate,
       chooseSupplyReward,
       chooseGate,
@@ -3356,6 +3350,7 @@
     step,
     spawnEnemy,
     spawnGate,
+    spawnGatePair,
     grantGate,
     chooseSupplyReward,
     chooseGate,
