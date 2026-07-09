@@ -282,12 +282,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R57") && swText.includes("src/ui.js?v=R57") && swText.includes("src/game.js?v=R57") && swText.includes("src/rules.js?v=R57"),
+      swCachesJs: swText.includes("src/version.js?v=R58") && swText.includes("src/ui.js?v=R58") && swText.includes("src/game.js?v=R58") && swText.includes("src/rules.js?v=R58"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R57"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R57"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R57"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R58"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R58"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R58"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -296,7 +296,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R57", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R58", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -357,6 +357,7 @@ async function checkShortDesktopReachability(page) {
     "#screenShakeToggle",
     "#soundToggle",
     "#showRunTrailerToggle",
+    "#showCompanionToggle",
     "#fxLevelSelect",
     "#damageTextDensitySelect",
     "#performanceModeSelect",
@@ -604,6 +605,11 @@ async function checkSettingsAndQuestBoard(page) {
   meta = await page.evaluate(() => window.__test.getMeta());
   assert.strictEqual(meta.settings.showRunTrailer, false, "run trailer toggle off should persist");
   await page.locator("#showRunTrailerToggle").check();
+  assert.strictEqual(await page.locator("#showCompanionToggle").isChecked(), true, "companion setting should default on");
+  await page.locator("#showCompanionToggle").uncheck();
+  meta = await page.evaluate(() => window.__test.getMeta());
+  assert.strictEqual(meta.settings.showCompanion, false, "companion toggle off should persist");
+  await page.locator("#showCompanionToggle").check();
   await page.selectOption("#damageTextDensitySelect", "large");
   await page.selectOption("#performanceModeSelect", "low");
   await page.selectOption("#fontSizeSelect", "large");
@@ -645,7 +651,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R57"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R58"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -917,6 +923,165 @@ async function checkFleetProjectileTraits(page) {
   });
   const seaProjectile = await page.evaluate(() => window.__test.getState().projectiles[0]);
   assert(seaProjectile && seaProjectile.splash > 0, "sea ark should fire splash projectiles");
+}
+
+async function checkR58CombatRefresh(page) {
+  const road = await page.evaluate(() => {
+    window.__test.clearStorage();
+    window.__test.startRun("land_rig");
+    const cfg = window.DSConfig;
+    const state = window.__test.getState();
+    const half = cfg.VEHICLES.land_rig.visualHalfWidth;
+    window.__test.setState({ vehicle: { followX: cfg.LOGIC.roadLeft - 80, weaponCooldown: 999 } });
+    window.__test.step(900);
+    const leftX = window.__test.getState().vehicle.x;
+    window.__test.setState({ vehicle: { followX: cfg.LOGIC.roadRight + 80, weaponCooldown: 999 } });
+    window.__test.step(1600);
+    const rightX = window.__test.getState().vehicle.x;
+    const gates = window.__test.spawnGatePair(["damage_plus", "repair"]);
+    return {
+      roadLeft: cfg.LOGIC.roadLeft,
+      roadRight: cfg.LOGIC.roadRight,
+      half,
+      leftX,
+      rightX,
+      gateXs: gates.map((gate) => Math.round(gate.x))
+    };
+  });
+  assert(road.leftX >= road.roadLeft + road.half - 0.5, "vehicle should clamp inside widened left road edge");
+  assert(road.rightX <= road.roadRight - road.half + 0.5, "vehicle should clamp inside widened right road edge");
+  assert.deepStrictEqual(road.gateXs, [56, 139], "widened road should place gate choices at x=56/139");
+  await page.keyboard.press("Escape").catch(() => {});
+
+  await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    const state = window.__test.getState();
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      runMods: Object.assign({}, state.runMods, { weaponMode: "homing", weaponLevel: 2 }),
+      vehicle: {
+        aimX: state.vehicle.x - 72,
+        aimY: state.vehicle.y - 190,
+        weaponCooldown: 0
+      }
+    });
+    window.__test.spawnEnemy("runner", { x: state.vehicle.x + 54, y: state.vehicle.y - 170, hp: 12, speed: 0 });
+    window.__test.step(120);
+  });
+  const homingStart = await page.evaluate(() => {
+    const state = window.__test.getState();
+    return {
+      projectile: state.projectiles.find((projectile) => projectile.homing),
+      hud: document.getElementById("hudMods").textContent
+    };
+  });
+  assert(homingStart.projectile && homingStart.projectile.turnRate === 4.5, "homing mode should fire homing projectiles");
+  assert(homingStart.hud.includes("Lv2"), `weapon HUD should show weapon level: ${homingStart.hud}`);
+  await page.evaluate(() => window.__test.step(1200));
+  const homingEnd = await page.evaluate(() => window.__test.getState().stats.kills);
+  assert(homingEnd >= 1, "homing projectile should hit and kill the offset target");
+
+  await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    const state = window.__test.getState();
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      vehicle: { weaponCooldown: 999 },
+      companionCooldown: 0
+    });
+    window.__test.spawnEnemy("shambler", { x: state.vehicle.x, y: state.vehicle.y - 115, hp: 999, speed: 0 });
+    window.__test.step(1600);
+  });
+  const companionOn = await page.evaluate(() => {
+    const state = window.__test.getState();
+    const debug = window.__test.getRenderDebug();
+    return {
+      damage: state.stats.damageBySource.companion || 0,
+      drawn: debug.companionRasterDrawn || debug.companionFallbackDrawn
+    };
+  });
+  assert(companionOn.damage > 0, "companion should deal damage by source");
+  assert.strictEqual(companionOn.drawn, true, "companion should render when enabled");
+
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.settings.showCompanion = false;
+    window.__test.setMeta(meta);
+    window.__test.startRun("land_rig");
+    const state = window.__test.getState();
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      vehicle: { weaponCooldown: 999 },
+      companionCooldown: 0
+    });
+    window.__test.spawnEnemy("shambler", { x: state.vehicle.x, y: state.vehicle.y - 115, hp: 999, speed: 0 });
+    window.__test.step(1600);
+  });
+  const companionOff = await page.evaluate(() => {
+    const state = window.__test.getState();
+    const debug = window.__test.getRenderDebug();
+    return {
+      damage: state.stats.damageBySource.companion || 0,
+      drawn: debug.companionRasterDrawn || debug.companionFallbackDrawn
+    };
+  });
+  assert.strictEqual(companionOff.damage, 0, "disabled companion should not fire");
+  assert.strictEqual(companionOff.drawn, false, "disabled companion should not render");
+  await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.settings.showCompanion = true;
+    window.__test.setMeta(meta);
+  });
+
+  await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    const state = window.__test.getState();
+    window.__test.setState({
+      runMods: Object.assign({}, state.runMods, { damageAdd: 2.5 }),
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      vehicle: { weaponCooldown: 999 }
+    });
+    window.__test.spawnGatePair(["damage_plus", "repair"]);
+  });
+  await page.waitForSelector('#gateChoiceOverlay:not([hidden]) .choice-overflow-badge');
+  const gateOverflowText = await page.locator('#gateChoiceOverlay .choice-overflow-badge').first().innerText();
+  assert(gateOverflowText.includes("已滿") && gateOverflowText.includes("+6"), `gate overflow badge should describe goods overflow: ${gateOverflowText}`);
+  await page.evaluate(() => window.__test.chooseGate("damage_plus"));
+  const overflowGateState = await page.evaluate(() => window.__test.getState());
+  assert.strictEqual(overflowGateState.runMods.overload, 1, "overflow gate should add overload");
+  assert(overflowGateState.stats.scavengeGoods >= 6, "overflow gate should grant scavenge goods");
+
+  await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    const state = window.__test.getState();
+    window.__test.setState({
+      runMods: Object.assign({}, state.runMods, { damageAdd: 2.5 }),
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      supplyDrops: [
+        { id: "overflow_supply", x: state.vehicle.x, y: state.vehicle.y - 4, vx: 0, vy: 0, radius: 12, age: 0, ttl: 30, picked: false }
+      ],
+      vehicle: { weaponCooldown: 999 }
+    });
+    window.__test.step(80);
+  });
+  await page.waitForSelector('#supplyChoiceOverlay:not([hidden]) .supply-choice-btn[data-reward-id="damage_boost"] .choice-overflow-badge');
+  const supplyOverflowText = await page.locator('#supplyChoiceOverlay .supply-choice-btn[data-reward-id="damage_boost"] .choice-overflow-badge').innerText();
+  assert(supplyOverflowText.includes("已滿") && supplyOverflowText.includes("+6"), `supply overflow badge should describe goods overflow: ${supplyOverflowText}`);
+  await page.click('#supplyChoiceOverlay .supply-choice-btn[data-reward-id="damage_boost"]');
+  await page.waitForFunction(() => document.getElementById("supplyChoiceOverlay").hidden === true);
+  const overflowSupplyState = await page.evaluate(() => window.__test.getState());
+  assert.strictEqual(overflowSupplyState.runMods.overload, 1, "overflow supply should add overload");
+  assert(overflowSupplyState.stats.scavengeGoods >= 6, "overflow supply should grant scavenge goods");
 }
 
 async function checkEmptySettlementCta(page) {
@@ -1564,7 +1729,7 @@ async function checkEnvironmentEventsAndVariants(page) {
   assert(state.enemies.some((enemy) => enemy.variantId), "late wave generation should spawn tinted variants");
 }
 
-async function checkR57EnemyRosterBehaviors(page) {
+async function checkR58EnemyRosterBehaviors(page) {
   await page.evaluate(() => {
     window.__test.clearStorage();
     window.__test.startRun("land_rig");
@@ -1613,7 +1778,7 @@ async function checkR57EnemyRosterBehaviors(page) {
       statuses: debug.enemyImageStatus
     };
   });
-  assert.deepStrictEqual(result.enemyIds, ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith"].sort(), "R57 enemy roster should be spawnable");
+  assert.deepStrictEqual(result.enemyIds, ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith"].sort(), "R58 enemy roster should be spawnable");
   assert(result.enemyProjectiles >= 1, "spore spitter should fire enemy projectiles");
   assert(result.spitterCooldown > 0, "spore spitter should reset attack cooldown after firing");
   assert.strictEqual(result.bruteSlow, true, "tar brute should apply movement slow aura near the vehicle");
@@ -1963,7 +2128,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
     await checkBossBlueprintDropAnimation(page);
     await unlockFleet(page);
     await checkEnvironmentEventsAndVariants(page);
-    await checkR57EnemyRosterBehaviors(page);
+    await checkR58EnemyRosterBehaviors(page);
     await checkEventCodexAndAchievements(page);
     await checkSupplyDropPickupAndSettlement(page);
     await unlockFleet(page);
@@ -2324,7 +2489,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r57")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r58")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -2342,7 +2507,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r57")), "R57 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r58")), "R58 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

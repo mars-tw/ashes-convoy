@@ -1027,6 +1027,7 @@
     els.screenShakeToggle.checked = meta.settings.screenShake !== false;
     if (els.soundToggle) els.soundToggle.checked = meta.settings.sound !== false;
     if (els.showRunTrailerToggle) els.showRunTrailerToggle.checked = meta.settings.showRunTrailer !== false;
+    if (els.showCompanionToggle) els.showCompanionToggle.checked = meta.settings.showCompanion !== false;
     if (els.fxLevelSelect) els.fxLevelSelect.value = meta.settings.fxLevel || "full";
     els.damageTextDensitySelect.value = meta.settings.damageTextDensity || "all";
     els.performanceModeSelect.value = meta.settings.performanceMode || "auto";
@@ -1257,12 +1258,23 @@
       gateIds.forEach((gateId, index) => {
         const gate = config.GATES[gateId];
         if (!gate) return;
+        const optionState = rules.gateOptionState({
+          gateId,
+          runMods: state.runMods,
+          vehicle: state.vehicle,
+          vehicleLevels: rules.getVehicleLevels(state.meta, state.vehicleId, config),
+          config
+        });
         const button = root.document.createElement("button");
         button.type = "button";
         button.className = "supply-choice-btn gate-option-btn";
+        if (optionState.maxed) button.classList.add("is-maxed");
         button.dataset.gateId = gateId;
         button.setAttribute("aria-label", `${gate.label} ${gateValueText(gateId)}`);
         button.innerHTML = `<b>${index + 1}. ${gate.label}</b><span>${gateValueText(gateId)}</span><small>選擇後立即套用</small>`;
+        if (optionState.maxed && optionState.overflowText) {
+          button.insertAdjacentHTML("beforeend", `<em class="choice-overflow-badge">已滿 → 溢出：${optionState.overflowText}</em>`);
+        }
         button.addEventListener("click", () => {
           game.chooseGate(gateId);
         });
@@ -1295,12 +1307,22 @@
       rewardIds.forEach((rewardId, index) => {
         const reward = config.SUPPLY_DROPS.rewards[rewardId];
         if (!reward) return;
+        const optionState = rules.supplyOptionState({
+          rewardId,
+          runMods: state.runMods,
+          vehicle: state.vehicle,
+          config
+        });
         const button = root.document.createElement("button");
         button.type = "button";
         button.className = "supply-choice-btn";
+        if (optionState.maxed) button.classList.add("is-maxed");
         button.dataset.rewardId = rewardId;
         button.setAttribute("aria-label", `${reward.label} ${supplyRewardValueText(reward)}`);
         button.innerHTML = `<b>${index + 1}. ${reward.label}</b><span>${supplyRewardValueText(reward)}</span><small>${supplyRewardDetailText(reward)}</small>`;
+        if (optionState.maxed && optionState.overflowText) {
+          button.insertAdjacentHTML("beforeend", `<em class="choice-overflow-badge">已滿 → 溢出：${optionState.overflowText}</em>`);
+        }
         button.addEventListener("click", () => {
           game.chooseSupplyReward(rewardId);
         });
@@ -1417,6 +1439,13 @@
     els.hudParts.textContent = `零件 ${state.stats.partsPreview}`;
     const mods = [];
     const effectiveMods = state.effectiveRunMods || state.runMods;
+    if (state.runMods.weaponMode && state.runMods.weaponMode !== "standard") {
+      const mode = config.WEAPON_POWERUPS && config.WEAPON_POWERUPS.modes
+        ? config.WEAPON_POWERUPS.modes[state.runMods.weaponMode]
+        : null;
+      mods.push(`${mode && mode.label ? mode.label : state.runMods.weaponMode} Lv${state.runMods.weaponLevel || 1}`);
+    }
+    if (state.runMods.overload > 0) mods.push(`超載 ${state.runMods.overload}`);
     if (state.runMods.damageAdd > 0) mods.push(`火力 x${(1 + state.runMods.damageAdd).toFixed(2)}`);
     if (state.runMods.fireIntervalMul < 1) mods.push(`射速 x${(1 / state.runMods.fireIntervalMul).toFixed(2)}`);
     if (state.runMods.projectileAdd > 0) mods.push(`彈道 +${state.runMods.projectileAdd}`);
@@ -1791,6 +1820,7 @@
     els.screenShakeToggle.addEventListener("change", () => updateSetting("screenShake", els.screenShakeToggle.checked));
     els.soundToggle.addEventListener("change", () => updateSetting("sound", els.soundToggle.checked));
     els.showRunTrailerToggle.addEventListener("change", () => updateSetting("showRunTrailer", els.showRunTrailerToggle.checked));
+    if (els.showCompanionToggle) els.showCompanionToggle.addEventListener("change", () => updateSetting("showCompanion", els.showCompanionToggle.checked));
     els.fxLevelSelect.addEventListener("change", () => updateSetting("fxLevel", els.fxLevelSelect.value));
     els.damageTextDensitySelect.addEventListener("change", () => updateSetting("damageTextDensity", els.damageTextDensitySelect.value));
     els.performanceModeSelect.addEventListener("change", () => updateSetting("performanceMode", els.performanceModeSelect.value));
@@ -1962,6 +1992,7 @@
       "screenShakeToggle",
       "soundToggle",
       "showRunTrailerToggle",
+      "showCompanionToggle",
       "fxLevelSelect",
       "damageTextDensitySelect",
       "performanceModeSelect",

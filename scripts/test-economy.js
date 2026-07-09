@@ -92,6 +92,25 @@ assert.strictEqual(second.reward.achievementParts, 8, "second run should only pa
 assert.strictEqual(second.reward.milestoneParts, 0, "claimed milestones must not repeat");
 assert.deepStrictEqual(second.reward.achievements, ["total_kills_100"]);
 
+const deepMilestones = rules.settleRunRewards({
+  meta: rules.migrateMeta(null, { config }),
+  run: { vehicleId: "land_rig", wavesCleared: 100, kills: 0, bossesDefeated: 0, score: 10000, difficultyId: "normal" },
+  rng: () => 0.99,
+  now: fixedNow,
+  config
+});
+assert.strictEqual(deepMilestones.reward.milestones.length, 12, "wave 100 should claim all deep milestones once");
+assert.strictEqual(deepMilestones.reward.milestoneParts, 1080, "wave 100 milestones should total 1080 parts");
+assert.strictEqual(deepMilestones.meta.claimedMilestones.wave_100, true);
+const deepRepeat = rules.settleRunRewards({
+  meta: deepMilestones.meta,
+  run: { vehicleId: "land_rig", wavesCleared: 100, kills: 0, bossesDefeated: 0, score: 10000, difficultyId: "normal" },
+  rng: () => 0.99,
+  now: fixedNow,
+  config
+});
+assert.strictEqual(deepRepeat.reward.milestoneParts, 0, "deep milestones should not repeat after claimed");
+
 const pity = rules.settleRunRewards({
   meta: rules.migrateMeta(null, { config }),
   run: { vehicleId: "land_rig", wavesCleared: 15, kills: 0, bossesDefeated: 3, score: 1500, difficultyId: "normal" },

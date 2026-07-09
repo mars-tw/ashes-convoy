@@ -432,6 +432,9 @@ assert(shambler4.hp > shambler1.hp, "scaled enemy hp must grow");
 assert(shambler4.speed > shambler1.speed, "scaled enemy speed must grow");
 
 const baseMods = rules.defaultRunMods();
+assert.strictEqual(baseMods.overload, 0, "default run mods should start with no overload");
+assert.strictEqual(baseMods.weaponMode, "standard", "default weapon mode should be standard");
+assert.strictEqual(baseMods.weaponLevel, 1, "default weapon level should start at 1");
 const damageGate = rules.applyGateEffect({
   gateId: "damage_plus",
   runMods: baseMods,
@@ -591,5 +594,123 @@ const voidSpecial = rules.calculateShotStats({ vehicleId: "void_runner", meta: s
 assert.strictEqual(voidSpecial.pierce, voidShot.pierce + 1, "void pierce node should add one pierce");
 const landSpecial = rules.getVehicleStats("land_rig", specialMeta, config);
 assert(landSpecial.damageTakenMul < 1, "land resist node should reduce incoming damage multiplier");
+
+const samePowerup = rules.applyWeaponPowerup({
+  currentMode: "spread",
+  currentLevel: 2,
+  pickedMode: "spread",
+  config
+});
+assert.deepStrictEqual(samePowerup, { mode: "spread", level: 3 }, "same weapon mode should level up");
+const cappedPowerup = rules.applyWeaponPowerup({
+  currentMode: "laser",
+  currentLevel: 5,
+  pickedMode: "laser",
+  config
+});
+assert.deepStrictEqual(cappedPowerup, { mode: "laser", level: 5 }, "weapon level should cap at maxLevel");
+const switchedPowerup = rules.applyWeaponPowerup({
+  currentMode: "homing",
+  currentLevel: 4,
+  pickedMode: "laser",
+  config
+});
+assert.deepStrictEqual(switchedPowerup, { mode: "laser", level: 3 }, "switching weapon mode should reduce level by one");
+
+const spreadShot = rules.calculateShotStats({
+  vehicleId: "land_rig",
+  meta,
+  runMods: Object.assign(rules.defaultRunMods(), { weaponMode: "spread", weaponLevel: 2 }),
+  config
+});
+assert.strictEqual(spreadShot.weaponMode, "spread");
+assert.strictEqual(spreadShot.weaponLevel, 2);
+assert.strictEqual(spreadShot.projectiles, baseShot.projectiles + 2, "spread mode should add two projectiles");
+assert(spreadShot.spread > baseShot.spread, "spread mode should widen spread");
+assert(spreadShot.damage > baseShot.damage * 0.75 && spreadShot.damage < baseShot.damage, "spread mode should trade per-shot damage for more shots");
+const laserShot = rules.calculateShotStats({
+  vehicleId: "land_rig",
+  meta,
+  runMods: Object.assign(rules.defaultRunMods(), { weaponMode: "laser", weaponLevel: 3 }),
+  config
+});
+assert.strictEqual(laserShot.bulletSprite, "bullet_pulse", "laser mode should override bullet sprite");
+assert.strictEqual(laserShot.spread, 0, "laser mode should remove spread");
+assert.strictEqual(laserShot.pierce, baseShot.pierce + 3, "laser mode should add pierce");
+assert(laserShot.projectileSpeed > baseShot.projectileSpeed, "laser mode should speed projectiles");
+const homingShot = rules.calculateShotStats({
+  vehicleId: "land_rig",
+  meta,
+  runMods: Object.assign(rules.defaultRunMods(), { weaponMode: "homing", weaponLevel: 2 }),
+  config
+});
+assert.strictEqual(homingShot.homing, true, "homing mode should mark projectiles homing");
+assert.strictEqual(homingShot.turnRate, 4.5, "homing mode should expose turn rate");
+assert(homingShot.projectileSpeed < baseShot.projectileSpeed, "homing mode should slow projectiles");
+
+const overloadValues = [0, 1, 2, 3, 4, 5].map((n) => rules.overloadDamage(n));
+for (let i = 1; i < overloadValues.length; i += 1) {
+  assert(overloadValues[i] > overloadValues[i - 1], "overload damage should increase monotonically");
+  const currentStep = overloadValues[i] - overloadValues[i - 1];
+  const previousStep = i > 1 ? overloadValues[i - 1] - overloadValues[i - 2] : Infinity;
+  assert(currentStep > 0 && currentStep <= previousStep, "overload damage marginal gain should be positive and diminishing");
+}
+const overloadedShot = rules.calculateShotStats({
+  vehicleId: "land_rig",
+  meta,
+  runMods: Object.assign(rules.defaultRunMods(), { overload: 6 }),
+  config
+});
+assert.strictEqual(overloadedShot.overloadPierce, 2, "every three overload should add one pierce");
+assert(overloadedShot.damage > baseShot.damage, "overload should increase shot damage");
+assert(overloadedShot.overloadCritChance > 0 && overloadedShot.overloadCritChance < 1, "overload should expose crit chance");
+assert.strictEqual(overloadedShot.overloadCritMul, 1.5);
+
+const maxedDamageState = rules.gateOptionState({
+  gateId: "damage_plus",
+  runMods: Object.assign(rules.defaultRunMods(), { damageAdd: 2.5 }),
+  vehicle: { hp: 100, maxHp: 200, shield: 0, maxShield: 120 },
+  config
+});
+assert.strictEqual(maxedDamageState.maxed, true, "damage gate should be maxed at 2.5 damageAdd");
+assert.strictEqual(maxedDamageState.overflow.amount, 6, "maxed damage gate should overflow to goods");
+const maxedDamageGate = rules.applyGateEffect({
+  gateId: "damage_plus",
+  runMods: Object.assign(rules.defaultRunMods(), { damageAdd: 2.5 }),
+  vehicle: { hp: 100, maxHp: 200, shield: 0, maxShield: 120 },
+  config
+});
+assert.strictEqual(maxedDamageGate.runMods.damageAdd, 2.5, "maxed gate should not add dead damage");
+assert.strictEqual(maxedDamageGate.runMods.overload, 1, "maxed gate should add overload");
+assert.strictEqual(maxedDamageGate.overflow.type, "goods");
+const maxedSupply = rules.applySupplyRewardById({
+  rewardId: "overshield",
+  runMods: rules.defaultRunMods(),
+  vehicle: { hp: 200, maxHp: 200, shield: 120, maxShield: 120 },
+  stats: {},
+  config
+});
+assert.strictEqual(maxedSupply.vehicle.shield, 120, "maxed overshield should not exceed shield cap");
+assert.strictEqual(maxedSupply.runMods.overload, 1, "maxed supply should add overload");
+assert.strictEqual(maxedSupply.overflow.amount, 5, "maxed overshield should overflow to goods");
+
+const gunnerPose = rules.resolveGunnerPose({
+  vehicle: { x: 100, y: 300 },
+  time: 0,
+  config
+});
+assert.strictEqual(gunnerPose.x, 100, "gunner pose should align with vehicle x by default");
+assert.strictEqual(gunnerPose.y, 334, "gunner pose should use the configured rear offset");
+const gunnerTarget = rules.selectGunnerTarget({
+  gunner: { x: 100, y: 334 },
+  enemies: [
+    { id: "far", enemyId: "runner", x: 100, y: 80, hp: 10 },
+    { id: "near", enemyId: "shambler", x: 110, y: 220, hp: 10 },
+    { id: "dead", enemyId: "runner", x: 95, y: 260, hp: 0 }
+  ],
+  range: 210,
+  config
+});
+assert.strictEqual(gunnerTarget.id, "near", "gunner should select the nearest live target within range");
 
 console.log("Rules tests PASS");

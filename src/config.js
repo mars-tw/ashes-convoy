@@ -4,7 +4,7 @@ const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 3;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R57", CACHE_VERSION: "ashes-convoy-r57-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R58", CACHE_VERSION: "ashes-convoy-r58-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -14,8 +14,8 @@ const LOGIC = {
   displayWidth: 390,
   displayHeight: 844,
   renderScale: 2,
-  roadLeft: 39,
-  roadRight: 156,
+  roadLeft: 27,
+  roadRight: 168,
   vehicleY: 352,
   aimMinY: 34,
   aimMaxY: 320
@@ -43,6 +43,25 @@ const RUN_TRAILER = {
       shadow: { widthMul: 0.92, heightMul: 0.22, alpha: 0.28, offsetY: 9, color: "#000000" }
     }
   }
+};
+
+const TRAILER_GUNNER = {
+  enabledDefault: true,
+  sprite: "assets/vehicles/xi_gunner.png",
+  offsetX: 0,
+  offsetY: 34,
+  followLerp: 0.12,
+  targetRange: 320,
+  weapon: {
+    damage: 6,
+    fireInterval: 0.9,
+    projectileSpeed: 300,
+    projectileRadius: 3,
+    spread: 0,
+    bulletSprite: "bullet_machine",
+    color: "#ffd27f"
+  },
+  muzzleOffsetY: -12
 };
 
 const STORY = {
@@ -642,6 +661,43 @@ const ENEMY_VARIANTS = {
     filter: "hue-rotate(30deg) saturate(1.6) brightness(0.95)",
     minWave: 8
   }
+};
+
+const WEAPON_POWERUPS = {
+  dropChancePerKill: 0.035,
+  pityKills: 30,
+  crateSpeed: 24,
+  ttl: 14,
+  pickupRadius: 30,
+  maxLevel: 5,
+  levelDamageMul: [1, 1.12, 1.24, 1.38, 1.55],
+  modes: {
+    standard: {
+      label: "標準彈"
+    },
+    spread: {
+      label: "散射",
+      projectilesAdd: 2,
+      spreadAdd: 0.06,
+      damageMul: 0.72
+    },
+    laser: {
+      label: "雷射",
+      pierceAdd: 3,
+      projectileSpeedMul: 1.35,
+      spread: 0,
+      damageMul: 0.9,
+      bulletSprite: "bullet_pulse"
+    },
+    homing: {
+      label: "追蹤",
+      homing: true,
+      turnRate: 4.5,
+      projectileSpeedMul: 0.9,
+      damageMul: 0.85
+    }
+  },
+  cycleModes: ["spread", "laser", "homing"]
 };
 
 const ENVIRONMENT_EVENTS = {
@@ -1974,6 +2030,46 @@ const MILESTONES = {
     metric: "bestWave",
     target: 25,
     rewardParts: 60
+  },
+  wave_30: {
+    id: "wave_30",
+    label: "深水第 30 波",
+    description: "抵達第 30 波，車隊仍向灰燼深處推進",
+    metric: "bestWave",
+    target: 30,
+    rewardParts: 80
+  },
+  wave_40: {
+    id: "wave_40",
+    label: "深水第 40 波",
+    description: "抵達第 40 波，夜色也攔不住護航火線",
+    metric: "bestWave",
+    target: 40,
+    rewardParts: 110
+  },
+  wave_50: {
+    id: "wave_50",
+    label: "深水第 50 波",
+    description: "抵達第 50 波，殘響之後仍有引擎聲",
+    metric: "bestWave",
+    target: 50,
+    rewardParts: 150
+  },
+  wave_75: {
+    id: "wave_75",
+    label: "深水第 75 波",
+    description: "抵達第 75 波，廢土長夜被砲火鑿開",
+    metric: "bestWave",
+    target: 75,
+    rewardParts: 220
+  },
+  wave_100: {
+    id: "wave_100",
+    label: "深水第 100 波",
+    description: "抵達第 100 波，灰燼盡頭仍有火",
+    metric: "bestWave",
+    target: 100,
+    rewardParts: 320
   }
 };
 
@@ -2062,6 +2158,7 @@ const META_DEFAULT = {
     reducedFlash: false,
     screenShake: true,
     showRunTrailer: true,
+    showCompanion: true,
     damageTextDensity: "all",
     performanceMode: "auto",
     fxLevel: "full",
@@ -2089,9 +2186,11 @@ const DSConfig = {
   LOGIC,
   ENVIRONMENT_BACKGROUNDS,
   RUN_TRAILER,
+  TRAILER_GUNNER,
   STORY,
   VEHICLES,
   WEAPONS,
+  WEAPON_POWERUPS,
   ENEMIES,
   ENEMY_VARIANTS,
   ENVIRONMENT_EVENTS,

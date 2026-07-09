@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#111317" />
-    <link rel="manifest" href="manifest.webmanifest?v=R57" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R57" />
+    <link rel="manifest" href="manifest.webmanifest?v=R58" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R58" />
     <title>灰燼護航</title>
     <style>
       :root {
@@ -462,6 +462,26 @@
 
       .gate-option-btn span {
         color: var(--accent);
+      }
+
+      .supply-choice-btn.is-maxed {
+        border-color: rgba(255, 102, 102, 0.78);
+        background: rgba(42, 14, 18, 0.86);
+      }
+
+      .choice-overflow-badge {
+        display: block;
+        margin-top: 5px;
+        padding: 3px 5px;
+        border: 1px solid rgba(255, 102, 102, 0.62);
+        border-radius: 6px;
+        color: #ffd1d1;
+        background: rgba(255, 102, 102, 0.12);
+        font-size: 10px;
+        font-style: normal;
+        font-weight: 900;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
       }
 
       .trailer-overlay {
@@ -1557,7 +1577,7 @@
             <span id="trailerBonusText">HP +0% · 傷害 +0% · 射速 +0% · 承傷 -0%</span>
           </div>
           <section class="story-log-section" id="storyLogSection" aria-label="無線電日誌" hidden>
-            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R57" alt="熹" decoding="async" draggable="false" />
+            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R58" alt="熹" decoding="async" draggable="false" />
             <div class="story-log-list" id="storyLogList"></div>
           </section>
           <div class="trailer-room-body">
@@ -1640,6 +1660,10 @@
                 <label class="settings-row">
                   <small>出勤拖車</small>
                   <input id="showRunTrailerToggle" type="checkbox" />
+                </label>
+                <label class="settings-row">
+                  <small>熹僚機</small>
+                  <input id="showCompanionToggle" type="checkbox" />
                 </label>
                 <label class="settings-row">
                   <small>畫面特效</small>
@@ -1735,7 +1759,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R57";
+        var key = "ashes_convoy_html_boot_reload_R58";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -1752,15 +1776,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R57"></script>
-    <script src="src/sprites.js?v=R57"></script>
-    <script src="src/sprite-renderer.js?v=R57"></script>
-    <script src="src/shelter-scene.js?v=R57"></script>
-    <script src="src/config.js?v=R57"></script>
-    <script src="src/rules.js?v=R57"></script>
-    <script src="src/fx.js?v=R57"></script>
-    <script src="src/audio.js?v=R57"></script>
-    <script src="src/game.js?v=R57"></script>
-    <script src="src/ui.js?v=R57"></script>
+    <script src="src/version.js?v=R58"></script>
+    <script src="src/sprites.js?v=R58"></script>
+    <script src="src/sprite-renderer.js?v=R58"></script>
+    <script src="src/shelter-scene.js?v=R58"></script>
+    <script src="src/config.js?v=R58"></script>
+    <script src="src/rules.js?v=R58"></script>
+    <script src="src/fx.js?v=R58"></script>
+    <script src="src/audio.js?v=R58"></script>
+    <script src="src/game.js?v=R58"></script>
+    <script src="src/ui.js?v=R58"></script>
   </body>
 </html>

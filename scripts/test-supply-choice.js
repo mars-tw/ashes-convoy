@@ -70,6 +70,29 @@ assert.strictEqual(parts.ok, true);
 assert.strictEqual(parts.partsGained, 2);
 assert.strictEqual(parts.stats.supplyParts, config.SUPPLY_DROPS.partsCapPerRun);
 
+const maxedRate = rules.applySupplyRewardById({
+  rewardId: "rate_boost",
+  time: 0,
+  runMods: Object.assign(rules.defaultRunMods(), { fireIntervalMul: 0.46 }),
+  vehicle: baseVehicle,
+  supplyBuffs: [],
+  stats: baseStats,
+  config
+});
+assert.strictEqual(maxedRate.ok, true);
+assert.strictEqual(maxedRate.supplyBuffs.length, 0, "maxed rate supply should not add a dead buff");
+assert.strictEqual(maxedRate.runMods.overload, 1, "maxed rate supply should add overload");
+assert.deepStrictEqual(maxedRate.overflow, { type: "score", amount: 120 });
+
+const maxedRepair = rules.supplyOptionState({
+  rewardId: "repair_small",
+  runMods: rules.defaultRunMods(),
+  vehicle: { hp: 100, maxHp: 100, shield: 0 },
+  config
+});
+assert.strictEqual(maxedRepair.maxed, true);
+assert.strictEqual(maxedRepair.overflowText, "分數 +80");
+
 const invalid = rules.applySupplyRewardById({
   rewardId: "missing_reward",
   time: 0,

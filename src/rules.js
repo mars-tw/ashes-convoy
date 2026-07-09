@@ -137,7 +137,7 @@ function sanitizeSettings(input, config) {
   } else if (typeof source.aimAssist === "boolean") {
     output.aimAssistLevel = source.aimAssist ? "medium" : "off";
   }
-  ["reducedFlash", "screenShake", "sound", "showRunTrailer"].forEach((key) => {
+  ["reducedFlash", "screenShake", "sound", "showRunTrailer", "showCompanion"].forEach((key) => {
     if (typeof source[key] === "boolean") output[key] = source[key];
   });
   if (validDamageTextDensity(source.damageTextDensity)) output.damageTextDensity = source.damageTextDensity;
@@ -563,6 +563,34 @@ function resolveTrailerFollowPose(options) {
   return { x, y, targetX, targetY, rotation, bobY, alpha };
 }
 
+function resolveGunnerPose(options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const base = cfg.TRAILER_GUNNER || {};
+  const spec = Object.assign(
+    {
+      offsetX: 0,
+      offsetY: 34,
+      followLerp: 0.12,
+      maxSwayRad: 0.06,
+      swayPerPixel: 0.008,
+      bobAmp: 0.5,
+      bobHz: 1.7,
+      bobPhase: 0.18
+    },
+    base,
+    opts.gunnerConfig || {}
+  );
+  return resolveTrailerFollowPose({
+    vehicle: opts.vehicle,
+    previous: opts.previous,
+    dt: opts.dt,
+    time: opts.time,
+    trailerConfig: spec,
+    simplified: opts.simplified
+  });
+}
+
 function getConfig(config) {
   if (config) return config;
   if (!Config) throw new Error("DSRules requires DSConfig.");
@@ -892,6 +920,7 @@ function applySupplyRewardById(options) {
     : null;
   const vehicle = opts.vehicle ? deepClone(opts.vehicle) : null;
   const supplyBuffs = Array.isArray(opts.supplyBuffs) ? deepClone(opts.supplyBuffs) : [];
+  const runMods = Object.assign(defaultRunMods(), opts.runMods || {});
   const stats = opts.stats ? deepClone(opts.stats) : {};
   if (!stats.supplyRewards || typeof stats.supplyRewards !== "object" || Array.isArray(stats.supplyRewards)) {
     stats.supplyRewards = {};
@@ -913,11 +942,13 @@ function applySupplyRewardById(options) {
       rewardId: opts.rewardId || "",
       vehicle,
       supplyBuffs,
+      runMods,
       stats,
       reward: null,
       buff: null,
       heal: 0,
-      partsGained: 0
+      partsGained: 0,
+      overflow: null
     };
   }
 
@@ -929,17 +960,26 @@ function applySupplyRewardById(options) {
     rewardId,
     vehicle,
     supplyBuffs,
+    runMods,
     stats,
     reward: deepClone(reward),
     buff: null,
     heal: 0,
     shieldGained: 0,
-    partsGained: 0
+    partsGained: 0,
+    overflow: null
   };
 
   stats.supplyCratesCollected += 1;
   stats.lastSupplyReward = rewardId;
   stats.supplyRewards[rewardId] = finiteNumber(stats.supplyRewards[rewardId], 0, { min: 0, integer: true }) + 1;
+
+  const option = supplyOptionState({ rewardId, runMods, vehicle, config: cfg });
+  if (option.maxed && option.overflow) {
+    runMods.overload = finiteNumber(runMods.overload, 0, { min: 0, integer: true }) + 1;
+    result.overflow = option.overflow;
+    return result;
+  }
 
   if (reward.type === "rate" || reward.type === "damage") {
     result.buff = {
@@ -1029,6 +1069,51 @@ function selectAimAssistTarget(options) {
   });
 
   return best;
+}
+
+function selectGunnerTarget(options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const gunner = opts.gunner && typeof opts.gunner === "object" ? opts.gunner : {};
+  const enemies = Array.isArray(opts.enemies) ? opts.enemies : [];
+  const range = finiteNumber(
+    opts.range,
+    cfg.TRAILER_GUNNER && Number.isFinite(cfg.TRAILER_GUNNER.targetRange) ? cfg.TRAILER_GUNNER.targetRange : 210,
+    { min: 0 }
+  );
+  const gunnerX = finiteNumber(gunner.x, cfg.LOGIC.width * 0.5);
+  const gunnerY = finiteNumber(gunner.y, cfg.LOGIC.vehicleY);
+  let best = null;
+
+  enemies.forEach((enemy, index) => {
+    if (!enemy || enemy.dead === true || finiteNumber(enemy.hp, 1) <= 0) return;
+    const x = finiteNumber(enemy.x, cfg.LOGIC.width * 0.5);
+    const y = finiteNumber(enemy.y, 0);
+    const dx = x - gunnerX;
+    const dy = y - gunnerY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (!Number.isFinite(dist) || dist > range) return;
+    const score = dist + index * 0.001;
+    if (!best || score < best.score) {
+      best = {
+        id: enemy.id,
+        enemyId: typeof enemy.enemyId === "string" ? enemy.enemyId : "",
+        x,
+        y,
+        distance: dist,
+        score
+      };
+    }
+  });
+
+  if (!best) return null;
+  return {
+    id: best.id,
+    enemyId: best.enemyId,
+    x: best.x,
+    y: best.y,
+    distance: best.distance
+  };
 }
 
 function vehicleSpecialTracks(vehicleId, config) {
@@ -1401,8 +1486,123 @@ function defaultRunMods() {
     projectileAdd: 0,
     burn: 0,
     shock: 0,
-    slow: 0
+    slow: 0,
+    overload: 0,
+    weaponMode: "standard",
+    weaponLevel: 1
   };
+}
+
+function overloadDamage(overload) {
+  const count = finiteNumber(overload, 0, { min: 0, integer: true });
+  let total = 0;
+  for (let i = 1; i <= count; i += 1) {
+    total += 1 / (1 + 0.05 * i);
+  }
+  return 0.02 * total;
+}
+
+function overflowTextFor(overflow) {
+  if (!overflow || !Number.isFinite(overflow.amount)) return "";
+  if (overflow.type === "goods") return `拾荒物資 +${overflow.amount}`;
+  if (overflow.type === "heal") return `HP +${overflow.amount}`;
+  if (overflow.type === "score") return `分數 +${overflow.amount}`;
+  return `+${overflow.amount}`;
+}
+
+function maxShieldForVehicle(vehicle) {
+  const maxHp = finiteNumber(vehicle && vehicle.maxHp, 0, { min: 0 });
+  const fallback = Math.round(maxHp * 0.6);
+  return finiteNumber(vehicle && vehicle.maxShield, fallback, { min: 0 });
+}
+
+function overflowForGate(gateId, vehicle) {
+  const maxHp = finiteNumber(vehicle && vehicle.maxHp, 0, { min: 0 });
+  if (gateId === "damage_plus") return { type: "goods", amount: 6 };
+  if (gateId === "multishot_plus") return { type: "heal", amount: Math.round(maxHp * 0.06) };
+  if (gateId === "rate_plus") return { type: "score", amount: 120 };
+  if (gateId === "barrier") return { type: "goods", amount: 5 };
+  if (gateId === "repair") return { type: "score", amount: 80 };
+  return null;
+}
+
+function overflowForSupplyReward(rewardId, vehicle) {
+  const maxHp = finiteNumber(vehicle && vehicle.maxHp, 0, { min: 0 });
+  if (rewardId === "damage_boost") return { type: "goods", amount: 6 };
+  if (rewardId === "rate_boost") return { type: "score", amount: 120 };
+  if (rewardId === "overshield") return { type: "goods", amount: 5 };
+  if (rewardId === "repair_small") return { type: "score", amount: 80 };
+  if (rewardId === "multishot_plus") return { type: "heal", amount: Math.round(maxHp * 0.06) };
+  return null;
+}
+
+function isVehicleFullHealth(vehicle) {
+  if (!vehicle) return false;
+  const maxHp = finiteNumber(vehicle.maxHp, 0, { min: 0 });
+  return maxHp > 0 && finiteNumber(vehicle.hp, 0, { min: 0 }) >= maxHp;
+}
+
+function isVehicleFullShield(vehicle) {
+  if (!vehicle) return false;
+  const maxShield = maxShieldForVehicle(vehicle);
+  return maxShield > 0 && finiteNumber(vehicle.shield, 0, { min: 0 }) >= maxShield;
+}
+
+function gateOptionState(options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const gate = cfg.GATES && cfg.GATES[opts.gateId];
+  const runMods = Object.assign(defaultRunMods(), opts.runMods || {});
+  const vehicle = opts.vehicle || null;
+  let maxed = false;
+
+  if (gate && gate.effect) {
+    if (gate.effect.type === "damageAdd") maxed = finiteNumber(runMods.damageAdd, 0) >= 2.5;
+    else if (gate.effect.type === "projectileAdd") maxed = finiteNumber(runMods.projectileAdd, 0, { integer: true }) >= 4;
+    else if (gate.effect.type === "fireIntervalMul") maxed = finiteNumber(runMods.fireIntervalMul, 1) <= 0.46;
+    else if (gate.effect.type === "shieldPct") maxed = isVehicleFullShield(vehicle);
+    else if (gate.effect.type === "repairPct") maxed = isVehicleFullHealth(vehicle);
+  }
+
+  const overflow = maxed ? overflowForGate(opts.gateId, vehicle) : null;
+  return { maxed, overflowText: overflowTextFor(overflow), overflow };
+}
+
+function supplyOptionState(options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const reward = cfg.SUPPLY_DROPS && cfg.SUPPLY_DROPS.rewards
+    ? cfg.SUPPLY_DROPS.rewards[opts.rewardId]
+    : null;
+  const runMods = Object.assign(defaultRunMods(), opts.runMods || {});
+  const vehicle = opts.vehicle || null;
+  let maxed = false;
+
+  if (reward) {
+    if (reward.type === "damage") maxed = finiteNumber(runMods.damageAdd, 0) >= 2.5;
+    else if (reward.type === "rate") maxed = finiteNumber(runMods.fireIntervalMul, 1) <= 0.46;
+    else if (reward.type === "shield") maxed = isVehicleFullShield(vehicle);
+    else if (reward.type === "repair") maxed = isVehicleFullHealth(vehicle);
+  }
+
+  const overflow = maxed ? overflowForSupplyReward(opts.rewardId, vehicle) : null;
+  return { maxed, overflowText: overflowTextFor(overflow), overflow };
+}
+
+function applyWeaponPowerup(options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const powerups = cfg.WEAPON_POWERUPS || {};
+  const modes = powerups.modes || {};
+  const maxLevel = finiteNumber(powerups.maxLevel, 5, { min: 1, integer: true });
+  const currentMode = modes[opts.currentMode] ? opts.currentMode : "standard";
+  const pickedMode = modes[opts.pickedMode] ? opts.pickedMode : currentMode;
+  const currentLevel = finiteNumber(opts.currentLevel, 1, { min: 1, max: maxLevel, integer: true });
+
+  if (pickedMode === currentMode) {
+    return { mode: currentMode, level: Math.min(maxLevel, currentLevel + 1) };
+  }
+  return { mode: pickedMode, level: Math.max(1, currentLevel - 1) };
 }
 
 function sanitizeVehicleLevels(levels, vehicleId, config) {
@@ -1501,23 +1701,47 @@ function calculateShotStats(options) {
   const damageMul = (1 + levels.weapon * weaponTrack.damageMulPerLevel) * special.damageMul * (1 + trailer.damagePct);
   const energyMul = Math.pow(1 - energyTrack.fireRateMulPerLevel, levels.energy);
   const damageAdd = Math.min(runMods.damageAdd, 2.5);
-  const projectiles = clamp(weapon.baseProjectiles + runMods.projectileAdd, 1, weapon.baseProjectiles + 4);
+  const powerups = cfg.WEAPON_POWERUPS || {};
+  const modes = powerups.modes || {};
+  const maxWeaponLevel = finiteNumber(powerups.maxLevel, 5, { min: 1, integer: true });
+  const weaponMode = modes[runMods.weaponMode] ? runMods.weaponMode : "standard";
+  const mode = modes[weaponMode] || {};
+  const weaponLevel = finiteNumber(runMods.weaponLevel, 1, { min: 1, max: maxWeaponLevel, integer: true });
+  const levelDamageMul = Array.isArray(powerups.levelDamageMul)
+    ? finiteNumber(powerups.levelDamageMul[weaponLevel - 1], 1, { min: 0.1, max: 4 })
+    : 1;
+  const modeDamageMul = finiteNumber(mode.damageMul, 1, { min: 0.1, max: 4 });
+  const baseProjectiles = clamp(weapon.baseProjectiles + runMods.projectileAdd, 1, weapon.baseProjectiles + 4);
+  const projectiles = clamp(baseProjectiles + finiteNumber(mode.projectilesAdd, 0, { integer: true }), 1, weapon.baseProjectiles + 6);
   const minInterval = Math.max(0.08, weapon.fireInterval * 0.55);
   const interval = Math.max(minInterval, weapon.fireInterval * runMods.fireIntervalMul * energyMul * special.fireIntervalMul * trailer.fireIntervalMul);
+  const overload = finiteNumber(runMods.overload, 0, { min: 0, integer: true });
+  const overloadPierce = Math.floor(overload / 3);
+  const projectileSpeedMul = finiteNumber(mode.projectileSpeedMul, 1, { min: 0.1, max: 4 });
+  const spread = Number.isFinite(mode.spread)
+    ? finiteNumber(mode.spread, weapon.spread, { min: 0, max: 0.4 })
+    : weapon.spread + finiteNumber(mode.spreadAdd, 0, { min: -0.2, max: 0.4 });
   return {
     weaponId: weapon.id,
-    bulletSprite: weapon.bulletSprite,
-    damage: weapon.damage * damageMul * (1 + damageAdd),
+    bulletSprite: mode.bulletSprite || weapon.bulletSprite,
+    damage: weapon.damage * damageMul * (1 + damageAdd) * levelDamageMul * modeDamageMul * (1 + overloadDamage(overload)),
     fireInterval: interval,
-    projectileSpeed: weapon.projectileSpeed,
-    pierce: weapon.pierce + special.pierceAdd,
-    spread: weapon.spread,
+    projectileSpeed: weapon.projectileSpeed * projectileSpeedMul,
+    pierce: weapon.pierce + special.pierceAdd + finiteNumber(mode.pierceAdd, 0, { integer: true }) + overloadPierce,
+    spread,
     splash: weapon.splash + special.splashAdd,
     muzzleOffset: weapon.muzzleOffset,
     baseProjectiles: weapon.baseProjectiles,
     bonusProjectiles: Math.max(0, projectiles - weapon.baseProjectiles),
     projectiles,
-    sideDamageMul: weapon.sideDamageMul
+    sideDamageMul: weapon.sideDamageMul,
+    weaponMode,
+    weaponLevel,
+    homing: mode.homing === true,
+    turnRate: finiteNumber(mode.turnRate, 0, { min: 0, max: 20 }),
+    overloadCritChance: 1 - 1 / (1 + overload * 0.06),
+    overloadCritMul: 1.5,
+    overloadPierce
   };
 }
 
@@ -1533,6 +1757,14 @@ function applyGateEffect(options) {
   const effect = gate.effect;
   const runMods = deepClone(currentMods);
   let changedVehicle = vehicle;
+  let overflow = null;
+
+  const option = gateOptionState({ gateId: opts.gateId, runMods, vehicle: changedVehicle, vehicleLevels: levels, config: cfg });
+  if (option.maxed && option.overflow) {
+    runMods.overload = finiteNumber(runMods.overload, 0, { min: 0, integer: true }) + 1;
+    overflow = option.overflow;
+    return { runMods, vehicle: changedVehicle, gateId: gate.id, overflow };
+  }
 
   if (effect.type === "damageAdd") {
     runMods.damageAdd = Math.min(effect.maxDamageMul - 1, runMods.damageAdd + effect.add * gateMul);
@@ -1552,7 +1784,7 @@ function applyGateEffect(options) {
     changedVehicle.shield = Math.min(shieldCap, current + gained);
   }
 
-  return { runMods, vehicle: changedVehicle, gateId: gate.id };
+  return { runMods, vehicle: changedVehicle, gateId: gate.id, overflow };
 }
 
 function damageEnemy(enemy, amount) {
@@ -2234,9 +2466,14 @@ const DSRules = {
   chooseSupplyReward,
   stepSupplyDropMotion,
   applySupplyRewardById,
+  gateOptionState,
+  supplyOptionState,
+  applyWeaponPowerup,
+  overloadDamage,
   rollScavengeDrop,
   scavengeGoodsBreakdownForRun,
   resolveTrailerFollowPose,
+  resolveGunnerPose,
   sanitizeTrailerRoom,
   sanitizeStory,
   storyUnlockValue,
@@ -2248,6 +2485,7 @@ const DSRules = {
   buyTrailerFurniture,
   equipTrailerFurniture,
   selectAimAssistTarget,
+  selectGunnerTarget,
   aimAssistStrength,
   recommendUpgradeForRun,
   createSafeRecoveryMeta,

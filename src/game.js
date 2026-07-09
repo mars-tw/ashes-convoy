@@ -48,11 +48,16 @@
     runTrailerFallbackDrawn: false,
     runTrailerImageStatus: "none",
     runTrailerPose: null,
+    companionRasterDrawn: false,
+    companionFallbackDrawn: false,
+    companionImageStatus: "none",
+    companionPose: null,
     enemyImageStatus: {}
   };
   const environmentImages = {};
   const vehicleImages = {};
   const runTrailerImages = {};
+  const companionImages = {};
   const enemyImages = {};
   const enemySpriteOptions = { flipX: false, alpha: 1 };
 
@@ -360,6 +365,33 @@
     return record.status;
   }
 
+  function preloadCompanionImages() {
+    if (typeof root.Image !== "function") return;
+    const spec = config.TRAILER_GUNNER || {};
+    const src = spec.sprite;
+    if (!src || companionImages[src]) return;
+    const record = { image: new root.Image(), status: "loading", src };
+    record.image.onload = () => {
+      record.status = "loaded";
+      draw();
+    };
+    record.image.onerror = () => {
+      record.status = "failed";
+      draw();
+    };
+    record.image.decoding = "async";
+    record.image.src = src;
+    companionImages[src] = record;
+  }
+
+  function companionImageStatus(spec) {
+    const src = spec && spec.sprite;
+    const record = src ? companionImages[src] : null;
+    if (!record) return "none";
+    if (record.status === "loaded" && record.image.complete && record.image.naturalWidth > 0) return "loaded";
+    return record.status;
+  }
+
   function preloadEnvironmentImages() {
     if (typeof root.Image !== "function") return;
     Object.keys(config.ENVIRONMENT_BACKGROUNDS || {}).forEach((environment) => {
@@ -460,6 +492,35 @@
     };
   }
 
+  function applyOverflowReward(overflow, x, y) {
+    if (!overflow || !Number.isFinite(overflow.amount) || overflow.amount <= 0) return;
+    let label = "";
+    let color = "#ffd27f";
+    if (overflow.type === "goods") {
+      state.stats.scavengeGoods += overflow.amount;
+      label = `拾荒物資 +${overflow.amount}`;
+      color = "#d7b56b";
+    } else if (overflow.type === "heal") {
+      const before = state.vehicle.hp;
+      state.vehicle.hp = Math.min(state.vehicle.maxHp, state.vehicle.hp + overflow.amount);
+      const healed = Math.max(0, Math.round(state.vehicle.hp - before));
+      label = `HP +${healed}`;
+      color = "#87d27d";
+    } else if (overflow.type === "score") {
+      state.stats.score += overflow.amount;
+      label = `分數 +${overflow.amount}`;
+      color = "#f0b64a";
+    }
+    if (!label) return;
+    state.messages.push({ text: `溢出：${label}`, time: state.time, ttl: 1.45 });
+    addFloatingText(label, Number.isFinite(x) ? x : state.vehicle.x, Number.isFinite(y) ? y : state.vehicle.y - 64, {
+      color,
+      size: 8,
+      ttl: 0.72,
+      vy: -13
+    });
+  }
+
   function pulseShake(amount, duration) {
     if (meta.settings && meta.settings.reducedFlash) return;
     if (meta.settings && meta.settings.screenShake === false) return;
@@ -524,6 +585,7 @@
       hazards: state.hazards.map(publicEntity),
       enemyProjectiles: state.enemyProjectiles.map(publicEntity),
       supplyDrops: state.supplyDrops.map(publicEntity),
+      weaponPowerups: state.weaponPowerups.map(publicEntity),
       supplyBuffs: state.supplyBuffs.map(publicEntity),
       projectiles: state.projectiles.map(publicEntity),
       gates: state.gates.map(publicEntity),
@@ -789,6 +851,38 @@
     }
   }
 
+  function spawnWeaponPowerup(x, y, mode) {
+    const powerups = config.WEAPON_POWERUPS || {};
+    state.weaponPowerups.push({
+      id: nextId("weapon_powerup"),
+      mode,
+      x,
+      y,
+      vx: 0,
+      vy: powerups.crateSpeed || 24,
+      radius: 12,
+      age: 0,
+      ttl: powerups.ttl || 14,
+      picked: false
+    });
+    addFloatingText("彈種", x, y - 16, { color: "#ffd27f", size: 8, ttl: 0.55, vy: -12 });
+  }
+
+  function maybeDropWeaponPowerup(enemy) {
+    const powerups = config.WEAPON_POWERUPS || {};
+    const modes = Array.isArray(powerups.cycleModes) && powerups.cycleModes.length ? powerups.cycleModes : [];
+    if (!modes.length) return;
+    const killsSinceDrop = Math.max(0, state.stats.weaponPowerupKillsSinceDrop || 0) + 1;
+    const pityKills = Math.max(1, powerups.pityKills || 30);
+    const guaranteed = killsSinceDrop >= pityKills;
+    const dropped = guaranteed || state.rng() < Math.max(0, Math.min(1, powerups.dropChancePerKill || 0));
+    state.stats.weaponPowerupKillsSinceDrop = dropped ? 0 : killsSinceDrop;
+    if (!dropped) return;
+    const mode = modes[Math.min(modes.length - 1, Math.floor(state.rng() * modes.length))];
+    state.stats.weaponPowerupsDropped += 1;
+    spawnWeaponPowerup(enemy.x, enemy.y, mode);
+  }
+
   function maybeDropScavenge(enemy) {
     const result = rules.rollScavengeDrop({
       killsSinceDrop: state.stats.scavengeKillsSinceDrop,
@@ -829,6 +923,7 @@
       rewardId,
       time: state.time,
       vehicle: state.vehicle,
+      runMods: state.runMods,
       supplyBuffs: state.supplyBuffs,
       stats: state.stats,
       buffId: nextId("buff"),
@@ -836,8 +931,10 @@
     });
     if (!result.ok) return getState();
     state.vehicle = result.vehicle || state.vehicle;
+    state.runMods = result.runMods || state.runMods;
     state.supplyBuffs = result.supplyBuffs;
     state.stats = Object.assign(state.stats, result.stats);
+    applyOverflowReward(result.overflow, choice.x, choice.y - 10);
     state.supplyChoice = null;
     state.paused = false;
     state.mode = "playing";
@@ -913,11 +1010,15 @@
       },
       runTrailerPose: null,
       runTrailerUpdatedAt: 0,
+      companionPose: null,
+      companionUpdatedAt: 0,
+      companionCooldown: 0,
       runMods: rules.defaultRunMods(),
       enemies: [],
       hazards: [],
       enemyProjectiles: [],
       supplyDrops: [],
+      weaponPowerups: [],
       supplyBuffs: [],
       gateChoice: null,
       supplyChoice: null,
@@ -941,6 +1042,9 @@
         supplyParts: 0,
         supplyRewards: {},
         lastSupplyReward: "",
+        weaponPowerupKillsSinceDrop: 0,
+        weaponPowerupsDropped: 0,
+        weaponPowerupsCollected: 0,
         scavengeKillsSinceDrop: 0,
         scavengeDrops: 0,
         scavengeGoods: 0,
@@ -1204,6 +1308,7 @@
     });
     state.runMods = result.runMods;
     state.vehicle = result.vehicle || state.vehicle;
+    applyOverflowReward(result.overflow, state.vehicle.x, state.vehicle.y - 66);
     state.stats.gatesTaken += 1;
     state.lastGateChoice = {
       gateId,
@@ -1432,6 +1537,7 @@
       });
     }
     maybeDropSupply(enemy);
+    maybeDropWeaponPowerup(enemy);
     maybeDropScavenge(enemy);
     updatePartsPreview();
   }
@@ -1568,6 +1674,11 @@
           bonusProjectile,
           vehicleId: state.vehicleId,
           pierce: shot.pierce,
+          overloadPierce: shot.overloadPierce,
+          overloadCritChance: shot.overloadCritChance,
+          overloadCritMul: shot.overloadCritMul,
+          homing: shot.homing,
+          turnRate: shot.turnRate,
           radius: shot.bulletSprite === "bullet_rocket" ? 9 : 6,
           rotation: angle,
           life: 1.45,
@@ -1837,6 +1948,53 @@
     state.supplyDrops = state.supplyDrops.filter((drop) => !drop.picked && drop.age < drop.ttl && drop.y < H + 40);
   }
 
+  function collectWeaponPowerup(drop) {
+    if (!drop || drop.picked) return;
+    const picked = rules.applyWeaponPowerup({
+      currentMode: state.runMods.weaponMode,
+      currentLevel: state.runMods.weaponLevel,
+      pickedMode: drop.mode,
+      config
+    });
+    state.runMods.weaponMode = picked.mode;
+    state.runMods.weaponLevel = picked.level;
+    state.stats.weaponPowerupsCollected += 1;
+    drop.picked = true;
+    const mode = config.WEAPON_POWERUPS && config.WEAPON_POWERUPS.modes
+      ? config.WEAPON_POWERUPS.modes[picked.mode]
+      : null;
+    const label = `${mode && mode.label ? mode.label : picked.mode} Lv${picked.level}`;
+    state.messages.push({ text: label, time: state.time, ttl: 1.5 });
+    pushEventBanner("彈種切換", label, { kind: "supply", ttl: 1.4 });
+    playSound("pickup");
+    addFloatingText(label, state.vehicle.x, state.vehicle.y - 72, {
+      color: "#ffd27f",
+      size: 8,
+      ttl: 0.75,
+      vy: -13
+    });
+  }
+
+  function updateWeaponPowerups(dt) {
+    if (!state.weaponPowerups.length) return;
+    const powerups = config.WEAPON_POWERUPS || {};
+    const pickupRadius = powerups.pickupRadius || 30;
+    const driftSpeed = 24;
+    for (let i = 0; i < state.weaponPowerups.length; i += 1) {
+      const drop = state.weaponPowerups[i];
+      if (drop.picked) continue;
+      const dx = state.vehicle.x - drop.x;
+      const xStep = Math.min(Math.abs(dx), driftSpeed * dt);
+      drop.x += Math.sign(dx) * xStep;
+      drop.y += (drop.vy || powerups.crateSpeed || 24) * dt;
+      drop.age += dt;
+      if (distance(drop, state.vehicle) <= pickupRadius + state.vehicle.radius) {
+        collectWeaponPowerup(drop);
+      }
+    }
+    state.weaponPowerups = state.weaponPowerups.filter((drop) => !drop.picked && drop.age < drop.ttl && drop.y < H + 40);
+  }
+
   function updateEnemyProjectiles(dt) {
     if (!state.enemyProjectiles.length) return;
     state.enemyProjectiles.forEach((shot) => {
@@ -1866,8 +2024,35 @@
     });
   }
 
+  function angleDelta(target, current) {
+    let delta = target - current;
+    while (delta > Math.PI) delta -= TAU;
+    while (delta < -Math.PI) delta += TAU;
+    return delta;
+  }
+
+  function updateHomingProjectile(projectile, dt) {
+    if (!projectile.homing || projectile.turnRate <= 0) return;
+    let best = null;
+    state.enemies.forEach((enemy) => {
+      if (enemy.dead) return;
+      const d = distance(projectile, enemy);
+      if (!best || d < best.distance) best = { enemy, distance: d };
+    });
+    if (!best) return;
+    const speed = Math.sqrt(projectile.vx * projectile.vx + projectile.vy * projectile.vy) || 1;
+    const current = Math.atan2(projectile.vy, projectile.vx);
+    const desired = Math.atan2(best.enemy.y - projectile.y, best.enemy.x - projectile.x);
+    const maxTurn = projectile.turnRate * dt;
+    const next = current + rules.clamp(angleDelta(desired, current), -maxTurn, maxTurn);
+    projectile.vx = Math.cos(next) * speed;
+    projectile.vy = Math.sin(next) * speed;
+    projectile.rotation = next;
+  }
+
   function updateProjectiles(dt) {
     state.projectiles.forEach((projectile) => {
+      updateHomingProjectile(projectile, dt);
       projectile.x += projectile.vx * dt;
       projectile.y += projectile.vy * dt;
       projectile.life -= dt;
@@ -1908,7 +2093,10 @@
         if (distance(projectile, enemy) <= projectile.radius + enemy.radius) {
           let damage = projectile.damage;
           const projectileVehicle = getVehicleConfig(projectile.vehicleId);
-          if (projectileVehicle.passive && projectileVehicle.passive.id === "armor_break_focus") {
+          const critChance = Math.max(0, Math.min(1, projectile.overloadCritChance || 0));
+          const crit = critChance > 0 && state.rng() < critChance;
+          if (crit) damage *= projectile.overloadCritMul || 1.5;
+          if (projectile.source !== "companion" && projectileVehicle.passive && projectileVehicle.passive.id === "armor_break_focus") {
             const passive = projectileVehicle.passive;
             const stacks = Math.min(passive.maxStacks, enemy.armorBreakStacks || 0);
             damage *= 1 + stacks * passive.armorBreakPerHit;
@@ -1946,6 +2134,16 @@
             damageNumber: true,
             amount: damage
           });
+          if (crit) {
+            addFloatingText("暴擊", enemy.x + 8, enemy.y - enemy.radius - 12, {
+              color: "#ffd76a",
+              size: 7,
+              ttl: 0.5,
+              vy: -14,
+              damageNumber: true,
+              amount: damage
+            });
+          }
           playSound("hit");
           if (FXC && fxEnabled()) {
             fxHitOpts.x = projectile.x;
@@ -2078,6 +2276,71 @@
     }
   }
 
+  function companionEnabled() {
+    const spec = config.TRAILER_GUNNER || {};
+    if (spec.enabledDefault === false) return false;
+    return !(meta.settings && meta.settings.showCompanion === false);
+  }
+
+  function updateCompanionPose(dt) {
+    const previousUpdateAt = Number.isFinite(state.companionUpdatedAt) ? state.companionUpdatedAt : state.time;
+    const poseDt = Number.isFinite(dt) ? dt : Math.max(0, state.time - previousUpdateAt);
+    const pose = rules.resolveGunnerPose({
+      vehicle: state.vehicle,
+      previous: state.companionPose,
+      dt: poseDt,
+      time: stateTime(),
+      gunnerConfig: config.TRAILER_GUNNER,
+      simplified: performanceState.quality === "low" || fxLevelSetting() === "off",
+      config
+    });
+    state.companionPose = pose;
+    state.companionUpdatedAt = state.time;
+    return pose;
+  }
+
+  function updateCompanion(dt) {
+    if (!companionEnabled()) return;
+    const spec = config.TRAILER_GUNNER || {};
+    const weapon = spec.weapon || {};
+    const pose = updateCompanionPose(dt);
+    state.companionCooldown = Math.max(0, (state.companionCooldown || 0) - dt);
+    if (state.companionCooldown > 0 || state.projectiles.length >= config.PERFORMANCE.maxProjectiles) return;
+    const target = rules.selectGunnerTarget({
+      gunner: pose,
+      enemies: state.enemies,
+      range: spec.targetRange,
+      config
+    });
+    if (!target) return;
+    const muzzleY = pose.y + (spec.muzzleOffsetY || -12);
+    const spread = (weapon.spread || 0) * (state.rng() - 0.5);
+    const direction = normalize(target.x - pose.x, target.y - muzzleY);
+    const angle = Math.atan2(direction.y, direction.x) + spread;
+    const speed = weapon.projectileSpeed || 300;
+    state.projectiles.push({
+      id: nextId("projectile"),
+      source: "companion",
+      sprite: weapon.bulletSprite || "bullet_machine",
+      x: pose.x + Math.cos(angle) * 7,
+      y: muzzleY + Math.sin(angle) * 7,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      damage: weapon.damage || 6,
+      damageSources: [{ key: "companion", ratio: 1 }],
+      bonusProjectile: false,
+      vehicleId: state.vehicleId,
+      pierce: 0,
+      radius: weapon.projectileRadius || 3,
+      rotation: angle,
+      life: 1.2,
+      splash: 0,
+      scale: 0.78,
+      color: weapon.color || "#ffd27f"
+    });
+    state.companionCooldown += weapon.fireInterval || 0.9;
+  }
+
   function update(dt) {
     if (!state || state.paused || state.over) return;
     state.time += dt;
@@ -2086,9 +2349,11 @@
     updateVehicleAim(dt);
     processWaveEvents();
     fireProjectiles(dt);
+    updateCompanion(dt);
     updateHazards(dt);
     updateEnemyProjectiles(dt);
     updateSupplyDrops(dt);
+    updateWeaponPowerups(dt);
     updateProjectiles(dt);
     updateEnemies(dt);
     updateGatesAndEffects(dt);
@@ -2927,6 +3192,41 @@
     renderDebug.supplyCrateStyle = "pixel_wood";
   }
 
+  function drawWeaponPowerup(drop) {
+    const mode = config.WEAPON_POWERUPS && config.WEAPON_POWERUPS.modes
+      ? config.WEAPON_POWERUPS.modes[drop.mode]
+      : null;
+    const time = stateTime() + drop.age * 0.3;
+    const bobY = Math.sin(time * TAU * 1.2) * 1.3;
+    const y = drop.y + bobY;
+    ctx.save();
+    if (fxLevelSetting() !== "off") {
+      ctx.globalAlpha = 0.22 + 0.1 * Math.sin(time * TAU * 1.8);
+      ctx.fillStyle = "#ffd27f";
+      ctx.beginPath();
+      ctx.arc(drop.x, y, 14, 0, TAU);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.translate(Math.round(drop.x), Math.round(y));
+    ctx.fillStyle = "#2a2831";
+    ctx.fillRect(-8, -7, 16, 14);
+    ctx.fillStyle = "#5ed4cb";
+    ctx.fillRect(-6, -5, 12, 4);
+    ctx.fillStyle = "#ffd27f";
+    ctx.fillRect(-2, -7, 4, 14);
+    ctx.strokeStyle = "#f4ead8";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(-7.5, -6.5, 15, 13);
+    ctx.fillStyle = "#ffd27f";
+    ctx.font = "800 6px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(mode && mode.label ? mode.label.slice(0, 1) : "彈", 0, 1);
+    ctx.restore();
+    renderDebug.weaponPowerupDrawn += 1;
+  }
+
   function drawSupplyPickup(effect) {
     ctx.save();
     ctx.globalAlpha *= effect.alpha == null ? 1 : effect.alpha;
@@ -2971,6 +3271,7 @@
       ctx.globalAlpha = p.alpha;
       ctx.strokeStyle = p.color;
       ctx.lineWidth = Math.max(0.5, p.size * 0.6);
+      ctx.lineCap = "round";
       ctx.beginPath();
       ctx.moveTo(p.x - nx * len, p.y - ny * len);
       ctx.lineTo(p.x + nx * len * 0.4, p.y + ny * len * 0.4);
@@ -2982,16 +3283,76 @@
       ctx.fill();
     } else if (p.shape === "debris" || p.shape === "shard") {
       const s = Math.max(0.8, p.size);
+      const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy) || 1;
+      const nx = p.vx / speed;
+      const ny = p.vy / speed;
+      const len = Math.max(1.2, s * (p.shape === "shard" ? 2.2 : 1.45));
       ctx.globalAlpha = p.alpha;
       ctx.save();
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = Math.max(0.45, s * (p.shape === "shard" ? 0.35 : 0.5));
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(p.x - nx * len, p.y - ny * len);
+      ctx.lineTo(p.x - nx * s * 0.18, p.y - ny * s * 0.18);
+      ctx.stroke();
       ctx.translate(p.x, p.y);
       ctx.rotate(p.rotation);
-      ctx.fillRect(-s * 0.5, -s * 0.5, s, p.shape === "shard" ? s * 0.6 : s);
+      ctx.beginPath();
+      ctx.arc(0, 0, p.shape === "shard" ? s * 0.34 : s * 0.48, 0, TAU);
+      ctx.fill();
+      ctx.restore();
+    } else if (p.shape === "spark" || p.shape === "ember") {
+      const s = Math.max(0.6, p.size);
+      if (performanceState.quality === "low" || (meta.settings && meta.settings.reducedFlash)) {
+        ctx.globalAlpha = p.alpha;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, s * 0.5, 0, TAU);
+        ctx.fill();
+        return;
+      }
+      const radius = Math.max(1, s * 1.6);
+      const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radius);
+      gradient.addColorStop(0, p.color);
+      gradient.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      ctx.globalCompositeOperation = "lighter";
+      if (p.shape === "ember") {
+        ctx.globalAlpha = p.alpha * 0.36;
+        ctx.fillStyle = "#ff9a3a";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius * 1.55, 0, TAU);
+        ctx.fill();
+        ctx.globalAlpha = p.alpha;
+      }
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, radius, 0, TAU);
+      ctx.fill();
+      const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy) || 0;
+      if (speed > 4) {
+        const nx = p.vx / speed;
+        const ny = p.vy / speed;
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = Math.max(0.45, s * 0.36);
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(p.x - nx * s * 2.1, p.y - ny * s * 2.1);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "#fff6d8";
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, Math.max(0.35, s * 0.22), 0, TAU);
+      ctx.fill();
       ctx.restore();
     } else {
       const s = Math.max(0.6, p.size);
       ctx.globalAlpha = p.alpha;
-      ctx.fillRect(p.x - s * 0.5, p.y - s * 0.5, s, s);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, s * 0.5, 0, TAU);
+      ctx.fill();
     }
   }
 
@@ -3117,6 +3478,60 @@
     }
 
     drawRunTrailerFallback(pose, width, height, spec);
+  }
+
+  function drawCompanionFallback(pose, width, height) {
+    ctx.save();
+    ctx.translate(pose.x, pose.y + pose.bobY);
+    ctx.rotate(pose.rotation);
+    ctx.globalAlpha *= 0.92;
+    ctx.fillStyle = "#35291c";
+    ctx.fillRect(-width * 0.34, -height * 0.32, width * 0.68, height * 0.5);
+    ctx.fillStyle = "#c5905d";
+    ctx.fillRect(-width * 0.22, -height * 0.58, width * 0.44, height * 0.28);
+    ctx.fillStyle = "#1d2530";
+    ctx.fillRect(-width * 0.28, -height * 0.2, width * 0.56, height * 0.28);
+    ctx.strokeStyle = "#ffd27f";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(0, -height * 0.28);
+    ctx.lineTo(0, -height * 0.58);
+    ctx.stroke();
+    ctx.restore();
+    renderDebug.companionFallbackDrawn = true;
+  }
+
+  function drawCompanion(vehicleConfig, vehicle) {
+    if (!state || !companionEnabled()) return;
+    const spec = config.TRAILER_GUNNER || {};
+    const pose = state.companionPose || updateCompanionPose(0);
+    const status = companionImageStatus(spec);
+    const record = spec.sprite ? companionImages[spec.sprite] : null;
+    const width = spec.visualWidth || 30;
+    const height =
+      record && record.image && record.image.naturalWidth > 0
+        ? width * (record.image.naturalHeight / record.image.naturalWidth)
+        : width * 1.33;
+    renderDebug.companionImageStatus = status;
+    renderDebug.companionPose = {
+      x: Math.round(pose.x * 10) / 10,
+      y: Math.round(pose.y * 10) / 10,
+      rotation: Math.round(pose.rotation * 1000) / 1000
+    };
+
+    if (record && status === "loaded") {
+      ctx.save();
+      ctx.translate(pose.x, pose.y + pose.bobY);
+      ctx.rotate(pose.rotation);
+      ctx.globalAlpha *= spec.alpha == null ? 0.96 : spec.alpha;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(record.image, -width * 0.5, -height * 0.64, width, height);
+      ctx.restore();
+      renderDebug.companionRasterDrawn = true;
+      return;
+    }
+
+    drawCompanionFallback(pose, width, height);
   }
 
   function hexChannel(hex, index) {
@@ -3331,6 +3746,7 @@
     state.hazards.forEach(drawHazard);
     state.enemyProjectiles.forEach(drawEnemyProjectile);
     state.supplyDrops.forEach(drawSupplyDrop);
+    state.weaponPowerups.forEach(drawWeaponPowerup);
     state.projectiles.forEach((projectile) => {
       drawSprite(projectile.sprite, "move", timeMs, projectile.x - projectile.vx * 0.034, projectile.y - projectile.vy * 0.034, projectile.scale, {
         rotation: projectile.rotation,
@@ -3387,6 +3803,7 @@
       : null;
     if (motion && motion.shadow) drawVehicleShadow(vehicleConfig, state.vehicle, motion.shadow);
     drawRunTrailer(vehicleConfig, state.vehicle);
+    drawCompanion(vehicleConfig, state.vehicle);
     ctx.save();
     if (motion) {
       ctx.translate(state.vehicle.x, state.vehicle.y + motion.bobY);
@@ -3431,6 +3848,10 @@
       runTrailerFallbackDrawn: false,
       runTrailerImageStatus: "none",
       runTrailerPose: null,
+      companionRasterDrawn: false,
+      companionFallbackDrawn: false,
+      companionImageStatus: "none",
+      companionPose: null,
       backgroundRasterDrawn: false,
       backgroundFallbackDrawn: false,
       backgroundImageStatus: "none",
@@ -3446,6 +3867,7 @@
       vignetteDrawn: false,
       waveBannerDrawn: false,
       supplyCrateDrawn: 0,
+      weaponPowerupDrawn: 0,
       supplyCrateStyle: ""
     };
     const timeMs = ((state ? state.time : idleTime) || 0) * 1000;
@@ -3529,6 +3951,7 @@
     preloadEnvironmentImages();
     preloadVehicleImages();
     preloadRunTrailerImages();
+    preloadCompanionImages();
     preloadEnemyImages();
     bindInput();
     // 音效解鎖：首次 pointerdown / keydown resume AudioContext（autoplay 政策）
