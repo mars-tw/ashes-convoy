@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#111317" />
-    <link rel="manifest" href="manifest.webmanifest?v=R56" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R56" />
+    <link rel="manifest" href="manifest.webmanifest?v=R57" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R57" />
     <title>灰燼護航</title>
     <style>
       :root {
@@ -499,7 +499,7 @@
       .trailer-panel {
         min-height: 0;
         display: grid;
-        grid-template-rows: auto auto minmax(0, 1fr);
+        grid-template-rows: auto auto auto minmax(0, 1fr);
         gap: 10px;
         padding: 12px;
         border: 1px solid var(--line);
@@ -527,6 +527,109 @@
         color: var(--muted);
         font-size: 12px;
         font-weight: 800;
+      }
+
+      .trailer-actions {
+        display: flex;
+        gap: 6px;
+        align-items: start;
+      }
+
+      .trailer-actions button {
+        min-height: 38px;
+        padding: 0 10px;
+        font-size: 12px;
+      }
+
+      .story-log-section {
+        min-height: 0;
+        max-height: 190px;
+        display: grid;
+        grid-template-columns: 72px minmax(0, 1fr);
+        gap: 10px;
+        padding: 9px;
+        border: 1px solid rgba(240, 182, 74, 0.3);
+        border-radius: 8px;
+        background: rgba(7, 9, 13, 0.58);
+        overflow: hidden;
+      }
+
+      .story-log-section[hidden] {
+        display: none;
+      }
+
+      .xi-portrait {
+        width: 72px;
+        height: 108px;
+        object-fit: contain;
+        align-self: start;
+        image-rendering: pixelated;
+        filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.48));
+      }
+
+      .story-log-list {
+        min-height: 0;
+        overflow-y: auto;
+        display: grid;
+        align-content: start;
+        gap: 7px;
+        padding-right: 2px;
+      }
+
+      .story-beat {
+        min-width: 0;
+        padding: 7px 8px;
+        border: 1px solid rgba(221, 211, 178, 0.18);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .story-beat.is-locked {
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.026);
+      }
+
+      .story-beat.is-unread {
+        border-color: rgba(94, 212, 203, 0.5);
+      }
+
+      .story-summary {
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .story-lines {
+        display: grid;
+        gap: 5px;
+        margin-top: 7px;
+      }
+
+      .story-line {
+        margin: 0;
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr);
+        gap: 7px;
+        align-items: start;
+        font-size: 11px;
+        line-height: 1.4;
+      }
+
+      .story-line b {
+        color: var(--accent);
+      }
+
+      .story-line.speaker-xi b {
+        color: #ffd08a;
+      }
+
+      .story-line.speaker-driver b {
+        color: #8fd9d4;
+      }
+
+      .story-line.speaker-narration {
+        color: var(--muted);
+        font-style: italic;
       }
 
       .trailer-room-body {
@@ -615,7 +718,7 @@
         }
 
         .trailer-panel {
-          grid-template-rows: auto auto minmax(76px, 1fr);
+          grid-template-rows: auto auto auto minmax(76px, 1fr);
           gap: 6px;
           padding: 8px;
         }
@@ -626,6 +729,18 @@
 
         .trailer-head .subtle {
           display: none;
+        }
+
+        .story-log-section {
+          max-height: 112px;
+          grid-template-columns: 52px minmax(0, 1fr);
+          gap: 6px;
+          padding: 6px;
+        }
+
+        .xi-portrait {
+          width: 52px;
+          height: 78px;
         }
 
         .trailer-resources {
@@ -1201,7 +1316,7 @@
       }
 
       .hotspot-btn {
-        position: static;
+        position: relative;
         min-width: 0;
         min-height: 42px;
         padding: 8px 10px;
@@ -1214,6 +1329,31 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      .hotspot-btn.has-unread {
+        border-color: rgba(94, 212, 203, 0.78);
+      }
+
+      .unread-badge {
+        position: absolute;
+        top: 3px;
+        right: 5px;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        border-radius: 999px;
+        background: #e15f4f;
+        color: #fff7ec;
+        display: grid;
+        place-items: center;
+        font-size: 10px;
+        line-height: 1;
+        box-shadow: 0 0 0 2px rgba(7, 9, 13, 0.82);
+      }
+
+      .unread-badge[hidden] {
+        display: none;
       }
 
       .hotspot-primary {
@@ -1407,12 +1547,19 @@
               <h2 id="trailerRoomTitle">拖車少女房間</h2>
               <p class="subtle" id="trailerStarterText">破爛逃生倉：目前只有床和舊報紙。</p>
             </div>
-            <button id="closeTrailerRoomBtn" type="button" aria-label="關閉拖車房間">關閉</button>
+            <div class="trailer-actions">
+              <button id="storyLogBtn" type="button" aria-expanded="false" aria-controls="storyLogSection">無線電日誌</button>
+              <button id="closeTrailerRoomBtn" type="button" aria-label="關閉拖車房間">關閉</button>
+            </div>
           </div>
           <div class="trailer-resources">
             <span id="trailerGoodsText">拾荒物資 0</span>
             <span id="trailerBonusText">HP +0% · 傷害 +0% · 射速 +0% · 承傷 -0%</span>
           </div>
+          <section class="story-log-section" id="storyLogSection" aria-label="無線電日誌" hidden>
+            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R57" alt="熹" decoding="async" draggable="false" />
+            <div class="story-log-list" id="storyLogList"></div>
+          </section>
           <div class="trailer-room-body">
             <div class="trailer-column" aria-label="房間插槽" id="trailerSlotList"></div>
             <div class="trailer-column" aria-label="家具目錄" id="trailerFurnitureList"></div>
@@ -1435,7 +1582,7 @@
           <button class="hotspot-btn" id="upgradeHotspotBtn" type="button" aria-label="開啟升級工坊">升級</button>
           <button class="hotspot-btn" id="vehicleHotspotBtn" type="button" aria-label="開啟載具棚">載具</button>
           <button class="hotspot-btn" id="seriesHotspotBtn" type="button" aria-label="開啟成就牆">成就</button>
-          <button class="hotspot-btn" id="trailerHotspotBtn" type="button" aria-label="開啟拖車房間">拖車</button>
+          <button class="hotspot-btn" id="trailerHotspotBtn" type="button" aria-label="開啟拖車房間">拖車<span class="unread-badge" id="trailerUnreadBadge" hidden>0</span></button>
           <button class="hotspot-btn" id="opsHotspotBtn" type="button" aria-label="開啟任務與設定">任務/設定</button>
           <button class="hotspot-btn danger" id="resetOverlayBtn" type="button" aria-label="清除存檔">清存檔</button>
         </div>
@@ -1588,7 +1735,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R56";
+        var key = "ashes_convoy_html_boot_reload_R57";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -1605,15 +1752,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R56"></script>
-    <script src="src/sprites.js?v=R56"></script>
-    <script src="src/sprite-renderer.js?v=R56"></script>
-    <script src="src/shelter-scene.js?v=R56"></script>
-    <script src="src/config.js?v=R56"></script>
-    <script src="src/rules.js?v=R56"></script>
-    <script src="src/fx.js?v=R56"></script>
-    <script src="src/audio.js?v=R56"></script>
-    <script src="src/game.js?v=R56"></script>
-    <script src="src/ui.js?v=R56"></script>
+    <script src="src/version.js?v=R57"></script>
+    <script src="src/sprites.js?v=R57"></script>
+    <script src="src/sprite-renderer.js?v=R57"></script>
+    <script src="src/shelter-scene.js?v=R57"></script>
+    <script src="src/config.js?v=R57"></script>
+    <script src="src/rules.js?v=R57"></script>
+    <script src="src/fx.js?v=R57"></script>
+    <script src="src/audio.js?v=R57"></script>
+    <script src="src/game.js?v=R57"></script>
+    <script src="src/ui.js?v=R57"></script>
   </body>
 </html>

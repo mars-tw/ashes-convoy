@@ -282,12 +282,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R56") && swText.includes("src/ui.js?v=R56") && swText.includes("src/game.js?v=R56") && swText.includes("src/rules.js?v=R56"),
+      swCachesJs: swText.includes("src/version.js?v=R57") && swText.includes("src/ui.js?v=R57") && swText.includes("src/game.js?v=R57") && swText.includes("src/rules.js?v=R57"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R56"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R56"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R56"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R57"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R57"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R57"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -296,7 +296,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R56", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R57", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -436,11 +436,31 @@ async function checkTrailerRoomSystem(page) {
     state: window.__test.getTrailerRoomState(),
     metrics: window.__test.getTrailerRoomMetrics()
   }));
-  assert(initial.text.includes("破爛逃生倉"), `initial trailer room should describe the broken pod: ${initial.text}`);
+  assert(initial.text.includes("喂……有人嗎？這台車，後面的門是壞的。"), `initial trailer room should use Xi's first radio line: ${initial.text}`);
   assert(initial.goods.includes("拾荒物資 0"), `initial goods should be zero: ${initial.goods}`);
   assert.strictEqual(initial.state.items.filter((item) => item.owned).length, 0, "new save should not own trailer furniture");
   assert.strictEqual(initial.metrics.itemsDrawn, 0, "starter room should draw no purchased furniture");
   assert.strictEqual(initial.metrics.renderMode, "raster", "trailer room should render from raster assets");
+  await page.click("#storyLogBtn");
+  await page.waitForSelector('#storyLogSection:not([hidden]) [data-story-beat="b01"] .story-line');
+  const storyLog = await page.evaluate(() => {
+    const beat = document.querySelector('[data-story-beat="b01"]');
+    const portrait = document.getElementById("xiPortrait");
+    return {
+      hidden: document.getElementById("storyLogSection").hidden,
+      expanded: beat && beat.open === true,
+      firstLine: beat && beat.textContent,
+      portraitReady: portrait.complete && portrait.naturalWidth > 0,
+      unread: window.DSRules.countUnreadStory(window.__test.getMeta(), window.DSConfig),
+      badgeHidden: document.getElementById("trailerUnreadBadge").hidden
+    };
+  });
+  assert.strictEqual(storyLog.hidden, false, "story log should open inside the trailer room");
+  assert.strictEqual(storyLog.expanded, true, "unlocked story beat should be expanded for reading");
+  assert(storyLog.firstLine.includes("無線電是撿來的"), `story log should render b01 dialogue: ${storyLog.firstLine}`);
+  assert.strictEqual(storyLog.portraitReady, true, "Xi portrait should load in the story log");
+  assert.strictEqual(storyLog.unread, 0, "opening story log should mark unlocked beats as seen");
+  assert.strictEqual(storyLog.badgeHidden, true, "opening story log should clear the unread badge");
 
   await page.evaluate(() => {
     const meta = window.__test.getMeta();
@@ -625,7 +645,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R56"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R57"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -1544,7 +1564,7 @@ async function checkEnvironmentEventsAndVariants(page) {
   assert(state.enemies.some((enemy) => enemy.variantId), "late wave generation should spawn tinted variants");
 }
 
-async function checkR56EnemyRosterBehaviors(page) {
+async function checkR57EnemyRosterBehaviors(page) {
   await page.evaluate(() => {
     window.__test.clearStorage();
     window.__test.startRun("land_rig");
@@ -1593,7 +1613,7 @@ async function checkR56EnemyRosterBehaviors(page) {
       statuses: debug.enemyImageStatus
     };
   });
-  assert.deepStrictEqual(result.enemyIds, ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith"].sort(), "R56 enemy roster should be spawnable");
+  assert.deepStrictEqual(result.enemyIds, ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith"].sort(), "R57 enemy roster should be spawnable");
   assert(result.enemyProjectiles >= 1, "spore spitter should fire enemy projectiles");
   assert(result.spitterCooldown > 0, "spore spitter should reset attack cooldown after firing");
   assert.strictEqual(result.bruteSlow, true, "tar brute should apply movement slow aura near the vehicle");
@@ -1943,7 +1963,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
     await checkBossBlueprintDropAnimation(page);
     await unlockFleet(page);
     await checkEnvironmentEventsAndVariants(page);
-    await checkR56EnemyRosterBehaviors(page);
+    await checkR57EnemyRosterBehaviors(page);
     await checkEventCodexAndAchievements(page);
     await checkSupplyDropPickupAndSettlement(page);
     await unlockFleet(page);
@@ -2304,7 +2324,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r56")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r57")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -2322,7 +2342,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r56")), "R56 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r57")), "R57 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

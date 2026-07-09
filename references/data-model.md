@@ -5,7 +5,7 @@
 ## 儲存契約
 
 - localStorage key：`ashes_convoy_meta_v1`
-- schema version：`META_VERSION = 2`
+- schema version：`META_VERSION = 3`
 - 格式：JSON
 - 時間：`createdAt`、`updatedAt` 與紀錄欄位使用 ISO 字串或可被遷移的既有值。
 - 遷移入口：`migrateMeta(raw, { config })`

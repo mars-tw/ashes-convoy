@@ -1,10 +1,10 @@
 "use strict";
 
 const STORAGE_KEY = "ashes_convoy_meta_v1";
-const META_VERSION = 2;
+const META_VERSION = 3;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R56", CACHE_VERSION: "ashes-convoy-r56-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R57", CACHE_VERSION: "ashes-convoy-r57-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -43,6 +43,174 @@ const RUN_TRAILER = {
       shadow: { widthMul: 0.92, heightMul: 0.22, alpha: 0.28, offsetY: 9, color: "#000000" }
     }
   }
+};
+
+const STORY = {
+  characters: {
+    xi: { id: "xi", name: "熹", role: "trailer" },
+    driver: { id: "driver", name: "壁爐", role: "driver" }
+  },
+  beats: [
+    {
+      id: "b01",
+      order: 1,
+      chapter: "序章",
+      title: "空罐與火種",
+      unlock: { type: "default" },
+      lines: [
+        { speaker: "narration", text: "無線電是撿來的，只剩一個頻道還活著。" },
+        { speaker: "xi", text: "喂……有人嗎？這台車，後面的門是壞的。" },
+        { speaker: "driver", text: "別怕。門我焊死了，喪屍進不來。你先睡，天亮我們就走。" },
+        { speaker: "xi", text: "你叫什麼？" },
+        { speaker: "driver", text: "呼號叫我『壁爐』就好。有火的地方，就不算太冷。" }
+      ]
+    },
+    {
+      id: "b02",
+      order: 2,
+      chapter: "",
+      title: "第一個晚上",
+      unlock: { type: "bestWave", value: 1 },
+      lines: [
+        { speaker: "xi", text: "外面一直在響。是它們嗎？" },
+        { speaker: "driver", text: "是砲，是我在擋。數到一百它就停，你數給我聽。" },
+        { speaker: "xi", text: "一、二、三……壁爐，你不要走遠。" },
+        { speaker: "driver", text: "我就在前面這塊鐵皮後面。哪都不去。" }
+      ]
+    },
+    {
+      id: "b03",
+      order: 3,
+      chapter: "",
+      title: "她終於開口",
+      unlock: { type: "bestWave", value: 3 },
+      lines: [
+        { speaker: "xi", text: "今天我把報紙鋪平了，當地毯。這樣走路不會冷。" },
+        { speaker: "driver", text: "不錯嘛，會過日子了。" },
+        { speaker: "xi", text: "媽媽以前也這樣鋪。……我記不太清楚她的臉了。" },
+        { speaker: "driver", text: "記不清沒關係。你把這台車記住就好，這裡以後也算你家。" }
+      ]
+    },
+    {
+      id: "b04",
+      order: 4,
+      chapter: "",
+      title: "拼起來的家具",
+      unlock: { type: "furnitureCount", value: 1 },
+      lines: [
+        { speaker: "xi", text: "你撿的那個架子，我擺好了！罐頭排整齊，看起來就像……真的有人住。" },
+        { speaker: "driver", text: "本來就有人住。是你。" },
+        { speaker: "xi", text: "嘿嘿。那我要一直住到很老很老。" }
+      ]
+    },
+    {
+      id: "b05",
+      order: 5,
+      chapter: "",
+      title: "爐火與灰燼",
+      unlock: { type: "bestWave", value: 5 },
+      lines: [
+        { speaker: "xi", text: "為什麼叫『壁爐』？" },
+        { speaker: "driver", text: "以前的家有個壁爐。冬天全家圍著它，灰燼掃了又生。世界燒成這樣，我還想守著一點火。" },
+        { speaker: "xi", text: "那我就是你要守的火嗎？" },
+        { speaker: "driver", text: "……對。所以你不准熄。" }
+      ]
+    },
+    {
+      id: "b06",
+      order: 6,
+      chapter: "",
+      title: "藍圖上的遠方",
+      unlock: { type: "vehicleUnlock", value: 2 },
+      lines: [
+        { speaker: "xi", text: "你換了另一台車？窗外的顏色不一樣了。" },
+        { speaker: "driver", text: "舊路斷了，我們得繞海、繞天走。藍圖是撿來的，拼一拼還能跑。" },
+        { speaker: "xi", text: "那我把望遠鏡架在窗邊，我幫你看前面有沒有路。" },
+        { speaker: "driver", text: "好，你當我的眼睛。我當你的牆。" }
+      ]
+    },
+    {
+      id: "b07",
+      order: 7,
+      chapter: "",
+      title: "巨屍的影子",
+      unlock: { type: "bosses", value: 1 },
+      lines: [
+        { speaker: "xi", text: "剛剛那個好大……車都在抖。" },
+        { speaker: "driver", text: "母巢巨屍。放倒了，別怕。" },
+        { speaker: "xi", text: "你有沒有受傷？" },
+        { speaker: "driver", text: "一點皮肉。你聽我聲音還穩，就代表沒事。" },
+        { speaker: "xi", text: "那你多說幾句，我要一直聽到穩為止。" }
+      ]
+    },
+    {
+      id: "b08",
+      order: 8,
+      chapter: "",
+      title: "拖車就是家",
+      unlock: { type: "furnitureCount", value: 4 },
+      lines: [
+        { speaker: "xi", text: "串燈、菜架、還有你焊的桌子……壁爐，這裡現在好亮。" },
+        { speaker: "driver", text: "亮了好。亮了喪屍就不敢靠。" },
+        { speaker: "xi", text: "才不是因為喪屍。是因為……是家才會亮。" },
+        { speaker: "driver", text: "……是。是家。" }
+      ]
+    },
+    {
+      id: "b09",
+      order: 9,
+      chapter: "",
+      title: "更深的路",
+      unlock: { type: "bestWave", value: 8 },
+      lines: [
+        { speaker: "xi", text: "路越走越荒了，罐頭上的字我都不認得。" },
+        { speaker: "driver", text: "越深的地方零件越好，撐過去我們就能換更硬的殼。" },
+        { speaker: "xi", text: "我不要更硬的殼。我要你更少受傷。" },
+        { speaker: "driver", text: "那就一樣的意思。乖，繫好帶子。" }
+      ]
+    },
+    {
+      id: "b10",
+      order: 10,
+      chapter: "",
+      title: "風暴之間",
+      unlock: { type: "bestWave", value: 12 },
+      lines: [
+        { speaker: "xi", text: "外面風好大，燈一直閃。" },
+        { speaker: "driver", text: "風暴而已，過了就晴。這次換我數給你聽。" },
+        { speaker: "xi", text: "……你剛剛那句，聲音在抖。" },
+        { speaker: "driver", text: "鐵皮冷。人沒抖。睡吧，醒來就過去了。" }
+      ]
+    },
+    {
+      id: "b11",
+      order: 11,
+      chapter: "",
+      title: "群星的方向",
+      unlock: { type: "bestWave", value: 16 },
+      lines: [
+        { speaker: "xi", text: "望遠鏡裡有星星！好多好多，一點都不像灰的。" },
+        { speaker: "driver", text: "那是我們要去的方向。地上沒路了，就往上面找。" },
+        { speaker: "xi", text: "上面也有喪屍嗎？" },
+        { speaker: "driver", text: "有星星的地方，我陪你一起怕。" }
+      ]
+    },
+    {
+      id: "b12",
+      order: 12,
+      chapter: "結局",
+      title: "不熄的光",
+      unlock: { type: "bestWave", value: 20 },
+      lines: [
+        { speaker: "narration", text: "里程表跳過了一個又一個死掉的城市。" },
+        { speaker: "xi", text: "壁爐，我畫完了。畫的是一台車，拉著一節拖車，後面拖著一長串亮亮的東西。" },
+        { speaker: "driver", text: "那是什麼？" },
+        { speaker: "xi", text: "是我們走過的路啊。你看，灰裡面，全是火。" },
+        { speaker: "driver", text: "……收好。等我們找到能停下來的地方，就掛在牆上。" },
+        { speaker: "xi", text: "一定會找到的。因為火還沒熄。" }
+      ]
+    }
+  ]
 };
 
 const VEHICLES = {
@@ -453,6 +621,26 @@ const ENEMY_VARIANTS = {
     tint: "rgba(200, 205, 210, 0.3)",
     filter: "grayscale(0.7) brightness(0.92) contrast(1.2)",
     minWave: 7
+  },
+  brute_molten: {
+    id: "brute_molten",
+    baseEnemy: "tar_brute",
+    label: "熔核瀝青",
+    hpMul: 1.35,
+    speedMul: 0.9,
+    tint: "rgba(255,110,50,0.34)",
+    filter: "saturate(1.5) contrast(1.15) hue-rotate(-8deg)",
+    minWave: 8
+  },
+  wraith_null: {
+    id: "wraith_null",
+    baseEnemy: "void_wraith",
+    label: "虛滅漂影",
+    hpMul: 0.85,
+    speedMul: 1.25,
+    tint: "rgba(150,90,200,0.3)",
+    filter: "hue-rotate(30deg) saturate(1.6) brightness(0.95)",
+    minWave: 8
   }
 };
 
@@ -715,6 +903,42 @@ const TRAILER_ROOM = {
       description: "小型焊槍、焊條與補強片排在耐熱布上，車體破口能當場封住。",
       effectText: "車體 HP +0.8%",
       effects: { maxHpPct: 0.008 }
+    },
+    crayon_drawing: {
+      id: "crayon_drawing",
+      name: "熹的蠟筆畫",
+      style: "生存物資",
+      slot: "wall_right",
+      rarity: "common",
+      cost: 10,
+      sprite: "assets/shelter/trailer/crayon_drawing.png",
+      description: "釘在牆上的小畫，車後拖著一串亮點，像灰裡還沒熄的火。",
+      effectText: "承受傷害 -0.4%",
+      effects: { damageTakenMul: 0.996 }
+    },
+    star_telescope: {
+      id: "star_telescope",
+      name: "窗邊望遠鏡",
+      style: "溫室生態",
+      slot: "window_sill",
+      rarity: "rare",
+      cost: 30,
+      sprite: "assets/shelter/trailer/star_telescope.png",
+      description: "黃銅鏡筒朝著裂開的夜空，熹說她會幫忙找下一條路。",
+      effectText: "車體 HP +0.8%",
+      effects: { maxHpPct: 0.008 }
+    },
+    photo_frame: {
+      id: "photo_frame",
+      name: "磨損相框",
+      style: "工坊機械",
+      slot: "bedside",
+      rarity: "uncommon",
+      cost: 18,
+      sprite: "assets/shelter/trailer/photo_frame.png",
+      description: "褪色拍立得裡，一大一小兩個影子靠在拖車門邊，像終於有人等門開。",
+      effectText: "射擊間隔 -1%",
+      effects: { fireIntervalMul: 0.99 }
     }
   }
 };
@@ -1742,6 +1966,14 @@ const MILESTONES = {
     metric: "bestWave",
     target: 20,
     rewardParts: 50
+  },
+  wave_25: {
+    id: "wave_25",
+    label: "突破第 25 波",
+    description: "最高紀錄達到 25 波，無線電裡的靜電終於被下一段路蓋過。",
+    metric: "bestWave",
+    target: 25,
+    rewardParts: 60
   }
 };
 
@@ -1820,6 +2052,10 @@ const META_DEFAULT = {
     },
     seenIntro: false
   },
+  story: {
+    seen: {},
+    lastUnlockedAt: null
+  },
   settings: {
     aimAssist: true,
     aimAssistLevel: "medium",
@@ -1853,6 +2089,7 @@ const DSConfig = {
   LOGIC,
   ENVIRONMENT_BACKGROUNDS,
   RUN_TRAILER,
+  STORY,
   VEHICLES,
   WEAPONS,
   ENEMIES,

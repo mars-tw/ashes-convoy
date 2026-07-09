@@ -212,6 +212,104 @@ function sanitizeTrailerRoom(input, config) {
   return output;
 }
 
+function storyBeatIds(config) {
+  const cfg = getConfig(config);
+  return new Set(((cfg.STORY && cfg.STORY.beats) || []).map((beat) => beat.id));
+}
+
+function sanitizeStory(input, config) {
+  const cfg = getConfig(config);
+  const source = input && typeof input === "object" && !Array.isArray(input) ? input : {};
+  const seenSource = source.seen && typeof source.seen === "object" && !Array.isArray(source.seen) ? source.seen : {};
+  const knownIds = storyBeatIds(cfg);
+  const seen = {};
+  Object.keys(seenSource).forEach((id) => {
+    if (knownIds.has(id) && seenSource[id] === true) seen[id] = true;
+  });
+  return {
+    seen,
+    lastUnlockedAt:
+      typeof source.lastUnlockedAt === "string" || typeof source.lastUnlockedAt === "number"
+        ? source.lastUnlockedAt
+        : null
+  };
+}
+
+function storyUnlockValue(meta, beat, config) {
+  const source = meta && typeof meta === "object" ? meta : {};
+  const unlock = beat && beat.unlock && typeof beat.unlock === "object" ? beat.unlock : { type: "default" };
+  const value = finiteNumber(unlock.value, 0, { min: 0, integer: true });
+  if (unlock.type === "default") return true;
+  if (unlock.type === "bestWave") return finiteNumber(source.bestWave, 0, { min: 0, integer: true }) >= value;
+  if (unlock.type === "bosses") return finiteNumber(source.totalBossKills, 0, { min: 0, integer: true }) >= value;
+  if (unlock.type === "vehicleUnlock") {
+    const unlocked = source.unlockedVehicles && typeof source.unlockedVehicles === "object" ? source.unlockedVehicles : {};
+    return Object.values(unlocked).filter(Boolean).length >= value;
+  }
+  if (unlock.type === "furnitureCount") {
+    const slots = source.trailerRoom && source.trailerRoom.slots && typeof source.trailerRoom.slots === "object"
+      ? source.trailerRoom.slots
+      : {};
+    return Object.keys(slots).filter((slotId) => !!slots[slotId]).length >= value;
+  }
+  return false;
+}
+
+function storyUnlockLabel(beat) {
+  const unlock = beat && beat.unlock && typeof beat.unlock === "object" ? beat.unlock : { type: "default" };
+  const value = finiteNumber(unlock.value, 0, { min: 0, integer: true });
+  if (unlock.type === "default") return "已接收";
+  if (unlock.type === "bestWave") return `第 ${value} 波`;
+  if (unlock.type === "bosses") return `擊倒 ${value} 隻 Boss`;
+  if (unlock.type === "vehicleUnlock") return `解鎖 ${value} 台載具`;
+  if (unlock.type === "furnitureCount") return `佈置 ${value} 件家具`;
+  return "未知通訊條件";
+}
+
+function getStoryProgress(meta, config) {
+  const cfg = getConfig(config);
+  const migrated = migrateMeta(meta || cfg.META_DEFAULT, { config: cfg });
+  const beats = ((cfg.STORY && cfg.STORY.beats) || []).slice().sort((a, b) => {
+    return finiteNumber(a.order, 0, { integer: true }) - finiteNumber(b.order, 0, { integer: true });
+  });
+  return beats.map((beat) => {
+    const unlocked = storyUnlockValue(migrated, beat, cfg);
+    return {
+      id: beat.id,
+      chapter: beat.chapter || "",
+      title: beat.title || beat.id,
+      lines: deepClone(Array.isArray(beat.lines) ? beat.lines : []),
+      unlocked,
+      seen: migrated.story && migrated.story.seen ? migrated.story.seen[beat.id] === true : false,
+      unlockLabel: storyUnlockLabel(beat)
+    };
+  });
+}
+
+function countUnreadStory(meta, config) {
+  return getStoryProgress(meta, config).filter((beat) => beat.unlocked && !beat.seen).length;
+}
+
+function markStoryBeatsSeen(meta, ids, options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const migrated = migrateMeta(meta || cfg.META_DEFAULT, { config: cfg });
+  const next = deepClone(migrated);
+  const knownIds = storyBeatIds(cfg);
+  const list = Array.isArray(ids) ? ids : [];
+  if (!next.story || typeof next.story !== "object" || Array.isArray(next.story)) {
+    next.story = sanitizeStory(null, cfg);
+  }
+  if (!next.story.seen || typeof next.story.seen !== "object" || Array.isArray(next.story.seen)) next.story.seen = {};
+  list.forEach((id) => {
+    if (knownIds.has(id)) next.story.seen[id] = true;
+  });
+  next.story.lastUnlockedAt = timestampFromNow(opts.now);
+  next.updatedAt = next.story.lastUnlockedAt;
+  if (!next.createdAt) next.createdAt = next.updatedAt;
+  return next;
+}
+
 function rollScavengeDrop(options) {
   const opts = options || {};
   const cfg = getConfig(opts.config);
@@ -1887,6 +1985,7 @@ function migrateMeta(raw, options) {
   meta.questClaims = boolTrueMap(input.questClaims);
   meta.claimedMilestones = boolTrueMap(input.claimedMilestones);
   meta.trailerRoom = sanitizeTrailerRoom(input.trailerRoom, cfg);
+  meta.story = sanitizeStory(input.story, cfg);
   meta.settings = sanitizeSettings(input.settings, cfg);
   meta.tutorial = Object.assign({}, base.tutorial);
   if (input.tutorial && typeof input.tutorial === "object" && !Array.isArray(input.tutorial)) {
@@ -2139,6 +2238,11 @@ const DSRules = {
   scavengeGoodsBreakdownForRun,
   resolveTrailerFollowPose,
   sanitizeTrailerRoom,
+  sanitizeStory,
+  storyUnlockValue,
+  getStoryProgress,
+  countUnreadStory,
+  markStoryBeatsSeen,
   calculateTrailerBonuses,
   getTrailerRoomState,
   buyTrailerFurniture,

@@ -672,6 +672,32 @@
     });
   }
 
+  function hasStoryBeatForWave(wave) {
+    return ((config.STORY && config.STORY.beats) || []).some((beat) => {
+      return beat.unlock && beat.unlock.type === "bestWave" && beat.unlock.value === wave;
+    });
+  }
+
+  function nextStoryWaveLabel(sourceMeta) {
+    if (typeof rules.getStoryProgress !== "function") return "";
+    const next = rules.getStoryProgress(sourceMeta || meta, config).find((beat) => {
+      return !beat.unlocked && /^第 \d+ 波$/.test(beat.unlockLabel || "");
+    });
+    return next ? next.unlockLabel : "";
+  }
+
+  function countNewlyUnlockedStory(beforeMeta, afterMeta) {
+    if (typeof rules.getStoryProgress !== "function") return 0;
+    const before = new Set(
+      rules.getStoryProgress(beforeMeta || config.META_DEFAULT, config)
+        .filter((beat) => beat.unlocked)
+        .map((beat) => beat.id)
+    );
+    return rules.getStoryProgress(afterMeta || config.META_DEFAULT, config).filter((beat) => {
+      return beat.unlocked && !before.has(beat.id);
+    }).length;
+  }
+
   function renderMilestones() {
     if (!els.milestoneList || typeof rules.getMilestoneProgress !== "function") return;
     const progress = rules.getMilestoneProgress(meta, config);
@@ -688,7 +714,7 @@
       progressFill.style.width = `${Math.round(pct * 100)}%`;
       progressBar.appendChild(progressFill);
       const desc = root.document.createElement("small");
-      desc.textContent = `${entry.description} · 獎勵 ${entry.rewardParts} 零件`;
+      desc.textContent = `${entry.description} · 獎勵 ${entry.rewardParts} 零件${hasStoryBeatForWave(entry.target) ? " ＋通訊碎片" : ""}`;
       item.append(title, progressBar, desc);
       els.milestoneList.appendChild(item);
     });
@@ -737,12 +763,108 @@
     const bonuses = state && state.bonuses ? state.bonuses : {};
     const fireBonus = 1 - (bonuses.fireIntervalMul || 1);
     const defenseBonus = 1 - (bonuses.damageTakenMul || 1);
+    const hasBonus =
+      (bonuses.maxHpPct || 0) > 0 ||
+      (bonuses.damagePct || 0) > 0 ||
+      fireBonus > 0 ||
+      defenseBonus > 0;
+    if (!hasBonus) return "佈置拾荒家具即可強化車體";
     return [
       `HP +${trailerPercent(bonuses.maxHpPct || 0)}`,
       `傷害 +${trailerPercent(bonuses.damagePct || 0)}`,
       `射速 +${trailerPercent(Math.max(0, fireBonus))}`,
       `承傷 -${trailerPercent(Math.max(0, defenseBonus))}`
     ].join(" · ");
+  }
+
+  function storySpeakerName(speaker) {
+    if (speaker === "narration") return "旁白";
+    const characters = (config.STORY && config.STORY.characters) || {};
+    return (characters[speaker] && characters[speaker].name) || speaker;
+  }
+
+  function refreshStoryUnreadBadge() {
+    if (!els.trailerUnreadBadge || typeof rules.countUnreadStory !== "function") return;
+    const unread = rules.countUnreadStory(meta, config);
+    els.trailerUnreadBadge.hidden = unread <= 0;
+    els.trailerUnreadBadge.textContent = unread > 9 ? "9+" : String(unread);
+    if (els.trailerHotspotBtn) els.trailerHotspotBtn.classList.toggle("has-unread", unread > 0);
+  }
+
+  function renderStoryLog() {
+    if (!els.storyLogList || typeof rules.getStoryProgress !== "function") return;
+    const progress = rules.getStoryProgress(meta, config);
+    els.storyLogList.textContent = "";
+    progress.forEach((beat) => {
+      const node = beat.unlocked ? root.document.createElement("details") : root.document.createElement("div");
+      node.className = `story-beat${beat.unlocked ? "" : " is-locked"}${beat.seen ? "" : " is-unread"}`;
+      node.dataset.storyBeat = beat.id;
+      if (beat.unlocked) node.open = true;
+
+      const summary = beat.unlocked ? root.document.createElement("summary") : root.document.createElement("strong");
+      summary.className = "story-summary";
+      const chapter = beat.chapter ? `${beat.chapter} · ` : "";
+      summary.textContent = beat.unlocked ? `${chapter}${beat.title}` : `${chapter}${beat.title}｜${beat.unlockLabel}`;
+      node.appendChild(summary);
+
+      if (beat.unlocked) {
+        const lines = root.document.createElement("div");
+        lines.className = "story-lines";
+        beat.lines.forEach((line) => {
+          const row = root.document.createElement("p");
+          const speaker = line.speaker || "narration";
+          row.className = `story-line speaker-${speaker}`;
+          const label = root.document.createElement("b");
+          label.textContent = storySpeakerName(speaker);
+          const text = root.document.createElement("span");
+          text.textContent = line.text || "";
+          row.append(label, text);
+          lines.appendChild(row);
+        });
+        node.appendChild(lines);
+      }
+
+      els.storyLogList.appendChild(node);
+    });
+  }
+
+  function markUnlockedStorySeen() {
+    if (typeof rules.getStoryProgress !== "function" || typeof rules.markStoryBeatsSeen !== "function") return 0;
+    const progress = rules.getStoryProgress(meta, config);
+    const unread = progress.filter((beat) => beat.unlocked && !beat.seen).length;
+    const unlockedIds = progress.filter((beat) => beat.unlocked).map((beat) => beat.id);
+    if (unlockedIds.length) {
+      meta = migrateUiMeta(rules.markStoryBeatsSeen(meta, unlockedIds, { now: nowIso, config }));
+      saveMeta();
+      game.setMeta(meta);
+    }
+    refreshStoryUnreadBadge();
+    return unread;
+  }
+
+  function openStoryLog() {
+    if (!els.storyLogSection) return;
+    els.storyLogSection.hidden = false;
+    const unread = markUnlockedStorySeen();
+    renderStoryLog();
+    if (els.storyLogBtn) {
+      els.storyLogBtn.textContent = "收合日誌";
+      els.storyLogBtn.setAttribute("aria-expanded", "true");
+    }
+    if (unread > 0) setStatus(`已讀取 ${unread} 則無線電通訊`);
+  }
+
+  function toggleStoryLog() {
+    if (!els.storyLogSection) return;
+    if (els.storyLogSection.hidden) {
+      openStoryLog();
+      return;
+    }
+    els.storyLogSection.hidden = true;
+    if (els.storyLogBtn) {
+      els.storyLogBtn.textContent = "無線電日誌";
+      els.storyLogBtn.setAttribute("aria-expanded", "false");
+    }
   }
 
   function drawTrailerRoomCanvas(state) {
@@ -784,7 +906,9 @@
     if (els.trailerStarterText) {
       const ownedCount = Object.keys(state.room.owned || {}).length;
       els.trailerStarterText.textContent =
-        ownedCount === 0
+        state.room.seenIntro === false
+          ? "熹：喂……有人嗎？這台車，後面的門是壞的。"
+          : ownedCount === 0
           ? "破爛逃生倉：目前只有床和舊報紙。出勤拾荒後添購擺設，讓拖車慢慢變成自己的房間。"
           : `已添購 ${ownedCount} 件擺設，房間能力正在疊加到目前載具。`;
     }
@@ -833,6 +957,7 @@
         els.trailerFurnitureList.appendChild(node);
       });
     }
+    if (els.storyLogSection && !els.storyLogSection.hidden) renderStoryLog();
     drawTrailerRoomCanvas(state);
     return state;
   }
@@ -1096,6 +1221,7 @@
     renderMilestones();
     renderQuestBoard();
     renderSettings();
+    refreshStoryUnreadBadge();
     if (meta.recovery && meta.recovery.pending) {
       setStatus("偵測到上次異常，已保留存檔。");
     }
@@ -1427,6 +1553,13 @@
         els.settlementBadges.appendChild(badge);
       }
     }
+    const storyWave = nextStoryWaveLabel(meta);
+    if (storyWave) {
+      const badge = root.document.createElement("div");
+      badge.className = "settlement-badge";
+      badge.textContent = `下一段通訊：${storyWave}`;
+      els.settlementBadges.appendChild(badge);
+    }
     if (els.settlementBadges.childElementCount > 0) {
       els.settlementBadges.hidden = false;
     } else {
@@ -1613,11 +1746,14 @@
   }
 
   function onRunEnd(result) {
+    const storyUnlocks = countNewlyUnlockedStory(meta, result && result.meta ? result.meta : meta);
     meta = migrateUiMeta(result.meta);
     lastSettlement = Object.assign({}, result, { meta });
     saveMeta();
     game.setMeta(meta);
     showSettlement(lastSettlement);
+    refreshStoryUnreadBadge();
+    if (storyUnlocks > 0) setStatus(`已接收 ${storyUnlocks} 則新無線電通訊`);
   }
 
   function bindEvents() {
@@ -1630,6 +1766,7 @@
     els.opsHotspotBtn.addEventListener("click", () => openMetaDrawer("operations", els.opsHotspotBtn));
     els.resetOverlayBtn.addEventListener("click", clearStorage);
     els.closeMetaDrawer.addEventListener("click", closeMetaDrawer);
+    if (els.storyLogBtn) els.storyLogBtn.addEventListener("click", toggleStoryLog);
     els.closeTrailerRoomBtn.addEventListener("click", closeTrailerRoom);
     root.addEventListener("resize", syncGateChoiceLayerSize);
     root.addEventListener("ashes-trailer-asset-ready", () => {
@@ -1738,12 +1875,17 @@
         openTrailerRoom(els.trailerHotspotBtn);
         return rules.getTrailerRoomState(meta, config);
       },
+      openStoryLog: () => {
+        openStoryLog();
+        return rules.getStoryProgress(meta, config);
+      },
       closeTrailerRoom: () => {
         closeTrailerRoom();
         return rules.getTrailerRoomState(meta, config);
       },
       buyTrailerFurniture: (furnitureId) => buyTrailerFurniture(furnitureId),
       equipTrailerFurniture: (furnitureId) => equipTrailerFurniture(furnitureId),
+      getStoryProgress: () => rules.deepClone(rules.getStoryProgress(meta, config)),
       getTrailerRoomState: () => rules.deepClone(rules.getTrailerRoomState(meta, config)),
       getTrailerRoomMetrics: () => (trailerRoomMetrics ? rules.deepClone(trailerRoomMetrics) : null),
       getShelterState,
@@ -1790,6 +1932,7 @@
       "vehicleHotspotBtn",
       "seriesHotspotBtn",
       "trailerHotspotBtn",
+      "trailerUnreadBadge",
       "opsHotspotBtn",
       "resetOverlayBtn",
       "trailerOverlay",
@@ -1797,6 +1940,10 @@
       "trailerGoodsText",
       "trailerBonusText",
       "trailerStarterText",
+      "storyLogBtn",
+      "storyLogSection",
+      "xiPortrait",
+      "storyLogList",
       "trailerSlotList",
       "trailerFurnitureList",
       "closeTrailerRoomBtn",

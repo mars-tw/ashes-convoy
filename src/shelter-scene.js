@@ -370,6 +370,7 @@ function drawTrailerRoomShell(ctx, r, s, timeMs) {
 
 const TRAILER_ROOM_ASSETS = {
   base: "assets/shelter/trailer/base_escape_pod.png",
+  character: "assets/story/xi.png",
   furniture: {
     supply_shelf: "assets/shelter/trailer/supply_shelf.png",
     solar_radio: "assets/shelter/trailer/solar_radio.png",
@@ -382,8 +383,12 @@ const TRAILER_ROOM_ASSETS = {
     field_medkit: "assets/shelter/trailer/field_medkit.png",
     mycelium_rack: "assets/shelter/trailer/mycelium_rack.png",
     reload_bench: "assets/shelter/trailer/reload_bench.png",
-    welding_kit: "assets/shelter/trailer/welding_kit.png"
+    welding_kit: "assets/shelter/trailer/welding_kit.png",
+    crayon_drawing: "assets/shelter/trailer/crayon_drawing.png",
+    star_telescope: "assets/shelter/trailer/star_telescope.png",
+    photo_frame: "assets/shelter/trailer/photo_frame.png"
   },
+  characterAnchor: { x: 250, y: 470, w: 210, h: 320 },
   anchors: {
     wall_left: { x: 92, y: 138, w: 138, h: 120 },
     wall_right: { x: 548, y: 145, w: 126, h: 136 },
@@ -566,6 +571,18 @@ function drawTrailerRoom(ctx, opts = {}) {
   if (baseReady) {
     contentRect = fitContain(baseImage.naturalWidth, baseImage.naturalHeight, width, height);
     ctx.drawImage(baseImage, contentRect.x, contentRect.y, contentRect.w, contentRect.h);
+    const characterImage = getTrailerImage(TRAILER_ROOM_ASSETS.character);
+    const characterReady = isImageReady(characterImage);
+    assetsReady = assetsReady && characterReady;
+    if (characterReady) {
+      const anchor = TRAILER_ROOM_ASSETS.characterAnchor;
+      drawImageInRect(ctx, characterImage, {
+        x: contentRect.x + anchor.x * contentRect.scale,
+        y: contentRect.y + anchor.y * contentRect.scale,
+        w: anchor.w * contentRect.scale,
+        h: anchor.h * contentRect.scale
+      });
+    }
     Object.keys(slots).forEach((slotId) => {
       const furnitureId = slots[slotId];
       if (!furnitureId) return;

@@ -81,7 +81,7 @@ assert.strictEqual(
   dirtyBefore,
   "migrateMeta must not mutate input objects"
 );
-assert.strictEqual(migrated.version, 2);
+assert.strictEqual(migrated.version, 3);
 assert.strictEqual(migrated.selectedVehicle, "land_rig");
 assert.strictEqual(migrated.shelterTheme, "snow");
 assert.strictEqual(migrated.parts, 0);
@@ -163,7 +163,7 @@ const oldJson = JSON.stringify({
   vehicleLevels: { dawn_skiff: { hull: 1, weapon: 2 } }
 });
 const old = rules.migrateMeta(oldJson, { config });
-assert.strictEqual(old.version, 2);
+assert.strictEqual(old.version, 3);
 assert.strictEqual(old.selectedVehicle, "land_rig");
 assert.strictEqual(old.shelterTheme, "snow");
 assert.strictEqual(old.parts, 18);

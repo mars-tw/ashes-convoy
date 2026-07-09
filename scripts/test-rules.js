@@ -275,6 +275,50 @@ assert.strictEqual(settledScavenge.meta.trailerGoods, 15, "settlement should ban
 assert.strictEqual(settledScavenge.meta.lastRun.scavengeBreakdown.total, 15);
 assert.strictEqual(settledScavenge.reward.scavengeGoods, 15);
 
+const migratedStory = rules.migrateMeta(
+  {
+    version: config.META_VERSION,
+    story: { seen: { b01: true, ghost_signal: true }, lastUnlockedAt: "2026-07-09T00:00:00.000Z" }
+  },
+  { config }
+);
+assert.deepStrictEqual(migratedStory.story.seen, { b01: true }, "story migration should keep known seen beats only");
+assert.strictEqual(migratedStory.story.lastUnlockedAt, "2026-07-09T00:00:00.000Z");
+const storyFresh = rules.migrateMeta(null, { config });
+const storyWave0 = rules.getStoryProgress(storyFresh, config);
+assert.deepStrictEqual(storyWave0.filter((beat) => beat.unlocked).map((beat) => beat.id), ["b01"], "fresh story progress should only unlock the default beat");
+assert.strictEqual(rules.countUnreadStory(storyFresh, config), 1, "fresh default beat should be unread");
+const storyWave5 = rules.getStoryProgress(rules.migrateMeta({ version: config.META_VERSION, bestWave: 5 }, { config }), config);
+assert(storyWave5.find((beat) => beat.id === "b05").unlocked, "bestWave 5 should unlock b05");
+const storyBoss = rules.getStoryProgress(rules.migrateMeta({ version: config.META_VERSION, totalBossKills: 1 }, { config }), config);
+assert(storyBoss.find((beat) => beat.id === "b07").unlocked, "one boss kill should unlock b07");
+const storyVehicle = rules.getStoryProgress(
+  rules.migrateMeta({ version: config.META_VERSION, unlockedVehicles: { land_rig: true, sky_barge: true } }, { config }),
+  config
+);
+assert(storyVehicle.find((beat) => beat.id === "b06").unlocked, "two unlocked vehicles should unlock b06");
+const storyFurniture = rules.getStoryProgress(
+  rules.migrateMeta(
+    {
+      version: config.META_VERSION,
+      trailerRoom: { owned: { supply_shelf: true }, slots: { wall_left: "supply_shelf" } }
+    },
+    { config }
+  ),
+  config
+);
+assert(storyFurniture.find((beat) => beat.id === "b04").unlocked, "one equipped furniture slot should unlock b04");
+const markedStory = rules.markStoryBeatsSeen(storyFresh, ["b01", "ghost_signal"], {
+  now: () => "2026-07-09T01:02:03.000Z",
+  config
+});
+assert.strictEqual(markedStory.story.seen.b01, true, "markStoryBeatsSeen should mark known ids");
+assert.strictEqual(markedStory.story.seen.ghost_signal, undefined, "markStoryBeatsSeen should ignore unknown ids");
+assert.strictEqual(markedStory.story.lastUnlockedAt, "2026-07-09T01:02:03.000Z");
+assert.strictEqual(rules.countUnreadStory(markedStory, config), 0, "seen default story should no longer count unread");
+const markedStoryAgain = rules.markStoryBeatsSeen(markedStory, ["b01"], { now: () => "2026-07-09T01:02:03.000Z", config });
+assert.deepStrictEqual(markedStoryAgain.story.seen, markedStory.story.seen, "markStoryBeatsSeen should be idempotent for seen ids");
+
 const eventStats = rules.mergeEventStats(
   { meteor_shower: { encounters: 1, completions: 0 } },
   { meteor_shower: { encounters: 1, completions: 1 } },

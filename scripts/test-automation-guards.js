@@ -77,6 +77,7 @@ Object.values(config.ENEMIES).forEach((enemy) => {
 });
 ["assets/shelter/bunker.png", "assets/shelter/greenhouse.png", "assets/shelter/snow.png", "assets/shelter/workshop.png"].forEach((resource) => expectedCached.add(resource));
 listFiles("assets/shelter/trailer", ".png").forEach((resource) => expectedCached.add(resource));
+expectedCached.add("assets/story/xi.png");
 ["assets/icons/icon-192.png", "assets/icons/icon-512.png"].forEach((resource) => expectedCached.add(resource));
 
 expectedCached.forEach((resource) => {
@@ -87,7 +88,7 @@ expectedCached.forEach((resource) => {
   assert(fileExists(resource), `service worker cache entry does not exist: ${resource}`);
 });
 
-assert.strictEqual(version.APP_VERSION, "R56");
+assert.strictEqual(version.APP_VERSION, "R57");
 assert.strictEqual(version.CACHE_VERSION, `ashes-convoy-${version.APP_VERSION.toLowerCase()}-v1`);
 assert.strictEqual(config.APP_VERSION, version.APP_VERSION, "config APP_VERSION should use src/version.js");
 assert.strictEqual(config.CACHE_VERSION, version.CACHE_VERSION, "config CACHE_VERSION should use src/version.js");
@@ -103,7 +104,7 @@ assert(uiText.includes("controllerchange"), "page should listen for service work
 assert(uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"), "page should gate service worker auto reload to 15 seconds");
 assert(uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"), "page should guard service worker auto reload by session");
 assert(uiText.includes("root.location.reload()"), "page should auto reload after a fresh service worker takes control");
-assert(indexHtml.includes("ashes_convoy_html_boot_reload_R56"), "HTML boot guard should cover pre-JS service worker skew");
+assert(indexHtml.includes("ashes_convoy_html_boot_reload_R57"), "HTML boot guard should cover pre-JS service worker skew");
 
 const userVisibleFiles = ["index.html", ...listFiles("src", ".js")];
 const mojibakePatterns = [

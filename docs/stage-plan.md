@@ -22,7 +22,7 @@
 
 ### 車庫與 meta
 
-- `META_VERSION = 2`。
+- `META_VERSION = 3`。
 - `land_rig` 預設解鎖；`sky_barge`、`sea_ark`、`void_runner` 各需 3 張藍圖。
 - 通用升級四條：`hull`、`weapon`、`energy`、`gate`。
 - 每台載具兩條專屬分支，`void_runner` 的穿透節點上限 1。

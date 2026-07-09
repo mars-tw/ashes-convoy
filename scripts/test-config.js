@@ -11,12 +11,12 @@ function assertFinitePositive(value, label) {
 }
 
 assert.strictEqual(config.STORAGE_KEY, "ashes_convoy_meta_v1");
-assert.strictEqual(config.META_VERSION, 2);
-assert.strictEqual(config.APP_VERSION, "R56");
-assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r56-v1");
+assert.strictEqual(config.META_VERSION, 3);
+assert.strictEqual(config.APP_VERSION, "R57");
+assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r57-v1");
 const indexHtml = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-assert(indexHtml.includes("manifest.webmanifest?v=R56"), "index.html should version the web manifest for R56");
-assert(indexHtml.includes("assets/icons/icon-192.png?v=R56"), "index.html should version the app icon for R56");
+assert(indexHtml.includes("manifest.webmanifest?v=R57"), "index.html should version the web manifest for R57");
+assert(indexHtml.includes("assets/icons/icon-192.png?v=R57"), "index.html should version the app icon for R57");
 assert.strictEqual(config.LOGIC.width, 195);
 assert.strictEqual(config.LOGIC.height, 422);
 assert.strictEqual(config.LOGIC.displayWidth, 390);
@@ -89,7 +89,7 @@ const expectedEnemies = [
   "void_wraith",
   "boss_hive_titan"
 ];
-assert.deepStrictEqual(Object.keys(config.ENEMIES).sort(), expectedEnemies.slice().sort(), "enemy roster should match R56 roster");
+assert.deepStrictEqual(Object.keys(config.ENEMIES).sort(), expectedEnemies.slice().sort(), "enemy roster should match R57 roster");
 expectedEnemies.forEach((id) => {
   const enemy = config.ENEMIES[id];
   assert(enemy, `missing enemy ${id}`);
@@ -165,9 +165,9 @@ assert.strictEqual(config.TRAILER_ROOM.waveGoods, 1);
 assert.strictEqual(config.TRAILER_ROOM.bossGoods, 4);
 assert.strictEqual(config.TRAILER_ROOM.maxGoodsPerRun, 28);
 assert.strictEqual(Object.keys(config.TRAILER_ROOM.slots).length, 8, "trailer room should expose eight fixed slots");
-assert.strictEqual(Object.keys(config.TRAILER_ROOM.furniture).length, 12, "R56 should expand the trailer furniture catalog");
+assert.strictEqual(Object.keys(config.TRAILER_ROOM.furniture).length, 15, "R57 should expand the trailer furniture catalog");
 const trailerCostTotal = Object.values(config.TRAILER_ROOM.furniture).reduce((sum, item) => sum + item.cost, 0);
-assert.strictEqual(trailerCostTotal, 270, "trailer furniture should have a clear long-tail cost");
+assert.strictEqual(trailerCostTotal, 328, "trailer furniture should have a clear long-tail cost");
 const trailerFullEffects = Object.values(config.TRAILER_ROOM.furniture).reduce(
   (sum, item) => {
     sum.maxHpPct += item.effects.maxHpPct || 0;
@@ -178,10 +178,11 @@ const trailerFullEffects = Object.values(config.TRAILER_ROOM.furniture).reduce(
   },
   { maxHpPct: 0, damagePct: 0, fireIntervalMul: 1, damageTakenMul: 1 }
 );
-assert(trailerFullEffects.maxHpPct <= 0.03, "full trailer HP bonus should stay smaller than one hull upgrade");
-assert(trailerFullEffects.damagePct <= 0.035, "full trailer damage bonus should stay smaller than one weapon upgrade");
-assert(1 - trailerFullEffects.fireIntervalMul <= 0.05, "full trailer fire-rate bonus should stay minor");
-assert(1 - trailerFullEffects.damageTakenMul <= 0.025, "full trailer mitigation should stay minor");
+// Equipment-time hard caps remain enforced in rules; catalog totals can be higher because slots compete.
+assert(trailerFullEffects.maxHpPct <= 0.04, "full trailer HP catalog bonus should stay within the room envelope");
+assert(trailerFullEffects.damagePct <= 0.04, "full trailer damage catalog bonus should stay within the room envelope");
+assert(1 - trailerFullEffects.fireIntervalMul <= 0.06, "full trailer fire-rate catalog bonus should stay minor");
+assert(1 - trailerFullEffects.damageTakenMul <= 0.03, "full trailer mitigation catalog bonus should stay minor");
 Object.values(config.TRAILER_ROOM.furniture).forEach((item) => {
   assert(config.TRAILER_ROOM.slots[item.slot], `${item.id} should point to a valid trailer slot`);
   assert(item.sprite && item.sprite.startsWith("assets/shelter/trailer/") && item.sprite.endsWith(".png"), `${item.id} should bind a trailer sprite`);
@@ -189,6 +190,11 @@ Object.values(config.TRAILER_ROOM.furniture).forEach((item) => {
   assert(item.name && item.description && item.effectText, `${item.id} should have visible room copy`);
   assert(Number.isInteger(item.cost) && item.cost > 0, `${item.id} should have a positive cost`);
   assert(["生存物資", "溫室生態", "工坊機械", "車隊維修"].includes(item.style), `${item.id} should fit the room style set`);
+});
+["crayon_drawing", "star_telescope", "photo_frame"].forEach((id) => {
+  const item = config.TRAILER_ROOM.furniture[id];
+  assert(item && item.name && item.description && item.effectText, `${id} should include room copy`);
+  assert(fs.existsSync(path.join(__dirname, "..", item.sprite)), `${id} sprite should exist`);
 });
 assert.strictEqual(config.QUESTS.dailyRewardParts, 5);
 assert.strictEqual(config.QUESTS.weeklyRewardParts, 15);
@@ -224,6 +230,8 @@ assert.strictEqual(config.ENEMY_VARIANTS.swarm_venom.baseEnemy, "swarm_mite");
 assert.strictEqual(config.ENEMY_VARIANTS.bloater_volatile.baseEnemy, "bloater");
 assert.strictEqual(config.ENEMY_VARIANTS.spitter_corrosive.baseEnemy, "spore_spitter");
 assert.strictEqual(config.ENEMY_VARIANTS.husk_bulwark.baseEnemy, "shield_husk");
+assert.strictEqual(config.ENEMY_VARIANTS.brute_molten.baseEnemy, "tar_brute");
+assert.strictEqual(config.ENEMY_VARIANTS.wraith_null.baseEnemy, "void_wraith");
 Object.values(config.ENEMY_VARIANTS).forEach((variant) => {
   assert(variant.hpMul > 0 && variant.speedMul > 0, `${variant.id} needs stat multipliers`);
   assert(variant.tint || variant.filter, `${variant.id} needs a canvas-only visual difference`);
@@ -259,11 +267,27 @@ assert.strictEqual(Object.keys(config.ACHIEVEMENTS).length, 14, "R22 should defi
 assert.strictEqual(achievementRewardTotal, 72, "R22 achievement rewards should include the event set");
 assert(eventAchievementTotal <= config.ECONOMY.upgradeTracks.hull.costs[0], "event achievements should add at most one Lv1 hull upgrade");
 const milestoneRewardTotal = Object.values(config.MILESTONES).reduce((sum, milestone) => sum + milestone.rewardParts, 0);
-assert.strictEqual(Object.keys(config.MILESTONES).length, 6, "R56 should define six wave milestones");
-assert.strictEqual(milestoneRewardTotal, 140, "R56 milestone rewards should total 140 parts");
+assert.strictEqual(Object.keys(config.MILESTONES).length, 7, "R57 should define seven wave milestones");
+assert.strictEqual(milestoneRewardTotal, 200, "R57 milestone rewards should total 200 parts");
+assert.strictEqual(config.MILESTONES.wave_25.target, 25, "R57 wave_25 milestone should target wave 25");
 Object.values(config.MILESTONES).forEach((milestone) => {
   assert.strictEqual(milestone.metric, "bestWave", `${milestone.id} should track bestWave`);
   assert(Number.isInteger(milestone.target) && milestone.target > 0, `${milestone.id} should have a wave target`);
 });
+
+assert(config.STORY && Array.isArray(config.STORY.beats), "R57 should define story beats");
+assert.strictEqual(config.STORY.beats.length, 12, "R57 should include 12 radio log beats");
+const validStoryUnlocks = new Set(["default", "bestWave", "bosses", "vehicleUnlock", "furnitureCount"]);
+config.STORY.beats.forEach((beat) => {
+  assert(beat.id && beat.title, `${beat.id || "story beat"} should have id and title`);
+  assert(Array.isArray(beat.lines) && beat.lines.length > 0, `${beat.id} should include dialogue lines`);
+  beat.lines.forEach((line) => {
+    assert(["xi", "driver", "narration"].includes(line.speaker), `${beat.id} has an invalid speaker ${line.speaker}`);
+    assert(line.text && line.text.replace(/\s+/g, "").length > 0, `${beat.id} line text should not be blank`);
+  });
+  assert(beat.unlock && validStoryUnlocks.has(beat.unlock.type), `${beat.id} should use a valid story unlock type`);
+});
+assert.strictEqual(config.STORY.beats.find((beat) => beat.id === "b01").unlock.type, "default");
+assert(config.STORY.beats.some((beat) => beat.unlock.type === "bestWave" && beat.unlock.value === 20 && beat.title === "不熄的光"), "R57 story should include the wave 20 ending beat");
 
 console.log("Config tests PASS");
