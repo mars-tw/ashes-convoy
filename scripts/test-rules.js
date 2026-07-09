@@ -101,6 +101,19 @@ weightedWave8Pool.forEach((item) => {
 });
 assert(weightedCounts.tar_brute < weightedCounts.runner * 0.4, "tar_brute fractional poolWeight should not be clamped to runner frequency");
 
+const zeroWeightPool = [
+  { enemyId: "zero_a", weight: 0 },
+  { enemyId: "zero_b", weight: 0 },
+  { enemyId: "zero_c", weight: 0 }
+];
+const zeroCounts = { zero_a: 0, zero_b: 0, zero_c: 0 };
+const zeroFallbackRng = fixedRng([0, 0.2, 0.34, 0.5, 0.67, 0.99]);
+for (let i = 0; i < 3000; i += 1) {
+  const picked = rules.pickWeighted(zeroWeightPool, zeroFallbackRng);
+  zeroCounts[picked.enemyId] += 1;
+}
+assert.deepStrictEqual(zeroCounts, { zero_a: 1000, zero_b: 1000, zero_c: 1000 }, "all-zero weights should fall back to a safe uniform pick");
+
 const rangedShot = rules.resolveEnemyRangedAttack({
   enemy: {
     enemyId: "spore_spitter",
@@ -131,14 +144,41 @@ const rangedCooldown = rules.resolveEnemyRangedAttack({
 assert.strictEqual(rangedCooldown.fire, false, "spore spitter should respect cooldown");
 
 const shieldDamage = rules.resolveEnemyIncomingDamage({
-  enemy: { enemyId: "shield_husk", hp: 52, shieldHp: 28, behavior: config.ENEMIES.shield_husk.behavior },
+  enemy: { enemyId: "shield_husk", x: 100, y: 150, hp: 52, shieldHp: 28, behavior: config.ENEMIES.shield_husk.behavior },
   damage: 20,
-  projectile: { vy: -220 },
+  projectile: { vx: 0, vy: -220 },
+  shieldFacing: { x: 100, y: config.LOGIC.vehicleY },
   config
 });
 assert.strictEqual(shieldDamage.shieldHp, 8, "shield should absorb incoming front damage first");
 assert.strictEqual(Math.round(shieldDamage.appliedDamage * 10) / 10, 6.4, "shielded front hit should leak reduced hp damage");
 assert.strictEqual(Math.round(shieldDamage.hp * 10) / 10, 45.6, "shield husk hp should only receive leaked damage");
+const rearScreenShieldDamage = rules.resolveEnemyIncomingDamage({
+  enemy: { enemyId: "shield_husk", x: 100, y: config.LOGIC.vehicleY + 42, hp: 52, shieldHp: 28, behavior: config.ENEMIES.shield_husk.behavior },
+  damage: 20,
+  projectile: { vx: 0, vy: 220, source: "companion" },
+  shieldFacing: { x: 100, y: config.LOGIC.vehicleY },
+  config
+});
+assert.strictEqual(rearScreenShieldDamage.shieldHp, 8, "shield should absorb downward shots when the husk is facing the trailer from below");
+assert.strictEqual(Math.round(rearScreenShieldDamage.hp * 10) / 10, 45.6, "rear-screen shield hit should still leak only mitigated hp damage");
+const sideScreenShieldDamage = rules.resolveEnemyIncomingDamage({
+  enemy: { enemyId: "shield_husk", x: 134, y: config.LOGIC.vehicleY, hp: 52, shieldHp: 28, behavior: config.ENEMIES.shield_husk.behavior },
+  damage: 20,
+  projectile: { vx: 220, vy: 0, source: "companion" },
+  shieldFacing: { x: 100, y: config.LOGIC.vehicleY },
+  config
+});
+assert.strictEqual(sideScreenShieldDamage.shieldHp, 8, "shield should absorb side-screen shots that arrive from the trailer-facing arc");
+const nonFacingShieldDamage = rules.resolveEnemyIncomingDamage({
+  enemy: { enemyId: "shield_husk", x: 100, y: 150, hp: 52, shieldHp: 28, behavior: config.ENEMIES.shield_husk.behavior },
+  damage: 20,
+  projectile: { vx: 0, vy: 220, source: "companion" },
+  shieldFacing: { x: 100, y: config.LOGIC.vehicleY },
+  config
+});
+assert.strictEqual(nonFacingShieldDamage.shieldHp, 28, "shield should not absorb a reverse shot from outside the trailer-facing arc");
+assert.strictEqual(nonFacingShieldDamage.hp, 32, "reverse shots outside the front arc should keep the existing weak-side hp behavior");
 const phaseDamage = rules.resolveEnemyIncomingDamage({
   enemy: { enemyId: "void_wraith", hp: 42, phaseActive: true, behavior: config.ENEMIES.void_wraith.behavior },
   damage: 20,

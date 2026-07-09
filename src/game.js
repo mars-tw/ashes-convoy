@@ -1422,6 +1422,7 @@
       enemyConfig: config.ENEMIES[enemy.enemyId],
       damage,
       projectile: projectile || { vy: -1, sourceKind: "aoe" },
+      shieldFacing: state && state.vehicle ? state.vehicle : null,
       config
     });
     enemy.hp = incoming.hp;
@@ -2130,6 +2131,7 @@
             enemyConfig: config.ENEMIES[enemy.enemyId],
             damage,
             projectile,
+            shieldFacing: state.vehicle,
             config
           });
           damage = incoming.appliedDamage;

@@ -31,6 +31,32 @@ function finiteNumber(value, fallback, options) {
   return opts.integer ? Math.floor(cleaned) : cleaned;
 }
 
+function hasFinitePoint(point) {
+  return point && Number.isFinite(point.x) && Number.isFinite(point.y);
+}
+
+function shieldFrontHit(enemy, projectile, behavior, shieldFacing) {
+  const shot = projectile || {};
+  if (shot.sourceKind === "aoe") return true;
+
+  const facing = shieldFacing || shot.shieldFacing;
+  if (hasFinitePoint(enemy) && hasFinitePoint(facing)) {
+    const frontX = facing.x - enemy.x;
+    const frontY = facing.y - enemy.y;
+    const frontLen = Math.hypot(frontX, frontY);
+    const incomingX = -finiteNumber(shot.vx, 0);
+    const incomingY = -finiteNumber(shot.vy, 0);
+    const incomingLen = Math.hypot(incomingX, incomingY);
+    if (frontLen > 0.0001 && incomingLen > 0.0001) {
+      const dot = (frontX * incomingX + frontY * incomingY) / (frontLen * incomingLen);
+      const frontArcCos = finiteNumber(behavior.shieldFrontArcCos, 0, { min: -1, max: 1 });
+      return dot >= frontArcCos;
+    }
+  }
+
+  return finiteNumber(shot.vy, -1) < 0;
+}
+
 function boolTrueMap(input) {
   const output = {};
   if (!input || typeof input !== "object" || Array.isArray(input)) return output;
@@ -719,7 +745,7 @@ function resolveEnemyIncomingDamage(options) {
   let appliedDamage = rawDamage;
   let shieldDamage = 0;
   let shieldBroken = false;
-  const frontHit = finiteNumber(projectile.vy, -1) < 0;
+  const frontHit = shieldFrontHit(enemy, projectile, behavior, opts.shieldFacing);
 
   if (behavior.type === "shield" && shieldHp > 0 && frontHit) {
     const before = shieldHp;
