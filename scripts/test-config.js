@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 const assert = require("assert");
 const fs = require("fs");
@@ -12,11 +12,11 @@ function assertFinitePositive(value, label) {
 
 assert.strictEqual(config.STORAGE_KEY, "ashes_convoy_meta_v1");
 assert.strictEqual(config.META_VERSION, 3);
-assert.strictEqual(config.APP_VERSION, "R60");
-assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r60-v1");
+assert.strictEqual(config.APP_VERSION, "R61");
+assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r61-v1");
 const indexHtml = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-assert(indexHtml.includes("manifest.webmanifest?v=R60"), "index.html should version the web manifest for R60");
-assert(indexHtml.includes("assets/icons/icon-192.png?v=R60"), "index.html should version the app icon for R60");
+assert(indexHtml.includes("manifest.webmanifest?v=R61"), "index.html should version the web manifest for R61");
+assert(indexHtml.includes("assets/icons/icon-192.png?v=R61"), "index.html should version the app icon for R61");
 assert.strictEqual(config.LOGIC.width, 195);
 assert.strictEqual(config.LOGIC.height, 422);
 assert.strictEqual(config.LOGIC.displayWidth, 390);
@@ -34,7 +34,7 @@ assert.strictEqual(config.RUN_TRAILER.byEnvironment.land.spriteImage, "assets/ve
 assert(fs.existsSync(path.join(__dirname, "..", config.RUN_TRAILER.byEnvironment.land.spriteImage)), "run trailer sprite should exist");
 assertFinitePositive(config.RUN_TRAILER.byEnvironment.land.visualWidth, "RUN_TRAILER.land.visualWidth");
 assertFinitePositive(config.RUN_TRAILER.byEnvironment.land.offsetY, "RUN_TRAILER.land.offsetY");
-assert(config.TRAILER_GUNNER && config.TRAILER_GUNNER.enabledDefault === true, "R60 should enable the trailer gunner by default");
+assert(config.TRAILER_GUNNER && config.TRAILER_GUNNER.enabledDefault === true, "R61 should enable the trailer gunner by default");
 assert.strictEqual(config.TRAILER_GUNNER.sprite, "assets/vehicles/xi_gunner.png");
 assert(fs.existsSync(path.join(__dirname, "..", config.TRAILER_GUNNER.sprite)), "trailer gunner sprite should exist");
 assert.strictEqual(config.TRAILER_GUNNER.weapon.damage, 6);
@@ -83,7 +83,7 @@ Object.entries(config.WEAPONS).forEach(([id, weapon]) => {
   assertFinitePositive(weapon.fireInterval, `${id}.fireInterval`);
   assertFinitePositive(weapon.projectileSpeed, `${id}.projectileSpeed`);
 });
-assert(config.WEAPON_POWERUPS, "R60 should define weapon power-ups");
+assert(config.WEAPON_POWERUPS, "R61 should define weapon power-ups");
 assert.strictEqual(config.WEAPON_POWERUPS.dropChancePerKill, 0.035);
 assert.strictEqual(config.WEAPON_POWERUPS.pityKills, 30);
 assert.strictEqual(config.WEAPON_POWERUPS.crateSpeed, 24);
@@ -91,12 +91,16 @@ assert.strictEqual(config.WEAPON_POWERUPS.ttl, 14);
 assert.strictEqual(config.WEAPON_POWERUPS.pickupRadius, 30);
 assert.strictEqual(config.WEAPON_POWERUPS.maxLevel, 5);
 assert.deepStrictEqual(config.WEAPON_POWERUPS.levelDamageMul, [1, 1.12, 1.24, 1.38, 1.55]);
-assert.deepStrictEqual(config.WEAPON_POWERUPS.cycleModes, ["spread", "laser", "homing"]);
+assert.deepStrictEqual(config.WEAPON_POWERUPS.cycleModes, ["spread", "fracture", "laser", "ember", "homing"]);
 assert.strictEqual(config.WEAPON_POWERUPS.modes.spread.projectilesAdd, 2);
 assert.strictEqual(config.WEAPON_POWERUPS.modes.laser.pierceAdd, 3);
 assert.strictEqual(config.WEAPON_POWERUPS.modes.laser.bulletSprite, "bullet_pulse");
 assert.strictEqual(config.WEAPON_POWERUPS.modes.homing.homing, true);
 assert.strictEqual(config.WEAPON_POWERUPS.modes.homing.turnRate, 4.5);
+assert.strictEqual(config.WEAPON_POWERUPS.modes.fracture.shardCount, 2);
+assert(config.WEAPON_POWERUPS.modes.fracture.damageMul < 0.75 && config.WEAPON_POWERUPS.modes.fracture.shardDamageMul <= 0.16, "fracture should trade primary DPS for short shards");
+assert.strictEqual(config.WEAPON_POWERUPS.modes.ember.burnTicks, 3);
+assert(config.WEAPON_POWERUPS.modes.ember.damageMul < config.WEAPON_POWERUPS.modes.laser.damageMul, "ember primary DPS should stay below laser");
 
 const expectedEnemies = [
   "shambler",
@@ -107,9 +111,13 @@ const expectedEnemies = [
   "swarm_mite",
   "tar_brute",
   "void_wraith",
+  "ash_screamer",
+  "chain_tether",
+  "mirror_husk",
+  "ember_tick",
   "boss_hive_titan"
 ];
-assert.deepStrictEqual(Object.keys(config.ENEMIES).sort(), expectedEnemies.slice().sort(), "enemy roster should match R60 roster");
+assert.deepStrictEqual(Object.keys(config.ENEMIES).sort(), expectedEnemies.slice().sort(), "enemy roster should match R61 roster");
 expectedEnemies.forEach((id) => {
   const enemy = config.ENEMIES[id];
   assert(enemy, `missing enemy ${id}`);
@@ -130,9 +138,17 @@ assert.strictEqual(config.ENEMIES.shield_husk.behavior.type, "shield");
 assert.strictEqual(config.ENEMIES.swarm_mite.behavior.type, "swarm");
 assert.strictEqual(config.ENEMIES.tar_brute.behavior.type, "brute");
 assert.strictEqual(config.ENEMIES.void_wraith.behavior.type, "phase");
+assert.strictEqual(config.ENEMIES.ash_screamer.behavior.type, "ranged");
+assert.strictEqual(config.ENEMIES.chain_tether.behavior.type, "brute");
+assert.strictEqual(config.ENEMIES.mirror_husk.behavior.type, "shield");
+assert.strictEqual(config.ENEMIES.ember_tick.behavior.type, "swarm");
 assert(config.ENEMIES.spore_spitter.firstWave >= 3, "ranged enemy should not appear in the opening waves");
 assert(config.ENEMIES.swarm_mite.budgetCost === 1 && config.ENEMIES.swarm_mite.hp < config.ENEMIES.runner.hp, "swarm mite should be cheap and fragile");
 assert(config.ENEMIES.tar_brute.hp > config.ENEMIES.bloater.hp && config.ENEMIES.tar_brute.speed < config.ENEMIES.bloater.speed, "tar brute should be a slow meat shield");
+assert(config.ENEMIES.ash_screamer.firstWave === 5 && config.ENEMIES.ash_screamer.behavior.projectileDamage <= 8, "ash screamer should enter midgame with low projectile damage");
+assert(config.ENEMIES.chain_tether.firstWave === 7 && config.ENEMIES.chain_tether.behavior.slowMul >= 0.78, "chain tether slow should be readable but not hard-locking");
+assert(config.ENEMIES.mirror_husk.firstWave === 8 && config.ENEMIES.mirror_husk.poolWeight <= 0.28, "mirror husk should stay rare because frontal mitigation is strong");
+assert(config.ENEMIES.ember_tick.firstWave === 4 && config.ENEMIES.ember_tick.budgetCost === 1, "ember tick should remain a cheap swarm enemy");
 assert(config.ENEMIES.runner.visualWidth < config.VEHICLES.sky_barge.visualWidth, "runner should read as smaller than the smallest vehicle");
 assert(config.ENEMIES.shambler.visualWidth < config.VEHICLES.land_rig.visualWidth, "shambler should read as smaller than the land rig");
 assert(config.ENEMIES.bloater.visualWidth > config.VEHICLES.sea_ark.visualWidth, "bloater should read as an elite larger than the player");
@@ -147,7 +163,7 @@ assert.strictEqual(config.ENEMIES.boss_hive_titan.firstWave, 5);
 assert(Array.isArray(config.ENEMIES.boss_hive_titan.phases));
 assert(config.ENEMIES.boss_hive_titan.phases.length >= 2);
 
-["damage_plus", "rate_plus", "multishot_plus", "repair", "barrier"].forEach((id) => {
+["damage_plus", "rate_plus", "multishot_plus", "repair", "barrier", "gate_focus"].forEach((id) => {
   const gate = config.GATES[id];
   assert(gate, `missing gate ${id}`);
   assert.strictEqual(gate.id, id);
@@ -157,6 +173,9 @@ assert(config.ENEMIES.boss_hive_titan.phases.length >= 2);
   assert(gate.effect && typeof gate.effect === "object", `${id} needs an effect`);
   assert(!Object.prototype.hasOwnProperty.call(gate.effect, "parts"), `${id} must not grant parts`);
 });
+assert.strictEqual(config.GATES.gate_focus.effect.type, "focus");
+assert.strictEqual(config.GATES.gate_focus.effect.duration, 10);
+assert(config.GATES.gate_focus.effect.spreadMul < 1, "focus gate should improve handling without increasing damage");
 
 assert.strictEqual(config.WAVE.bossEvery, 5);
 assert(config.WAVE.firstGateMinTime >= 8 && config.WAVE.firstGateMaxTime <= 11, "first gate should appear in 8-11 seconds");
@@ -185,7 +204,7 @@ assert.strictEqual(config.TRAILER_ROOM.waveGoods, 1);
 assert.strictEqual(config.TRAILER_ROOM.bossGoods, 4);
 assert.strictEqual(config.TRAILER_ROOM.maxGoodsPerRun, 28);
 assert.strictEqual(Object.keys(config.TRAILER_ROOM.slots).length, 8, "trailer room should expose eight fixed slots");
-assert.strictEqual(Object.keys(config.TRAILER_ROOM.furniture).length, 15, "R60 should expand the trailer furniture catalog");
+assert.strictEqual(Object.keys(config.TRAILER_ROOM.furniture).length, 15, "R61 should expand the trailer furniture catalog");
 const trailerCostTotal = Object.values(config.TRAILER_ROOM.furniture).reduce((sum, item) => sum + item.cost, 0);
 assert.strictEqual(trailerCostTotal, 328, "trailer furniture should have a clear long-tail cost");
 const trailerFullEffects = Object.values(config.TRAILER_ROOM.furniture).reduce(
@@ -244,6 +263,13 @@ assert.deepStrictEqual(Object.keys(config.ENVIRONMENT_EVENTS).sort(), ["air", "l
 Object.values(config.ENVIRONMENT_EVENTS).forEach((event) => {
   assert(event.id && event.label && event.description, `${event.id} should have readable copy`);
   assert(event.chance > 0 && event.chance < 1, `${event.id} should be a random wave event`);
+  assert(event.systemLine && Array.isArray(event.barks) && event.barks.length >= 2 && event.completeLine, `${event.id} should include R61 event bark copy`);
+  assert(Array.isArray(event.alternates) && event.alternates.length === 1, `${event.id} should define one mutually exclusive alternate`);
+  event.alternates.forEach((alternate) => {
+    assert(alternate.id && alternate.label && alternate.description, `${alternate.id} should have readable copy`);
+    assert(alternate.systemLine && Array.isArray(alternate.barks) && alternate.barks.length >= 2 && alternate.completeLine, `${alternate.id} should include event bark copy`);
+    assert(alternate.chance > 0 && alternate.chance < 1, `${alternate.id} should be a random alternate event`);
+  });
 });
 assert.strictEqual(config.ENEMY_VARIANTS.runner_frenzy.baseEnemy, "runner");
 assert.strictEqual(config.ENEMY_VARIANTS.shambler_hardened.baseEnemy, "shambler");
@@ -253,9 +279,23 @@ assert.strictEqual(config.ENEMY_VARIANTS.spitter_corrosive.baseEnemy, "spore_spi
 assert.strictEqual(config.ENEMY_VARIANTS.husk_bulwark.baseEnemy, "shield_husk");
 assert.strictEqual(config.ENEMY_VARIANTS.brute_molten.baseEnemy, "tar_brute");
 assert.strictEqual(config.ENEMY_VARIANTS.wraith_null.baseEnemy, "void_wraith");
+assert.strictEqual(config.ENEMY_VARIANTS.screamer_white_noise.baseEnemy, "ash_screamer");
+assert.strictEqual(config.ENEMY_VARIANTS.tether_rusthook.baseEnemy, "chain_tether");
+assert.strictEqual(config.ENEMY_VARIANTS.husk_backglint.baseEnemy, "mirror_husk");
+assert.strictEqual(config.ENEMY_VARIANTS.tick_cindercloud.baseEnemy, "ember_tick");
 Object.values(config.ENEMY_VARIANTS).forEach((variant) => {
+  assert(config.ENEMIES[variant.baseEnemy], `${variant.id} should point to a known base enemy`);
   assert(variant.hpMul > 0 && variant.speedMul > 0, `${variant.id} needs stat multipliers`);
   assert(variant.tint || variant.filter, `${variant.id} needs a canvas-only visual difference`);
+});
+["sortie_start", "first_supply", "first_gate", "boss_radio", "boss_down", "critical_hull", "deep_route"].forEach((id) => {
+  const bark = config.RUN_BARKS[id];
+  assert(bark && bark.id === id, `${id} run bark should exist`);
+  assert(Array.isArray(bark.lines) && bark.lines.length >= 1 && bark.lines.length <= 2, `${id} should stay short`);
+  bark.lines.forEach((line) => {
+    assert(["xi", "driver", "narration"].includes(line.speaker), `${id} has invalid speaker ${line.speaker}`);
+    assert(line.text && line.text.length > 0, `${id} line should not be blank`);
+  });
 });
 assert.strictEqual(config.VEHICLES.sky_barge.passive.id, "slipstream");
 assert.strictEqual(config.VEHICLES.sea_ark.passive.id, "broadside_echo");
@@ -288,17 +328,17 @@ assert.strictEqual(Object.keys(config.ACHIEVEMENTS).length, 14, "R22 should defi
 assert.strictEqual(achievementRewardTotal, 72, "R22 achievement rewards should include the event set");
 assert(eventAchievementTotal <= config.ECONOMY.upgradeTracks.hull.costs[0], "event achievements should add at most one Lv1 hull upgrade");
 const milestoneRewardTotal = Object.values(config.MILESTONES).reduce((sum, milestone) => sum + milestone.rewardParts, 0);
-assert.strictEqual(Object.keys(config.MILESTONES).length, 12, "R60 should define twelve wave milestones");
-assert.strictEqual(milestoneRewardTotal, 1080, "R60 milestone rewards should total 1080 parts");
-assert.strictEqual(config.MILESTONES.wave_25.target, 25, "R60 wave_25 milestone should target wave 25");
+assert.strictEqual(Object.keys(config.MILESTONES).length, 12, "R61 should define twelve wave milestones");
+assert.strictEqual(milestoneRewardTotal, 1080, "R61 milestone rewards should total 1080 parts");
+assert.strictEqual(config.MILESTONES.wave_25.target, 25, "R61 wave_25 milestone should target wave 25");
 assert.strictEqual(config.MILESTONES.wave_100.description, "抵達第 100 波，灰燼盡頭仍有火");
 Object.values(config.MILESTONES).forEach((milestone) => {
   assert.strictEqual(milestone.metric, "bestWave", `${milestone.id} should track bestWave`);
   assert(Number.isInteger(milestone.target) && milestone.target > 0, `${milestone.id} should have a wave target`);
 });
 
-assert(config.STORY && Array.isArray(config.STORY.beats), "R60 should define story beats");
-assert.strictEqual(config.STORY.beats.length, 12, "R60 should include 12 radio log beats");
+assert(config.STORY && Array.isArray(config.STORY.beats), "R61 should define story beats");
+assert.strictEqual(config.STORY.beats.length, 12, "R61 should include 12 radio log beats");
 const validStoryUnlocks = new Set(["default", "bestWave", "bosses", "vehicleUnlock", "furnitureCount"]);
 config.STORY.beats.forEach((beat) => {
   assert(beat.id && beat.title, `${beat.id || "story beat"} should have id and title`);
@@ -310,6 +350,6 @@ config.STORY.beats.forEach((beat) => {
   assert(beat.unlock && validStoryUnlocks.has(beat.unlock.type), `${beat.id} should use a valid story unlock type`);
 });
 assert.strictEqual(config.STORY.beats.find((beat) => beat.id === "b01").unlock.type, "default");
-assert(config.STORY.beats.some((beat) => beat.unlock.type === "bestWave" && beat.unlock.value === 20 && beat.title === "不熄的光"), "R60 story should include the wave 20 ending beat");
+assert(config.STORY.beats.some((beat) => beat.unlock.type === "bestWave" && beat.unlock.value === 20 && beat.title === "不熄的光"), "R61 story should include the wave 20 ending beat");
 
 console.log("Config tests PASS");

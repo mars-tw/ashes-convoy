@@ -81,6 +81,14 @@ assert.deepStrictEqual(wave1Pool, ["runner", "shambler"], "wave 1 pool should pr
 const wave3Pool = rules.enemyPoolForWave(3, config).map((enemy) => enemy.id);
 assert(wave3Pool.includes("swarm_mite") && wave3Pool.includes("spore_spitter") && wave3Pool.includes("shield_husk"), "wave 3 should introduce swarm/ranged/shield enemies");
 assert(!wave3Pool.includes("tar_brute") && !wave3Pool.includes("void_wraith"), "elite and phase enemies should enter later");
+const wave4Pool = rules.enemyPoolForWave(4, config).map((enemy) => enemy.id);
+assert(wave4Pool.includes("ember_tick"), "wave 4 should introduce ember ticks");
+const wave5Pool = rules.enemyPoolForWave(5, config).map((enemy) => enemy.id);
+assert(wave5Pool.includes("ash_screamer"), "wave 5 should introduce ash screamer");
+const wave7Pool = rules.enemyPoolForWave(7, config).map((enemy) => enemy.id);
+assert(wave7Pool.includes("chain_tether"), "wave 7 should introduce chain tether");
+const wave8Pool = rules.enemyPoolForWave(8, config).map((enemy) => enemy.id);
+assert(wave8Pool.includes("mirror_husk"), "wave 8 should introduce mirror husk");
 
 const weightedWave8Pool = rules.enemyPoolForWave(8, config).map((enemy) => ({
   enemyId: enemy.id,
@@ -142,6 +150,22 @@ const rangedCooldown = rules.resolveEnemyRangedAttack({
   config
 });
 assert.strictEqual(rangedCooldown.fire, false, "spore spitter should respect cooldown");
+const screamShot = rules.resolveEnemyRangedAttack({
+  enemy: {
+    enemyId: "ash_screamer",
+    x: 96,
+    y: 248,
+    radius: config.ENEMIES.ash_screamer.radius,
+    attackCooldown: 0,
+    behavior: config.ENEMIES.ash_screamer.behavior
+  },
+  vehicle: { x: 98, y: config.LOGIC.vehicleY, radius: config.VEHICLES.land_rig.radius },
+  dt: 0.1,
+  config
+});
+assert.strictEqual(screamShot.fire, true, "ash screamer should reuse ranged behavior");
+assert.strictEqual(screamShot.projectile.kind, "scream", "ash screamer projectile should be visually distinguishable");
+assert(screamShot.projectile.damage <= 8, "ash screamer projectile damage should respect the P0 cap");
 
 const shieldDamage = rules.resolveEnemyIncomingDamage({
   enemy: { enemyId: "shield_husk", x: 100, y: 150, hp: 52, shieldHp: 28, behavior: config.ENEMIES.shield_husk.behavior },
@@ -186,6 +210,22 @@ const phaseDamage = rules.resolveEnemyIncomingDamage({
   config
 });
 assert.strictEqual(phaseDamage.appliedDamage, 9, "phase enemy should reduce damage while phased");
+const mirrorFront = rules.resolveEnemyIncomingDamage({
+  enemy: { enemyId: "mirror_husk", x: 100, y: 150, hp: 58, shieldHp: 46, behavior: config.ENEMIES.mirror_husk.behavior },
+  damage: 20,
+  projectile: { vx: 0, vy: -220 },
+  shieldFacing: { x: 100, y: config.LOGIC.vehicleY },
+  config
+});
+assert(mirrorFront.appliedDamage <= 2, "mirror husk front should almost nullify direct fire while shielded");
+const mirrorBack = rules.resolveEnemyIncomingDamage({
+  enemy: { enemyId: "mirror_husk", x: 100, y: 150, hp: 58, shieldHp: 46, behavior: config.ENEMIES.mirror_husk.behavior },
+  damage: 20,
+  projectile: { vx: 0, vy: 220 },
+  shieldFacing: { x: 100, y: config.LOGIC.vehicleY },
+  config
+});
+assert.strictEqual(mirrorBack.hp, 38, "mirror husk back side should remain weak to reverse shots");
 
 let mixedNew = 0;
 let mixedTotal = 0;
@@ -193,12 +233,39 @@ for (let seed = 0; seed < 20; seed += 1) {
   const plan = rules.generateWave({ wave: 6, vehicleId: "land_rig", rng: rules.createSeededRng(`r52-mix-${seed}`), config });
   const nonBoss = plan.spawns.filter((spawn) => spawn.enemyId !== "boss_hive_titan");
   mixedTotal += nonBoss.length;
-  mixedNew += nonBoss.filter((spawn) => ["spore_spitter", "shield_husk", "swarm_mite", "tar_brute", "void_wraith"].includes(spawn.enemyId)).length;
+  mixedNew += nonBoss.filter((spawn) => ["spore_spitter", "shield_husk", "swarm_mite", "tar_brute", "void_wraith", "ash_screamer", "ember_tick"].includes(spawn.enemyId)).length;
   const cost = nonBoss.reduce((sum, spawn) => sum + config.ENEMIES[spawn.enemyId].budgetCost, 0);
   assert(cost / Math.max(1, nonBoss.length) <= 4.2, "wave 6 average enemy budget cost should stay controlled");
 }
 const newShare = mixedNew / mixedTotal;
 assert(newShare > 0.12 && newShare < 0.62, `new enemy share should be present but not dominate, got ${newShare}`);
+
+let focusSeen = false;
+for (let seed = 0; seed < 40 && !focusSeen; seed += 1) {
+  const plan = rules.generateWave({ wave: 4, vehicleId: "land_rig", rng: rules.createSeededRng(`focus-gate-${seed}`), config });
+  focusSeen = plan.gates.some((gate) => gate.options.includes("gate_focus"));
+}
+assert.strictEqual(focusSeen, true, "gate_focus should enter the Boss-prep wave gate pool");
+for (let seed = 0; seed < 20; seed += 1) {
+  const plan = rules.generateWave({ wave: 3, vehicleId: "land_rig", rng: rules.createSeededRng(`no-focus-${seed}`), config });
+  assert(plan.gates.every((gate) => !gate.options.includes("gate_focus")), "gate_focus should stay out of ordinary gate pairs");
+}
+const primaryLandEvent = rules.chooseEnvironmentEvent({ wave: 4, vehicleId: "land_rig", rng: () => 0.05, config });
+assert.strictEqual(primaryLandEvent.id, "sandstorm", "low event roll should choose the primary land event");
+assert.strictEqual(primaryLandEvent.alternates, undefined, "selected events should not carry alternate config payloads");
+const alternateLandEvent = rules.chooseEnvironmentEvent({ wave: 4, vehicleId: "land_rig", rng: () => 0.35, config });
+assert.strictEqual(alternateLandEvent.id, "land_blackout", "middle event roll should choose the mutually exclusive land alternate");
+const noLandEvent = rules.chooseEnvironmentEvent({ wave: 4, vehicleId: "land_rig", rng: () => 0.8, config });
+assert.strictEqual(noLandEvent, null, "high event roll should produce no environment event");
+const airStaticEvent = rules.chooseEnvironmentEvent({ wave: 4, vehicleId: "sky_barge", rng: () => 0.35, config });
+assert.strictEqual(airStaticEvent.id, "air_static", "air static should be selectable as the air alternate");
+assert.strictEqual(airStaticEvent.enemyProjectileSpeedMul, 0.88, "air static should expose slower enemy projectile tuning");
+const migratedEventStats = rules.migrateMeta({ eventStats: { sandstorm: { encounters: 2, completions: 1 } } }, { config }).eventStats;
+assert.strictEqual(migratedEventStats.land_blackout.encounters, 0, "old saves should gain alternate event stats with zero counts");
+const eventCodex = rules.getEventCodexProgress(rules.migrateMeta(null, { config }), config);
+["sandstorm", "land_blackout", "air_static", "sea_fogbank", "space_echo"].forEach((eventId) => {
+  assert(eventCodex.some((entry) => entry.id === eventId), `${eventId} should appear in event codex progress`);
+});
 
 function simulateSupplyReachability(startX) {
   const vehicle = { x: config.LOGIC.width * 0.5, y: config.LOGIC.vehicleY, radius: config.VEHICLES.land_rig.radius };
@@ -706,6 +773,24 @@ const homingShot = rules.calculateShotStats({
 assert.strictEqual(homingShot.homing, true, "homing mode should mark projectiles homing");
 assert.strictEqual(homingShot.turnRate, 4.5, "homing mode should expose turn rate");
 assert(homingShot.projectileSpeed < baseShot.projectileSpeed, "homing mode should slow projectiles");
+const fractureShot = rules.calculateShotStats({
+  vehicleId: "land_rig",
+  meta,
+  runMods: Object.assign(rules.defaultRunMods(), { weaponMode: "fracture", weaponLevel: 2 }),
+  config
+});
+assert.strictEqual(fractureShot.shardCount, 2, "fracture mode should create two short shards");
+assert(fractureShot.damage < baseShot.damage, "fracture primary hit should be lower than standard");
+assert(fractureShot.damage * (1 + fractureShot.shardCount * fractureShot.shardDamageMul) <= baseShot.damage * 1.08, "fracture all-hit damage should stay near standard");
+const emberShot = rules.calculateShotStats({
+  vehicleId: "land_rig",
+  meta,
+  runMods: Object.assign(rules.defaultRunMods(), { weaponMode: "ember", weaponLevel: 2, burn: config.WEAPON_POWERUPS.modes.ember.burnTicks }),
+  config
+});
+assert.strictEqual(emberShot.burnTicks, 3, "ember mode should activate the runMods burn slot");
+assert(emberShot.damage < laserShot.damage, "ember direct damage should stay below laser");
+assert(emberShot.damage * (1 + emberShot.burnTicks * emberShot.burnDamageMul) < laserShot.damage, "ember short DoT should not out-DPS laser on a single target");
 
 const overloadValues = [0, 1, 2, 3, 4, 5].map((n) => rules.overloadDamage(n));
 for (let i = 1; i < overloadValues.length; i += 1) {
@@ -742,6 +827,33 @@ const maxedDamageGate = rules.applyGateEffect({
 assert.strictEqual(maxedDamageGate.runMods.damageAdd, 2.5, "maxed gate should not add dead damage");
 assert.strictEqual(maxedDamageGate.runMods.overload, 1, "maxed gate should add overload");
 assert.strictEqual(maxedDamageGate.overflow.type, "goods");
+const focusGate = rules.applyGateEffect({
+  gateId: "gate_focus",
+  runMods: rules.defaultRunMods(),
+  vehicle: { hp: 100, maxHp: 200, shield: 0, maxShield: 120 },
+  vehicleLevels: { hull: 0, weapon: 0, energy: 0, gate: 0 },
+  time: 12,
+  config
+});
+assert.strictEqual(focusGate.runMods.focusUntil, 22, "focus gate should grant a 10 second calibration window");
+const focusedShot = rules.calculateShotStats({
+  vehicleId: "land_rig",
+  meta,
+  runMods: focusGate.runMods,
+  time: 13,
+  config
+});
+const expiredFocusShot = rules.calculateShotStats({
+  vehicleId: "land_rig",
+  meta,
+  runMods: focusGate.runMods,
+  time: 23,
+  config
+});
+assert.strictEqual(focusedShot.focusActive, true, "focus should be active inside its time window");
+assert(focusedShot.spread < baseShot.spread, "focus should reduce spread without adding damage");
+assert.strictEqual(focusedShot.damage, baseShot.damage, "focus should not increase base damage");
+assert.strictEqual(expiredFocusShot.focusActive, false, "focus should expire after its time window");
 const maxedSupply = rules.applySupplyRewardById({
   rewardId: "overshield",
   runMods: rules.defaultRunMods(),

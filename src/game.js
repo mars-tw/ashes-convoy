@@ -492,6 +492,52 @@
     };
   }
 
+  function speakerName(speaker) {
+    if (speaker === "xi") return "熹";
+    if (speaker === "driver") return "壁爐";
+    return "旁白";
+  }
+
+  function runBarksEnabled() {
+    if (!config.RUN_BARKS) return false;
+    if (meta.settings && meta.settings.showCompanion === false) return false;
+    if (meta.settings && meta.settings.reducedFlash === true) return false;
+    return true;
+  }
+
+  function pushRunBark(barkId) {
+    if (!state || !runBarksEnabled()) return false;
+    if (!state.runBarksSeen) state.runBarksSeen = {};
+    if (state.runBarksSeen[barkId]) return false;
+    const bark = config.RUN_BARKS[barkId];
+    if (!bark || !Array.isArray(bark.lines) || !bark.lines.length) return false;
+    state.runBarksSeen[barkId] = true;
+    if (!state.stats.runBarks || typeof state.stats.runBarks !== "object") state.stats.runBarks = {};
+    state.stats.runBarks[barkId] = 1;
+    const title = speakerName(bark.lines[0].speaker);
+    const body = bark.lines.map((line) => `${speakerName(line.speaker)}：「${line.text}」`).join(" ");
+    state.messages.push({ text: body, time: state.time, ttl: bark.ttl || 1.8 });
+    pushEventBanner(title, body, { kind: "story", ttl: bark.ttl || 1.8 });
+    return true;
+  }
+
+  function eventBarkLine(event) {
+    if (!event || !Array.isArray(event.barks) || !event.barks.length) return "";
+    const index = (state.wave + state.stats.environmentEvents.length) % event.barks.length;
+    const line = event.barks[index];
+    if (!line || !line.text) return "";
+    return `${speakerName(line.speaker)}：「${line.text}」`;
+  }
+
+  function eventBannerBody(event) {
+    if (!event) return "";
+    const parts = [event.systemLine || `${event.label}：${event.description}`];
+    const bark = eventBarkLine(event);
+    if (bark) parts.push(bark);
+    if (event.objective) parts.push(`目標：${event.objective}`);
+    return parts.join(" ");
+  }
+
   function applyOverflowReward(overflow, x, y) {
     if (!overflow || !Number.isFinite(overflow.amount) || overflow.amount <= 0) return;
     let label = "";
@@ -576,6 +622,7 @@
       vehicle: rules.deepClone(state.vehicle),
       runMods: rules.deepClone(state.runMods),
       effectiveRunMods: rules.deepClone(effectiveRunMods()),
+      runBarksSeen: rules.deepClone(state.runBarksSeen || {}),
       input: rules.deepClone(state.input),
       eventBanner: state.eventBanner ? rules.deepClone(state.eventBanner) : null,
       lastGateChoice: state.lastGateChoice ? rules.deepClone(state.lastGateChoice) : null,
@@ -667,6 +714,7 @@
     if (state.runMods.damageAdd > 0) labels.push("增傷門");
     if (state.runMods.fireIntervalMul < 0.999) labels.push("射速門");
     if (state.runMods.projectileAdd > 0) labels.push("多重彈");
+    if (state.runMods.focusUntil > state.time) labels.push("校準門");
     state.supplyBuffs.forEach((buff) => {
       if (buff.until > state.time && buff.label) labels.push(buff.label);
     });
@@ -813,7 +861,7 @@
       state.stats.eventRewardMul = Math.min(2, state.stats.eventRewardMul + event.rewardMulAdd);
     }
     if (event.id === "meteor_shower") spawnMeteorHazards(event);
-    pushEventBanner("環境事件", `${event.label}：${event.description}`, { kind: "event", ttl: 2.4 });
+    pushEventBanner(event.label || "環境事件", eventBannerBody(event), { kind: "event", ttl: 2.6 });
   }
 
   function completeCurrentEnvironmentEvent() {
@@ -821,6 +869,9 @@
     if (!event || state.completedEnvironmentEventWave === state.wave) return;
     state.completedEnvironmentEventWave = state.wave;
     recordRunEventStat(event.id, "completions");
+    if (event.completeLine) {
+      pushEventBanner("事件收束", event.completeLine, { kind: "event", ttl: 1.6 });
+    }
   }
 
   function spawnSupplyDrop(x, y) {
@@ -940,6 +991,7 @@
     state.mode = "playing";
     state.messages.push({ text: `補給箱：${result.reward.label}`, time: state.time, ttl: 1.8 });
     pushEventBanner("補給箱", result.reward.label, { kind: "supply", ttl: 1.5 });
+    pushRunBark("first_supply");
     playSound("pickup");
     addEffect({
       id: nextId("effect"),
@@ -1025,6 +1077,7 @@
       projectiles: [],
       gates: [],
       effects: [],
+      runBarksSeen: {},
       stats: {
         kills: 0,
         bossesDefeated: 0,
@@ -1053,6 +1106,7 @@
         damageTimeline: {},
         recentDamageEvents: [],
         variantKills: {},
+        runBarks: {},
         deathContext: null,
         partsPreview: config.ECONOMY.minRunParts
       },
@@ -1137,6 +1191,10 @@
     if (!enemyConfig) throw new Error(`Unknown enemy "${enemyId}".`);
     const scaled = rules.scaledEnemyStats(enemyId, state.wave, config);
     const opts = overrides || {};
+    const behavior = enemyConfig.behavior ? rules.deepClone(enemyConfig.behavior) : null;
+    if (behavior && Number.isFinite(opts.enemyProjectileSpeedMul) && Number.isFinite(behavior.projectileSpeed)) {
+      behavior.projectileSpeed *= opts.enemyProjectileSpeedMul;
+    }
     const enemy = {
       id: opts.id || nextId("enemy"),
       enemyId,
@@ -1168,7 +1226,7 @@
       contactDamage: Number.isFinite(opts.contactDamage) ? opts.contactDamage : enemyConfig.contactDamage,
       radius: Number.isFinite(opts.radius) ? opts.radius : enemyConfig.radius,
       scale: Number.isFinite(opts.scale) ? opts.scale : enemyConfig.scale,
-      behavior: enemyConfig.behavior ? rules.deepClone(enemyConfig.behavior) : null,
+      behavior,
       attackCooldown: Number.isFinite(opts.attackCooldown)
         ? opts.attackCooldown
         : enemyConfig.behavior && enemyConfig.behavior.type === "ranged"
@@ -1183,8 +1241,8 @@
       score: enemyConfig.score,
       variantId: opts.variantId || null,
       variantLabel: opts.variantLabel || "",
-      tint: opts.tint || "",
-      filter: opts.filter || "",
+      tint: opts.tint || enemyConfig.tint || "",
+      filter: opts.filter || enemyConfig.filter || "",
       boss: enemyConfig.boss === true,
       dead: false,
       hitCooldown: 0,
@@ -1196,6 +1254,7 @@
     if (enemy.boss) {
       pushEventBanner("Boss 來襲", enemyConfig.name, { kind: "boss", ttl: 2.4 });
       state.messages.push({ text: `${enemyConfig.name} 逼近`, time: state.time, ttl: 2.1 });
+      pushRunBark("boss_radio");
       playSound("bossWarn");
     }
     if (!opts.silent) emitState();
@@ -1304,6 +1363,7 @@
       vehicle: state.vehicle,
       vehicleId: state.vehicleId,
       vehicleLevels: rules.getVehicleLevels(meta, state.vehicleId, config),
+      time: state.time,
       config
     });
     state.runMods = result.runMods;
@@ -1318,6 +1378,7 @@
     };
     state.messages.push({ text: `已選：${config.GATES[gateId].label}`, time: state.time, ttl: 1.7 });
     pushEventBanner("增益已選", config.GATES[gateId].label, { kind: "gate", ttl: 1.6 });
+    pushRunBark("first_gate");
     playSound("gateChoice");
     addFloatingText(config.GATES[gateId].shortLabel, state.vehicle.x, state.vehicle.y - 54, {
       color: "#f0b64a",
@@ -1401,6 +1462,9 @@
     state.vehicle.recentHitUntil = state.time + 0.28;
     if (passive && passive.id === "revenge_fire") state.vehicle.recentHitUntil = state.time + passive.duration;
     pulseShake(fx.resolveShake(FXC, 1.2 + (FXC && FXC.shake ? FXC.shake.hitAmp * 0.5 : 0), meta.settings), 0.18);
+    if (state.vehicle.hp > 0 && state.vehicle.hp <= state.vehicle.maxHp * 0.25) {
+      pushRunBark("critical_hull");
+    }
     if (state.vehicle.hp <= 0) {
       const kind = source && source.type ? source.type : "unknown";
       state.stats.deathContext = {
@@ -1503,6 +1567,7 @@
       state.stats.score += 900;
       resolveBossBlueprintDrop(enemy);
       state.messages.push({ text: "Boss 已擊破", time: state.time, ttl: 1.8 });
+      pushRunBark("boss_down");
     }
     applyBroadsideEcho(enemy);
     if (cause !== "burst") {
@@ -1641,6 +1706,7 @@
     state.waveBannerStart = state.time;
     state.waveBannerNumber = state.wave;
     playSound("waveStart");
+    if (state.wave === 10 || state.wave === 15) pushRunBark("deep_route");
     emitState();
     return getState();
   }
@@ -1653,6 +1719,7 @@
       vehicleId: state.vehicleId,
       meta,
       runMods,
+      time: state.time,
       config
     });
     const damageSources = projectileDamageSources(runMods);
@@ -1701,6 +1768,15 @@
           overloadCritMul: shot.overloadCritMul,
           homing: shot.homing,
           turnRate: shot.turnRate,
+          weaponMode: shot.weaponMode,
+          shardCount: shot.shardCount,
+          shardDamageMul: shot.shardDamageMul,
+          shardSpread: shot.shardSpread,
+          shardSpeedMul: shot.shardSpeedMul,
+          shardLife: shot.shardLife,
+          burnTicks: shot.burnTicks,
+          burnDamageMul: shot.burnDamageMul,
+          burnInterval: shot.burnInterval,
           radius: shot.bulletSprite === "bullet_rocket" ? 9 : 6,
           rotation: angle,
           life: 1.45,
@@ -1768,6 +1844,8 @@
   function updateEnemies(dt) {
     const vehicle = state.vehicle;
     state.enemies.forEach((enemy) => {
+      if (enemy.dead) return;
+      updateEnemyBurn(enemy);
       if (enemy.dead) return;
       enemy.hitCooldown = Math.max(0, enemy.hitCooldown - dt);
       enemy.hitFlash = Math.max(0, (enemy.hitFlash || 0) - dt);
@@ -1872,6 +1950,91 @@
       }
     });
     state.enemies = state.enemies.filter((enemy) => !enemy.dead && enemy.y < H + 52);
+  }
+
+  function applyBurnToEnemy(enemy, projectile, appliedDamage) {
+    if (!enemy || enemy.dead || !projectile || projectile.source === "companion") return;
+    const ticks = rules.finiteNumber(projectile.burnTicks, 0, { min: 0, max: 6, integer: true });
+    const damageMul = rules.finiteNumber(projectile.burnDamageMul, 0, { min: 0, max: 0.5 });
+    if (ticks <= 0 || damageMul <= 0 || appliedDamage <= 0) return;
+    const tickDamage = Math.max(0.35, appliedDamage * damageMul);
+    const interval = rules.finiteNumber(projectile.burnInterval, 0.42, { min: 0.1, max: 2 });
+    const current = enemy.burn || null;
+    if (current && current.ticksRemaining > ticks && current.damage >= tickDamage) return;
+    enemy.burn = {
+      ticksRemaining: ticks,
+      damage: tickDamage,
+      interval,
+      nextAt: state.time + interval,
+      vehicleId: projectile.vehicleId || state.vehicleId
+    };
+  }
+
+  function updateEnemyBurn(enemy) {
+    if (!enemy || enemy.dead || !enemy.burn) return;
+    let guard = 0;
+    while (enemy.burn && enemy.burn.ticksRemaining > 0 && state.time >= enemy.burn.nextAt && guard < 6) {
+      const incoming = applyEnemyIncomingDamage(enemy, enemy.burn.damage, null, { sourceKey: "burn" });
+      if (incoming.appliedDamage > 0) {
+        addFloatingText(Math.max(1, Math.round(incoming.appliedDamage)).toString(), enemy.x - 4, enemy.y - enemy.radius - 8, {
+          color: "#ff9f4a",
+          size: 6,
+          ttl: 0.38,
+          vy: -10,
+          damageNumber: true,
+          amount: incoming.appliedDamage
+        });
+      }
+      enemy.burn.ticksRemaining -= 1;
+      enemy.burn.nextAt += enemy.burn.interval;
+      guard += 1;
+      if (enemy.hp <= 0) {
+        killEnemy(enemy, "burn");
+        return;
+      }
+    }
+    if (enemy.burn && enemy.burn.ticksRemaining <= 0) enemy.burn = null;
+  }
+
+  function spawnFractureShards(projectile, target) {
+    if (!projectile || projectile.fractureShard || !target) return;
+    const count = rules.finiteNumber(projectile.shardCount, 0, { min: 0, max: 4, integer: true });
+    const damageMul = rules.finiteNumber(projectile.shardDamageMul, 0, { min: 0, max: 1 });
+    if (count <= 0 || damageMul <= 0) return;
+    const spread = rules.finiteNumber(projectile.shardSpread, 0.3, { min: 0.05, max: 0.8 });
+    const speed = Math.sqrt(projectile.vx * projectile.vx + projectile.vy * projectile.vy) *
+      rules.finiteNumber(projectile.shardSpeedMul, 0.72, { min: 0.1, max: 2 });
+    const life = rules.finiteNumber(projectile.shardLife, 0.36, { min: 0.05, max: 1 });
+    const baseAngle = Math.atan2(projectile.vy, projectile.vx);
+    for (let i = 0; i < count; i += 1) {
+      if (state.projectiles.length >= config.PERFORMANCE.maxProjectiles) break;
+      const side = i % 2 === 0 ? -1 : 1;
+      const step = Math.floor(i / 2) + 1;
+      const angle = baseAngle + side * spread * step;
+      const hitIds = {};
+      if (target.id != null) hitIds[String(target.id)] = true;
+      state.projectiles.push({
+        id: nextId("projectile"),
+        source: "fracture",
+        fractureShard: true,
+        sprite: projectile.sprite || "bullet_pulse",
+        x: projectile.x,
+        y: projectile.y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        damage: projectile.damage * damageMul,
+        damageSources: projectile.damageSources,
+        bonusProjectile: true,
+        vehicleId: projectile.vehicleId,
+        pierce: 0,
+        hitIds,
+        radius: 4,
+        rotation: angle,
+        life,
+        splash: 0,
+        scale: 0.78
+      });
+    }
   }
 
   function damageSplash(projectile, target) {
@@ -1981,6 +2144,7 @@
     const mode = config.WEAPON_POWERUPS && config.WEAPON_POWERUPS.modes
       ? config.WEAPON_POWERUPS.modes[picked.mode]
       : null;
+    state.runMods.burn = mode && Number.isFinite(mode.burnTicks) ? mode.burnTicks : 0;
     const label = `${mode && mode.label ? mode.label : picked.mode} Lv${picked.level}`;
     state.messages.push({ text: label, time: state.time, ttl: 1.5 });
     pushEventBanner("彈種切換", label, { kind: "supply", ttl: 1.4 });
@@ -2141,6 +2305,7 @@
           state.stats.damageDealt += damage;
           recordDamageTimeline(damage);
           addProjectileDamageSource(projectile, damage);
+          applyBurnToEnemy(enemy, projectile, damage);
           if (incoming.shieldDamage > 0) {
             addFloatingText(incoming.shieldBroken ? "破盾" : "盾", enemy.x - 5, enemy.y - enemy.radius - 10, {
               color: incoming.shieldBroken ? "#ffd166" : "#9ad7ff",
@@ -2188,6 +2353,7 @@
             age: 0,
             alpha: 0.85
           });
+          spawnFractureShards(projectile, enemy);
           if (enemy.hp <= 0) killEnemy(enemy, "projectile");
           damageSplash(projectile, enemy);
           if (projectile.pierce > 0) {
@@ -2371,6 +2537,7 @@
     if (!state || state.paused || state.over) return;
     state.time += dt;
     state.waveElapsed += dt;
+    if (state.time >= 3) pushRunBark("sortie_start");
     state.scroll = (state.scroll + 112 * dt) % 32;
     updateVehicleAim(dt);
     processWaveEvents();
@@ -2546,10 +2713,12 @@
         ? "+35%"
         : gate.gateId === "rate_plus"
           ? "+25%"
-          : gate.gateId === "multishot_plus"
-            ? "+1"
-            : gate.gateId === "barrier"
-              ? "+15%"
+        : gate.gateId === "multishot_plus"
+          ? "+1"
+          : gate.gateId === "barrier"
+            ? "+15%"
+            : gate.gateId === "gate_focus"
+              ? "10 秒"
               : "維修";
     ctx.save();
     ctx.globalAlpha *= 0.9;

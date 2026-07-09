@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 const assert = require("assert");
 const fs = require("fs");
@@ -282,12 +282,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R60") && swText.includes("src/ui.js?v=R60") && swText.includes("src/game.js?v=R60") && swText.includes("src/rules.js?v=R60"),
+      swCachesJs: swText.includes("src/version.js?v=R61") && swText.includes("src/ui.js?v=R61") && swText.includes("src/game.js?v=R61") && swText.includes("src/rules.js?v=R61"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R60"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R60"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R60"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R61"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R61"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R61"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -296,7 +296,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R60", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R61", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -651,7 +651,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R60"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R61"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -925,7 +925,7 @@ async function checkFleetProjectileTraits(page) {
   assert(seaProjectile && seaProjectile.splash > 0, "sea ark should fire splash projectiles");
 }
 
-async function checkR60CombatRefresh(page) {
+async function checkR61CombatRefresh(page) {
   const road = await page.evaluate(() => {
     window.__test.startRun("land_rig");
     const cfg = window.DSConfig;
@@ -980,6 +980,116 @@ async function checkR60CombatRefresh(page) {
   await page.evaluate(() => window.__test.step(1200));
   const homingEnd = await page.evaluate(() => window.__test.getState().stats.kills);
   assert(homingEnd >= 1, "homing projectile should hit and kill the offset target");
+
+  const fracture = await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      hazards: [],
+      supplyDrops: [],
+      enemyProjectiles: [],
+      companionCooldown: 999,
+      vehicle: { weaponCooldown: 999 },
+      wavePlan: { spawns: [], gates: [], duration: 30, boss: false, environmentEvent: null },
+      spawnIndex: 0,
+      gateIndex: 0
+    });
+    const target = window.__test.spawnEnemy("shambler", { id: "fracture_target", x: 100, y: 150, hp: 100, speed: 0, silent: true });
+    const mode = window.DSConfig.WEAPON_POWERUPS.modes.fracture;
+    window.__test.setState({
+      projectiles: [
+        {
+          id: "fracture_probe",
+          sprite: "bullet_pulse",
+          x: target.x,
+          y: target.y,
+          vx: 0,
+          vy: -1,
+          damage: 12,
+          damageSources: [{ key: "land_rig", ratio: 1 }],
+          bonusProjectile: false,
+          vehicleId: "land_rig",
+          pierce: 0,
+          hitIds: {},
+          radius: 12,
+          rotation: -Math.PI / 2,
+          life: 1,
+          splash: 0,
+          scale: 1,
+          shardCount: mode.shardCount,
+          shardDamageMul: mode.shardDamageMul,
+          shardSpread: mode.shardSpread,
+          shardSpeedMul: mode.shardSpeedMul,
+          shardLife: mode.shardLife
+        }
+      ]
+    });
+    window.__test.step(16);
+    const state = window.__test.getState();
+    return {
+      shards: state.projectiles.filter((projectile) => projectile.fractureShard).length,
+      targetHp: state.enemies.find((enemy) => enemy.id === "fracture_target").hp
+    };
+  });
+  assert.strictEqual(fracture.shards, 2, "fracture hit should spawn two short shard projectiles");
+  assert(fracture.targetHp < 100, "fracture primary hit should still damage the target");
+
+  const ember = await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      hazards: [],
+      supplyDrops: [],
+      enemyProjectiles: [],
+      companionCooldown: 999,
+      vehicle: { weaponCooldown: 999 },
+      wavePlan: { spawns: [], gates: [], duration: 30, boss: false, environmentEvent: null },
+      spawnIndex: 0,
+      gateIndex: 0
+    });
+    const target = window.__test.spawnEnemy("shambler", { id: "ember_target", x: 100, y: 150, hp: 100, speed: 0, silent: true });
+    const mode = window.DSConfig.WEAPON_POWERUPS.modes.ember;
+    window.__test.setState({
+      projectiles: [
+        {
+          id: "ember_probe",
+          sprite: "bullet_pulse",
+          x: target.x,
+          y: target.y,
+          vx: 0,
+          vy: -1,
+          damage: 20,
+          damageSources: [{ key: "land_rig", ratio: 1 }],
+          bonusProjectile: false,
+          vehicleId: "land_rig",
+          pierce: 0,
+          hitIds: {},
+          radius: 12,
+          rotation: -Math.PI / 2,
+          life: 1,
+          splash: 0,
+          scale: 1,
+          burnTicks: mode.burnTicks,
+          burnDamageMul: mode.burnDamageMul,
+          burnInterval: mode.burnInterval
+        }
+      ]
+    });
+    window.__test.step(16);
+    window.__test.step(1600);
+    const state = window.__test.getState();
+    const enemy = state.enemies.find((item) => item.id === "ember_target");
+    return {
+      hp: enemy && enemy.hp,
+      burnDamage: state.stats.damageBySource.burn || 0
+    };
+  });
+  assert(ember.burnDamage > 0, "ember hit should deal burn damage over time");
+  assert(ember.hp < 80, `ember burn should reduce target hp after the direct hit, got ${ember.hp}`);
 
   await page.evaluate(() => {
     window.__test.startRun("land_rig");
@@ -1082,7 +1192,7 @@ async function checkR60CombatRefresh(page) {
   assert(overflowSupplyState.stats.scavengeGoods >= 6, "overflow supply should grant scavenge goods");
 }
 
-async function checkR60DamageRegression(page) {
+async function checkR61DamageRegression(page) {
   const pierce = await page.evaluate(() => {
     window.__test.startRun("void_runner");
     window.__test.setState({
@@ -1897,7 +2007,8 @@ async function checkEnvironmentEventsAndVariants(page) {
     "space low event roll should start meteor shower"
   );
   assert(state.hazards.length >= 3, "meteor shower should spawn shootable hazards");
-  assert(state.eventBanner && state.eventBanner.title.includes("環境事件"), "event start should show a HUD banner");
+  assert(state.eventBanner && state.eventBanner.title.includes("星渣雨"), "event start should show the named HUD banner");
+  assert(state.eventBanner.body.includes("目標"), "event banner should include short objective copy");
 
   await page.evaluate(() => {
     const stateNow = window.__test.getState();
@@ -1931,7 +2042,7 @@ async function checkEnvironmentEventsAndVariants(page) {
   assert(state.enemies.some((enemy) => enemy.variantId), "late wave generation should spawn tinted variants");
 }
 
-async function checkR60EnemyRosterBehaviors(page) {
+async function checkR61EnemyRosterBehaviors(page) {
   await page.evaluate(() => {
     window.__test.clearStorage();
     window.__test.startRun("land_rig");
@@ -1958,12 +2069,16 @@ async function checkR60EnemyRosterBehaviors(page) {
     window.__test.spawnEnemy("swarm_mite", { x: 118, y: state.vehicle.y - 135, speed: 0, hp: 80, silent: true });
     window.__test.spawnEnemy("tar_brute", { x: state.vehicle.x, y: state.vehicle.y - 42, speed: 0, hp: 180, silent: true });
     window.__test.spawnEnemy("void_wraith", { x: 138, y: state.vehicle.y - 120, speed: 0, hp: 120, animPhase: 0, silent: true });
+    window.__test.spawnEnemy("ash_screamer", { x: 112, y: state.vehicle.y - 104, speed: 0, hp: 120, attackCooldown: 0, silent: true });
+    window.__test.spawnEnemy("chain_tether", { x: state.vehicle.x + 16, y: state.vehicle.y - 44, speed: 0, hp: 150, silent: true });
+    window.__test.spawnEnemy("mirror_husk", { x: 164, y: state.vehicle.y - 154, speed: 0, hp: 120, silent: true });
+    window.__test.spawnEnemy("ember_tick", { x: 58, y: state.vehicle.y - 130, speed: 0, hp: 80, silent: true });
     for (let i = 0; i < 3; i += 1) window.__test.step(100);
   });
   await page.waitForFunction(() => {
     const state = window.__test.getState();
     const debug = window.__test.getRenderDebug();
-    const ids = ["spore_spitter", "shield_husk", "swarm_mite", "tar_brute", "void_wraith"];
+    const ids = ["spore_spitter", "shield_husk", "swarm_mite", "tar_brute", "void_wraith", "ash_screamer", "chain_tether", "mirror_husk", "ember_tick"];
     return state.enemyProjectiles.length > 0 && ids.every((id) => debug.enemyImageStatus[id] === "loaded");
   });
   const result = await page.evaluate(() => {
@@ -1973,19 +2088,111 @@ async function checkR60EnemyRosterBehaviors(page) {
     return {
       enemyIds: state.enemies.map((enemy) => enemy.enemyId).sort(),
       enemyProjectiles: state.enemyProjectiles.length,
+      screamProjectile: state.enemyProjectiles.some((shot) => shot.enemyId === "ash_screamer" && shot.kind === "scream" && shot.damage <= 8),
       spitterCooldown: byId.spore_spitter && byId.spore_spitter.attackCooldown,
+      screamerCooldown: byId.ash_screamer && byId.ash_screamer.attackCooldown,
       bruteSlow: state.vehicle.slowUntil > state.time && state.vehicle.slowMul < 1,
       voidPhase: byId.void_wraith && byId.void_wraith.phaseActive === true,
+      tetherSlowMul: byId.chain_tether && byId.chain_tether.behavior && byId.chain_tether.behavior.slowMul,
+      mirrorShieldHp: byId.mirror_husk && byId.mirror_husk.shieldHp,
+      emberBehavior: byId.ember_tick && byId.ember_tick.behavior && byId.ember_tick.behavior.type,
       rasterDrawn: debug.enemyRasterDrawn,
       statuses: debug.enemyImageStatus
     };
   });
-  assert.deepStrictEqual(result.enemyIds, ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith"].sort(), "R60 enemy roster should be spawnable");
-  assert(result.enemyProjectiles >= 1, "spore spitter should fire enemy projectiles");
+  assert.deepStrictEqual(
+    result.enemyIds,
+    ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith", "ash_screamer", "chain_tether", "mirror_husk", "ember_tick"].sort(),
+    "R61 enemy roster should be spawnable"
+  );
+  assert(result.enemyProjectiles >= 2, "spore spitter and ash screamer should fire enemy projectiles");
+  assert.strictEqual(result.screamProjectile, true, "ash screamer should fire low-damage scream projectiles");
   assert(result.spitterCooldown > 0, "spore spitter should reset attack cooldown after firing");
+  assert(result.screamerCooldown > 0, "ash screamer should reset attack cooldown after firing");
   assert.strictEqual(result.bruteSlow, true, "tar brute should apply movement slow aura near the vehicle");
   assert.strictEqual(result.voidPhase, true, "void wraith should enter phase state");
-  assert(result.rasterDrawn >= 5, `new enemies should draw raster sprites, got ${result.rasterDrawn}`);
+  assert(result.tetherSlowMul >= 0.78, "chain tether should use the guarded slow multiplier");
+  assert(result.mirrorShieldHp >= 40, "mirror husk should spawn with a strong front shield");
+  assert.strictEqual(result.emberBehavior, "swarm", "ember tick should reuse swarm behavior");
+  assert(result.rasterDrawn >= 9, `R61 enemies should draw raster sprites, got ${result.rasterDrawn}`);
+}
+
+async function checkR61RunBarks(page) {
+  const triggered = await page.evaluate(() => {
+    window.__test.clearStorage();
+    window.__test.startRun("land_rig");
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      hazards: [],
+      supplyDrops: [],
+      enemyProjectiles: [],
+      wavePlan: { spawns: [], gates: [], duration: 30, boss: false, environmentEvent: null },
+      spawnIndex: 0,
+      gateIndex: 0,
+      companionCooldown: 999,
+      vehicle: { weaponCooldown: 999 }
+    });
+    window.__test.step(3100);
+    window.__test.setState({
+      supplyChoice: {
+        dropId: "bark_supply",
+        x: 96,
+        y: 160,
+        openedAt: window.__test.getState().time,
+        rewardIds: Object.keys(window.DSConfig.SUPPLY_DROPS.rewards)
+      },
+      paused: false
+    });
+    window.__test.chooseSupplyReward("parts_cache");
+    window.__test.spawnGatePair(["gate_focus", "repair"]);
+    window.__test.chooseGate("gate_focus");
+    window.__test.spawnEnemy("boss_hive_titan", { x: 96, y: 100, hp: 1, speed: 0, silent: false });
+    window.__test.killAllEnemies();
+    const afterBoss = window.__test.getState();
+    window.__test.setState({ vehicle: { hp: afterBoss.vehicle.maxHp, shield: 0 } });
+    window.__test.damageVehicle(afterBoss.vehicle.maxHp * 0.8, { type: "enemy", enemyId: "shambler" });
+    window.__test.pushWave(10);
+    const state = window.__test.getState();
+    return {
+      seen: state.runBarksSeen,
+      stats: state.stats.runBarks,
+      focusUntil: state.runMods.focusUntil,
+      paused: state.paused,
+      banner: state.eventBanner
+    };
+  });
+  ["sortie_start", "first_supply", "first_gate", "boss_radio", "boss_down", "critical_hull", "deep_route"].forEach((id) => {
+    assert.strictEqual(triggered.seen[id], true, `${id} run bark should trigger once`);
+    assert.strictEqual(triggered.stats[id], 1, `${id} run bark should be counted once`);
+  });
+  assert(triggered.focusUntil > 0, "gate_focus should apply during the run bark gate choice flow");
+  assert.strictEqual(triggered.paused, false, "run barks should not leave the game paused");
+  assert(triggered.banner && triggered.banner.kind === "story", "latest run bark should use the non-blocking event banner");
+
+  const disabled = await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    meta.settings.showCompanion = false;
+    window.__test.setMeta(meta);
+    window.__test.startRun("land_rig");
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      hazards: [],
+      supplyDrops: [],
+      enemyProjectiles: [],
+      wavePlan: { spawns: [], gates: [], duration: 30, boss: false, environmentEvent: null },
+      spawnIndex: 0,
+      gateIndex: 0,
+      companionCooldown: 999,
+      vehicle: { weaponCooldown: 999 }
+    });
+    window.__test.step(3300);
+    return window.__test.getState();
+  });
+  assert.deepStrictEqual(disabled.runBarksSeen, {}, "showCompanion=false should disable run barks");
 }
 
 async function checkEventCodexAndAchievements(page) {
@@ -2223,7 +2430,10 @@ async function spawnBoss(page) {
     hidden: node.hidden,
     text: node.innerText
   }));
-  assert(!banner.hidden && banner.text.includes("Boss 來襲"), `boss alert banner should be visible, got ${banner.text}`);
+  assert(
+    !banner.hidden && (banner.text.includes("Boss 來襲") || banner.text.includes("大地雷")),
+    `boss alert or boss_radio bark should be visible, got ${banner.text}`
+  );
 
   await page.evaluate(() => {
     const stateNow = window.__test.getState();
@@ -2330,13 +2540,14 @@ async function runScenario(browser, baseUrl, viewport, full) {
     await checkBossBlueprintDropAnimation(page);
     await unlockFleet(page);
     await checkEnvironmentEventsAndVariants(page);
-    await checkR60EnemyRosterBehaviors(page);
+    await checkR61EnemyRosterBehaviors(page);
+    await checkR61RunBarks(page);
     await checkEventCodexAndAchievements(page);
     await checkSupplyDropPickupAndSettlement(page);
     await unlockFleet(page);
     await checkFleetProjectileTraits(page);
-    await checkR60CombatRefresh(page);
-    await checkR60DamageRegression(page);
+    await checkR61CombatRefresh(page);
+    await checkR61DamageRegression(page);
     await checkVehicleFleetSelectionAndCombat(page);
     await checkBlueprintAchievementsAndUnlock(page);
     await checkVehicleSpecificUpgradePurchase(page);
@@ -2693,7 +2904,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r60")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r61")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -2711,7 +2922,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r60")), "R60 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r61")), "R61 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

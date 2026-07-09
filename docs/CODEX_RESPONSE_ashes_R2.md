@@ -6,7 +6,7 @@
 
 也採納 R2-5 的測試缺口：`pickWeighted` 在 `total <= 0` 時新增 3000 次均勻回退測試，明確鎖住不除以 0。
 
-版本由 on-disk `R59` bump 到 `R60`，同步 `src/version.js`、`src/config.js` fallback、`index.html ?v=`、`sw.js` cache list、`scripts/test-config.js`、`scripts/test-automation-guards.js`、`scripts/test-e2e.js` 斷言。
+版本由 on-disk `R59` bump 到當輪目標版，並同步 `src/version.js`、`src/config.js` fallback、`index.html ?v=`、`sw.js` cache list、`scripts/test-config.js`、`scripts/test-automation-guards.js`、`scripts/test-e2e.js` 斷言。
 
 ## Grok R2 逐條回應
 
@@ -54,4 +54,4 @@
 
 ## 與 Grok 不同處
 
-Grok R2 判定 R2-1 為 P1 且「本輪只審不改」；本輪已採納並落地。其餘 P2 我同意多數風險描述，但未在 R60 混入：它們分別屬測試注入防呆、未來武器組合、平衡、主循環、Boss AI、storage policy 或 UI snapshot 契約，沒有必要與盾正面語意修正綁在同一版。
+Grok R2 判定 R2-1 為 P1 且「本輪只審不改」；本輪已採納並落地。其餘 P2 我同意多數風險描述，但未在該輪版本混入：它們分別屬測試注入防呆、未來武器組合、平衡、主循環、Boss AI、storage policy 或 UI snapshot 契約，沒有必要與盾正面語意修正綁在同一版。

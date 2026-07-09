@@ -4,7 +4,7 @@ const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 3;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R60", CACHE_VERSION: "ashes-convoy-r60-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R61", CACHE_VERSION: "ashes-convoy-r61-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -556,6 +556,114 @@ const ENEMIES = {
     tags: ["phase", "floating"],
     stage: 1
   },
+  ash_screamer: {
+    id: "ash_screamer",
+    name: "灰喉尖嘯屍",
+    spriteImage: "assets/zombies/spore_spitter.png",
+    sprite: "zombie_spore_spitter",
+    hp: 30,
+    speed: 20,
+    contactDamage: 6,
+    budgetCost: 3,
+    score: 18,
+    radius: 9,
+    scale: 1.45,
+    visualWidth: 18,
+    firstWave: 5,
+    poolWeight: 0.42,
+    tint: "rgba(130, 190, 210, 0.28)",
+    filter: "grayscale(0.45) hue-rotate(16deg) saturate(1.25) brightness(1.02)",
+    behavior: {
+      type: "ranged",
+      range: 118,
+      keepDistance: 118,
+      cooldown: 1.9,
+      windup: 0.22,
+      projectileSpeed: 64,
+      projectileDamage: 7,
+      projectileRadius: 4,
+      projectileLife: 2.6,
+      projectileKind: "scream"
+    },
+    tags: ["ground", "ranged", "scream"],
+    stage: 1
+  },
+  chain_tether: {
+    id: "chain_tether",
+    name: "鐵鏈拖屍",
+    spriteImage: "assets/zombies/tar_brute.png",
+    sprite: "zombie_tar_brute",
+    hp: 90,
+    speed: 14,
+    contactDamage: 12,
+    budgetCost: 5,
+    score: 30,
+    radius: 14,
+    scale: 1.42,
+    visualWidth: 28,
+    firstWave: 7,
+    poolWeight: 0.3,
+    tint: "rgba(150, 160, 168, 0.28)",
+    filter: "grayscale(0.65) contrast(1.16) brightness(0.92)",
+    behavior: {
+      type: "brute",
+      slowRadius: 44,
+      slowMul: 0.8
+    },
+    tags: ["ground", "slow_aura", "tether"],
+    stage: 1
+  },
+  mirror_husk: {
+    id: "mirror_husk",
+    name: "反光殼屍",
+    spriteImage: "assets/zombies/shield_husk.png",
+    sprite: "zombie_shield_husk",
+    hp: 58,
+    speed: 18,
+    contactDamage: 11,
+    budgetCost: 5,
+    score: 32,
+    radius: 12,
+    scale: 1.5,
+    visualWidth: 24,
+    firstWave: 8,
+    poolWeight: 0.24,
+    tint: "rgba(210, 230, 236, 0.34)",
+    filter: "grayscale(0.35) brightness(1.18) contrast(1.28)",
+    behavior: {
+      type: "shield",
+      shieldHp: 46,
+      frontDamageMul: 0.08,
+      shieldBreakFlash: 0.38
+    },
+    tags: ["ground", "shield", "weak_back"],
+    stage: 1
+  },
+  ember_tick: {
+    id: "ember_tick",
+    name: "餘燼蜱群",
+    spriteImage: "assets/zombies/swarm_mite.png",
+    sprite: "zombie_swarm_mite",
+    hp: 7,
+    speed: 58,
+    contactDamage: 2,
+    budgetCost: 1,
+    score: 5,
+    radius: 5,
+    scale: 1.08,
+    visualWidth: 10,
+    firstWave: 4,
+    poolWeight: 0.72,
+    tint: "rgba(255, 116, 48, 0.36)",
+    filter: "sepia(1) saturate(2.2) hue-rotate(-24deg) brightness(1.08)",
+    behavior: {
+      type: "swarm",
+      zigzagAmp: 15,
+      zigzagFreq: 5.4
+    },
+    tags: ["ground", "swarm", "fast", "ember"],
+    stage: 1
+  },
   boss_hive_titan: {
     id: "boss_hive_titan",
     name: "母巢巨屍",
@@ -660,6 +768,46 @@ const ENEMY_VARIANTS = {
     tint: "rgba(150,90,200,0.3)",
     filter: "hue-rotate(30deg) saturate(1.6) brightness(0.95)",
     minWave: 8
+  },
+  screamer_white_noise: {
+    id: "screamer_white_noise",
+    baseEnemy: "ash_screamer",
+    label: "白噪灰喉",
+    hpMul: 0.9,
+    speedMul: 1.12,
+    tint: "rgba(150, 220, 230, 0.3)",
+    filter: "grayscale(0.55) hue-rotate(28deg) saturate(1.45) brightness(1.08)",
+    minWave: 7
+  },
+  tether_rusthook: {
+    id: "tether_rusthook",
+    baseEnemy: "chain_tether",
+    label: "鏽鉤拖屍",
+    hpMul: 1.18,
+    speedMul: 0.92,
+    tint: "rgba(190, 120, 70, 0.32)",
+    filter: "sepia(0.8) saturate(1.35) contrast(1.14)",
+    minWave: 9
+  },
+  husk_backglint: {
+    id: "husk_backglint",
+    baseEnemy: "mirror_husk",
+    label: "背光殼屍",
+    hpMul: 1.08,
+    speedMul: 1.05,
+    tint: "rgba(225, 245, 250, 0.34)",
+    filter: "brightness(1.25) contrast(1.34) saturate(0.82)",
+    minWave: 10
+  },
+  tick_cindercloud: {
+    id: "tick_cindercloud",
+    baseEnemy: "ember_tick",
+    label: "燼雲蜱",
+    hpMul: 0.9,
+    speedMul: 1.18,
+    tint: "rgba(255, 92, 42, 0.34)",
+    filter: "sepia(1) saturate(2.45) hue-rotate(-32deg) brightness(1.12)",
+    minWave: 6
   }
 };
 
@@ -695,53 +843,230 @@ const WEAPON_POWERUPS = {
       turnRate: 4.5,
       projectileSpeedMul: 0.9,
       damageMul: 0.85
+    },
+    fracture: {
+      label: "裂片",
+      damageMul: 0.68,
+      shardCount: 2,
+      shardDamageMul: 0.16,
+      shardSpread: 0.3,
+      shardSpeedMul: 0.72,
+      shardLife: 0.36,
+      bulletSprite: "bullet_pulse"
+    },
+    ember: {
+      label: "燼燃",
+      damageMul: 0.78,
+      projectileSpeedMul: 0.95,
+      burnTicks: 3,
+      burnDamageMul: 0.055,
+      burnInterval: 0.42,
+      bulletSprite: "bullet_pulse"
     }
   },
-  cycleModes: ["spread", "laser", "homing"]
+  cycleModes: ["spread", "fracture", "laser", "ember", "homing"]
+};
+
+const RUN_BARKS = {
+  sortie_start: {
+    id: "sortie_start",
+    ttl: 1.8,
+    lines: [
+      { speaker: "driver", text: "繫好。今天也把火帶回來。" },
+      { speaker: "xi", text: "我把後門鎖好了。" }
+    ]
+  },
+  first_supply: {
+    id: "first_supply",
+    ttl: 1.7,
+    lines: [
+      { speaker: "xi", text: "是罐頭還是子彈？……都要。" }
+    ]
+  },
+  first_gate: {
+    id: "first_gate",
+    ttl: 1.7,
+    lines: [
+      { speaker: "driver", text: "選一條能活下去的。" }
+    ]
+  },
+  boss_radio: {
+    id: "boss_radio",
+    ttl: 1.9,
+    lines: [
+      { speaker: "xi", text: "大地雷……不，是腳步。" },
+      { speaker: "driver", text: "別看它，聽我的節奏。" }
+    ]
+  },
+  boss_down: {
+    id: "boss_down",
+    ttl: 1.8,
+    lines: [
+      { speaker: "driver", text: "數到十。還在，就好。" }
+    ]
+  },
+  critical_hull: {
+    id: "critical_hull",
+    ttl: 1.8,
+    lines: [
+      { speaker: "xi", text: "壁爐？你聲音……又在抖。" }
+    ]
+  },
+  deep_route: {
+    id: "deep_route",
+    ttl: 1.8,
+    lines: [
+      { speaker: "narration", text: "路上的地名，已經沒人記得。" }
+    ]
+  }
 };
 
 const ENVIRONMENT_EVENTS = {
   land: {
     id: "sandstorm",
     environment: "land",
-    label: "沙塵暴",
-    description: "視野下降，結算零件 +20%",
-    chance: 0.38,
+    label: "灰喉走廊",
+    description: "沙塵灌進道路，視野下降；撐過本波，結算零件 +20%",
+    objective: "撐過本波",
+    systemLine: "沙牆壓低視野，車燈只能照見下一個影子。",
+    barks: [
+      { speaker: "xi", text: "外面……像有人在哭。" },
+      { speaker: "driver", text: "聽見哭聲就別停。" }
+    ],
+    completeLine: "沙聲退開，輪痕還在。",
+    chance: 0.3,
     minWave: 2,
     rewardMulAdd: 0.2,
-    visibilityLoss: 0.18
+    visibilityLoss: 0.18,
+    alternates: [
+      {
+        id: "land_blackout",
+        environment: "land",
+        label: "燈火管制",
+        description: "車燈收束，視野更窄；撐過本波，結算零件 +8%",
+        objective: "低視野存活",
+        systemLine: "燈火壓到最低，廢城像把路吞了。",
+        barks: [
+          { speaker: "driver", text: "不要開遠光，會把牠們全叫醒。" },
+          { speaker: "xi", text: "我只看得到你的肩膀。" }
+        ],
+        completeLine: "燈線恢復，黑暗沒有跟上來。",
+        chance: 0.14,
+        minWave: 4,
+        rewardMulAdd: 0.08,
+        visibilityLoss: 0.28
+      }
+    ]
   },
   air: {
     id: "turbulence",
     environment: "air",
-    label: "亂流",
-    description: "敵速 +15%，結算零件 +12%",
-    chance: 0.38,
+    label: "斷錨航道",
+    description: "亂流推擠敵群，敵速 +15%；撐過本波，結算零件 +12%",
+    objective: "穩住航線",
+    systemLine: "風切把航道撕成碎片，所有東西都快了一拍。",
+    barks: [
+      { speaker: "driver", text: "抓穩，這段風不講理。" },
+      { speaker: "xi", text: "我抓著了，換你別放手。" }
+    ],
+    completeLine: "亂流被甩在尾焰後面。",
+    chance: 0.3,
     minWave: 2,
     enemySpeedMul: 1.15,
-    rewardMulAdd: 0.12
+    rewardMulAdd: 0.12,
+    alternates: [
+      {
+        id: "air_static",
+        environment: "air",
+        label: "靜電層",
+        description: "靜電拖慢敵方投射物；撐過本波，結算零件 +8%",
+        objective: "穿越靜電雲",
+        systemLine: "空氣帶電，敵方彈體在藍白火花裡失速。",
+        barks: [
+          { speaker: "xi", text: "頭髮都站起來了。" },
+          { speaker: "driver", text: "讓它替我們慢一點。" }
+        ],
+        completeLine: "電噪散去，通訊重新咬住頻道。",
+        chance: 0.14,
+        minWave: 4,
+        enemyProjectileSpeedMul: 0.88,
+        rewardMulAdd: 0.08
+      }
+    ]
   },
   sea: {
     id: "undertow",
     environment: "sea",
-    label: "暗流",
-    description: "敵群左右漂移，結算零件 +10%",
-    chance: 0.38,
+    label: "沉錨帶",
+    description: "暗流牽偏敵群，左右漂移加劇；撐過本波，結算零件 +10%",
+    objective: "穿過沉錨帶",
+    systemLine: "水下殘骸拉扯航線，敵群像被看不見的繩拖著。",
+    barks: [
+      { speaker: "xi", text: "車在歪……我把罐頭扶好了。" },
+      { speaker: "driver", text: "先扶好你自己。" }
+    ],
+    completeLine: "暗流鬆手，甲板終於不再偏斜。",
+    chance: 0.3,
     minWave: 2,
     rewardMulAdd: 0.1,
     swayAmpMul: 1.75,
-    driftAmp: 8
+    driftAmp: 8,
+    alternates: [
+      {
+        id: "sea_fogbank",
+        environment: "sea",
+        label: "鹽霧岸",
+        description: "鹽霧遮蔽巨影，疾奔屍權重上升、腫囊屍權重下降",
+        objective: "清出霧岸",
+        systemLine: "白霧貼著水面，快影比大影更早出現。",
+        barks: [
+          { speaker: "driver", text: "看腳步，不看輪廓。" },
+          { speaker: "xi", text: "霧裡有很多小聲音。" }
+        ],
+        completeLine: "鹽霧裂開，航標重新浮現。",
+        chance: 0.14,
+        minWave: 4,
+        rewardMulAdd: 0.06,
+        poolWeightMul: { runner: 1.35, bloater: 0.55 }
+      }
+    ]
   },
   space: {
     id: "meteor_shower",
     environment: "space",
-    label: "隕石雨",
-    description: "額外障礙，可擊爆拿零件",
-    chance: 0.38,
+    label: "星渣雨",
+    description: "星渣落入航線，可擊爆障礙拿零件",
+    objective: "擊破星渣或撐過本波",
+    systemLine: "亮點不是星星，是冷掉的碎片在墜落。",
+    barks: [
+      { speaker: "driver", text: "那些不是星星，別抬頭太久。" },
+      { speaker: "xi", text: "我只抬一秒。" }
+    ],
+    completeLine: "星渣燒盡，窗外只剩黑。",
+    chance: 0.3,
     minWave: 2,
     hazardCount: 3,
     hazardHp: 20,
-    hazardParts: 2
+    hazardParts: 2,
+    alternates: [
+      {
+        id: "space_echo",
+        environment: "space",
+        label: "殘響帶",
+        description: "相位怪權重上升；撐過本波，結算零件 +12%",
+        objective: "穿過殘響帶",
+        systemLine: "舊訊號在真空裡回頭，虛影沿著聲音靠近。",
+        barks: [
+          { speaker: "xi", text: "無線電在叫我們的名字。" },
+          { speaker: "driver", text: "不要回答。" }
+        ],
+        completeLine: "殘響斷線，艙內重新安靜。",
+        chance: 0.14,
+        minWave: 6,
+        rewardMulAdd: 0.12,
+        poolWeightMul: { void_wraith: 1.45 }
+      }
+    ]
   }
 };
 
@@ -1118,6 +1443,15 @@ const GATES = {
     sprite: "gate_barrier",
     coreHp: 50,
     effect: { type: "shieldPct", pct: 0.15, maxShieldMul: 0.6 },
+    stage: 1
+  },
+  gate_focus: {
+    id: "gate_focus",
+    label: "校準門",
+    shortLabel: "校準",
+    sprite: "gate_rate",
+    coreHp: 45,
+    effect: { type: "focus", duration: 10, spreadMul: 0.52 },
     stage: 1
   }
 };
@@ -2115,9 +2449,13 @@ const META_DEFAULT = {
   achievements: {},
   eventStats: {
     sandstorm: { encounters: 0, completions: 0 },
+    land_blackout: { encounters: 0, completions: 0 },
     turbulence: { encounters: 0, completions: 0 },
+    air_static: { encounters: 0, completions: 0 },
     undertow: { encounters: 0, completions: 0 },
-    meteor_shower: { encounters: 0, completions: 0 }
+    sea_fogbank: { encounters: 0, completions: 0 },
+    meteor_shower: { encounters: 0, completions: 0 },
+    space_echo: { encounters: 0, completions: 0 }
   },
   questStats: {
     variantKills: 0,
@@ -2191,6 +2529,7 @@ const DSConfig = {
   VEHICLES,
   WEAPONS,
   WEAPON_POWERUPS,
+  RUN_BARKS,
   ENEMIES,
   ENEMY_VARIANTS,
   ENVIRONMENT_EVENTS,

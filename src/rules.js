@@ -68,7 +68,17 @@ function boolTrueMap(input) {
 
 function eventIds(config) {
   const cfg = getConfig(config);
-  return Object.values(cfg.ENVIRONMENT_EVENTS || {}).map((event) => event.id);
+  const ids = [];
+  Object.values(cfg.ENVIRONMENT_EVENTS || {}).forEach((event) => {
+    if (!event) return;
+    if (event.id) ids.push(event.id);
+    if (Array.isArray(event.alternates)) {
+      event.alternates.forEach((alternate) => {
+        if (alternate && alternate.id) ids.push(alternate.id);
+      });
+    }
+  });
+  return ids;
 }
 
 function sanitizeEventStats(input, config) {
@@ -727,7 +737,7 @@ function resolveEnemyRangedAttack(options) {
       damage: finiteNumber(behavior.projectileDamage, Math.max(1, enemyConfig.contactDamage || 6), { min: 1 }),
       radius: finiteNumber(behavior.projectileRadius, 5, { min: 1 }),
       life: finiteNumber(behavior.projectileLife, 3, { min: 0.2 }),
-      kind: "acid"
+      kind: behavior.projectileKind || "acid"
     }
   };
 }
@@ -799,7 +809,7 @@ function chooseGatePair(wave, rng, config) {
   const cfg = getConfig(config);
   const ids = Object.keys(cfg.GATES);
   const bossNext = (wave + 1) % cfg.WAVE.bossEvery === 0;
-  const pool = bossNext ? ["repair", "damage_plus", "rate_plus", "multishot_plus"] : ids;
+  const pool = bossNext ? ["repair", "damage_plus", "rate_plus", "multishot_plus", "gate_focus"] : ids.filter((id) => id !== "gate_focus");
   const first = pool[Math.floor(rng() * pool.length) % pool.length];
   let second = pool[Math.floor(rng() * pool.length) % pool.length];
   if (second === first) {
@@ -860,10 +870,27 @@ function chooseEnvironmentEvent(options) {
   const wave = finiteNumber(opts.wave, 1, { min: 1, integer: true });
   const vehicle = cfg.VEHICLES[opts.vehicleId] || cfg.VEHICLES[defaultVehicleId(cfg)];
   const event = cfg.ENVIRONMENT_EVENTS && cfg.ENVIRONMENT_EVENTS[vehicle.environment];
-  if (!event || wave < finiteNumber(event.minWave, 2, { min: 1, integer: true })) return null;
-  const chance = finiteNumber(event.chance, 0, { min: 0, max: 1 });
-  if (rng() >= chance) return null;
-  return deepClone(event);
+  if (!event) return null;
+  const candidates = [event].concat(Array.isArray(event.alternates) ? event.alternates : [])
+    .filter((candidate) => {
+      return candidate && wave >= finiteNumber(candidate.minWave, 2, { min: 1, integer: true });
+    })
+    .map((candidate) => {
+      const copy = deepClone(candidate);
+      delete copy.alternates;
+      return copy;
+    });
+  if (!candidates.length) return null;
+  const weights = candidates.map((candidate) => finiteNumber(candidate.chance, 0, { min: 0, max: 1 }));
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  if (total <= 0) return null;
+  let roll = rng();
+  if (roll >= Math.min(1, total)) return null;
+  for (let i = 0; i < candidates.length; i += 1) {
+    roll -= weights[i];
+    if (roll <= 0) return candidates[i];
+  }
+  return candidates[candidates.length - 1];
 }
 
 function applyEnvironmentEventToSpawn(spawn, environmentEvent) {
@@ -872,6 +899,9 @@ function applyEnvironmentEventToSpawn(spawn, environmentEvent) {
   if (environmentEvent.enemySpeedMul) next.speed *= finiteNumber(environmentEvent.enemySpeedMul, 1, { min: 0.1 });
   if (environmentEvent.swayAmpMul) next.swayAmp = finiteNumber(next.swayAmp, 0, { min: 0 }) * environmentEvent.swayAmpMul;
   if (environmentEvent.driftAmp) next.eventDriftAmp = environmentEvent.driftAmp;
+  if (environmentEvent.enemyProjectileSpeedMul) {
+    next.enemyProjectileSpeedMul = finiteNumber(environmentEvent.enemyProjectileSpeedMul, 1, { min: 0.1, max: 2 });
+  }
   return next;
 }
 
@@ -1397,11 +1427,18 @@ function generateWave(options) {
     });
   }
 
-  const pool = enemyPoolForWave(wave, cfg).map((enemy) => ({
-    enemyId: enemy.id,
-    cost: enemy.budgetCost,
-    weight: Number.isFinite(enemy.poolWeight) ? enemy.poolWeight : enemy.id === "bloater" ? 0.65 : enemy.id === "runner" ? 1.15 : 1
-  }));
+  const poolWeightMul =
+    environmentEvent && environmentEvent.poolWeightMul && typeof environmentEvent.poolWeightMul === "object"
+      ? environmentEvent.poolWeightMul
+      : {};
+  const pool = enemyPoolForWave(wave, cfg).map((enemy) => {
+    const baseWeight = Number.isFinite(enemy.poolWeight) ? enemy.poolWeight : enemy.id === "bloater" ? 0.65 : enemy.id === "runner" ? 1.15 : 1;
+    return {
+      enemyId: enemy.id,
+      cost: enemy.budgetCost,
+      weight: baseWeight * finiteNumber(poolWeightMul[enemy.id], 1, { min: 0, max: 4 })
+    };
+  });
 
   const targetCount = bossWave
     ? 10 + wave * 2
@@ -1523,6 +1560,8 @@ function defaultRunMods() {
     shock: 0,
     slow: 0,
     overload: 0,
+    focusUntil: 0,
+    focusSpreadMul: 1,
     weaponMode: "standard",
     weaponLevel: 1
   };
@@ -1753,9 +1792,16 @@ function calculateShotStats(options) {
   const overload = finiteNumber(runMods.overload, 0, { min: 0, integer: true });
   const overloadPierce = Math.floor(overload / 3);
   const projectileSpeedMul = finiteNumber(mode.projectileSpeedMul, 1, { min: 0.1, max: 4 });
-  const spread = Number.isFinite(mode.spread)
+  const now = finiteNumber(opts.time, 0, { min: 0 });
+  const focusActive = finiteNumber(runMods.focusUntil, 0, { min: 0 }) > now;
+  const focusSpreadMul = focusActive ? finiteNumber(runMods.focusSpreadMul, 1, { min: 0.25, max: 1 }) : 1;
+  const spread = (Number.isFinite(mode.spread)
     ? finiteNumber(mode.spread, weapon.spread, { min: 0, max: 0.4 })
-    : weapon.spread + finiteNumber(mode.spreadAdd, 0, { min: -0.2, max: 0.4 });
+    : weapon.spread + finiteNumber(mode.spreadAdd, 0, { min: -0.2, max: 0.4 })) * focusSpreadMul;
+  const burnTicks = Math.max(
+    finiteNumber(runMods.burn, 0, { min: 0, max: 6, integer: true }),
+    finiteNumber(mode.burnTicks, 0, { min: 0, max: 6, integer: true })
+  );
   return {
     weaponId: weapon.id,
     bulletSprite: mode.bulletSprite || weapon.bulletSprite,
@@ -1774,6 +1820,15 @@ function calculateShotStats(options) {
     weaponLevel,
     homing: mode.homing === true,
     turnRate: finiteNumber(mode.turnRate, 0, { min: 0, max: 20 }),
+    shardCount: finiteNumber(mode.shardCount, 0, { min: 0, max: 4, integer: true }),
+    shardDamageMul: finiteNumber(mode.shardDamageMul, 0, { min: 0, max: 1 }),
+    shardSpread: finiteNumber(mode.shardSpread, 0.25, { min: 0.05, max: 0.8 }),
+    shardSpeedMul: finiteNumber(mode.shardSpeedMul, 0.7, { min: 0.1, max: 2 }),
+    shardLife: finiteNumber(mode.shardLife, 0.34, { min: 0.05, max: 1 }),
+    burnTicks,
+    burnDamageMul: finiteNumber(mode.burnDamageMul, 0, { min: 0, max: 0.5 }),
+    burnInterval: finiteNumber(mode.burnInterval, 0.45, { min: 0.1, max: 2 }),
+    focusActive,
     overloadCritChance: 1 - 1 / (1 + overload * 0.06),
     overloadCritMul: 1.5,
     overloadPierce
@@ -1817,6 +1872,11 @@ function applyGateEffect(options) {
     const gained = Math.round(maxHp * finiteNumber(effect.pct, 0, { min: 0, max: 1 }));
     changedVehicle.maxShield = shieldCap;
     changedVehicle.shield = Math.min(shieldCap, current + gained);
+  } else if (effect.type === "focus") {
+    const now = finiteNumber(opts.time, 0, { min: 0 });
+    const duration = finiteNumber(effect.duration, 10, { min: 1, max: 30 });
+    runMods.focusUntil = Math.max(finiteNumber(runMods.focusUntil, 0, { min: 0 }), now + duration * gateMul);
+    runMods.focusSpreadMul = finiteNumber(effect.spreadMul, 0.55, { min: 0.25, max: 1 });
   }
 
   return { runMods, vehicle: changedVehicle, gateId: gate.id, overflow };
@@ -2107,7 +2167,18 @@ function getEventCodexProgress(meta, config) {
   const cfg = getConfig(config);
   const migrated = migrateMeta(meta || cfg.META_DEFAULT, { config: cfg });
   const stats = sanitizeEventStats(migrated.eventStats, cfg);
-  const events = Object.values(cfg.ENVIRONMENT_EVENTS || {});
+  const events = [];
+  Object.values(cfg.ENVIRONMENT_EVENTS || {}).forEach((event) => {
+    if (!event) return;
+    const primary = deepClone(event);
+    delete primary.alternates;
+    events.push(primary);
+    if (Array.isArray(event.alternates)) {
+      event.alternates.forEach((alternate) => {
+        if (alternate) events.push(deepClone(alternate));
+      });
+    }
+  });
   return events.map((event) => ({
     id: event.id,
     label: event.label,

@@ -439,6 +439,7 @@
     if (gateId === "rate_plus") return "+25%";
     if (gateId === "multishot_plus") return "+1";
     if (gateId === "barrier") return "+15%";
+    if (gateId === "gate_focus") return "10 秒";
     return "維修";
   }
 
@@ -1094,13 +1095,23 @@
 
   function eventAnalysisLine(run) {
     const events = config.ENVIRONMENT_EVENTS || {};
+    const eventList = [];
+    Object.values(events).forEach((event) => {
+      if (!event) return;
+      eventList.push(event);
+      if (Array.isArray(event.alternates)) {
+        event.alternates.forEach((alternate) => {
+          if (alternate) eventList.push(alternate);
+        });
+      }
+    });
     const lines = Object.keys(run.eventStats || {})
       .filter((id) => {
         const record = run.eventStats[id];
         return record && (record.encounters > 0 || record.completions > 0);
       })
       .map((id) => {
-        const event = Object.values(events).find((item) => item.id === id);
+        const event = eventList.find((item) => item.id === id);
         const record = run.eventStats[id];
         return `${event ? event.label : id} 遭遇 ${record.encounters || 0} / 完成 ${record.completions || 0}`;
       });
