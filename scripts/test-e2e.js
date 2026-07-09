@@ -282,12 +282,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R58") && swText.includes("src/ui.js?v=R58") && swText.includes("src/game.js?v=R58") && swText.includes("src/rules.js?v=R58"),
+      swCachesJs: swText.includes("src/version.js?v=R59") && swText.includes("src/ui.js?v=R59") && swText.includes("src/game.js?v=R59") && swText.includes("src/rules.js?v=R59"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R58"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R58"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R58"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R59"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R59"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R59"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -296,7 +296,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R58", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R59", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -651,7 +651,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R58"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R59"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -925,9 +925,8 @@ async function checkFleetProjectileTraits(page) {
   assert(seaProjectile && seaProjectile.splash > 0, "sea ark should fire splash projectiles");
 }
 
-async function checkR58CombatRefresh(page) {
+async function checkR59CombatRefresh(page) {
   const road = await page.evaluate(() => {
-    window.__test.clearStorage();
     window.__test.startRun("land_rig");
     const cfg = window.DSConfig;
     const state = window.__test.getState();
@@ -951,7 +950,6 @@ async function checkR58CombatRefresh(page) {
   assert(road.leftX >= road.roadLeft + road.half - 0.5, "vehicle should clamp inside widened left road edge");
   assert(road.rightX <= road.roadRight - road.half + 0.5, "vehicle should clamp inside widened right road edge");
   assert.deepStrictEqual(road.gateXs, [56, 139], "widened road should place gate choices at x=56/139");
-  await page.keyboard.press("Escape").catch(() => {});
 
   await page.evaluate(() => {
     window.__test.startRun("land_rig");
@@ -1082,6 +1080,154 @@ async function checkR58CombatRefresh(page) {
   const overflowSupplyState = await page.evaluate(() => window.__test.getState());
   assert.strictEqual(overflowSupplyState.runMods.overload, 1, "overflow supply should add overload");
   assert(overflowSupplyState.stats.scavengeGoods >= 6, "overflow supply should grant scavenge goods");
+}
+
+async function checkR59DamageRegression(page) {
+  const pierce = await page.evaluate(() => {
+    window.__test.startRun("void_runner");
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      hazards: [],
+      supplyDrops: [],
+      enemyProjectiles: [],
+      companionCooldown: 999,
+      vehicle: { weaponCooldown: 999 },
+      wavePlan: { spawns: [], gates: [], duration: 30, boss: false, environmentEvent: null },
+      spawnIndex: 0,
+      gateIndex: 0
+    });
+    const target = window.__test.spawnEnemy("shambler", { id: "pierce_target", x: 100, y: 150, hp: 100, speed: 0, silent: true });
+    window.__test.setState({
+      projectiles: [
+        {
+          id: "pierce_probe",
+          sprite: "bullet_pulse",
+          x: target.x,
+          y: target.y,
+          vx: 0,
+          vy: 0,
+          damage: 10,
+          damageSources: [{ key: "void_runner", ratio: 1 }],
+          bonusProjectile: false,
+          vehicleId: "void_runner",
+          pierce: 2,
+          hitIds: {},
+          radius: 12,
+          rotation: 0,
+          life: 1,
+          splash: 0,
+          scale: 1
+        }
+      ]
+    });
+    for (let i = 0; i < 5; i += 1) window.__test.step(50);
+    const state = window.__test.getState();
+    const enemy = state.enemies.find((item) => item.id === "pierce_target");
+    return {
+      hp: enemy && enemy.hp,
+      damageDealt: state.stats.damageDealt,
+      projectilePierce: state.projectiles[0] && state.projectiles[0].pierce
+    };
+  });
+  assert.strictEqual(pierce.hp, 90, "piercing projectile should damage the same enemy only once while overlapping");
+  assert.strictEqual(pierce.damageDealt, 10, "repeated pierce overlap should only count one damage event");
+  assert.strictEqual(pierce.projectilePierce, 1, "pierce should only decrement for a new target hit");
+
+  const splash = await page.evaluate(() => {
+    window.__test.startRun("sea_ark");
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      hazards: [],
+      supplyDrops: [],
+      enemyProjectiles: [],
+      companionCooldown: 999,
+      vehicle: { weaponCooldown: 999 },
+      wavePlan: { spawns: [], gates: [], duration: 30, boss: false, environmentEvent: null },
+      spawnIndex: 0,
+      gateIndex: 0
+    });
+    const anchor = window.__test.spawnEnemy("shambler", { id: "splash_anchor", x: 92, y: 150, hp: 999, speed: 0, silent: true });
+    window.__test.spawnEnemy("shield_husk", { id: "splash_shield", x: 122, y: 150, hp: 100, shieldHp: 28, speed: 0, silent: true });
+    window.__test.setState({
+      projectiles: [
+        {
+          id: "splash_probe",
+          sprite: "bullet_rocket",
+          x: anchor.x,
+          y: anchor.y,
+          vx: 0,
+          vy: -1,
+          damage: 100,
+          damageSources: [{ key: "sea_ark", ratio: 1 }],
+          bonusProjectile: false,
+          vehicleId: "sea_ark",
+          pierce: 0,
+          hitIds: {},
+          radius: 12,
+          rotation: -Math.PI / 2,
+          life: 1,
+          splash: 60,
+          scale: 1
+        }
+      ]
+    });
+    window.__test.step(16);
+    const shield = window.__test.getState().enemies.find((item) => item.id === "splash_shield");
+    return { hp: shield && shield.hp, shieldHp: shield && shield.shieldHp };
+  });
+  assert.strictEqual(splash.shieldHp, 0, "splash damage should consume shield husk shield");
+  assert(splash.hp > 86 && splash.hp < 91, `splash damage should apply shield mitigation to hp, got ${splash.hp}`);
+
+  const burst = await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      hazards: [],
+      supplyDrops: [],
+      enemyProjectiles: [],
+      companionCooldown: 999,
+      vehicle: { weaponCooldown: 999 },
+      wavePlan: { spawns: [], gates: [], duration: 30, boss: false, environmentEvent: null },
+      spawnIndex: 0,
+      gateIndex: 0
+    });
+    const bloater = window.__test.spawnEnemy("bloater", { id: "burst_source", x: 92, y: 150, hp: 10, speed: 0, silent: true });
+    window.__test.spawnEnemy("shield_husk", { id: "burst_shield", x: 116, y: 150, hp: 100, shieldHp: 28, speed: 0, silent: true });
+    window.__test.setState({
+      projectiles: [
+        {
+          id: "burst_probe",
+          sprite: "bullet_machine",
+          x: bloater.x,
+          y: bloater.y,
+          vx: 0,
+          vy: -1,
+          damage: 20,
+          damageSources: [{ key: "land_rig", ratio: 1 }],
+          bonusProjectile: false,
+          vehicleId: "land_rig",
+          pierce: 0,
+          hitIds: {},
+          radius: 12,
+          rotation: -Math.PI / 2,
+          life: 1,
+          splash: 0,
+          scale: 1
+        }
+      ]
+    });
+    window.__test.step(16);
+    const shield = window.__test.getState().enemies.find((item) => item.id === "burst_shield");
+    return { hp: shield && shield.hp, shieldHp: shield && shield.shieldHp };
+  });
+  assert.strictEqual(burst.shieldHp, 6, "death burst should consume shield before hp");
+  assert(burst.hp > 92 && burst.hp < 94, `death burst should apply shield mitigation to hp, got ${burst.hp}`);
 }
 
 async function checkEmptySettlementCta(page) {
@@ -1729,7 +1875,7 @@ async function checkEnvironmentEventsAndVariants(page) {
   assert(state.enemies.some((enemy) => enemy.variantId), "late wave generation should spawn tinted variants");
 }
 
-async function checkR58EnemyRosterBehaviors(page) {
+async function checkR59EnemyRosterBehaviors(page) {
   await page.evaluate(() => {
     window.__test.clearStorage();
     window.__test.startRun("land_rig");
@@ -1778,7 +1924,7 @@ async function checkR58EnemyRosterBehaviors(page) {
       statuses: debug.enemyImageStatus
     };
   });
-  assert.deepStrictEqual(result.enemyIds, ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith"].sort(), "R58 enemy roster should be spawnable");
+  assert.deepStrictEqual(result.enemyIds, ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith"].sort(), "R59 enemy roster should be spawnable");
   assert(result.enemyProjectiles >= 1, "spore spitter should fire enemy projectiles");
   assert(result.spitterCooldown > 0, "spore spitter should reset attack cooldown after firing");
   assert.strictEqual(result.bruteSlow, true, "tar brute should apply movement slow aura near the vehicle");
@@ -2128,11 +2274,13 @@ async function runScenario(browser, baseUrl, viewport, full) {
     await checkBossBlueprintDropAnimation(page);
     await unlockFleet(page);
     await checkEnvironmentEventsAndVariants(page);
-    await checkR58EnemyRosterBehaviors(page);
+    await checkR59EnemyRosterBehaviors(page);
     await checkEventCodexAndAchievements(page);
     await checkSupplyDropPickupAndSettlement(page);
     await unlockFleet(page);
     await checkFleetProjectileTraits(page);
+    await checkR59CombatRefresh(page);
+    await checkR59DamageRegression(page);
     await checkVehicleFleetSelectionAndCombat(page);
     await checkBlueprintAchievementsAndUnlock(page);
     await checkVehicleSpecificUpgradePurchase(page);
@@ -2489,7 +2637,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r58")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r59")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -2507,7 +2655,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r58")), "R58 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r59")), "R59 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

@@ -751,10 +751,19 @@ function enemyPoolForWave(wave, config) {
 }
 
 function pickWeighted(pool, rng) {
-  const total = pool.reduce((sum, item) => sum + Math.max(1, item.weight || 1), 0);
+  if (!Array.isArray(pool) || pool.length === 0) return null;
+  const weights = pool.map((item) => {
+    const weight = Number(item && Object.prototype.hasOwnProperty.call(item, "weight") ? item.weight : 1);
+    return Number.isFinite(weight) ? Math.max(0, weight) : 0;
+  });
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  if (total <= 0) {
+    const index = Math.min(pool.length - 1, Math.floor(rng() * pool.length));
+    return pool[Math.max(0, index)];
+  }
   let roll = rng() * total;
   for (let i = 0; i < pool.length; i += 1) {
-    roll -= Math.max(1, pool[i].weight || 1);
+    roll -= weights[i];
     if (roll <= 0) return pool[i];
   }
   return pool[pool.length - 1];
@@ -1795,46 +1804,73 @@ function damageEnemy(enemy, amount) {
   return next;
 }
 
-function applyVehicleDamage(vehicle, incoming, armor) {
-  const next = deepClone(vehicle);
+function resolveVehicleDamageFields(vehicle, incoming, armor) {
+  const source = vehicle && typeof vehicle === "object" ? vehicle : {};
   const rawDamage = finiteNumber(incoming, 0, { min: 0 });
   const reduction = finiteNumber(armor, 0, { min: 0 });
-  const takenMul = finiteNumber(next.damageTakenMul, 1, { min: 0.45, max: 1.5 });
+  const takenMul = finiteNumber(source.damageTakenMul, 1, { min: 0.45, max: 1.5 });
   const damage = Math.max(1, Math.round(rawDamage * takenMul - reduction));
-  const shield = finiteNumber(next.shield, 0, { min: 0 });
+  const shield = finiteNumber(source.shield, 0, { min: 0 });
+  const hp = finiteNumber(source.hp, 0, { min: 0 });
+  let nextShield = shield;
+  let nextHp = hp;
   if (shield > 0) {
     const used = Math.min(shield, damage);
-    next.shield = shield - used;
-    next.hp = Math.max(0, finiteNumber(next.hp, 0, { min: 0 }) - (damage - used));
+    nextShield = shield - used;
+    nextHp = Math.max(0, hp - (damage - used));
   } else {
-    next.hp = Math.max(0, finiteNumber(next.hp, 0, { min: 0 }) - damage);
+    nextHp = Math.max(0, hp - damage);
   }
-  return { vehicle: next, damage };
+  return { hp: nextHp, shield: nextShield, damage };
+}
+
+function applyVehicleDamage(vehicle, incoming, armor) {
+  const next = deepClone(vehicle);
+  const result = resolveVehicleDamageFields(next, incoming, armor);
+  next.hp = result.hp;
+  next.shield = result.shield;
+  return { vehicle: next, damage: result.damage };
+}
+
+function resolveSlipstreamDamageFields(options) {
+  const opts = options || {};
+  const vehicle = opts.vehicle && typeof opts.vehicle === "object" ? opts.vehicle : {};
+  const passive = opts.passive && typeof opts.passive === "object" ? opts.passive : {};
+  const incoming = finiteNumber(opts.incoming, 0, { min: 0 });
+  const time = finiteNumber(opts.time, 0, { min: 0 });
+  const currentReadyAt = finiteNumber(vehicle.slipstreamReadyAt, 0, { min: 0 });
+  let incomingDamage = incoming;
+  let triggered = false;
+  let readyAt = currentReadyAt;
+
+  if (passive.id === "slipstream" && time >= currentReadyAt) {
+    incomingDamage = incoming * finiteNumber(passive.damageTakenMul, 1, { min: 0, max: 1 });
+    readyAt = time + finiteNumber(passive.dodgeCooldown, 0, { min: 0 });
+    triggered = true;
+  }
+
+  return {
+    incomingDamage,
+    triggered,
+    readyAt
+  };
 }
 
 function resolveSlipstreamDamage(options) {
   const opts = options || {};
   const vehicle = opts.vehicle ? deepClone(opts.vehicle) : {};
-  const passive = opts.passive && typeof opts.passive === "object" ? opts.passive : {};
-  const incoming = finiteNumber(opts.incoming, 0, { min: 0 });
-  const time = finiteNumber(opts.time, 0, { min: 0 });
-  const readyAt = finiteNumber(vehicle.slipstreamReadyAt, 0, { min: 0 });
-  let incomingDamage = incoming;
-  let triggered = false;
-
-  if (passive.id === "slipstream" && time >= readyAt) {
-    incomingDamage = incoming * finiteNumber(passive.damageTakenMul, 1, { min: 0, max: 1 });
-    vehicle.slipstreamReadyAt = time + finiteNumber(passive.dodgeCooldown, 0, { min: 0 });
-    triggered = true;
-  } else if (!Number.isFinite(vehicle.slipstreamReadyAt)) {
-    vehicle.slipstreamReadyAt = readyAt;
-  }
-
+  const result = resolveSlipstreamDamageFields({
+    vehicle,
+    passive: opts.passive,
+    incoming: opts.incoming,
+    time: opts.time
+  });
+  vehicle.slipstreamReadyAt = result.readyAt;
   return {
     vehicle,
-    incomingDamage,
-    triggered,
-    readyAt: finiteNumber(vehicle.slipstreamReadyAt, readyAt, { min: 0 })
+    incomingDamage: result.incomingDamage,
+    triggered: result.triggered,
+    readyAt: result.readyAt
   };
 }
 
@@ -2457,8 +2493,11 @@ const DSRules = {
   resolveEnemyRangedAttack,
   resolveEnemyIncomingDamage,
   enemyPoolForWave,
+  pickWeighted,
   variantChanceForWave,
   applyEnemyVariantToSpawn,
+  resolveVehicleDamageFields,
+  resolveSlipstreamDamageFields,
   resolveSlipstreamDamage,
   resolveBroadsideEcho,
   chooseEnvironmentEvent,

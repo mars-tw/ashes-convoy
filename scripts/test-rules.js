@@ -82,6 +82,25 @@ const wave3Pool = rules.enemyPoolForWave(3, config).map((enemy) => enemy.id);
 assert(wave3Pool.includes("swarm_mite") && wave3Pool.includes("spore_spitter") && wave3Pool.includes("shield_husk"), "wave 3 should introduce swarm/ranged/shield enemies");
 assert(!wave3Pool.includes("tar_brute") && !wave3Pool.includes("void_wraith"), "elite and phase enemies should enter later");
 
+const weightedWave8Pool = rules.enemyPoolForWave(8, config).map((enemy) => ({
+  enemyId: enemy.id,
+  weight: Number.isFinite(enemy.poolWeight) ? enemy.poolWeight : enemy.id === "bloater" ? 0.65 : enemy.id === "runner" ? 1.15 : 1
+}));
+const weightedCounts = Object.fromEntries(weightedWave8Pool.map((item) => [item.enemyId, 0]));
+const weightedRng = rules.createSeededRng("fractional-pool-weight-histogram");
+const weightedSamples = 12000;
+for (let i = 0; i < weightedSamples; i += 1) {
+  const picked = rules.pickWeighted(weightedWave8Pool, weightedRng);
+  weightedCounts[picked.enemyId] += 1;
+}
+const weightedTotal = weightedWave8Pool.reduce((sum, item) => sum + item.weight, 0);
+weightedWave8Pool.forEach((item) => {
+  const expected = item.weight / weightedTotal;
+  const actual = weightedCounts[item.enemyId] / weightedSamples;
+  assert(Math.abs(actual - expected) < 0.025, `${item.enemyId} poolWeight share should follow fractional config: expected ${expected}, got ${actual}`);
+});
+assert(weightedCounts.tar_brute < weightedCounts.runner * 0.4, "tar_brute fractional poolWeight should not be clamped to runner frequency");
+
 const rangedShot = rules.resolveEnemyRangedAttack({
   enemy: {
     enemyId: "spore_spitter",

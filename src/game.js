@@ -1366,13 +1366,13 @@
   function damageVehicle(amount, source) {
     if (!state) startRun(meta.selectedVehicle);
     const passive = getVehicleConfig(state.vehicleId).passive;
-    const passiveDamage = rules.resolveSlipstreamDamage({
+    const passiveDamage = rules.resolveSlipstreamDamageFields({
       vehicle: state.vehicle,
       passive,
       incoming: amount,
       time: state.time
     });
-    state.vehicle = passiveDamage.vehicle;
+    state.vehicle.slipstreamReadyAt = passiveDamage.readyAt;
     if (passiveDamage.triggered) {
       addEffect({
         id: nextId("effect"),
@@ -1392,8 +1392,9 @@
         vy: -12
       });
     }
-    const result = rules.applyVehicleDamage(state.vehicle, passiveDamage.incomingDamage, state.vehicle.armor);
-    state.vehicle = result.vehicle;
+    const result = rules.resolveVehicleDamageFields(state.vehicle, passiveDamage.incomingDamage, state.vehicle.armor);
+    state.vehicle.hp = result.hp;
+    state.vehicle.shield = result.shield;
     addDamageTaken(source, result.damage);
     recordRecentDamage(source, result.damage);
     playSound("hurt");
@@ -1412,6 +1413,30 @@
     }
     emitState();
     return result;
+  }
+
+  function applyEnemyIncomingDamage(enemy, damage, projectile, options) {
+    const opts = options || {};
+    const incoming = rules.resolveEnemyIncomingDamage({
+      enemy,
+      enemyConfig: config.ENEMIES[enemy.enemyId],
+      damage,
+      projectile: projectile || { vy: -1, sourceKind: "aoe" },
+      config
+    });
+    enemy.hp = incoming.hp;
+    enemy.shieldHp = incoming.shieldHp;
+    enemy.hitFlash = 0.12;
+    if (opts.trackStats !== false && incoming.appliedDamage > 0) {
+      state.stats.damageDealt += incoming.appliedDamage;
+      recordDamageTimeline(incoming.appliedDamage);
+      if (projectile) {
+        addProjectileDamageSource(projectile, incoming.appliedDamage);
+      } else if (opts.sourceKey) {
+        addDamageSource(opts.sourceKey, incoming.appliedDamage);
+      }
+    }
+    return incoming;
   }
 
   function applyBroadsideEcho(enemy) {
@@ -1440,18 +1465,14 @@
     echo.hits.forEach((hit) => {
       const target = state.enemies.find((item) => item.id === hit.id);
       if (!target || target.dead) return;
-      target.hp -= hit.damage;
-      target.hitFlash = 0.12;
-      state.stats.damageDealt += hit.damage;
-      recordDamageTimeline(hit.damage);
-      addDamageSource("broadside_echo", hit.damage);
-      addFloatingText(Math.round(hit.damage), target.x, target.y - target.radius, {
+      const incoming = applyEnemyIncomingDamage(target, hit.damage, null, { sourceKey: "broadside_echo" });
+      addFloatingText(Math.round(incoming.appliedDamage), target.x, target.y - target.radius, {
         color: "#9ad7ff",
         size: 7,
         ttl: 0.45,
         vy: -11,
         damageNumber: true,
-        amount: hit.damage
+        amount: incoming.appliedDamage
       });
       if (target.hp <= 0) killEnemy(target, "broadside_echo");
     });
@@ -1530,8 +1551,7 @@
       state.enemies.forEach((other) => {
         if (other.id === enemy.id || other.dead) return;
         if (distance(enemy, other) <= enemyConfig.deathBurst.radius) {
-          other.hp -= enemyConfig.deathBurst.damage;
-          other.hitFlash = 0.12;
+          applyEnemyIncomingDamage(other, enemyConfig.deathBurst.damage, null, { trackStats: false });
           if (other.hp <= 0) killEnemy(other, "burst");
         }
       });
@@ -1674,6 +1694,7 @@
           bonusProjectile,
           vehicleId: state.vehicleId,
           pierce: shot.pierce,
+          hitIds: {},
           overloadPierce: shot.overloadPierce,
           overloadCritChance: shot.overloadCritChance,
           overloadCritMul: shot.overloadCritMul,
@@ -1859,11 +1880,7 @@
       const d = distance(enemy, target);
       if (d <= projectile.splash) {
         const splashDamage = projectile.damage * (1 - d / projectile.splash) * 0.7;
-        enemy.hp -= splashDamage;
-        enemy.hitFlash = 0.12;
-        state.stats.damageDealt += splashDamage;
-        recordDamageTimeline(splashDamage);
-        addProjectileDamageSource(projectile, splashDamage);
+        applyEnemyIncomingDamage(enemy, splashDamage, projectile);
         if (enemy.hp <= 0) killEnemy(enemy, "splash");
       }
     });
@@ -2090,7 +2107,13 @@
       for (let i = 0; i < state.enemies.length; i += 1) {
         const enemy = state.enemies[i];
         if (enemy.dead) continue;
+        if (!projectile.hitIds || typeof projectile.hitIds !== "object" || Array.isArray(projectile.hitIds)) {
+          projectile.hitIds = {};
+        }
+        const hitKey = enemy.id == null ? "" : String(enemy.id);
+        if (hitKey && projectile.hitIds[hitKey]) continue;
         if (distance(projectile, enemy) <= projectile.radius + enemy.radius) {
+          if (hitKey) projectile.hitIds[hitKey] = true;
           let damage = projectile.damage;
           const projectileVehicle = getVehicleConfig(projectile.vehicleId);
           const critChance = Math.max(0, Math.min(1, projectile.overloadCritChance || 0));
@@ -2331,6 +2354,7 @@
       bonusProjectile: false,
       vehicleId: state.vehicleId,
       pierce: 0,
+      hitIds: {},
       radius: weapon.projectileRadius || 3,
       rotation: angle,
       life: 1.2,
