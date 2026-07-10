@@ -521,6 +521,10 @@
     return true;
   }
 
+  function triggerWaveStartBarks(wave) {
+    if (wave === 10 || wave === 15) pushRunBark("deep_route");
+  }
+
   function eventBarkLine(event) {
     if (!event || !Array.isArray(event.barks) || !event.barks.length) return "";
     const index = (state.wave + state.stats.environmentEvents.length) % event.barks.length;
@@ -1706,7 +1710,7 @@
     state.waveBannerStart = state.time;
     state.waveBannerNumber = state.wave;
     playSound("waveStart");
-    if (state.wave === 10 || state.wave === 15) pushRunBark("deep_route");
+    triggerWaveStartBarks(state.wave);
     emitState();
     return getState();
   }
@@ -2415,6 +2419,7 @@
       state.waveBannerStart = state.time;
       state.waveBannerNumber = state.wave;
       playSound("waveStart");
+      triggerWaveStartBarks(state.wave);
       state.messages.push({ text: `第 ${state.wave} 波`, time: state.time, ttl: 1.4 });
       updatePartsPreview();
     }
@@ -3853,7 +3858,22 @@
   function drawEnvironmentEventOverlay() {
     if (!state || !state.wavePlan || !state.wavePlan.environmentEvent) return;
     const event = state.wavePlan.environmentEvent;
+    const visibilityLoss = rules.clamp(Number(event.visibilityLoss) || 0, 0, 0.55);
+    renderDebug.environmentOverlayDrawn = true;
+    renderDebug.environmentVisibilityLoss = visibilityLoss;
     ctx.save();
+    if (visibilityLoss > 0) {
+      ctx.globalAlpha = 0.28 + visibilityLoss * 0.82;
+      ctx.fillStyle = event.environment === "land" ? "#11100d" : "#07121c";
+      ctx.fillRect(0, 0, W, H);
+      ctx.globalAlpha = visibilityLoss * 0.8;
+      ctx.fillStyle = event.id === "land_blackout" ? "#050504" : "#d3a45f";
+      ctx.fillRect(0, 0, W, H * 0.18);
+      ctx.fillRect(0, H * 0.82, W, H * 0.18);
+      const side = Math.max(12, W * visibilityLoss);
+      ctx.fillRect(0, 0, side, H);
+      ctx.fillRect(W - side, 0, side, H);
+    }
     if (event.id === "sandstorm") {
       ctx.globalAlpha = 0.22;
       ctx.fillStyle = "#d3a45f";
@@ -3885,6 +3905,15 @@
           if (x === 0) ctx.moveTo(x, yy);
           else ctx.lineTo(x, yy);
         }
+        ctx.stroke();
+      }
+    } else if (event.id === "land_blackout") {
+      ctx.globalAlpha = 0.34;
+      ctx.strokeStyle = "#f1e2b0";
+      for (let y = -16 + (state.scroll * 2) % 48; y < H + 48; y += 48) {
+        ctx.beginPath();
+        ctx.moveTo(W * 0.18, y);
+        ctx.lineTo(W * 0.82, y + 24);
         ctx.stroke();
       }
     }
@@ -4015,6 +4044,7 @@
     drawFxParticles();
     drawBossKillFx();
     drawAimGuide();
+    drawEnvironmentEventOverlay();
     drawSprite(
       "effect_muzzle",
       "burst",
@@ -4061,6 +4091,8 @@
       fxLevel: fxLevelSetting(),
       vignetteDrawn: false,
       waveBannerDrawn: false,
+      environmentOverlayDrawn: false,
+      environmentVisibilityLoss: 0,
       supplyCrateDrawn: 0,
       weaponPowerupDrawn: 0,
       supplyCrateStyle: ""
@@ -4080,7 +4112,6 @@
     }
     drawBackground(timeMs);
     if (state && FXC && fxEnabled() && currentEnvironment() === "space") drawStarDust();
-    if (state) drawEnvironmentEventOverlay();
     if (state) drawGame(timeMs);
     else drawIdlePreview(timeMs);
     if (

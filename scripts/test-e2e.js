@@ -282,12 +282,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R61") && swText.includes("src/ui.js?v=R61") && swText.includes("src/game.js?v=R61") && swText.includes("src/rules.js?v=R61"),
+      swCachesJs: swText.includes("src/version.js?v=R62") && swText.includes("src/ui.js?v=R62") && swText.includes("src/game.js?v=R62") && swText.includes("src/rules.js?v=R62"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R61"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R61"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R61"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R62"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R62"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R62"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -296,7 +296,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R61", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R62", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -651,7 +651,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R61"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R62"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -925,7 +925,7 @@ async function checkFleetProjectileTraits(page) {
   assert(seaProjectile && seaProjectile.splash > 0, "sea ark should fire splash projectiles");
 }
 
-async function checkR61CombatRefresh(page) {
+async function checkR62CombatRefresh(page) {
   const road = await page.evaluate(() => {
     window.__test.startRun("land_rig");
     const cfg = window.DSConfig;
@@ -1192,7 +1192,7 @@ async function checkR61CombatRefresh(page) {
   assert(overflowSupplyState.stats.scavengeGoods >= 6, "overflow supply should grant scavenge goods");
 }
 
-async function checkR61DamageRegression(page) {
+async function checkR62DamageRegression(page) {
   const pierce = await page.evaluate(() => {
     window.__test.startRun("void_runner");
     window.__test.setState({
@@ -2032,6 +2032,27 @@ async function checkEnvironmentEventsAndVariants(page) {
   assert(state.stats.eventParts > 0, "shooting a meteor should add event parts");
   assert(state.stats.partsPreview > 0, "event parts should feed run parts preview");
 
+  const blackout = await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    window.__test.setState({ rng: () => 0.35, enemies: [], projectiles: [], gates: [], hazards: [] });
+    window.__test.pushWave(4);
+    window.__test.step(16);
+    const stateNow = window.__test.getState();
+    return {
+      eventId: stateNow.wavePlan.environmentEvent && stateNow.wavePlan.environmentEvent.id,
+      configuredLoss: stateNow.wavePlan.environmentEvent && stateNow.wavePlan.environmentEvent.visibilityLoss,
+      debug: window.__test.getRenderDebug()
+    };
+  });
+  assert.strictEqual(blackout.eventId, "land_blackout", "middle land event roll should start blackout");
+  assert(blackout.configuredLoss > 0, "land_blackout should carry visibilityLoss tuning");
+  assert.strictEqual(blackout.debug.environmentOverlayDrawn, true, "visibilityLoss event should draw an environment overlay");
+  assert.strictEqual(
+    blackout.debug.environmentVisibilityLoss,
+    blackout.configuredLoss,
+    "visibilityLoss should be consumed by the render overlay"
+  );
+
   await page.evaluate(() => {
     window.__test.startRun("land_rig");
     window.__test.setState({ rng: () => 0, enemies: [], projectiles: [], gates: [], hazards: [] });
@@ -2042,7 +2063,7 @@ async function checkEnvironmentEventsAndVariants(page) {
   assert(state.enemies.some((enemy) => enemy.variantId), "late wave generation should spawn tinted variants");
 }
 
-async function checkR61EnemyRosterBehaviors(page) {
+async function checkR62EnemyRosterBehaviors(page) {
   await page.evaluate(() => {
     window.__test.clearStorage();
     window.__test.startRun("land_rig");
@@ -2103,7 +2124,7 @@ async function checkR61EnemyRosterBehaviors(page) {
   assert.deepStrictEqual(
     result.enemyIds,
     ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith", "ash_screamer", "chain_tether", "mirror_husk", "ember_tick"].sort(),
-    "R61 enemy roster should be spawnable"
+    "R62 enemy roster should be spawnable"
   );
   assert(result.enemyProjectiles >= 2, "spore spitter and ash screamer should fire enemy projectiles");
   assert.strictEqual(result.screamProjectile, true, "ash screamer should fire low-damage scream projectiles");
@@ -2114,10 +2135,10 @@ async function checkR61EnemyRosterBehaviors(page) {
   assert(result.tetherSlowMul >= 0.78, "chain tether should use the guarded slow multiplier");
   assert(result.mirrorShieldHp >= 40, "mirror husk should spawn with a strong front shield");
   assert.strictEqual(result.emberBehavior, "swarm", "ember tick should reuse swarm behavior");
-  assert(result.rasterDrawn >= 9, `R61 enemies should draw raster sprites, got ${result.rasterDrawn}`);
+  assert(result.rasterDrawn >= 9, `R62 enemies should draw raster sprites, got ${result.rasterDrawn}`);
 }
 
-async function checkR61RunBarks(page) {
+async function checkR62RunBarks(page) {
   const triggered = await page.evaluate(() => {
     window.__test.clearStorage();
     window.__test.startRun("land_rig");
@@ -2170,6 +2191,41 @@ async function checkR61RunBarks(page) {
   assert(triggered.focusUntil > 0, "gate_focus should apply during the run bark gate choice flow");
   assert.strictEqual(triggered.paused, false, "run barks should not leave the game paused");
   assert(triggered.banner && triggered.banner.kind === "story", "latest run bark should use the non-blocking event banner");
+
+  const naturalDeepRoute = await page.evaluate(() => {
+    window.__test.clearStorage();
+    window.__test.startRun("land_rig");
+    window.__test.pushWave(9);
+    const before = window.__test.getState();
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      hazards: [],
+      supplyDrops: [],
+      enemyProjectiles: [],
+      wavePlan: { spawns: [], gates: [], duration: 0, boss: false, environmentEvent: null },
+      spawnIndex: 0,
+      gateIndex: 0,
+      waveElapsed: 0,
+      companionCooldown: 999,
+      vehicle: { weaponCooldown: 999 }
+    });
+    window.__test.step(16);
+    const after = window.__test.getState();
+    return {
+      beforeWave: before.wave,
+      beforeSeen: before.runBarksSeen.deep_route === true,
+      afterWave: after.wave,
+      afterSeen: after.runBarksSeen.deep_route === true,
+      afterStats: after.stats.runBarks.deep_route || 0
+    };
+  });
+  assert.strictEqual(naturalDeepRoute.beforeWave, 9, "natural deep_route test should start on wave 9");
+  assert.strictEqual(naturalDeepRoute.beforeSeen, false, "deep_route should not be pre-triggered before natural wave completion");
+  assert.strictEqual(naturalDeepRoute.afterWave, 10, "empty wave plan should naturally advance from wave 9 to 10");
+  assert.strictEqual(naturalDeepRoute.afterSeen, true, "deep_route should trigger on natural wave progression");
+  assert.strictEqual(naturalDeepRoute.afterStats, 1, "natural deep_route trigger should be counted once");
 
   const disabled = await page.evaluate(() => {
     const meta = window.__test.getMeta();
@@ -2540,14 +2596,14 @@ async function runScenario(browser, baseUrl, viewport, full) {
     await checkBossBlueprintDropAnimation(page);
     await unlockFleet(page);
     await checkEnvironmentEventsAndVariants(page);
-    await checkR61EnemyRosterBehaviors(page);
-    await checkR61RunBarks(page);
+    await checkR62EnemyRosterBehaviors(page);
+    await checkR62RunBarks(page);
     await checkEventCodexAndAchievements(page);
     await checkSupplyDropPickupAndSettlement(page);
     await unlockFleet(page);
     await checkFleetProjectileTraits(page);
-    await checkR61CombatRefresh(page);
-    await checkR61DamageRegression(page);
+    await checkR62CombatRefresh(page);
+    await checkR62DamageRegression(page);
     await checkVehicleFleetSelectionAndCombat(page);
     await checkBlueprintAchievementsAndUnlock(page);
     await checkVehicleSpecificUpgradePurchase(page);
@@ -2904,7 +2960,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r61")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r62")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -2922,7 +2978,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r61")), "R61 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r62")), "R62 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());
