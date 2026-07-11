@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 importScripts("src/version.js");
 
@@ -9,17 +9,17 @@ const APP_SHELL_PATHS = [
   "./",
   "index.html",
   "offline.html",
-  "manifest.webmanifest?v=R62",
-  "src/version.js?v=R62",
-  "src/sprites.js?v=R62",
-  "src/sprite-renderer.js?v=R62",
-  "src/shelter-scene.js?v=R62",
-  "src/config.js?v=R62",
-  "src/rules.js?v=R62",
-  "src/fx.js?v=R62",
-  "src/audio.js?v=R62",
-  "src/game.js?v=R62",
-  "src/ui.js?v=R62"
+  "manifest.webmanifest?v=R63",
+  "src/version.js?v=R63",
+  "src/sprites.js?v=R63",
+  "src/sprite-renderer.js?v=R63",
+  "src/shelter-scene.js?v=R63",
+  "src/config.js?v=R63",
+  "src/rules.js?v=R63",
+  "src/fx.js?v=R63",
+  "src/audio.js?v=R63",
+  "src/game.js?v=R63",
+  "src/ui.js?v=R63"
 ];
 const ASSET_PATHS = [
   "assets/ui/start.png",
@@ -63,11 +63,11 @@ const ASSET_PATHS = [
   "assets/shelter/trailer/star_telescope.png",
   "assets/shelter/trailer/photo_frame.png",
   "assets/story/xi.png",
-  "assets/story/xi.png?v=R62",
-  "assets/shelter/trailer/crayon_drawing.png?v=R62",
-  "assets/shelter/trailer/star_telescope.png?v=R62",
-  "assets/shelter/trailer/photo_frame.png?v=R62",
-  "assets/icons/icon-192.png?v=R62",
+  "assets/story/xi.png?v=R63",
+  "assets/shelter/trailer/crayon_drawing.png?v=R63",
+  "assets/shelter/trailer/star_telescope.png?v=R63",
+  "assets/shelter/trailer/photo_frame.png?v=R63",
+  "assets/icons/icon-192.png?v=R63",
   "assets/icons/icon-192.png",
   "assets/icons/icon-512.png"
 ];

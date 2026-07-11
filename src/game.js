@@ -74,6 +74,12 @@
   let fxStarLayer;
   const fxScratch = { muzzle: {}, motion: {}, crate: {}, banner: {}, anchor: { x: 0, y: 0 } };
   const fxHitOpts = { x: 0, y: 0, angle: 0, vehicleId: "", color: null };
+  const hudAnchors = {
+    hp: { x: 32, y: 22, color: "#87d27d", icon: "+" },
+    parts: { x: 164, y: 22, color: "#f0b64a", icon: "*" },
+    weapon: { x: 98, y: 24, color: "#ffd27f", icon: "^" },
+    supply: { x: 98, y: 24, color: "#5ed4cb", icon: "+" }
+  };
   const fxTrailSpec = {
     x: 0,
     y: 0,
@@ -137,6 +143,10 @@
 
   function fxEnabled() {
     return !!fxState && fxLevelSetting() !== "off";
+  }
+
+  function flourishFxEnabled() {
+    return !!FXC && fxLevelSetting() === "full" && !(meta.settings && meta.settings.reducedFlash);
   }
 
   function resetRunFx(seed, vehicleX) {
@@ -480,6 +490,91 @@
     });
   }
 
+  function addHudFlyEffect(target, x, y, label, color) {
+    if (!flourishFxEnabled()) return;
+    const anchor = hudAnchors[target] || hudAnchors.supply;
+    addEffect({
+      id: nextId("hudfly"),
+      kind: "hud_fly",
+      startX: Number.isFinite(x) ? x : W * 0.5,
+      startY: Number.isFinite(y) ? y : H * 0.5,
+      targetX: anchor.x,
+      targetY: anchor.y,
+      x: Number.isFinite(x) ? x : W * 0.5,
+      y: Number.isFinite(y) ? y : H * 0.5,
+      icon: anchor.icon,
+      text: label || "",
+      color: color || anchor.color,
+      ttl: 0.62,
+      age: 0,
+      alpha: 1
+    });
+    addEffect({
+      id: nextId("hudpop"),
+      kind: "hud_pop",
+      x: anchor.x,
+      y: anchor.y,
+      text: label || "",
+      color: color || anchor.color,
+      ttl: 0.34,
+      age: 0,
+      alpha: 1
+    });
+  }
+
+  function triggerEnemyHitFlair(enemy, projectile) {
+    enemy.hitFlash = flourishFxEnabled() ? 0.16 : 0.12;
+    if (!flourishFxEnabled() || !projectile) return;
+    const speed = Math.sqrt(projectile.vx * projectile.vx + projectile.vy * projectile.vy) || 1;
+    const sizeMul = enemy.boss ? 0.55 : enemy.radius >= 13 ? 1.15 : 0.85;
+    enemy.knockbackX = (projectile.vx / speed) * sizeMul * 1.7;
+    enemy.knockbackY = (projectile.vy / speed) * sizeMul * 1.7;
+  }
+
+  function triggerVehicleRecoil(direction) {
+    if (!flourishFxEnabled() || !direction) return;
+    state.vehicle.recoilX = -direction.x * 1.5;
+    state.vehicle.recoilY = -direction.y * 1.2;
+    state.vehicle.recoilUntil = state.time + 0.12;
+    state.vehicle.recoilStartedAt = state.time;
+  }
+
+  function updateCombo(enemy) {
+    if (!state.combo) state.combo = { count: 0, lastKillAt: -1000000, best: 0 };
+    const cfg = (FXC && FXC.combo) || {};
+    const windowSeconds = cfg.windowSeconds || 2.25;
+    const count = state.time - state.combo.lastKillAt <= windowSeconds ? state.combo.count + 1 : 1;
+    state.combo.count = count;
+    state.combo.lastKillAt = state.time;
+    state.combo.best = Math.max(state.combo.best || 0, count);
+    if (count >= 2 && flourishFxEnabled()) {
+      addFloatingText(`COMBO x${count}`, enemy.x, enemy.y - enemy.radius - 18, {
+        color: cfg.color || "#ffe08a",
+        size: Math.min(13, 8 + Math.floor(count / 3)),
+        ttl: 0.72,
+        vy: -15
+      });
+    }
+  }
+
+  function addWaveCelebration(completedWave, partsDelta) {
+    if (!flourishFxEnabled()) return;
+    const amount = Math.max(0, Math.round(partsDelta || 0));
+    addEffect({
+      id: nextId("waveclear"),
+      kind: "wave_celebration",
+      text: `WAVE ${completedWave} CLEAR`,
+      subtext: amount > 0 ? `PARTS +${amount}` : "",
+      x: W * 0.5,
+      y: H * 0.5 - 64,
+      color: "#f2e6c8",
+      ttl: 1.15,
+      age: 0,
+      alpha: 1
+    });
+    if (amount > 0) addHudFlyEffect("parts", W * 0.5, H * 0.5 - 40, `+${amount}`, "#f0b64a");
+  }
+
   function pushEventBanner(title, body, options) {
     if (!state) return;
     const opts = options || {};
@@ -598,7 +693,7 @@
   function publicEntity(entity) {
     const copy = {};
     Object.keys(entity).forEach((key) => {
-      if (key !== "hitFlash" && key !== "phaseTriggered") copy[key] = rules.deepClone(entity[key]);
+      if (key !== "hitFlash" && key !== "knockbackX" && key !== "knockbackY" && key !== "phaseTriggered") copy[key] = rules.deepClone(entity[key]);
     });
     return copy;
   }
@@ -630,6 +725,8 @@
       input: rules.deepClone(state.input),
       eventBanner: state.eventBanner ? rules.deepClone(state.eventBanner) : null,
       lastGateChoice: state.lastGateChoice ? rules.deepClone(state.lastGateChoice) : null,
+      combo: state.combo ? rules.deepClone(state.combo) : null,
+      slowMoLeft: state.slowMoLeft || 0,
       gateChoice: state.gateChoice ? rules.deepClone(state.gateChoice) : null,
       supplyChoice: state.supplyChoice ? rules.deepClone(state.supplyChoice) : null,
       enemies: state.enemies.map(publicEntity),
@@ -997,6 +1094,10 @@
     pushEventBanner("補給箱", result.reward.label, { kind: "supply", ttl: 1.5 });
     pushRunBark("first_supply");
     playSound("pickup");
+    if (result.partsGained > 0) addHudFlyEffect("parts", choice.x, choice.y, `+${result.partsGained}`, "#f0b64a");
+    else if (result.heal > 0) addHudFlyEffect("hp", choice.x, choice.y, `+${result.heal}`, "#87d27d");
+    else if (result.shieldGained > 0) addHudFlyEffect("hp", choice.x, choice.y, `+${result.shieldGained}`, "#5ed4cb");
+    else addHudFlyEffect("supply", choice.x, choice.y, "+", "#5ed4cb");
     addEffect({
       id: nextId("effect"),
       kind: "supply_pickup",
@@ -1130,6 +1231,9 @@
       waveBannerKind: "wave",
       waveBannerStart: 0,
       waveBannerNumber: 1,
+      combo: { count: 0, lastKillAt: -1000000, best: 0 },
+      slowMoLeft: 0,
+      slowMoScale: 1,
       lastBroadsideEchoAt: -1000000,
       messages: []
     };
@@ -1495,7 +1599,7 @@
     });
     enemy.hp = incoming.hp;
     enemy.shieldHp = incoming.shieldHp;
-    enemy.hitFlash = 0.12;
+    triggerEnemyHitFlair(enemy, projectile);
     if (opts.trackStats !== false && incoming.appliedDamage > 0) {
       state.stats.damageDealt += incoming.appliedDamage;
       recordDamageTimeline(incoming.appliedDamage);
@@ -1551,6 +1655,7 @@
     if (!enemy || enemy.dead) return;
     const enemyConfig = config.ENEMIES[enemy.enemyId];
     enemy.dead = true;
+    updateCombo(enemy);
     state.stats.kills += 1;
     state.stats.score += enemy.score + state.wave * 3;
     if (enemy.variantId) addStatMapValue("variantKills", enemy.variantId, 1);
@@ -1559,12 +1664,20 @@
     const killShakeBonus = FXC && FXC.shake ? (enemy.boss ? FXC.shake.bossKillAmp : FXC.shake.killAmp) : 0;
     pulseShake(fx.resolveShake(FXC, killShakeBase + killShakeBonus, meta.settings), enemy.boss ? 0.42 : 0.18);
     if (FXC && fxEnabled()) {
-      fx.spawnKillBurst(fxState, FXC, fx.enemyFxKind(enemyConfig), enemy.x, enemy.y, fxRng);
+      const burstKind = fx.enemyFxKind(enemyConfig);
+      const burstCount = enemy.boss ? 3 : enemy.radius >= 13 ? 2 : 1;
+      for (let i = 0; i < burstCount; i += 1) {
+        fx.spawnKillBurst(fxState, FXC, burstKind, enemy.x, enemy.y, fxRng);
+      }
     }
     playSound(enemy.boss ? "bossKill" : "kill");
     if (enemy.boss) {
       // Boss 死亡演出：多段爆炸由 killBurst 的 delay 規格構成；此旗標驅動純視覺慢放感
       fxBossKillFx = { x: enemy.x, y: enemy.y, start: state.time };
+      if (flourishFxEnabled()) {
+        state.slowMoLeft = Math.max(state.slowMoLeft || 0, 0.2);
+        state.slowMoScale = 0.35;
+      }
     }
     if (enemy.boss) {
       state.stats.bossesDefeated += 1;
@@ -1806,6 +1919,7 @@
         alpha: 0.9
       });
       playSound("shoot", state.vehicleId);
+      triggerVehicleRecoil(direction);
       vehicle.weaponCooldown += shot.fireInterval * idleMul;
       shots += 1;
     }
@@ -1853,6 +1967,13 @@
       if (enemy.dead) return;
       enemy.hitCooldown = Math.max(0, enemy.hitCooldown - dt);
       enemy.hitFlash = Math.max(0, (enemy.hitFlash || 0) - dt);
+      if (enemy.knockbackX || enemy.knockbackY) {
+        const keep = Math.max(0, 1 - dt * 10);
+        enemy.knockbackX *= keep;
+        enemy.knockbackY *= keep;
+        if (Math.abs(enemy.knockbackX) < 0.05) enemy.knockbackX = 0;
+        if (Math.abs(enemy.knockbackY) < 0.05) enemy.knockbackY = 0;
+      }
       const behavior = enemy.behavior || {};
       const behaviorType = behavior.type || "";
       const rangedHoldY = vehicle.y - (behavior.keepDistance || behavior.range || 126);
@@ -2153,6 +2274,7 @@
     state.messages.push({ text: label, time: state.time, ttl: 1.5 });
     pushEventBanner("彈種切換", label, { kind: "supply", ttl: 1.4 });
     playSound("pickup");
+    addHudFlyEffect("weapon", drop.x, drop.y, `Lv${picked.level}`, "#ffd27f");
     addFloatingText(label, state.vehicle.x, state.vehicle.y - 72, {
       color: "#ffd27f",
       size: 8,
@@ -2305,7 +2427,7 @@
           damage = incoming.appliedDamage;
           enemy.hp = incoming.hp;
           enemy.shieldHp = incoming.shieldHp;
-          enemy.hitFlash = 0.12;
+          triggerEnemyHitFlair(enemy, projectile);
           state.stats.damageDealt += damage;
           recordDamageTimeline(damage);
           addProjectileDamageSource(projectile, damage);
@@ -2322,9 +2444,9 @@
           }
           addFloatingText(Math.round(damage).toString(), enemy.x + 3, enemy.y - enemy.radius - 2, {
             color: projectileVehicle.environment === "space" ? "#5ed4cb" : "#f4ead8",
-            size: 6,
-            ttl: 0.42,
-            vy: -12,
+            size: enemy.boss ? 10 : 6,
+            ttl: enemy.boss ? 0.58 : 0.42,
+            vy: enemy.boss ? -16 : -12,
             damageNumber: true,
             amount: damage
           });
@@ -2391,9 +2513,20 @@
         effect.x = effect.startX + (effect.targetX - effect.startX) * eased;
         effect.y = effect.startY + (effect.targetY - effect.startY) * eased - Math.sin(t * Math.PI) * 24;
       }
+      if (effect.kind === "hud_fly") {
+        const t = Math.min(1, effect.age / Math.max(0.01, effect.ttl));
+        const eased = 1 - Math.pow(1 - t, 3);
+        effect.x = effect.startX + (effect.targetX - effect.startX) * eased;
+        effect.y = effect.startY + (effect.targetY - effect.startY) * eased - Math.sin(t * Math.PI) * 18;
+      }
       effect.alpha = Math.max(0, 1 - effect.age / effect.ttl);
     });
     state.effects = state.effects.filter((effect) => effect.age < effect.ttl);
+    if (state.combo && state.combo.count > 0) {
+      const cfg = (FXC && FXC.combo) || {};
+      const resetAfter = (cfg.windowSeconds || 2.25) + (cfg.fadeSeconds || 0.45);
+      if (state.time - state.combo.lastKillAt > resetAfter) state.combo.count = 0;
+    }
     state.messages = state.messages.filter((message) => state.time - message.time <= message.ttl);
     if (state.eventBanner && state.time - state.eventBanner.time > state.eventBanner.ttl) state.eventBanner = null;
     if (state.lastGateChoice && state.time - state.lastGateChoice.time > state.lastGateChoice.ttl) state.lastGateChoice = null;
@@ -2407,6 +2540,8 @@
     const timerExpired = state.waveElapsed >= plan.duration;
     const staleWave = state.waveElapsed > plan.duration + 8;
     if (spawnedAll && !bossAlive && (enemiesCleared || staleWave) && (timerExpired || enemiesCleared)) {
+      const completedWave = state.wave;
+      const partsBefore = state.stats.partsPreview || 0;
       completeCurrentEnvironmentEvent();
       state.stats.wavesCleared = Math.max(state.stats.wavesCleared, state.wave);
       state.wave += 1;
@@ -2422,6 +2557,7 @@
       triggerWaveStartBarks(state.wave);
       state.messages.push({ text: `第 ${state.wave} 波`, time: state.time, ttl: 1.4 });
       updatePartsPreview();
+      addWaveCelebration(completedWave, (state.stats.partsPreview || 0) - partsBefore);
     }
   }
 
@@ -2540,6 +2676,15 @@
 
   function update(dt) {
     if (!state || state.paused || state.over) return;
+    if (state.slowMoLeft > 0 && flourishFxEnabled()) {
+      const consumed = Math.min(dt, state.slowMoLeft);
+      const scale = Math.max(0.1, Math.min(1, state.slowMoScale || 0.35));
+      dt = consumed * scale + (dt - consumed);
+      state.slowMoLeft = Math.max(0, state.slowMoLeft - consumed);
+    } else {
+      state.slowMoLeft = 0;
+      state.slowMoScale = 1;
+    }
     state.time += dt;
     state.waveElapsed += dt;
     if (state.time >= 3) pushRunBark("sortie_start");
@@ -3199,15 +3344,17 @@
     return Math.max(14, enemy.radius * 2);
   }
 
-  function drawEnemyShadow(enemy, width, lift, alpha) {
+  function drawEnemyShadow(enemy, width, lift, alpha, offsetX, offsetY) {
     const shadowScale = Math.max(0.74, 1 - Math.abs(lift) * 0.045);
+    const ox = Number.isFinite(offsetX) ? offsetX : 0;
+    const oy = Number.isFinite(offsetY) ? offsetY : 0;
     ctx.save();
     ctx.globalAlpha *= (enemy.boss ? 0.34 : 0.26) * (alpha == null ? 1 : alpha);
     ctx.fillStyle = "#050607";
     ctx.beginPath();
     ctx.ellipse(
-      enemy.x,
-      enemy.y + enemy.radius * (enemy.boss ? 0.62 : 0.52),
+      enemy.x + ox,
+      enemy.y + oy + enemy.radius * (enemy.boss ? 0.62 : 0.52),
       Math.max(4, width * (enemy.boss ? 0.42 : 0.36) * shadowScale),
       Math.max(2, enemy.radius * (enemy.boss ? 0.2 : 0.16) * shadowScale),
       0,
@@ -3233,19 +3380,21 @@
     const speedLean = rules.clamp((enemy.vx || 0) / Math.max(1, enemy.speed || 1), -1, 1) * 0.035;
     const wobble = Math.sin(phase * 0.52) * (enemy.boss ? 0.022 : 0.075) + speedLean;
     const drawAlpha = alpha == null ? 1 : alpha;
-    const flash = enemy.hitFlash > 0 && !(meta.settings && meta.settings.reducedFlash);
+    const flash = enemy.hitFlash > 0 && flourishFxEnabled();
+    const knockX = flourishFxEnabled() ? enemy.knockbackX || 0 : 0;
+    const knockY = flourishFxEnabled() ? enemy.knockbackY || 0 : 0;
 
     if (renderDebug.enemyImageStatus) renderDebug.enemyImageStatus[enemy.enemyId] = status;
-    drawEnemyShadow(enemy, width, lift, drawAlpha);
+    drawEnemyShadow(enemy, width, lift, drawAlpha, knockX, knockY);
 
     if (record && status === "loaded") {
       const image = record.image;
       const height = width * (image.naturalHeight / image.naturalWidth);
       ctx.save();
-      ctx.translate(enemy.x, enemy.y + lift);
+      ctx.translate(enemy.x + knockX, enemy.y + knockY + lift);
       ctx.rotate(wobble);
       ctx.scale(squashX, squashY);
-      ctx.globalAlpha *= flash ? drawAlpha * 0.82 : drawAlpha;
+      ctx.globalAlpha *= flash ? drawAlpha * 0.9 : drawAlpha;
       ctx.imageSmoothingEnabled = false;
       if (enemy.filter) ctx.filter = enemy.filter;
       ctx.drawImage(image, -width * 0.5, -height * 0.5, width, height);
@@ -3257,7 +3406,7 @@
       }
       if (flash) {
         ctx.globalCompositeOperation = "source-atop";
-        ctx.fillStyle = "rgba(255, 244, 214, 0.36)";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.68)";
         ctx.fillRect(-width * 0.5, -height * 0.5, width, height);
       }
       ctx.restore();
@@ -3266,11 +3415,11 @@
     }
 
     ctx.save();
-    ctx.translate(enemy.x, enemy.y + lift);
+    ctx.translate(enemy.x + knockX, enemy.y + knockY + lift);
     ctx.rotate(wobble);
     enemySpriteOptions.flipX = enemy.vx < -8;
-    enemySpriteOptions.alpha = flash ? drawAlpha * 0.78 : drawAlpha;
-    enemySpriteOptions.tint = enemy.tint || null;
+    enemySpriteOptions.alpha = flash ? drawAlpha * 0.9 : drawAlpha;
+    enemySpriteOptions.tint = flash ? "#ffffff" : enemy.tint || null;
     if (enemy.filter) ctx.filter = enemy.filter;
     drawSprite(enemy.sprite, anim || enemy.anim || "walk", timeMs, 0, 0, enemy.scale * Math.max(0.94, Math.min(1.08, squashY)), enemySpriteOptions);
     enemySpriteOptions.tint = null;
@@ -3437,6 +3586,72 @@
     ctx.stroke();
     drawWorldText(effect.text || "補給", effect.x, effect.y - 18, { size: 8, color: "#5ed4cb", alpha: effect.alpha });
     ctx.restore();
+  }
+
+  function drawHudFly(effect) {
+    ctx.save();
+    ctx.globalAlpha *= effect.alpha == null ? 1 : effect.alpha;
+    ctx.fillStyle = effect.color || "#f4ead8";
+    ctx.strokeStyle = "#1b1712";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, 5.5, 0, TAU);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#1b1712";
+    ctx.font = "900 6px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(effect.icon || "+", effect.x, effect.y + 0.5);
+    if (effect.text) {
+      drawWorldText(effect.text, effect.x, effect.y - 9, { size: 7, color: effect.color || "#f4ead8", alpha: effect.alpha });
+    }
+    ctx.restore();
+  }
+
+  function drawHudPop(effect) {
+    const t = Math.min(1, effect.age / Math.max(0.01, effect.ttl));
+    const scale = 1 + Math.sin(t * Math.PI) * 0.55;
+    ctx.save();
+    ctx.globalAlpha *= effect.alpha == null ? 1 : effect.alpha;
+    ctx.translate(effect.x, effect.y);
+    ctx.scale(scale, scale);
+    ctx.strokeStyle = effect.color || "#f4ead8";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(0, 0, 9, 0, TAU);
+    ctx.stroke();
+    if (effect.text) drawWorldText(effect.text, 0, -13, { size: 7, color: effect.color || "#f4ead8", alpha: effect.alpha });
+    ctx.restore();
+  }
+
+  function drawWaveCelebration(effect) {
+    const t = Math.min(1, effect.age / Math.max(0.01, effect.ttl));
+    const scale = 1 + Math.sin(t * Math.PI) * 0.12;
+    ctx.save();
+    ctx.globalAlpha *= effect.alpha == null ? 1 : effect.alpha;
+    drawWorldText(effect.text, effect.x, effect.y, { size: Math.round(15 * scale), color: effect.color || "#f2e6c8", stroke: "#2a2118" });
+    if (effect.subtext) drawWorldText(effect.subtext, effect.x, effect.y + 18, { size: 9, color: "#f0b64a", stroke: "#2a2118", alpha: effect.alpha });
+    ctx.restore();
+    renderDebug.waveCelebrationDrawn = true;
+  }
+
+  function drawComboCounter() {
+    if (!state || !state.combo || state.combo.count < 2 || !flourishFxEnabled()) return;
+    const cfg = (FXC && FXC.combo) || {};
+    const elapsed = state.time - state.combo.lastKillAt;
+    const windowSeconds = cfg.windowSeconds || 2.25;
+    const fadeSeconds = cfg.fadeSeconds || 0.45;
+    if (elapsed > windowSeconds + fadeSeconds) return;
+    const fade = elapsed <= windowSeconds ? 1 : 1 - (elapsed - windowSeconds) / Math.max(0.01, fadeSeconds);
+    const pulse = 1 + Math.max(0, 1 - elapsed * 4) * 0.28;
+    drawWorldText(`COMBO x${state.combo.count}`, W * 0.5, H * 0.5 - 96, {
+      size: Math.round((cfg.size || 13) * pulse),
+      color: cfg.color || "#ffe08a",
+      stroke: "#2a2118",
+      alpha: fade
+    });
+    renderDebug.comboDrawn = true;
   }
 
   function drawBlueprintDrop(effect) {
@@ -4001,6 +4216,12 @@
         drawBlueprintDrop(effect);
       } else if (effect.kind === "supply_pickup") {
         drawSupplyPickup(effect);
+      } else if (effect.kind === "hud_fly") {
+        drawHudFly(effect);
+      } else if (effect.kind === "hud_pop") {
+        drawHudPop(effect);
+      } else if (effect.kind === "wave_celebration") {
+        drawWaveCelebration(effect);
       } else if (effect.kind === "enemy_corpse") {
         drawEnemyCorpse(effect, timeMs);
       } else if (effect.kind === "muzzle_flash") {
@@ -4029,6 +4250,13 @@
     drawRunTrailer(vehicleConfig, state.vehicle);
     drawCompanion(vehicleConfig, state.vehicle);
     ctx.save();
+    if (flourishFxEnabled() && state.vehicle.recoilUntil > state.time) {
+      const startedAt = state.vehicle.recoilStartedAt || state.time;
+      const total = Math.max(0.01, state.vehicle.recoilUntil - startedAt);
+      const t = Math.max(0, Math.min(1, (state.time - startedAt) / total));
+      const kick = (1 - t) * (0.72 + 0.28 * Math.sin(t * Math.PI * 5));
+      ctx.translate((state.vehicle.recoilX || 0) * kick, (state.vehicle.recoilY || 0) * kick);
+    }
     if (motion) {
       ctx.translate(state.vehicle.x, state.vehicle.y + motion.bobY);
       ctx.rotate(fxTiltRad);
@@ -4055,6 +4283,7 @@
       { alpha: state.input.dragging ? 0.62 : 0.35 }
     );
     drawWaveBanner();
+    drawComboCounter();
     drawMessages();
   }
 
@@ -4091,6 +4320,8 @@
       fxLevel: fxLevelSetting(),
       vignetteDrawn: false,
       waveBannerDrawn: false,
+      waveCelebrationDrawn: false,
+      comboDrawn: false,
       environmentOverlayDrawn: false,
       environmentVisibilityLoss: 0,
       supplyCrateDrawn: 0,

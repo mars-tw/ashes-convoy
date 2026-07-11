@@ -166,6 +166,10 @@ assert(FX.waveBanner.boss.textTemplate.indexOf("警告") >= 0 || FX.waveBanner.b
 });
 assert(FX.waveBanner.boss.flashHz > 0 && FX.waveBanner.boss.shake > 0, "boss 橫幅需有 flash 與 shake 強化");
 
+// R63 combo reward flourish config.
+assert(FX.combo && FX.combo.windowSeconds > 0 && FX.combo.fadeSeconds > 0, "FX.combo should define combo timing");
+assert(FX.combo.size >= 10 && HEX.test(FX.combo.color), "FX.combo should define readable text styling");
+
 // shake 建議值。
 assert(FX.shake.hitAmp > 0 && FX.shake.killAmp > 0 && FX.shake.bossKillAmp > 0 && FX.shake.max > 0, "FX.shake 需完整");
 

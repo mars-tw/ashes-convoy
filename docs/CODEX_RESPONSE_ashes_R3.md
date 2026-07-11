@@ -1,8 +1,8 @@
-# Codex Response - Ashes R3
+﻿# Codex Response - Ashes R3
 
 ## Summary
 
-本輪升版到 `R62`，只修 Grok R3 指定的必修洞，並保持平衡護欄不變：screamer 傷害、husk 權重、tick cost、gate_focus 不加傷、決定性波次與純規則段都未改。
+本輪升版到 `R63`，只修 Grok R3 指定的必修洞，並保持平衡護欄不變：screamer 傷害、husk 權重、tick cost、gate_focus 不加傷、決定性波次與純規則段都未改。
 
 ## R3 Findings
 
@@ -24,7 +24,7 @@
 
 - e2e：`deep_route` 先從第 9 波自然完成進第 10 波，確認非 `pushWave(10)` 假陽性。
 - e2e：強制選中 `land_blackout`，確認 `visibilityLoss` 存在且被 render overlay 消費。
-- 版本守門同步到 `R62` / `ashes-convoy-r62-v1`。
+- 版本守門同步到 `R63` / `ashes-convoy-r63-v1`。
 
 ## Verification
 

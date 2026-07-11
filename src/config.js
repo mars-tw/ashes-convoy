@@ -1,10 +1,10 @@
-"use strict";
+﻿"use strict";
 
 const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 3;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R62", CACHE_VERSION: "ashes-convoy-r62-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R63", CACHE_VERSION: "ashes-convoy-r63-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -2036,6 +2036,12 @@ const FX = {
       flashHz: 3,
       shake: 2.4
     }
+  },
+  combo: {
+    windowSeconds: 2.25,
+    fadeSeconds: 0.45,
+    size: 13,
+    color: "#ffe08a"
   },
   // 震屏強度建議值（渲染端經 DSFx.resolveShake 套用 reducedFlash / screenShake 設定）。
   shake: { hitAmp: 1.1, killAmp: 0.8, bossKillAmp: 3, max: 6 }
