@@ -1,7 +1,7 @@
-﻿"use strict";
+"use strict";
 
 (function attachVersion(root) {
-  const APP_VERSION = "R64";
+  const APP_VERSION = "R65";
   const CACHE_VERSION = `ashes-convoy-${APP_VERSION.toLowerCase()}-v1`;
   const DSVersion = {
     APP_VERSION,

@@ -1,10 +1,10 @@
-﻿"use strict";
+"use strict";
 
 const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 3;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R64", CACHE_VERSION: "ashes-convoy-r64-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R65", CACHE_VERSION: "ashes-convoy-r65-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -2054,6 +2054,8 @@ const PERFORMANCE = {
   corpseFadeSeconds: 0.7,
   lowFpsFloor: 30,
   recoverFps: 48,
+  downgradeFrames: 18,
+  recoverFrames: 180,
   qualityProfiles: {
     high: {
       maxEnemies: 72,
@@ -2505,7 +2507,7 @@ const META_DEFAULT = {
     showCompanion: true,
     damageTextDensity: "all",
     performanceMode: "auto",
-    fxLevel: "full",
+    fxLevel: "reduced",
     fontSize: "medium",
     sound: true
   },

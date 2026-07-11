@@ -1026,6 +1026,7 @@
     if (!els.aimAssistLevelSelect) return;
     els.aimAssistLevelSelect.value = meta.settings.aimAssistLevel || (meta.settings.aimAssist ? "medium" : "off");
     els.screenShakeToggle.checked = meta.settings.screenShake !== false;
+    if (els.reducedFlashToggle) els.reducedFlashToggle.checked = meta.settings.reducedFlash === true;
     if (els.soundToggle) els.soundToggle.checked = meta.settings.sound !== false;
     if (els.showRunTrailerToggle) els.showRunTrailerToggle.checked = meta.settings.showRunTrailer !== false;
     if (els.showCompanionToggle) els.showCompanionToggle.checked = meta.settings.showCompanion !== false;
@@ -1829,6 +1830,7 @@
     els.resetBtn.addEventListener("click", clearStorage);
     els.aimAssistLevelSelect.addEventListener("change", () => updateSetting("aimAssistLevel", els.aimAssistLevelSelect.value));
     els.screenShakeToggle.addEventListener("change", () => updateSetting("screenShake", els.screenShakeToggle.checked));
+    if (els.reducedFlashToggle) els.reducedFlashToggle.addEventListener("change", () => updateSetting("reducedFlash", els.reducedFlashToggle.checked));
     els.soundToggle.addEventListener("change", () => updateSetting("sound", els.soundToggle.checked));
     els.showRunTrailerToggle.addEventListener("change", () => updateSetting("showRunTrailer", els.showRunTrailerToggle.checked));
     if (els.showCompanionToggle) els.showCompanionToggle.addEventListener("change", () => updateSetting("showCompanion", els.showCompanionToggle.checked));
@@ -2000,6 +2002,7 @@
       "questList",
       "settingsPanel",
       "aimAssistLevelSelect",
+      "reducedFlashToggle",
       "screenShakeToggle",
       "soundToggle",
       "showRunTrailerToggle",

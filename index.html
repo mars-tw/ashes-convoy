@@ -1,11 +1,13 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-Hant-TW">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#111317" />
-    <link rel="manifest" href="manifest.webmanifest?v=R64" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R64" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="manifest.webmanifest?v=R65" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R65" />
     <title>灰燼護航</title>
     <style>
       :root {
@@ -106,7 +108,7 @@
 
       .hud {
         position: absolute;
-        inset: max(10px, env(safe-area-inset-top)) 10px auto 10px;
+        inset: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) auto max(10px, env(safe-area-inset-left));
         display: none;
         gap: 8px;
         pointer-events: none;
@@ -373,7 +375,7 @@
         z-index: 8;
         display: grid;
         place-items: center;
-        padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+        padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
         background: rgba(4, 6, 10, 0.56);
         pointer-events: auto;
       }
@@ -491,7 +493,7 @@
         display: grid;
         grid-template-rows: minmax(260px, 46%) minmax(0, 1fr);
         gap: 10px;
-        padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+        padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
         background: rgba(5, 7, 10, 0.94);
         overflow: hidden;
       }
@@ -556,7 +558,7 @@
       }
 
       .trailer-actions button {
-        min-height: 38px;
+        min-height: 44px;
         padding: 0 10px;
         font-size: 12px;
       }
@@ -734,7 +736,7 @@
         .trailer-overlay {
           grid-template-rows: 112px minmax(0, 1fr);
           gap: 6px;
-          padding: max(6px, env(safe-area-inset-top)) 6px max(6px, env(safe-area-inset-bottom));
+          padding: max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
         }
 
         .trailer-panel {
@@ -776,7 +778,7 @@
 
       .panel {
         position: absolute;
-        inset: auto 10px max(10px, env(safe-area-inset-bottom)) 10px;
+        inset: auto max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
         max-height: min(calc(100% - 24px), calc(100dvh - 24px));
         padding: 12px;
         overflow: auto;
@@ -970,7 +972,12 @@
 
       .settings-row select,
       .settings-row input {
-        min-height: 38px;
+        min-height: 44px;
+      }
+
+      .settings-row input[type="checkbox"] {
+        min-width: 44px;
+        width: 44px;
       }
 
       .save-manager {
@@ -1224,7 +1231,7 @@
       }
 
       .series-links a {
-        min-height: 32px;
+        min-height: 44px;
         padding: 7px 9px;
         border: 1px solid rgba(221, 211, 178, 0.18);
         border-radius: 8px;
@@ -1232,6 +1239,8 @@
         color: var(--muted);
         text-decoration: none;
         white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
       }
 
       .meta-panel.is-illustration,
@@ -1292,8 +1301,8 @@
       .is-shelter .meta-summary {
         position: absolute;
         top: max(12px, env(safe-area-inset-top));
-        left: 12px;
-        right: 12px;
+        left: max(12px, env(safe-area-inset-left));
+        right: max(12px, env(safe-area-inset-right));
         padding: 10px 12px;
         border: 1px solid rgba(244, 234, 216, 0.18);
         border-radius: 8px;
@@ -1317,8 +1326,8 @@
 
       .hotspot-layer {
         position: absolute;
-        left: 10px;
-        right: 10px;
+        left: max(10px, env(safe-area-inset-left));
+        right: max(10px, env(safe-area-inset-right));
         bottom: max(10px, env(safe-area-inset-bottom));
         z-index: 3;
         display: grid;
@@ -1338,7 +1347,7 @@
       .hotspot-btn {
         position: relative;
         min-width: 0;
-        min-height: 42px;
+        min-height: 44px;
         padding: 8px 10px;
         border-color: rgba(244, 234, 216, 0.34);
         background: rgba(9, 12, 16, 0.72);
@@ -1394,8 +1403,8 @@
       .is-illustration .meta-drawer,
       .is-shelter .meta-drawer {
         position: absolute;
-        left: 10px;
-        right: 10px;
+        left: max(10px, env(safe-area-inset-left));
+        right: max(10px, env(safe-area-inset-right));
         bottom: calc(max(10px, env(safe-area-inset-bottom)) + 176px);
         max-height: min(50%, 480px, calc(100dvh - 220px));
         padding: 12px;
@@ -1421,7 +1430,7 @@
       }
 
       .meta-drawer-head button {
-        min-height: 36px;
+        min-height: 44px;
         padding: 0 10px;
       }
 
@@ -1577,7 +1586,7 @@
             <span id="trailerBonusText">HP +0% · 傷害 +0% · 射速 +0% · 承傷 -0%</span>
           </div>
           <section class="story-log-section" id="storyLogSection" aria-label="無線電日誌" hidden>
-            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R64" alt="熹" decoding="async" draggable="false" />
+            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R65" alt="熹" decoding="async" draggable="false" />
             <div class="story-log-list" id="storyLogList"></div>
           </section>
           <div class="trailer-room-body">
@@ -1652,6 +1661,10 @@
                 <label class="settings-row">
                   <small>螢幕震動</small>
                   <input id="screenShakeToggle" type="checkbox" />
+                </label>
+                <label class="settings-row">
+                  <small>減少閃光</small>
+                  <input id="reducedFlashToggle" type="checkbox" />
                 </label>
                 <label class="settings-row">
                   <small>音效</small>
@@ -1759,7 +1772,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R64";
+        var key = "ashes_convoy_html_boot_reload_R65";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -1776,15 +1789,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R64"></script>
-    <script src="src/sprites.js?v=R64"></script>
-    <script src="src/sprite-renderer.js?v=R64"></script>
-    <script src="src/shelter-scene.js?v=R64"></script>
-    <script src="src/config.js?v=R64"></script>
-    <script src="src/rules.js?v=R64"></script>
-    <script src="src/fx.js?v=R64"></script>
-    <script src="src/audio.js?v=R64"></script>
-    <script src="src/game.js?v=R64"></script>
-    <script src="src/ui.js?v=R64"></script>
+    <script src="src/version.js?v=R65"></script>
+    <script src="src/sprites.js?v=R65"></script>
+    <script src="src/sprite-renderer.js?v=R65"></script>
+    <script src="src/shelter-scene.js?v=R65"></script>
+    <script src="src/config.js?v=R65"></script>
+    <script src="src/rules.js?v=R65"></script>
+    <script src="src/fx.js?v=R65"></script>
+    <script src="src/audio.js?v=R65"></script>
+    <script src="src/game.js?v=R65"></script>
+    <script src="src/ui.js?v=R65"></script>
   </body>
 </html>

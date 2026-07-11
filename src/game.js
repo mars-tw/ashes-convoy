@@ -28,13 +28,16 @@
   let rafStarted = false;
   let lastFrameMs = null;
   let boundInput = false;
+  const constrainedDevice = detectConstrainedDevice();
   let performanceState = {
-    quality: "high",
+    quality: constrainedDevice ? "low" : "high",
     fps: 60,
     lowFrames: 0,
     highFrames: 0,
     lastFloatingTextAt: -Infinity,
-    reason: "穩定",
+    reason: constrainedDevice ? "裝置預檢" : "穩定",
+    constrainedDevice,
+    downgradedWave: constrainedDevice ? 1 : null,
     history: []
   };
   let renderDebug = {
@@ -58,6 +61,14 @@
   const vehicleImages = {};
   const runTrailerImages = {};
   const companionImages = {};
+
+  function detectConstrainedDevice() {
+    const navigatorInfo = root.navigator || {};
+    const memory = Number(navigatorInfo.deviceMemory);
+    const cores = Number(navigatorInfo.hardwareConcurrency);
+    const saveData = !!(navigatorInfo.connection && navigatorInfo.connection.saveData);
+    return saveData || (Number.isFinite(memory) && memory > 0 && memory <= 4) || (Number.isFinite(cores) && cores > 0 && cores <= 4);
+  }
   const enemyImages = {};
   const enemySpriteOptions = { flipX: false, alpha: 1 };
 
@@ -770,6 +781,7 @@
         quality: performanceState.quality,
         fps: Math.round(performanceState.fps),
         mode: (meta.settings && meta.settings.performanceMode) || "auto",
+        constrainedDevice: performanceState.constrainedDevice,
         maxEffects: effectiveMaxEffects(),
         maxEnemies: effectiveMaxEnemies(),
         capMultiplier: Math.round(
@@ -1273,7 +1285,7 @@
     activateWaveEnvironmentEvent();
     resetRunFx(initial.seed, initial.vehicle.x);
     playSound("waveStart");
-    state.messages.push({ text: "拖曳瞄準", time: 0, ttl: 2 });
+    state.messages.push({ text: "拖曳移動＋瞄準", time: 0, ttl: 2 });
     return state;
   }
 
@@ -2757,6 +2769,13 @@
       performanceState.highFrames = 0;
       return;
     }
+    if (performanceState.constrainedDevice) {
+      performanceState.quality = "low";
+      performanceState.reason = "裝置預檢";
+      performanceState.lowFrames = 0;
+      performanceState.highFrames = 0;
+      return;
+    }
     if (performanceState.fps < config.PERFORMANCE.lowFpsFloor) {
       performanceState.lowFrames += 1;
       performanceState.highFrames = 0;
@@ -2767,17 +2786,22 @@
       performanceState.lowFrames = Math.max(0, performanceState.lowFrames - 1);
       performanceState.highFrames = Math.max(0, performanceState.highFrames - 1);
     }
-    if (performanceState.lowFrames >= 45) {
+    if (performanceState.lowFrames >= (config.PERFORMANCE.downgradeFrames || 18)) {
       const reason = `FPS ${Math.round(performanceState.fps)} 低於 ${config.PERFORMANCE.lowFpsFloor}`;
       if (performanceState.quality !== "low") recordPerformanceHistory(reason);
       performanceState.quality = "low";
       performanceState.reason = reason;
+      performanceState.downgradedWave = state ? state.wave : null;
       performanceState.lowFrames = 0;
-    } else if (performanceState.highFrames >= 100) {
+    } else if (
+      performanceState.highFrames >= (config.PERFORMANCE.recoverFrames || 180) &&
+      (!state || performanceState.downgradedWave == null || state.wave > performanceState.downgradedWave)
+    ) {
       const reason = `FPS ${Math.round(performanceState.fps)} 回穩`;
       if (performanceState.quality !== "high") recordPerformanceHistory(reason);
       performanceState.quality = "high";
       performanceState.reason = reason;
+      performanceState.downgradedWave = null;
       performanceState.highFrames = 0;
     }
   }
@@ -2798,10 +2822,12 @@
     return getState();
   }
 
-  function setAimFromPoint(point) {
+  function setAimFromPoint(point, pointerType) {
     if (!state || state.over) return;
     state.vehicle.aimX = rules.clamp(point.x, 26, W - 26);
-    state.vehicle.aimY = rules.clamp(point.y, config.LOGIC.aimMinY, state.vehicle.y - 40);
+    const touchOffsetY = pointerType === "touch" || pointerType === "pen" ? 28 : 0;
+    state.vehicle.aimY = rules.clamp(point.y - touchOffsetY, config.LOGIC.aimMinY, state.vehicle.y - 40);
+    state.vehicle.followX = state.vehicle.aimX;
   }
 
   function pointFromEvent(event) {
@@ -2821,18 +2847,18 @@
       canvas.setPointerCapture(event.pointerId);
       state.input.dragging = true;
       state.input.lastPointer = event.pointerId;
-      setAimFromPoint(point);
+      setAimFromPoint(point, event.pointerType);
       event.preventDefault();
     });
     canvas.addEventListener("pointermove", (event) => {
       if (!state || !state.input.dragging || state.input.lastPointer !== event.pointerId) return;
-      setAimFromPoint(pointFromEvent(event));
+      setAimFromPoint(pointFromEvent(event), event.pointerType);
       event.preventDefault();
     });
     canvas.addEventListener("pointerup", (event) => {
       if (!state) return;
       if (state.input.lastPointer === event.pointerId) {
-        setAimFromPoint(pointFromEvent(event));
+        setAimFromPoint(pointFromEvent(event), event.pointerType);
         state.input.dragging = false;
         state.input.lastPointer = null;
       }
@@ -2866,7 +2892,8 @@
     const opts = options || {};
     ctx.save();
     ctx.globalAlpha *= opts.alpha == null ? 1 : opts.alpha;
-    ctx.font = `800 ${opts.size || 8}px system-ui, sans-serif`;
+    const fontScale = meta.settings && meta.settings.fontSize === "large" ? 1.15 : meta.settings && meta.settings.fontSize === "small" ? 0.92 : 1;
+    ctx.font = `800 ${(opts.size || 8) * fontScale}px system-ui, sans-serif`;
     ctx.textAlign = opts.align || "center";
     ctx.textBaseline = opts.baseline || "middle";
     ctx.lineWidth = opts.strokeWidth || 2;
@@ -2950,7 +2977,8 @@
     ctx.lineTo(guideX, guideY + 12);
     ctx.stroke();
     if (state.time < 2) {
-      drawWorldText("拖曳瞄準", W * 0.5, 118, { size: 10, alpha: 0.92, color: "#f4ead8" });
+      drawWorldText("拖曳移動＋瞄準", W * 0.5, 113, { size: 9, alpha: 0.92, color: "#f4ead8" });
+      drawWorldText("放開仍射擊（射速較慢）", W * 0.5, 124, { size: 7, alpha: 0.82, color: "#d7cdbb" });
       ctx.strokeStyle = "#f4ead8";
       ctx.beginPath();
       ctx.moveTo(W * 0.5, 142);
@@ -3418,7 +3446,7 @@
       ctx.scale(squashX, squashY);
       ctx.globalAlpha *= flash ? drawAlpha * 0.9 : drawAlpha;
       ctx.imageSmoothingEnabled = false;
-      if (enemy.filter) ctx.filter = enemy.filter;
+      if (enemy.filter && performanceState.quality !== "low") ctx.filter = enemy.filter;
       ctx.drawImage(image, -width * 0.5, -height * 0.5, width, height);
       if (enemy.tint) {
         ctx.globalCompositeOperation = "source-atop";
@@ -3442,7 +3470,7 @@
     enemySpriteOptions.flipX = enemy.vx < -8;
     enemySpriteOptions.alpha = flash ? drawAlpha * 0.9 : drawAlpha;
     enemySpriteOptions.tint = flash ? "#ffffff" : enemy.tint || null;
-    if (enemy.filter) ctx.filter = enemy.filter;
+    if (enemy.filter && performanceState.quality !== "low") ctx.filter = enemy.filter;
     drawSprite(enemy.sprite, anim || enemy.anim || "walk", timeMs, 0, 0, enemy.scale * Math.max(0.94, Math.min(1.08, squashY)), enemySpriteOptions);
     enemySpriteOptions.tint = null;
     ctx.restore();
@@ -3464,7 +3492,7 @@
       ctx.scale(1.08, 0.9);
       ctx.globalAlpha *= effect.alpha * 0.78;
       ctx.imageSmoothingEnabled = false;
-      if (effect.filter) ctx.filter = effect.filter;
+      if (effect.filter && performanceState.quality !== "low") ctx.filter = effect.filter;
       ctx.drawImage(image, -width * 0.5, -height * 0.5, width, height);
       if (effect.tint) {
         ctx.globalCompositeOperation = "source-atop";

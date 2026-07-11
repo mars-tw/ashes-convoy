@@ -2,7 +2,8 @@
 <html lang="zh-Hant-TW">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#111317" />
     <title>灰燼護航｜離線</title>
     <style>
       body {
@@ -18,7 +19,7 @@
         width: min(90vw, 390px);
         display: grid;
         gap: 10px;
-        padding: 18px;
+        padding: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
         border: 1px solid rgba(221, 211, 178, 0.26);
         border-radius: 8px;
         background: rgba(18, 22, 27, 0.92);

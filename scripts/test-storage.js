@@ -20,6 +20,7 @@ assert.strictEqual(freshAgain.settings.aimAssistLevel, "medium");
 assert.strictEqual(freshAgain.settings.screenShake, true);
 assert.strictEqual(freshAgain.settings.showRunTrailer, true);
 assert.strictEqual(freshAgain.settings.damageTextDensity, "all");
+assert.strictEqual(freshAgain.settings.fxLevel, "reduced");
 assert.strictEqual(freshAgain.settings.fontSize, "medium");
 assert.strictEqual(freshAgain.questStats.supplyCrates, 0);
 assert.strictEqual(freshAgain.trailerGoods, 0);

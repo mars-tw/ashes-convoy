@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 const assert = require("assert");
 const fs = require("fs");
@@ -88,7 +88,7 @@ expectedCached.forEach((resource) => {
   assert(fileExists(resource), `service worker cache entry does not exist: ${resource}`);
 });
 
-assert.strictEqual(version.APP_VERSION, "R64");
+assert.strictEqual(version.APP_VERSION, "R65");
 assert.strictEqual(version.CACHE_VERSION, `ashes-convoy-${version.APP_VERSION.toLowerCase()}-v1`);
 assert.strictEqual(config.APP_VERSION, version.APP_VERSION, "config APP_VERSION should use src/version.js");
 assert.strictEqual(config.CACHE_VERSION, version.CACHE_VERSION, "config CACHE_VERSION should use src/version.js");
@@ -99,12 +99,18 @@ assert(swText.includes("self.clients.claim()"), "service worker should claim cli
 assert(swText.includes("cache.match(request);"), "service worker cache-first requests should preserve URL query versions");
 assert(!/ashes-convoy-r\d+-v\d+/i.test(swText), "service worker should not hard-code release cache versions");
 const uiText = readText("src/ui.js");
+const gameText = readText("src/game.js");
 assert(uiText.includes("config.APP_VERSION"), "settings version text should render config.APP_VERSION");
+assert(gameText.includes("state.vehicle.followX = state.vehicle.aimX"), "touch aiming must keep vehicle movement synchronized");
+assert(gameText.includes('pointerType === "touch"') && gameText.includes("point.y - touchOffsetY"), "touch aiming must keep the reticle above the finger");
+assert(gameText.includes('performanceState.quality !== "low"'), "low quality must skip per-enemy canvas filters");
+assert(indexHtml.includes('id="reducedFlashToggle"'), "settings must expose the existing reducedFlash flag");
+assert(indexHtml.includes("safe-area-inset-left") && indexHtml.includes("safe-area-inset-right"), "mobile shell must respect horizontal safe areas");
 assert(uiText.includes("controllerchange"), "page should listen for service worker controller changes");
 assert(uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"), "page should gate service worker auto reload to 15 seconds");
 assert(uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"), "page should guard service worker auto reload by session");
 assert(uiText.includes("root.location.reload()"), "page should auto reload after a fresh service worker takes control");
-assert(indexHtml.includes("ashes_convoy_html_boot_reload_R64"), "HTML boot guard should cover pre-JS service worker skew");
+assert(indexHtml.includes("ashes_convoy_html_boot_reload_R65"), "HTML boot guard should cover pre-JS service worker skew");
 
 const userVisibleFiles = ["index.html", ...listFiles("src", ".js")];
 const mojibakePatterns = [

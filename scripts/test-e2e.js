@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 const assert = require("assert");
 const fs = require("fs");
@@ -182,7 +182,7 @@ async function checkMetaHotspotsFit(page) {
   assert(result.layer.bottom <= result.layer.appBottom + 1, "meta action layer should stay within app bottom");
   assert(result.viewportOverflow <= 1, "meta overlay should not create horizontal page overflow");
   result.buttons.forEach((button) => {
-    assert(button.width >= 44 && button.height >= 40, `${button.id} should be a touchable size`);
+    assert(button.width >= 44 && button.height >= 44, `${button.id} should be at least 44px in both touch dimensions`);
     assert(button.left >= button.appLeft - 1, `${button.id} should not overflow left`);
     assert(button.right <= button.appRight + 1, `${button.id} should not overflow right`);
     assert(button.top >= button.appTop - 1, `${button.id} should not overflow top`);
@@ -282,12 +282,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R64") && swText.includes("src/ui.js?v=R64") && swText.includes("src/game.js?v=R64") && swText.includes("src/rules.js?v=R64"),
+      swCachesJs: swText.includes("src/version.js?v=R65") && swText.includes("src/ui.js?v=R65") && swText.includes("src/game.js?v=R65") && swText.includes("src/rules.js?v=R65"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R64"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R64"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R64"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R65"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R65"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R65"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -296,7 +296,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R64", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R65", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -355,6 +355,7 @@ async function checkShortDesktopReachability(page) {
   for (const selector of [
     "#aimAssistLevelSelect",
     "#screenShakeToggle",
+    "#reducedFlashToggle",
     "#soundToggle",
     "#showRunTrailerToggle",
     "#showCompanionToggle",
@@ -554,12 +555,34 @@ async function dragAim(page) {
   const box = await page.locator("#gameCanvas").boundingBox();
   assert(box, "canvas bounding box should exist");
   const before = await page.evaluate(() => window.__test.getState().vehicle);
-  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.78);
-  await page.mouse.down();
-  await page.mouse.move(box.x + box.width * 0.78, box.y + box.height * 0.24, { steps: 8 });
+  await page.evaluate(({ box }) => {
+    const canvas = document.getElementById("gameCanvas");
+    canvas.setPointerCapture = () => {};
+    const fire = (type, x, y) => canvas.dispatchEvent(new PointerEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      pointerId: 77,
+      pointerType: "touch",
+      isPrimary: true,
+      clientX: x,
+      clientY: y
+    }));
+    fire("pointerdown", box.x + box.width * 0.5, box.y + box.height * 0.78);
+    fire("pointermove", box.x + box.width * 0.78, box.y + box.height * 0.24);
+  }, { box });
   await page.evaluate(() => window.__test.step(180));
   const duringDrag = await page.evaluate(() => window.__test.getState().vehicle);
-  await page.mouse.up();
+  await page.evaluate(({ box }) => {
+    document.getElementById("gameCanvas").dispatchEvent(new PointerEvent("pointerup", {
+      bubbles: true,
+      cancelable: true,
+      pointerId: 77,
+      pointerType: "touch",
+      isPrimary: true,
+      clientX: box.x + box.width * 0.78,
+      clientY: box.y + box.height * 0.24
+    }));
+  }, { box });
   await page.evaluate(() => {
     window.__test.setState({ projectiles: [], vehicle: { weaponCooldown: 0 } });
     window.__test.step(120);
@@ -573,12 +596,14 @@ async function dragAim(page) {
   });
   assert(Math.abs(after.vehicle.aimX - before.aimX) > 20, "drag should change aimX");
   assert(after.vehicle.aimY < before.aimY - 80, "drag should move aim upward");
-  assert(
-    Math.abs(duringDrag.x - before.x) < 8,
-    `drag aim should not hard-pull vehicle horizontally, moved ${Math.abs(duringDrag.x - before.x).toFixed(1)}`
-  );
+  assert(Math.abs(duringDrag.followX - duringDrag.aimX) < 0.01, "touch drag should synchronize vehicle followX with aimX");
+  assert(duringDrag.x > before.x + 8, `touch drag should move the vehicle during the gesture, moved ${(duringDrag.x - before.x).toFixed(1)}`);
+  const rawTouchY = ((box.y + box.height * 0.24 - box.y) / box.height) * 422;
+  assert(duringDrag.aimY <= rawTouchY - 24, `touch aim should stay above the finger, got aimY ${duringDrag.aimY}`);
   assert(after.projectile, "auto fire should create a projectile after drag");
-  assert(after.projectile.vx > 10, "projectile should point toward the dragged aim direction");
+  if (Math.abs(after.vehicle.aimX - after.vehicle.x) > 2) {
+    assert(Math.sign(after.projectile.vx) === Math.sign(after.vehicle.aimX - after.vehicle.x), "projectile should point toward the dragged aim direction");
+  }
   assert(after.projectile.vy < -40, "projectile should travel upward");
 }
 
@@ -600,6 +625,7 @@ async function checkSettingsAndQuestBoard(page) {
   let meta;
   await page.selectOption("#aimAssistLevelSelect", "high");
   await page.locator("#screenShakeToggle").uncheck();
+  await page.locator("#reducedFlashToggle").check();
   assert.strictEqual(await page.locator("#showRunTrailerToggle").isChecked(), true, "run trailer setting should default on");
   await page.locator("#showRunTrailerToggle").uncheck();
   meta = await page.evaluate(() => window.__test.getMeta());
@@ -617,14 +643,15 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(meta.settings.aimAssistLevel, "high", "aim assist level should persist from settings panel");
   assert.strictEqual(meta.settings.aimAssist, true, "high aim assist should keep compatibility boolean enabled");
   assert.strictEqual(meta.settings.screenShake, false, "screen shake toggle should persist");
+  assert.strictEqual(meta.settings.reducedFlash, true, "reduced flash toggle should persist");
   assert.strictEqual(meta.settings.showRunTrailer, true, "run trailer toggle on should persist");
   assert.strictEqual(meta.settings.damageTextDensity, "large", "damage text density should persist");
   assert.strictEqual(meta.settings.performanceMode, "low", "performance mode should persist");
   assert.strictEqual(meta.settings.fontSize, "large", "font size setting should persist");
 
-  // 畫面特效三段（完整/精簡/關閉）切換持久化＋migrate 兼容（預設完整）
+  // 畫面特效三段（完整/精簡/關閉）切換持久化＋migrate 兼容（手機友善預設精簡）
   const fxDefault = await page.evaluate(() => window.DSRules.migrateMeta(null, { config: window.DSConfig }).settings.fxLevel);
-  assert.strictEqual(fxDefault, "full", "fresh migrate should default fx level to full");
+  assert.strictEqual(fxDefault, "reduced", "fresh migrate should default fx level to reduced");
   for (const level of ["reduced", "off", "full"]) {
     await page.selectOption("#fxLevelSelect", level);
     meta = await page.evaluate(() => window.__test.getMeta());
@@ -651,7 +678,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R64"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R65"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -925,7 +952,7 @@ async function checkFleetProjectileTraits(page) {
   assert(seaProjectile && seaProjectile.splash > 0, "sea ark should fire splash projectiles");
 }
 
-async function checkR64CombatRefresh(page) {
+async function checkR65CombatRefresh(page) {
   const road = await page.evaluate(() => {
     window.__test.startRun("land_rig");
     const cfg = window.DSConfig;
@@ -1192,7 +1219,7 @@ async function checkR64CombatRefresh(page) {
   assert(overflowSupplyState.stats.scavengeGoods >= 6, "overflow supply should grant scavenge goods");
 }
 
-async function checkR64DamageRegression(page) {
+async function checkR65DamageRegression(page) {
   const pierce = await page.evaluate(() => {
     window.__test.startRun("void_runner");
     window.__test.setState({
@@ -1703,7 +1730,7 @@ async function checkFxIntegration(page) {
   });
 }
 
-async function checkR64JuiceFx(page) {
+async function checkR65JuiceFx(page) {
   const full = await page.evaluate(() => {
     window.__test.startRun("land_rig");
     const meta = window.__test.getMeta();
@@ -1726,21 +1753,21 @@ async function checkR64JuiceFx(page) {
     const b = window.__test.spawnEnemy("runner", { id: "combo_b", x: 112, y: 150, hp: 1, speed: 0, silent: true });
     window.__test.setState({
       projectiles: [
-        { id: "R64_a", sprite: "bullet_cannon", x: a.x, y: a.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 },
-        { id: "R64_b", sprite: "bullet_cannon", x: b.x, y: b.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
+        { id: "R65_a", sprite: "bullet_cannon", x: a.x, y: a.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 },
+        { id: "R65_b", sprite: "bullet_cannon", x: b.x, y: b.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
       ]
     });
     window.__test.step(16);
     const afterCombo = window.__test.getState();
     window.__test.setState({
-      supplyChoice: { dropId: "R64_supply", x: 52, y: 120, openedAt: afterCombo.time, rewardIds: Object.keys(window.DSConfig.SUPPLY_DROPS.rewards) },
+      supplyChoice: { dropId: "R65_supply", x: 52, y: 120, openedAt: afterCombo.time, rewardIds: Object.keys(window.DSConfig.SUPPLY_DROPS.rewards) },
       paused: false
     });
     window.__test.chooseSupplyReward("parts_cache");
-    const boss = window.__test.spawnEnemy("boss_hive_titan", { id: "R64_boss", x: 96, y: 116, hp: 1, speed: 0, silent: true });
+    const boss = window.__test.spawnEnemy("boss_hive_titan", { id: "R65_boss", x: 96, y: 116, hp: 1, speed: 0, silent: true });
     window.__test.setState({
       projectiles: [
-        { id: "R64_boss_shot", sprite: "bullet_cannon", x: boss.x, y: boss.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
+        { id: "R65_boss_shot", sprite: "bullet_cannon", x: boss.x, y: boss.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
       ]
     });
     window.__test.step(16);
@@ -1750,10 +1777,10 @@ async function checkR64JuiceFx(page) {
       debug: window.__test.getRenderDebug()
     };
   });
-  assert(full.state.combo && full.state.combo.count >= 2, "R64 combo should count consecutive kills");
-  assert(full.state.effects.some((effect) => effect.kind === "hud_fly" || effect.kind === "hud_pop"), "R64 pickup should create HUD fly/pop effects");
-  assert(full.state.fxTimeScaleLeft > 0, "R64 boss kill should start render-only fx time scaling");
-  assert.strictEqual(full.debug.comboDrawn, true, "R64 full fx should draw the combo counter");
+  assert(full.state.combo && full.state.combo.count >= 2, "R65 combo should count consecutive kills");
+  assert(full.state.effects.some((effect) => effect.kind === "hud_fly" || effect.kind === "hud_pop"), "R65 pickup should create HUD fly/pop effects");
+  assert(full.state.fxTimeScaleLeft > 0, "R65 boss kill should start render-only fx time scaling");
+  assert.strictEqual(full.debug.comboDrawn, true, "R65 full fx should draw the combo counter");
 
   const reduced = await page.evaluate(() => {
     window.__test.startRun("land_rig");
@@ -1768,14 +1795,14 @@ async function checkR64JuiceFx(page) {
       gates: [],
       hazards: [],
       supplyDrops: [],
-      supplyChoice: { dropId: "R64_supply_reduced", x: 52, y: 120, openedAt: state.time, rewardIds: Object.keys(window.DSConfig.SUPPLY_DROPS.rewards) },
+      supplyChoice: { dropId: "R65_supply_reduced", x: 52, y: 120, openedAt: state.time, rewardIds: Object.keys(window.DSConfig.SUPPLY_DROPS.rewards) },
       vehicle: { weaponCooldown: 999 }
     });
     window.__test.chooseSupplyReward("parts_cache");
-    const boss = window.__test.spawnEnemy("boss_hive_titan", { id: "R64_boss_reduced", x: 96, y: 116, hp: 1, speed: 0, silent: true });
+    const boss = window.__test.spawnEnemy("boss_hive_titan", { id: "R65_boss_reduced", x: 96, y: 116, hp: 1, speed: 0, silent: true });
     window.__test.setState({
       projectiles: [
-        { id: "R64_boss_reduced_shot", sprite: "bullet_cannon", x: boss.x, y: boss.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
+        { id: "R65_boss_reduced_shot", sprite: "bullet_cannon", x: boss.x, y: boss.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
       ]
     });
     window.__test.step(16);
@@ -1791,7 +1818,7 @@ async function checkR64JuiceFx(page) {
 
   const deterministic = await page.evaluate(() => {
     function runCase(fxLevel, reducedFlash) {
-      window.__test.startRun("land_rig", null, "r64_fx_determinism");
+      window.__test.startRun("land_rig", null, "r65_fx_determinism");
       const meta = window.__test.getMeta();
       meta.settings.performanceMode = "high";
       meta.settings.fxLevel = fxLevel;
@@ -1824,10 +1851,10 @@ async function checkR64JuiceFx(page) {
         },
         vehicle: { weaponCooldown: 999, aimX: state.vehicle.x, aimY: state.vehicle.y - 160 }
       });
-      const boss = window.__test.spawnEnemy("boss_hive_titan", { id: "r64_determinism_boss", x: 96, y: 116, hp: 1, speed: 0, silent: true });
+      const boss = window.__test.spawnEnemy("boss_hive_titan", { id: "r65_determinism_boss", x: 96, y: 116, hp: 1, speed: 0, silent: true });
       window.__test.setState({
         projectiles: [
-          { id: "r64_determinism_shot", sprite: "bullet_cannon", x: boss.x, y: boss.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
+          { id: "r65_determinism_shot", sprite: "bullet_cannon", x: boss.x, y: boss.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
         ]
       });
       window.__test.step(16);
@@ -2213,7 +2240,7 @@ async function checkEnvironmentEventsAndVariants(page) {
   assert(state.enemies.some((enemy) => enemy.variantId), "late wave generation should spawn tinted variants");
 }
 
-async function checkR64EnemyRosterBehaviors(page) {
+async function checkR65EnemyRosterBehaviors(page) {
   await page.evaluate(() => {
     window.__test.clearStorage();
     window.__test.startRun("land_rig");
@@ -2274,7 +2301,7 @@ async function checkR64EnemyRosterBehaviors(page) {
   assert.deepStrictEqual(
     result.enemyIds,
     ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith", "ash_screamer", "chain_tether", "mirror_husk", "ember_tick"].sort(),
-    "R64 enemy roster should be spawnable"
+    "R65 enemy roster should be spawnable"
   );
   assert(result.enemyProjectiles >= 2, "spore spitter and ash screamer should fire enemy projectiles");
   assert.strictEqual(result.screamProjectile, true, "ash screamer should fire low-damage scream projectiles");
@@ -2285,10 +2312,10 @@ async function checkR64EnemyRosterBehaviors(page) {
   assert(result.tetherSlowMul >= 0.78, "chain tether should use the guarded slow multiplier");
   assert(result.mirrorShieldHp >= 40, "mirror husk should spawn with a strong front shield");
   assert.strictEqual(result.emberBehavior, "swarm", "ember tick should reuse swarm behavior");
-  assert(result.rasterDrawn >= 9, `R64 enemies should draw raster sprites, got ${result.rasterDrawn}`);
+  assert(result.rasterDrawn >= 9, `R65 enemies should draw raster sprites, got ${result.rasterDrawn}`);
 }
 
-async function checkR64RunBarks(page) {
+async function checkR65RunBarks(page) {
   const triggered = await page.evaluate(() => {
     window.__test.clearStorage();
     window.__test.startRun("land_rig");
@@ -2746,14 +2773,14 @@ async function runScenario(browser, baseUrl, viewport, full) {
     await checkBossBlueprintDropAnimation(page);
     await unlockFleet(page);
     await checkEnvironmentEventsAndVariants(page);
-    await checkR64EnemyRosterBehaviors(page);
-    await checkR64RunBarks(page);
+    await checkR65EnemyRosterBehaviors(page);
+    await checkR65RunBarks(page);
     await checkEventCodexAndAchievements(page);
     await checkSupplyDropPickupAndSettlement(page);
     await unlockFleet(page);
     await checkFleetProjectileTraits(page);
-    await checkR64CombatRefresh(page);
-    await checkR64DamageRegression(page);
+    await checkR65CombatRefresh(page);
+    await checkR65DamageRegression(page);
     await checkVehicleFleetSelectionAndCombat(page);
     await checkBlueprintAchievementsAndUnlock(page);
     await checkVehicleSpecificUpgradePurchase(page);
@@ -2772,7 +2799,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await checkAimAssistToggle(page);
   await checkAdaptivePerformance(page);
   await checkFxIntegration(page);
-  await checkR64JuiceFx(page);
+  await checkR65JuiceFx(page);
   await dragAim(page);
   await killEnemiesAndEarnPreviewParts(page);
   await shootGate(page);
@@ -3111,7 +3138,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r64")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r65")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -3129,7 +3156,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r64")), "R64 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r65")), "R65 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());
