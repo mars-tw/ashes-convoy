@@ -149,6 +149,32 @@
     return !!FXC && fxLevelSetting() === "full" && !(meta.settings && meta.settings.reducedFlash);
   }
 
+  function visualStateTime() {
+    if (!state) return idleTime;
+    return Number.isFinite(state.fxVisualTime) ? state.fxVisualTime : state.time;
+  }
+
+  function updateFxPresentationClock(dt) {
+    if (!state) return;
+    const logicEndTime = state.time + dt;
+    if (!Number.isFinite(state.fxVisualTime)) state.fxVisualTime = state.time;
+
+    let visualDt = dt;
+    if (state.fxTimeScaleLeft > 0 && flourishFxEnabled()) {
+      const consumed = Math.min(dt, state.fxTimeScaleLeft);
+      const scale = Math.max(0.1, Math.min(1, state.fxTimeScale || 0.35));
+      visualDt = consumed * scale + (dt - consumed);
+      state.fxTimeScaleLeft = Math.max(0, state.fxTimeScaleLeft - consumed);
+    } else {
+      state.fxTimeScaleLeft = 0;
+      state.fxTimeScale = 1;
+      const lag = logicEndTime - state.fxVisualTime;
+      if (lag > dt * 0.05) visualDt = Math.min(dt * 1.75, lag);
+    }
+
+    state.fxVisualTime = Math.min(logicEndTime, state.fxVisualTime + visualDt);
+  }
+
   function resetRunFx(seed, vehicleX) {
     fxRng = fx.createSeededRng(hashSeed(seed));
     fxTiltRad = 0;
@@ -726,7 +752,9 @@
       eventBanner: state.eventBanner ? rules.deepClone(state.eventBanner) : null,
       lastGateChoice: state.lastGateChoice ? rules.deepClone(state.lastGateChoice) : null,
       combo: state.combo ? rules.deepClone(state.combo) : null,
-      slowMoLeft: state.slowMoLeft || 0,
+      fxTimeScaleLeft: state.fxTimeScaleLeft || 0,
+      fxTimeScale: state.fxTimeScale || 1,
+      fxVisualTime: visualStateTime(),
       gateChoice: state.gateChoice ? rules.deepClone(state.gateChoice) : null,
       supplyChoice: state.supplyChoice ? rules.deepClone(state.supplyChoice) : null,
       enemies: state.enemies.map(publicEntity),
@@ -1232,8 +1260,9 @@
       waveBannerStart: 0,
       waveBannerNumber: 1,
       combo: { count: 0, lastKillAt: -1000000, best: 0 },
-      slowMoLeft: 0,
-      slowMoScale: 1,
+      fxVisualTime: 0,
+      fxTimeScaleLeft: 0,
+      fxTimeScale: 1,
       lastBroadsideEchoAt: -1000000,
       messages: []
     };
@@ -1673,10 +1702,11 @@
     playSound(enemy.boss ? "bossKill" : "kill");
     if (enemy.boss) {
       // Boss 死亡演出：多段爆炸由 killBurst 的 delay 規格構成；此旗標驅動純視覺慢放感
-      fxBossKillFx = { x: enemy.x, y: enemy.y, start: state.time };
+      fxBossKillFx = { x: enemy.x, y: enemy.y, start: visualStateTime() };
       if (flourishFxEnabled()) {
-        state.slowMoLeft = Math.max(state.slowMoLeft || 0, 0.2);
-        state.slowMoScale = 0.35;
+        if (!Number.isFinite(state.fxVisualTime)) state.fxVisualTime = state.time;
+        state.fxTimeScaleLeft = Math.max(state.fxTimeScaleLeft || 0, 0.2);
+        state.fxTimeScale = 0.35;
       }
     }
     if (enemy.boss) {
@@ -2676,15 +2706,7 @@
 
   function update(dt) {
     if (!state || state.paused || state.over) return;
-    if (state.slowMoLeft > 0 && flourishFxEnabled()) {
-      const consumed = Math.min(dt, state.slowMoLeft);
-      const scale = Math.max(0.1, Math.min(1, state.slowMoScale || 0.35));
-      dt = consumed * scale + (dt - consumed);
-      state.slowMoLeft = Math.max(0, state.slowMoLeft - consumed);
-    } else {
-      state.slowMoLeft = 0;
-      state.slowMoScale = 1;
-    }
+    updateFxPresentationClock(dt);
     state.time += dt;
     state.waveElapsed += dt;
     if (state.time >= 3) pushRunBark("sortie_start");
@@ -4007,7 +4029,7 @@
   // Boss 死亡：擴散衝擊環＋短暫白閃＋上下黑邊，構成純視覺慢放感（不動邏輯時序）。
   function drawBossKillFx() {
     if (!fxBossKillFx || !state) return;
-    const elapsed = state.time - fxBossKillFx.start;
+    const elapsed = visualStateTime() - fxBossKillFx.start;
     const duration = 0.55;
     if (elapsed < 0 || elapsed > duration) {
       fxBossKillFx = null;
@@ -4201,7 +4223,7 @@
       });
     });
     state.enemies.forEach((enemy) => {
-      const alpha = enemy.hitFlash > 0 ? 0.7 : 1;
+      const alpha = enemy.hitFlash > 0 && flourishFxEnabled() ? 0.7 : 1;
       const anim = enemy.boss && enemy.hp < enemy.maxHp * 0.33 ? "rage" : enemy.anim || "walk";
       drawEnemyEntity(enemy, timeMs, alpha, anim);
     });
@@ -4328,7 +4350,7 @@
       weaponPowerupDrawn: 0,
       supplyCrateStyle: ""
     };
-    const timeMs = ((state ? state.time : idleTime) || 0) * 1000;
+    const timeMs = ((state ? visualStateTime() : idleTime) || 0) * 1000;
     ctx.clearRect(0, 0, W, H);
     if (
       state &&

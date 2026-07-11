@@ -207,6 +207,47 @@ function createFakeContext() {
 }
 
 {
+  const previousAudioContext = global.AudioContext;
+  const previousWebkitAudioContext = global.webkitAudioContext;
+  let createdContexts = 0;
+  let createdContext = null;
+  global.AudioContext = function FakeAudioContext() {
+    createdContexts += 1;
+    createdContext = createFakeContext();
+    return createdContext;
+  };
+  delete global.webkitAudioContext;
+  audio._resetForTests();
+  assert.strictEqual(audio.unlock(), true, "unlock should create and resume the default AudioContext on first gesture");
+  assert.strictEqual(createdContexts, 1, "unlock should create exactly one default AudioContext");
+  assert(createdContext.counters.gains >= 1, "unlock should create the master gain during context setup");
+  assert.strictEqual(createdContext.counters.resumes, 1, "unlock should resume the suspended context immediately");
+  assert(audio.play("hit") > 0, "play after unlock should synthesize through the existing context");
+  assert.strictEqual(createdContexts, 1, "play after unlock should reuse the default AudioContext");
+  audio._resetForTests();
+  if (previousAudioContext) global.AudioContext = previousAudioContext;
+  else delete global.AudioContext;
+  if (previousWebkitAudioContext) global.webkitAudioContext = previousWebkitAudioContext;
+  else delete global.webkitAudioContext;
+}
+
+{
+  const events = [];
+  const target = {
+    addEventListener(name) {
+      events.push(name);
+    }
+  };
+  audio._resetForTests();
+  assert.strictEqual(audio.installUnlockHandlers(target), true, "unlock handlers should install once");
+  assert(events.includes("pointerdown"), "unlock should listen for pointerdown");
+  assert(events.includes("touchstart"), "unlock should listen for touchstart for older iOS WebViews");
+  assert(events.includes("keydown"), "unlock should listen for keydown");
+  assert.strictEqual(audio.installUnlockHandlers(target), false, "unlock handlers should not double-install");
+  audio._resetForTests();
+}
+
+{
   const ctx = createFakeContext();
   const engine = audio.createEngine({ context: ctx, throttleMs: 50, rng: audio.createSeededRng(7) });
 

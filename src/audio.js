@@ -375,23 +375,27 @@ function getDefaultEngine() {
 }
 
 function resumeContext(engine) {
-  if (!engine || !engine.context) return;
+  if (!engine || !engine.context) return false;
   const ctx = engine.context;
   if (ctx.state === "suspended" && typeof ctx.resume === "function") {
     try {
       const result = ctx.resume();
       if (result && typeof result.catch === "function") result.catch(() => {});
+      return true;
     } catch (error) {
-      // resume 失敗（尚無手勢）留待下次互動再試
+      return false;
     }
   }
+  return ctx.state !== "suspended";
 }
 
 // 首次使用者互動解鎖：resume 既有 context；context 尚未建立時記錄手勢供之後補 resume。
 function unlock() {
   gestureSeen = true;
-  resumeContext(defaultEngine);
-  return gestureSeen;
+  const engine = getDefaultEngine();
+  ensureContext(engine, GLOBAL_ROOT);
+  resumeContext(engine);
+  return !!(engine && engine.context && !engine.failed);
 }
 
 function installUnlockHandlers(target) {
@@ -402,6 +406,7 @@ function installUnlockHandlers(target) {
     unlock();
   };
   scope.addEventListener("pointerdown", handler, { passive: true });
+  scope.addEventListener("touchstart", handler, { passive: true });
   scope.addEventListener("keydown", handler);
   return true;
 }
@@ -409,9 +414,19 @@ function installUnlockHandlers(target) {
 // 頁面入口：以預設單例播放；呼叫端（game.js）負責 settings.sound === false 時不呼叫本函式。
 function play(name, options) {
   const engine = getDefaultEngine();
+  if (gestureSeen) {
+    ensureContext(engine, GLOBAL_ROOT);
+    resumeContext(engine);
+  }
   const created = playEvent(engine, name, options, GLOBAL_ROOT);
   if (gestureSeen) resumeContext(engine);
   return created;
+}
+
+function resetForTests() {
+  defaultEngine = null;
+  gestureSeen = false;
+  unlockInstalled = false;
 }
 
 const DSAudio = {
@@ -428,7 +443,8 @@ const DSAudio = {
   play,
   unlock,
   installUnlockHandlers,
-  getDefaultEngine
+  getDefaultEngine,
+  _resetForTests: resetForTests
 };
 
 if (typeof window !== "undefined") window.DSAudio = DSAudio;
