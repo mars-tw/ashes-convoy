@@ -13,10 +13,10 @@ const uiSource = read("src/ui.js");
 const htmlSource = read("index.html");
 const credits = read("CREDITS.md");
 
-assert.strictEqual(version.APP_VERSION, "R66", "visual release guard must target R66");
+assert.strictEqual(version.APP_VERSION, "R67", "visual release guard must target R67");
 
 const textureEntries = Object.entries(config.FX.textures || {});
-assert.strictEqual(textureEntries.length, 4, "R66 must ship smoke/fire/debris/flash texture layers");
+assert.strictEqual(textureEntries.length, 4, "R67 must ship smoke/fire/debris/flash texture layers");
 textureEntries.forEach(([name, relativePath]) => {
   const file = path.join(root, relativePath);
   assert(fs.existsSync(file), `missing Kenney texture: ${relativePath}`);
@@ -42,6 +42,8 @@ assert(gameSource.includes("buildFxTextureTint") && gameSource.includes("prepare
 assert(gameSource.includes("texturedParticlesDrawn"), "runtime must expose textured-particle visual diagnostics");
 
 const modes = config.WEAPON_POWERUPS.modes;
+assert.strictEqual(modes.spread.visual.core, "#d39a4a", "scatter must move to the amber-brown band");
+assert.strictEqual(modes.homing.visual.core, "#d8fbff", "homing must move to the white-cyan band");
 const requiredVisualIds = ["standard", "scatter", "fracture", "ember", "laser"];
 const visuals = Object.values(modes).map((mode) => mode.visual).filter(Boolean);
 requiredVisualIds.forEach((id) => assert(visuals.some((visual) => visual.id === id), `missing projectile visual language: ${id}`));
@@ -51,6 +53,13 @@ assert.strictEqual(new Set(requiredVisuals.map((visual) => visual.shape)).size, 
 requiredVisuals.forEach((visual) => {
   assert(visual.trail !== visual.core && visual.trailLife > 0 && visual.trailStretch > 0, `${visual.id} must define a distinct trail`);
 });
+assert(config.FX.killBurst.zombie.some((spec) => spec.delay >= 0.1), "zombie kill burst must stagger its smoke beat");
+assert(config.FX.killBurst.mech.some((spec) => spec.delay >= 0.1), "mech kill burst must stagger its smoke beat");
+assert.strictEqual(config.FX.quality.high.maxParticles, 96, "visual polish must not raise the high particle-pool cap");
+assert.strictEqual(config.FX.quality.low.maxParticles, 48, "visual polish must not raise the low particle-pool cap");
+assert(gameSource.includes("enemy.hitFlashColor = weaponVisual(projectile.weaponMode).core"), "enemy hit tint must follow projectile color");
+assert(gameSource.includes("hitScaleX") && gameSource.includes("hitScaleY"), "enemy hits must add directional squash");
+assert(gameSource.includes("drawVehicleNavigationLights") && gameSource.includes("const count = reduced ? 1 : 2"), "vehicle navigation lights must cover reduced mode");
 assert(gameSource.includes("state.projectiles.forEach(drawProjectile)"), "projectiles must use the dedicated ammo renderer");
 assert(uiSource.includes("hud.dataset.weaponMode"), "HUD must switch its weapon signature immediately");
 

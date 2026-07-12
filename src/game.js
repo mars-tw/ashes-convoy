@@ -637,12 +637,16 @@
   }
 
   function triggerEnemyHitFlair(enemy, projectile) {
-    enemy.hitFlash = flourishFxEnabled() ? 0.16 : 0.12;
+    enemy.hitFlash = flourishFxEnabled() ? 0.2 : 0.12;
     if (!flourishFxEnabled() || !projectile) return;
     const speed = Math.sqrt(projectile.vx * projectile.vx + projectile.vy * projectile.vy) || 1;
+    enemy.hitFlashMax = 0.2;
+    enemy.hitFlashColor = weaponVisual(projectile.weaponMode).core;
+    enemy.hitDirectionX = projectile.vx / speed;
+    enemy.hitDirectionY = projectile.vy / speed;
     const sizeMul = enemy.boss ? 0.55 : enemy.radius >= 13 ? 1.15 : 0.85;
-    enemy.knockbackX = (projectile.vx / speed) * sizeMul * 1.7;
-    enemy.knockbackY = (projectile.vy / speed) * sizeMul * 1.7;
+    enemy.knockbackX = enemy.hitDirectionX * sizeMul * 1.7;
+    enemy.knockbackY = enemy.hitDirectionY * sizeMul * 1.7;
   }
 
   function triggerVehicleRecoil(direction) {
@@ -807,7 +811,11 @@
   function publicEntity(entity) {
     const copy = {};
     Object.keys(entity).forEach((key) => {
-      if (key !== "hitFlash" && key !== "knockbackX" && key !== "knockbackY" && key !== "phaseTriggered") copy[key] = rules.deepClone(entity[key]);
+      if (
+        key !== "hitFlash" && key !== "hitFlashMax" && key !== "hitFlashColor" &&
+        key !== "hitDirectionX" && key !== "hitDirectionY" &&
+        key !== "knockbackX" && key !== "knockbackY" && key !== "phaseTriggered"
+      ) copy[key] = rules.deepClone(entity[key]);
     });
     return copy;
   }
@@ -3540,6 +3548,35 @@
     renderDebug.vehicleShieldDrawn = true;
   }
 
+  // 車頭航行燈只存在於表現層；reduced 固定為單燈且不脈動，避免額外閃爍。
+  function drawVehicleNavigationLights(vehicleConfig, vehicle) {
+    if (fxLevelSetting() === "off") return;
+    const environment = currentEnvironment();
+    const reduced = !flourishFxEnabled();
+    const width = vehicleConfig.visualWidth || (vehicleConfig.visualHalfWidth || 36) * 2;
+    const height = width * (environment === "space" ? 1.65 : 1.9);
+    const color = environment === "land" ? "255, 194, 104" : "184, 242, 255";
+    const pulse = reduced ? 1 : 0.92 + Math.sin(visualStateTime() * 7.5) * 0.08;
+    const count = reduced ? 1 : 2;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    for (let i = 0; i < count; i += 1) {
+      const x = vehicle.x + (count === 1 ? 0 : (i === 0 ? -1 : 1) * width * 0.18);
+      const y = vehicle.y - height * 0.54;
+      const radius = (count === 1 ? 5.4 : 4.4) * pulse;
+      const glow = ctx.createRadialGradient(x, y, 0.4, x, y, radius);
+      glow.addColorStop(0, `rgba(${color}, ${reduced ? 0.72 : 0.92})`);
+      glow.addColorStop(0.35, `rgba(${color}, ${reduced ? 0.32 : 0.48})`);
+      glow.addColorStop(1, `rgba(${color}, 0)`);
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, TAU);
+      ctx.fill();
+    }
+    ctx.restore();
+    renderDebug.vehicleNavigationLightsDrawn += count;
+  }
+
   function enemyVisualWidth(enemy, enemyConfig) {
     if (Number.isFinite(enemy.visualWidth)) return enemy.visualWidth;
     if (enemyConfig && Number.isFinite(enemyConfig.visualWidth)) return enemyConfig.visualWidth;
@@ -3583,6 +3620,13 @@
     const wobble = Math.sin(phase * 0.52) * (enemy.boss ? 0.022 : 0.075) + speedLean;
     const drawAlpha = alpha == null ? 1 : alpha;
     const flash = enemy.hitFlash > 0 && flourishFxEnabled();
+    const hitPulse = flash ? rules.clamp(enemy.hitFlash / Math.max(0.01, enemy.hitFlashMax || 0.2), 0, 1) : 0;
+    const hitWeight = hitPulse * (enemy.boss ? 0.55 : 1);
+    const impactX = Math.abs(enemy.hitDirectionX || 0);
+    const impactY = Math.abs(enemy.hitDirectionY || 1);
+    const hitScaleX = 1 - impactX * hitWeight * 0.12 + impactY * hitWeight * 0.08;
+    const hitScaleY = 1 - impactY * hitWeight * 0.12 + impactX * hitWeight * 0.08;
+    const hitColor = enemy.hitFlashColor || "#ffd36a";
     const knockX = flourishFxEnabled() ? enemy.knockbackX || 0 : 0;
     const knockY = flourishFxEnabled() ? enemy.knockbackY || 0 : 0;
 
@@ -3595,7 +3639,7 @@
       ctx.save();
       ctx.translate(enemy.x + knockX, enemy.y + knockY + lift);
       ctx.rotate(wobble);
-      ctx.scale(squashX, squashY);
+      ctx.scale(squashX * hitScaleX, squashY * hitScaleY);
       ctx.globalAlpha *= flash ? drawAlpha * 0.9 : drawAlpha;
       ctx.imageSmoothingEnabled = false;
       if (enemy.filter && performanceState.quality !== "low") ctx.filter = enemy.filter;
@@ -3608,7 +3652,8 @@
       }
       if (flash) {
         ctx.globalCompositeOperation = "source-atop";
-        ctx.fillStyle = "rgba(255, 255, 255, 0.68)";
+        ctx.globalAlpha *= 0.68;
+        ctx.fillStyle = hitColor;
         ctx.fillRect(-width * 0.5, -height * 0.5, width, height);
       }
       ctx.restore();
@@ -3619,11 +3664,12 @@
     ctx.save();
     ctx.translate(enemy.x + knockX, enemy.y + knockY + lift);
     ctx.rotate(wobble);
+    ctx.scale(squashX * hitScaleX, squashY * hitScaleY);
     enemySpriteOptions.flipX = enemy.vx < -8;
     enemySpriteOptions.alpha = flash ? drawAlpha * 0.9 : drawAlpha;
-    enemySpriteOptions.tint = flash ? "#ffffff" : enemy.tint || null;
+    enemySpriteOptions.tint = flash ? hitColor : enemy.tint || null;
     if (enemy.filter && performanceState.quality !== "low") ctx.filter = enemy.filter;
-    drawSprite(enemy.sprite, anim || enemy.anim || "walk", timeMs, 0, 0, enemy.scale * Math.max(0.94, Math.min(1.08, squashY)), enemySpriteOptions);
+    drawSprite(enemy.sprite, anim || enemy.anim || "walk", timeMs, 0, 0, enemy.scale, enemySpriteOptions);
     enemySpriteOptions.tint = null;
     ctx.restore();
     renderDebug.enemyFallbackDrawn += 1;
@@ -4638,6 +4684,7 @@
       anim: vehicleAnim,
       hitFlash: state.vehicle.recentHitUntil > state.time
     });
+    drawVehicleNavigationLights(vehicleConfig, state.vehicle);
     drawVehicleShield(state.vehicle, timeMs);
     ctx.restore();
     drawFxParticles();
@@ -4668,6 +4715,7 @@
       vehicleRasterDrawn: false,
       vehicleFallbackDrawn: false,
       vehicleShieldDrawn: false,
+      vehicleNavigationLightsDrawn: 0,
       vehicleImageStatus: "none",
       runTrailerRasterDrawn: false,
       runTrailerFallbackDrawn: false,

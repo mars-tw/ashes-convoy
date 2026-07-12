@@ -4,7 +4,7 @@ const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 3;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R66", CACHE_VERSION: "ashes-convoy-r66-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R67", CACHE_VERSION: "ashes-convoy-r67-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -826,7 +826,7 @@ const WEAPON_POWERUPS = {
     },
     spread: {
       label: "散射",
-      visual: { id: "scatter", shape: "pellet", core: "#8fe388", edge: "#e0ffd3", trail: "#4f9a63", trailShape: "debris", trailLife: 0.14, trailSize: 1.15, trailStretch: 1.2, length: 5, width: 4 },
+      visual: { id: "scatter", shape: "pellet", core: "#d39a4a", edge: "#ffe0a3", trail: "#8b5a2b", trailShape: "debris", trailLife: 0.14, trailSize: 1.15, trailStretch: 1.2, length: 5, width: 4 },
       projectilesAdd: 2,
       spreadAdd: 0.06,
       damageMul: 0.72
@@ -842,7 +842,7 @@ const WEAPON_POWERUPS = {
     },
     homing: {
       label: "追蹤",
-      visual: { id: "homing", shape: "chevron", core: "#a9ff5f", edge: "#efffc4", trail: "#6cbe47", trailShape: "ember", trailLife: 0.24, trailSize: 1.45, trailStretch: 2, length: 8, width: 5 },
+      visual: { id: "homing", shape: "chevron", core: "#d8fbff", edge: "#ffffff", trail: "#78cbd8", trailShape: "ember", trailLife: 0.24, trailSize: 1.45, trailStretch: 2, length: 8, width: 5 },
       homing: true,
       turnRate: 4.5,
       projectileSpeedMul: 0.9,
@@ -1504,7 +1504,7 @@ const FX = {
     debris: "assets/fx/kenney_debris.png",
     flash: "assets/fx/kenney_flash.png"
   },
-  textureTints: ["#ffd36a", "#ff7a38", "#64ddff", "#f06cff", "#8fe388", "#a9ff5f", "#8f6a4d", "#5a514b"],
+  textureTints: ["#ffd36a", "#ff7a38", "#64ddff", "#f06cff", "#d39a4a", "#d8fbff", "#8f6a4d", "#5a514b"],
   // 擊殺爆發：依敵種類型（zombie 血綠碎塊＋骨屑 / mech 火花＋機油黑煙 / boss 多段大爆發）。
   killBurst: {
     zombie: [
@@ -1530,6 +1530,7 @@ const FX = {
         shape: "debris",
         texture: "debris",
         count: 9,
+        delay: 0.035,
         speedMin: 24,
         speedMax: 68,
         angleCenter: -Math.PI / 2,
@@ -1547,6 +1548,7 @@ const FX = {
       {
         shape: "shard",
         count: 5,
+        delay: 0.07,
         speedMin: 30,
         speedMax: 82,
         angleCenter: -Math.PI / 2,
@@ -1565,6 +1567,7 @@ const FX = {
         shape: "smoke",
         texture: "smoke",
         count: 2,
+        delay: 0.11,
         speedMin: 5,
         speedMax: 14,
         angleCenter: -Math.PI / 2,
@@ -1602,6 +1605,7 @@ const FX = {
       {
         shape: "spark",
         count: 10,
+        delay: 0.025,
         speedMin: 50,
         speedMax: 120,
         angleCenter: -Math.PI / 2,
@@ -1620,6 +1624,7 @@ const FX = {
         shape: "smoke",
         texture: "smoke",
         count: 4,
+        delay: 0.11,
         speedMin: 6,
         speedMax: 18,
         angleCenter: -Math.PI / 2,
@@ -1638,6 +1643,7 @@ const FX = {
         shape: "debris",
         texture: "debris",
         count: 3,
+        delay: 0.065,
         speedMin: 22,
         speedMax: 62,
         angleCenter: -Math.PI / 2,
