@@ -61,6 +61,8 @@
   const vehicleImages = {};
   const runTrailerImages = {};
   const companionImages = {};
+  const fxTextureImages = {};
+  const fxTextureTintCache = Object.create(null);
 
   function detectConstrainedDevice() {
     const navigatorInfo = root.navigator || {};
@@ -105,6 +107,15 @@
   };
   const fxExhaustLayers = {};
   const fxVignetteCache = {};
+
+  function weaponVisual(mode) {
+    const modes = (config.WEAPON_POWERUPS && config.WEAPON_POWERUPS.modes) || {};
+    const requested = modes[mode] || modes.standard || {};
+    return requested.visual || (modes.standard && modes.standard.visual) || {
+      id: "standard", shape: "capsule", core: "#ffd36a", edge: "#fff1b8", trail: "#d5963f",
+      trailShape: "spark", trailLife: 0.2, trailSize: 1.5, trailStretch: 2.4, length: 8, width: 3
+    };
+  }
 
   function hashSeed(text) {
     const source = String(text == null ? "seed" : text);
@@ -196,10 +207,9 @@
     fx.resetFxState(fxState);
   }
 
-  function fxTrailColor(vehicleId) {
-    const spark = FXC && FXC.hitSpark;
-    if (!spark) return "#ffd76a";
-    return (spark.colorsByVehicle && spark.colorsByVehicle[vehicleId]) || spark.defaultColor || "#ffd76a";
+  function fxTrailColor(projectile) {
+    if (projectile && projectile.color) return projectile.color;
+    return weaponVisual(projectile && projectile.weaponMode).trail;
   }
 
   function fxExhaustLayer(environment, spec) {
@@ -289,11 +299,17 @@
     // 子彈曳光（trailEvery 於低品質自動抽疏）
     for (let i = 0; i < state.projectiles.length; i += 1) {
       const projectile = state.projectiles[i];
+      const visual = weaponVisual(projectile.weaponMode);
       fxTrailSpec.x = projectile.x - projectile.vx * 0.012;
       fxTrailSpec.y = projectile.y - projectile.vy * 0.012;
       fxTrailSpec.vx = projectile.vx * 0.08;
       fxTrailSpec.vy = projectile.vy * 0.08;
-      fxTrailSpec.color = fxTrailColor(projectile.vehicleId);
+      fxTrailSpec.life = visual.trailLife;
+      fxTrailSpec.size = visual.trailSize;
+      fxTrailSpec.sizeEnd = Math.max(0.2, visual.trailSize * 0.18);
+      fxTrailSpec.stretch = visual.trailStretch;
+      fxTrailSpec.shape = visual.trailShape;
+      fxTrailSpec.color = fxTrailColor(projectile);
       fx.spawnTrailPoint(fxState, fxTrailSpec);
     }
 
@@ -464,6 +480,67 @@
     if (!record) return "none";
     if (record.status === "loaded" && record.image.complete && record.image.naturalWidth > 0) return "loaded";
     return record.status;
+  }
+
+  // Kenney 粒子紋理只在載入時建立固定 tint atlas；逐幀渲染僅 drawImage，不做 filter / 配色運算。
+  function buildFxTextureTint(textureName, tint) {
+    const record = fxTextureImages[textureName];
+    if (!record || record.status !== "loaded" || !record.image.naturalWidth) return null;
+    const key = `${textureName}:${tint || "base"}`;
+    if (fxTextureTintCache[key]) return fxTextureTintCache[key];
+    const buffer = root.document.createElement("canvas");
+    buffer.width = record.image.naturalWidth;
+    buffer.height = record.image.naturalHeight;
+    const bufferCtx = buffer.getContext("2d");
+    bufferCtx.imageSmoothingEnabled = true;
+    bufferCtx.clearRect(0, 0, buffer.width, buffer.height);
+    bufferCtx.drawImage(record.image, 0, 0);
+    if (tint) {
+      bufferCtx.globalCompositeOperation = "multiply";
+      bufferCtx.fillStyle = tint;
+      bufferCtx.fillRect(0, 0, buffer.width, buffer.height);
+      bufferCtx.globalCompositeOperation = "destination-in";
+      bufferCtx.drawImage(record.image, 0, 0);
+      bufferCtx.globalCompositeOperation = "source-over";
+    }
+    fxTextureTintCache[key] = buffer;
+    return buffer;
+  }
+
+  function prepareFxTextureTints(textureName) {
+    buildFxTextureTint(textureName, null);
+    const tints = (FXC && FXC.textureTints) || [];
+    for (let i = 0; i < tints.length; i += 1) buildFxTextureTint(textureName, tints[i]);
+  }
+
+  function preloadFxTextures() {
+    if (!FXC || typeof root.Image !== "function") return;
+    const textures = FXC.textures || {};
+    Object.keys(textures).forEach((textureName) => {
+      const src = textures[textureName];
+      if (!src || fxTextureImages[textureName]) return;
+      const record = { image: new root.Image(), status: "loading", src };
+      record.image.onload = () => {
+        record.status = "loaded";
+        prepareFxTextureTints(textureName);
+        draw();
+      };
+      record.image.onerror = () => {
+        record.status = "failed";
+        draw();
+      };
+      record.image.decoding = "async";
+      record.image.src = src;
+      fxTextureImages[textureName] = record;
+    });
+  }
+
+  function fxTextureStatus() {
+    const names = Object.keys((FXC && FXC.textures) || {});
+    if (!names.length) return "none";
+    if (names.some((name) => !fxTextureImages[name] || fxTextureImages[name].status === "loading")) return "loading";
+    if (names.some((name) => fxTextureImages[name].status !== "loaded")) return "failed";
+    return "loaded";
   }
 
   function preloadEnemyImages() {
@@ -2193,6 +2270,7 @@
         damageSources: projectile.damageSources,
         bonusProjectile: true,
         vehicleId: projectile.vehicleId,
+        weaponMode: "fracture",
         pierce: 0,
         hitIds,
         radius: 4,
@@ -2419,6 +2497,7 @@
             fxHitOpts.y = projectile.y;
             fxHitOpts.angle = projectile.rotation + Math.PI;
             fxHitOpts.vehicleId = projectile.vehicleId;
+            fxHitOpts.color = weaponVisual(projectile.weaponMode).core;
             fx.spawnHitSpark(fxState, FXC, fxHitOpts, fxRng);
           }
           addEffect({
@@ -2508,6 +2587,7 @@
             fxHitOpts.y = projectile.y;
             fxHitOpts.angle = projectile.rotation + Math.PI;
             fxHitOpts.vehicleId = projectile.vehicleId;
+            fxHitOpts.color = weaponVisual(projectile.weaponMode).core;
             fx.spawnHitSpark(fxState, FXC, fxHitOpts, fxRng);
           }
           addEffect({
@@ -2704,6 +2784,7 @@
       damageSources: [{ key: "companion", ratio: 1 }],
       bonusProjectile: false,
       vehicleId: state.vehicleId,
+      weaponMode: "standard",
       pierce: 0,
       hitIds: {},
       radius: weapon.projectileRadius || 3,
@@ -3043,6 +3124,56 @@
     renderDebug.backgroundRasterDrawn = true;
     renderDebug.backgroundImageStatus = "loaded";
     return true;
+  }
+
+  // 路面細節疊層獨立於底圖，因此 raster / fallback 都能共享；固定幾何避免引入遊戲 RNG。
+  function drawRoadDetailOverlay() {
+    if (currentEnvironment() !== "land") return;
+    const left = config.LOGIC.roadLeft;
+    const right = config.LOGIC.roadRight;
+    const roadWidth = right - left;
+    const scroll = state ? state.scroll : (idleTime * 42) % 32;
+    const low = performanceState.quality === "low" || fxLevelSetting() === "reduced";
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(left, 0, roadWidth, H);
+    ctx.clip();
+
+    ctx.strokeStyle = "rgba(8, 10, 11, 0.2)";
+    ctx.lineWidth = 2.1;
+    const trackOffset = (scroll * 1.05) % 54;
+    for (let y = -54 + trackOffset; y < H + 54; y += low ? 108 : 54) {
+      const sway = Math.sin((y + 37) * 0.07) * 1.4;
+      for (let lane = 0; lane < 2; lane += 1) {
+        const x = left + roadWidth * (lane ? 0.68 : 0.32) + sway;
+        ctx.beginPath();
+        ctx.moveTo(x - 2.5, y);
+        ctx.lineTo(x - 1.4, y + 38);
+        ctx.moveTo(x + 2.5, y + 6);
+        ctx.lineTo(x + 1.4, y + 44);
+        ctx.stroke();
+      }
+    }
+
+    ctx.strokeStyle = "rgba(181, 160, 126, 0.17)";
+    ctx.lineWidth = 0.8;
+    const crackStep = low ? 132 : 88;
+    for (let y = -crackStep + (scroll * 1.17) % crackStep; y < H + crackStep; y += crackStep) {
+      const x = left + 14 + ((Math.abs(Math.floor(y / crackStep)) * 47 + 19) % Math.max(24, Math.floor(roadWidth - 28)));
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + 5, y + 8);
+      ctx.lineTo(x + 1, y + 15);
+      ctx.lineTo(x + 10, y + 24);
+      ctx.moveTo(x + 4, y + 9);
+      ctx.lineTo(x + 11, y + 7);
+      ctx.moveTo(x + 2, y + 16);
+      ctx.lineTo(x - 5, y + 21);
+      ctx.stroke();
+    }
+    ctx.restore();
+    renderDebug.roadDetailDrawn = true;
+    renderDebug.roadDetailTier = low ? "low" : "high";
   }
 
   function drawLandBackground(timeMs) {
@@ -3596,12 +3727,13 @@
       ? config.WEAPON_POWERUPS.modes[drop.mode]
       : null;
     const time = stateTime() + drop.age * 0.3;
+    const visual = weaponVisual(drop.mode);
     const bobY = Math.sin(time * TAU * 1.2) * 1.3;
     const y = drop.y + bobY;
     ctx.save();
     if (fxLevelSetting() !== "off") {
       ctx.globalAlpha = 0.22 + 0.1 * Math.sin(time * TAU * 1.8);
-      ctx.fillStyle = "#ffd27f";
+      ctx.fillStyle = visual.core;
       ctx.beginPath();
       ctx.arc(drop.x, y, 14, 0, TAU);
       ctx.fill();
@@ -3610,20 +3742,130 @@
     ctx.translate(Math.round(drop.x), Math.round(y));
     ctx.fillStyle = "#2a2831";
     ctx.fillRect(-8, -7, 16, 14);
-    ctx.fillStyle = "#5ed4cb";
+    ctx.fillStyle = visual.trail;
     ctx.fillRect(-6, -5, 12, 4);
-    ctx.fillStyle = "#ffd27f";
+    ctx.fillStyle = visual.core;
     ctx.fillRect(-2, -7, 4, 14);
     ctx.strokeStyle = "#f4ead8";
     ctx.lineWidth = 1;
     ctx.strokeRect(-7.5, -6.5, 15, 13);
-    ctx.fillStyle = "#ffd27f";
-    ctx.font = "800 6px system-ui, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(mode && mode.label ? mode.label.slice(0, 1) : "彈", 0, 1);
+    ctx.save();
+    ctx.translate(0, 1);
+    ctx.scale(0.72, 0.72);
+    traceWeaponShape(visual, 1);
+    ctx.restore();
     ctx.restore();
     renderDebug.weaponPowerupDrawn += 1;
+  }
+
+  function traceWeaponShape(visual, scale) {
+    const length = (visual.length || 8) * (scale || 1);
+    const width = (visual.width || 3) * (scale || 1);
+    ctx.beginPath();
+    if (visual.shape === "diamond") {
+      ctx.moveTo(length * 0.58, 0);
+      ctx.lineTo(0, -width * 0.62);
+      ctx.lineTo(-length * 0.58, 0);
+      ctx.lineTo(0, width * 0.62);
+      ctx.closePath();
+    } else if (visual.shape === "beam") {
+      ctx.rect(-length * 0.58, -width * 0.5, length * 1.16, width);
+    } else if (visual.shape === "pellet") {
+      ctx.moveTo(length * 0.52, 0);
+      ctx.lineTo(-length * 0.42, -width * 0.58);
+      ctx.lineTo(-length * 0.18, 0);
+      ctx.lineTo(-length * 0.42, width * 0.58);
+      ctx.closePath();
+    } else if (visual.shape === "flame") {
+      ctx.moveTo(length * 0.58, 0);
+      ctx.bezierCurveTo(length * 0.1, -width * 0.75, -length * 0.18, -width * 0.55, -length * 0.56, 0);
+      ctx.bezierCurveTo(-length * 0.12, width * 0.12, -length * 0.08, width * 0.78, length * 0.58, 0);
+      ctx.closePath();
+    } else if (visual.shape === "chevron") {
+      ctx.moveTo(length * 0.56, 0);
+      ctx.lineTo(-length * 0.26, -width * 0.65);
+      ctx.lineTo(-length * 0.06, 0);
+      ctx.lineTo(-length * 0.26, width * 0.65);
+      ctx.closePath();
+    } else {
+      ctx.moveTo(length * 0.52, 0);
+      ctx.arc(0, 0, width * 0.5, -Math.PI / 2, Math.PI / 2);
+      ctx.lineTo(-length * 0.52, width * 0.5);
+      ctx.lineTo(-length * 0.52, -width * 0.5);
+      ctx.closePath();
+    }
+    ctx.fillStyle = visual.core;
+    ctx.fill();
+    ctx.strokeStyle = visual.edge;
+    ctx.lineWidth = Math.max(0.55, width * 0.18);
+    ctx.stroke();
+  }
+
+  function drawProjectile(projectile) {
+    const visual = weaponVisual(projectile.weaponMode);
+    const scale = projectile.fractureShard ? 0.72 : projectile.scale || 1;
+    const length = (visual.length || 8) * scale;
+    ctx.save();
+    ctx.translate(projectile.x, projectile.y);
+    ctx.rotate(projectile.rotation || 0);
+    ctx.lineCap = "round";
+    ctx.strokeStyle = visual.trail;
+    if (visual.id === "laser") {
+      ctx.globalAlpha = 0.62;
+      ctx.lineWidth = 2.4 * scale;
+      ctx.beginPath();
+      ctx.moveTo(-length * 2.8, 0);
+      ctx.lineTo(-length * 0.3, 0);
+      ctx.stroke();
+    } else if (visual.id === "fracture") {
+      ctx.globalAlpha = 0.56;
+      ctx.lineWidth = 1 * scale;
+      ctx.beginPath();
+      ctx.moveTo(-length * 2, -2 * scale);
+      ctx.lineTo(-length * 0.28, 0);
+      ctx.moveTo(-length * 1.55, 2 * scale);
+      ctx.lineTo(-length * 0.28, 0);
+      ctx.stroke();
+    } else if (visual.id === "ember") {
+      ctx.globalAlpha = 0.48;
+      ctx.fillStyle = visual.trail;
+      ctx.beginPath();
+      ctx.arc(-length * 1.35, 0, 2.2 * scale, 0, TAU);
+      ctx.arc(-length * 0.75, 0, 1.55 * scale, 0, TAU);
+      ctx.fill();
+    } else if (visual.id === "scatter") {
+      ctx.globalAlpha = 0.54;
+      ctx.fillStyle = visual.trail;
+      [-1, 0, 1].forEach((side) => {
+        ctx.beginPath();
+        ctx.arc(-length * (0.8 + Math.abs(side) * 0.35), side * 2.1 * scale, 0.9 * scale, 0, TAU);
+        ctx.fill();
+      });
+    } else if (visual.id === "homing") {
+      ctx.globalAlpha = 0.55;
+      ctx.lineWidth = 1.2 * scale;
+      ctx.beginPath();
+      ctx.moveTo(-length * 1.8, 2 * scale);
+      ctx.quadraticCurveTo(-length, -3 * scale, -length * 0.25, 0);
+      ctx.stroke();
+    } else {
+      ctx.globalAlpha = 0.48;
+      ctx.lineWidth = 1.5 * scale;
+      ctx.beginPath();
+      ctx.moveTo(-length * 1.8, 0);
+      ctx.lineTo(-length * 0.25, 0);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    traceWeaponShape(visual, scale);
+    ctx.fillStyle = visual.edge;
+    ctx.globalAlpha = 0.88;
+    ctx.beginPath();
+    ctx.arc(length * 0.2, 0, Math.max(0.45, (visual.width || 3) * scale * 0.16), 0, TAU);
+    ctx.fill();
+    ctx.restore();
+    const key = visual.id || "standard";
+    renderDebug.projectileVisualModes[key] = (renderDebug.projectileVisualModes[key] || 0) + 1;
   }
 
   function drawSupplyPickup(effect) {
@@ -3726,6 +3968,28 @@
   // ── DSFx 渲染端 ──────────────────────────────────────────────
 
   function drawFxParticle(p) {
+    if (p.texture) {
+      if (p.texture === "flash" && meta.settings && meta.settings.reducedFlash) return;
+      const image = fxTextureTintCache[`${p.texture}:${p.color}`] || fxTextureTintCache[`${p.texture}:base`];
+      if (image) {
+        const drawSize = Math.max(3, p.size * (p.texture === "flash" ? 2.5 : 2.15));
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation);
+        ctx.globalAlpha = p.alpha * (p.texture === "smoke" ? 0.48 : p.texture === "debris" ? 0.78 : 0.9);
+        if (
+          (p.texture === "fire" || p.texture === "flash") &&
+          performanceState.quality !== "low" &&
+          fxLevelSetting() === "full" &&
+          !(meta.settings && meta.settings.reducedFlash)
+        ) ctx.globalCompositeOperation = "lighter";
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(image, -drawSize * 0.5, -drawSize * 0.5, drawSize, drawSize);
+        ctx.restore();
+        renderDebug.texturedParticlesDrawn += 1;
+        return;
+      }
+    }
     ctx.fillStyle = p.color;
     if (p.stretch > 1.01) {
       // 速度向拉伸（風速線 / 流星 / 曳光）
@@ -4023,6 +4287,52 @@
     renderDebug.vignetteDrawn = true;
   }
 
+  function drawPulseVignette(cacheName, color, alpha) {
+    const key = `pulse:${cacheName}:${color}`;
+    let gradient = fxVignetteCache[key];
+    if (!gradient) {
+      const r = hexChannel(color, 0);
+      const g = hexChannel(color, 1);
+      const b = hexChannel(color, 2);
+      gradient = ctx.createRadialGradient(W * 0.5, H * 0.48, H * 0.2, W * 0.5, H * 0.48, H * 0.7);
+      gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0)`);
+      gradient.addColorStop(0.64, `rgba(${r}, ${g}, ${b}, 0.18)`);
+      gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 1)`);
+      fxVignetteCache[key] = gradient;
+    }
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
+
+  function drawBossArrivalVignette() {
+    const spec = FXC && FXC.bossArrival;
+    if (
+      !state || !spec || state.waveBannerKind !== "boss" || fxLevelSetting() !== "full" ||
+      performanceState.quality === "low" || (meta.settings && meta.settings.reducedFlash)
+    ) return;
+    const elapsed = state.time - state.waveBannerStart;
+    if (elapsed < 0 || elapsed > spec.duration) return;
+    const envelope = Math.sin(Math.PI * Math.min(1, elapsed / spec.duration));
+    const pulse = 0.62 + 0.38 * Math.sin(elapsed * spec.pulseHz * TAU);
+    drawPulseVignette("boss", spec.color, spec.strength * envelope * pulse);
+    renderDebug.bossArrivalVignetteDrawn = true;
+  }
+
+  function drawLowHpPulse() {
+    const spec = FXC && FXC.lowHpPulse;
+    if (!state || !spec || fxLevelSetting() !== "full" || (meta.settings && meta.settings.reducedFlash)) return;
+    const hpPct = state.vehicle.maxHp > 0 ? state.vehicle.hp / state.vehicle.maxHp : 0;
+    if (hpPct <= 0 || hpPct > spec.threshold) return;
+    const danger = 1 - hpPct / spec.threshold;
+    const breath = 0.5 + 0.5 * Math.sin(state.time * spec.pulseHz * TAU - Math.PI * 0.5);
+    const alpha = spec.minAlpha + (spec.maxAlpha - spec.minAlpha) * (0.35 + breath * 0.65) * (0.55 + danger * 0.45);
+    drawPulseVignette("low_hp", spec.color, alpha);
+    renderDebug.lowHpPulseDrawn = true;
+  }
+
   function starDustLayer() {
     if (fxStarLayer !== undefined) return fxStarLayer;
     const layers = fx.environmentLayers(FXC, "space");
@@ -4140,8 +4450,8 @@
       ctx.fillRect(W - side, 0, side, H);
     }
     if (event.id === "sandstorm") {
-      ctx.globalAlpha = 0.22;
-      ctx.fillStyle = "#d3a45f";
+      ctx.globalAlpha = performanceState.quality === "low" ? 0.2 : 0.3;
+      ctx.fillStyle = "#c89443";
       ctx.fillRect(0, 0, W, H);
       ctx.globalAlpha = 0.24;
       ctx.strokeStyle = "#f0d199";
@@ -4161,6 +4471,9 @@
         ctx.stroke();
       }
     } else if (event.id === "undertow") {
+      ctx.globalAlpha = performanceState.quality === "low" ? 0.16 : 0.24;
+      ctx.fillStyle = "#0a4264";
+      ctx.fillRect(0, 0, W, H);
       ctx.globalAlpha = 0.2;
       ctx.strokeStyle = "#b9fff2";
       for (let y = -20 + (state.scroll * 1.6) % 58; y < H + 58; y += 29) {
@@ -4236,20 +4549,7 @@
     state.enemyProjectiles.forEach(drawEnemyProjectile);
     state.supplyDrops.forEach(drawSupplyDrop);
     state.weaponPowerups.forEach(drawWeaponPowerup);
-    state.projectiles.forEach((projectile) => {
-      drawSprite(projectile.sprite, "move", timeMs, projectile.x - projectile.vx * 0.034, projectile.y - projectile.vy * 0.034, projectile.scale, {
-        rotation: projectile.rotation,
-        alpha: 0.18
-      });
-      drawSprite(projectile.sprite, "move", timeMs, projectile.x - projectile.vx * 0.018, projectile.y - projectile.vy * 0.018, projectile.scale, {
-        rotation: projectile.rotation,
-        alpha: 0.34
-      });
-      drawSprite(projectile.sprite, "move", timeMs, projectile.x, projectile.y, projectile.scale, {
-        rotation: projectile.rotation,
-        alpha: 0.98
-      });
-    });
+    state.projectiles.forEach(drawProjectile);
     state.enemies.forEach((enemy) => {
       const alpha = enemy.hitFlash > 0 && flourishFxEnabled() ? 0.7 : 1;
       const anim = enemy.boss && enemy.hp < enemy.maxHp * 0.33 ? "rage" : enemy.anim || "walk";
@@ -4368,7 +4668,15 @@
       fxMaxParticles: fxState ? fxState.maxParticles : 0,
       fxQuality: fxState ? fxState.quality : "none",
       fxLevel: fxLevelSetting(),
+      fxTextureStatus: fxTextureStatus(),
+      fxTextureTintCount: Object.keys(fxTextureTintCache).length,
+      texturedParticlesDrawn: 0,
       vignetteDrawn: false,
+      bossArrivalVignetteDrawn: false,
+      lowHpPulseDrawn: false,
+      roadDetailDrawn: false,
+      roadDetailTier: "none",
+      projectileVisualModes: {},
       waveBannerDrawn: false,
       waveCelebrationDrawn: false,
       comboDrawn: false,
@@ -4392,6 +4700,7 @@
       ctx.translate(Math.sin(state.time * 91) * amp, Math.cos(state.time * 73) * amp);
     }
     drawBackground(timeMs);
+    drawRoadDetailOverlay();
     if (state && FXC && fxEnabled() && currentEnvironment() === "space") drawStarDust();
     if (state) drawGame(timeMs);
     else drawIdlePreview(timeMs);
@@ -4405,6 +4714,10 @@
       // per-environment 色彩分級薄疊；low 品質由 vignetteParams 回 null 整層關閉
       const vignette = fx.vignetteParams(FXC, currentEnvironment(), performanceState.quality);
       if (vignette) drawVignette(currentEnvironment(), vignette);
+    }
+    if (state) {
+      drawBossArrivalVignette();
+      drawLowHpPulse();
     }
     displayCtx.clearRect(0, 0, DISPLAY_W, DISPLAY_H);
     displayCtx.imageSmoothingEnabled = false;
@@ -4460,6 +4773,7 @@
     preloadRunTrailerImages();
     preloadCompanionImages();
     preloadEnemyImages();
+    preloadFxTextures();
     bindInput();
     // 音效解鎖：首次 pointerdown / keydown resume AudioContext（autoplay 政策）
     if (audio && typeof audio.installUnlockHandlers === "function") audio.installUnlockHandlers(root);

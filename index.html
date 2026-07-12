@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#111317" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="manifest.webmanifest?v=R65" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R65" />
+    <link rel="manifest" href="manifest.webmanifest?v=R66" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R66" />
     <title>灰燼護航</title>
     <style>
       :root {
@@ -208,6 +208,32 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        transition: color 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+      }
+
+      .hud-number-pop {
+        animation: hud-number-pop 180ms cubic-bezier(0.2, 0.9, 0.3, 1.35);
+        transform-origin: center;
+      }
+
+      @keyframes hud-number-pop {
+        0% { transform: translateY(0) scale(1); }
+        42% { transform: translateY(-3px) scale(1.14); color: #fff2bd; }
+        100% { transform: translateY(0) scale(1); }
+      }
+
+      .hud.is-reduced .hud-number-pop {
+        animation: none;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .hud-number-pop {
+          animation: none;
+        }
+
+        .mods {
+          transition: none;
+        }
       }
 
       body.font-small .hud,
@@ -1586,7 +1612,7 @@
             <span id="trailerBonusText">HP +0% · 傷害 +0% · 射速 +0% · 承傷 -0%</span>
           </div>
           <section class="story-log-section" id="storyLogSection" aria-label="無線電日誌" hidden>
-            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R65" alt="熹" decoding="async" draggable="false" />
+            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R66" alt="熹" decoding="async" draggable="false" />
             <div class="story-log-list" id="storyLogList"></div>
           </section>
           <div class="trailer-room-body">
@@ -1772,7 +1798,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R65";
+        var key = "ashes_convoy_html_boot_reload_R66";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -1789,15 +1815,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R65"></script>
-    <script src="src/sprites.js?v=R65"></script>
-    <script src="src/sprite-renderer.js?v=R65"></script>
-    <script src="src/shelter-scene.js?v=R65"></script>
-    <script src="src/config.js?v=R65"></script>
-    <script src="src/rules.js?v=R65"></script>
-    <script src="src/fx.js?v=R65"></script>
-    <script src="src/audio.js?v=R65"></script>
-    <script src="src/game.js?v=R65"></script>
-    <script src="src/ui.js?v=R65"></script>
+    <script src="src/version.js?v=R66"></script>
+    <script src="src/sprites.js?v=R66"></script>
+    <script src="src/sprite-renderer.js?v=R66"></script>
+    <script src="src/shelter-scene.js?v=R66"></script>
+    <script src="src/config.js?v=R66"></script>
+    <script src="src/rules.js?v=R66"></script>
+    <script src="src/fx.js?v=R66"></script>
+    <script src="src/audio.js?v=R66"></script>
+    <script src="src/game.js?v=R66"></script>
+    <script src="src/ui.js?v=R66"></script>
   </body>
 </html>

@@ -1418,9 +1418,22 @@
     els.eventBannerBody.textContent = banner.body || "";
   }
 
+  function setAnimatedHudValue(element, text, value, reduced) {
+    if (!element) return;
+    const next = String(value);
+    const previous = element.dataset.hudValue;
+    element.textContent = text;
+    element.dataset.hudValue = next;
+    if (reduced || previous == null || previous === next) return;
+    element.classList.remove("hud-number-pop");
+    void element.offsetWidth;
+    element.classList.add("hud-number-pop");
+  }
+
   function renderHud(state) {
     if (!state || (state.mode !== "playing" && state.mode !== "paused")) {
       els.hud.classList.remove("is-visible");
+      els.hud.classList.remove("is-reduced");
       renderGateChoices(null);
       renderGateChoiceOverlay(null);
       renderEventBanner(null);
@@ -1428,6 +1441,8 @@
       return;
     }
     els.hud.classList.add("is-visible");
+    const reducedMotion = !!(meta.settings && meta.settings.reducedFlash);
+    els.hud.classList.toggle("is-reduced", reducedMotion);
     renderGateChoices(state);
     renderGateChoiceOverlay(state);
     renderEventBanner(state);
@@ -1438,17 +1453,21 @@
     const shield = Math.max(0, Number.isFinite(state.vehicle.shield) ? state.vehicle.shield : 0);
     const shieldPct = maxShield > 0 ? Math.max(0, Math.min(1, shield / maxShield)) : 0;
     els.hudVehicle.textContent = vehicle.name;
-    els.hudHpText.textContent = shield > 0
-      ? `HP ${Math.ceil(state.vehicle.hp)} / ${state.vehicle.maxHp} · 盾 ${Math.ceil(shield)}`
-      : `HP ${Math.ceil(state.vehicle.hp)} / ${state.vehicle.maxHp}`;
+    const hpValue = Math.ceil(state.vehicle.hp);
+    setAnimatedHudValue(
+      els.hudHpText,
+      shield > 0 ? `HP ${hpValue} / ${state.vehicle.maxHp} · 盾 ${Math.ceil(shield)}` : `HP ${hpValue} / ${state.vehicle.maxHp}`,
+      `${hpValue}:${Math.ceil(shield)}`,
+      reducedMotion
+    );
     els.hpBar.style.width = `${Math.round(hpPct * 100)}%`;
     if (els.shieldBar && els.shieldBarWrap) {
       els.shieldBarWrap.hidden = shield <= 0;
       els.shieldBar.style.width = `${Math.round(shieldPct * 100)}%`;
     }
-    els.hudWave.textContent = `第 ${state.wave} 波`;
-    els.hudKills.textContent = `擊殺 ${state.stats.kills}`;
-    els.hudParts.textContent = `零件 ${state.stats.partsPreview}`;
+    setAnimatedHudValue(els.hudWave, `第 ${state.wave} 波`, state.wave, reducedMotion);
+    setAnimatedHudValue(els.hudKills, `擊殺 ${state.stats.kills}`, state.stats.kills, reducedMotion);
+    setAnimatedHudValue(els.hudParts, `零件 ${state.stats.partsPreview}`, state.stats.partsPreview, reducedMotion);
     const mods = [];
     const effectiveMods = state.effectiveRunMods || state.runMods;
     if (state.runMods.weaponMode && state.runMods.weaponMode !== "standard") {
@@ -1462,13 +1481,22 @@
     if (state.runMods.fireIntervalMul < 1) mods.push(`射速 x${(1 / state.runMods.fireIntervalMul).toFixed(2)}`);
     if (state.runMods.projectileAdd > 0) mods.push(`彈道 +${state.runMods.projectileAdd}`);
     els.hudMods.textContent = `增益：${mods.length ? mods.join(" · ") : "無"}`;
+    const currentMode = state.runMods.weaponMode || "standard";
+    const currentModeConfig = config.WEAPON_POWERUPS && config.WEAPON_POWERUPS.modes
+      ? config.WEAPON_POWERUPS.modes[currentMode] || config.WEAPON_POWERUPS.modes.standard
+      : null;
+    const currentVisual = currentModeConfig && currentModeConfig.visual;
+    els.hud.dataset.weaponMode = (currentVisual && currentVisual.id) || currentMode;
+    els.hudMods.style.color = currentVisual ? currentVisual.edge : "";
+    els.hudMods.style.borderColor = currentVisual ? `${currentVisual.core}99` : "";
+    els.hudMods.style.boxShadow = currentVisual ? `inset 3px 0 ${currentVisual.core}, 0 6px 16px rgba(0, 0, 0, 0.22)` : "";
 
     const boss = state.enemies.find((enemy) => enemy.boss);
     if (boss) {
       const pct = Math.max(0, boss.hp / boss.maxHp);
       els.bossHud.classList.add("is-visible");
       els.bossName.textContent = boss.name || (config.ENEMIES[boss.enemyId] && config.ENEMIES[boss.enemyId].name) || "Boss";
-      els.bossHpText.textContent = `${Math.round(pct * 100)}%`;
+      setAnimatedHudValue(els.bossHpText, `${Math.round(pct * 100)}%`, Math.round(pct * 100), reducedMotion);
       els.bossBar.style.width = `${Math.round(pct * 100)}%`;
       els.bossTelegraph.textContent = boss.telegraphText || (boss.pendingPhase && boss.pendingPhase.label) || "";
     } else {

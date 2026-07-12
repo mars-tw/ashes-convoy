@@ -4,7 +4,7 @@ const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 3;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R65", CACHE_VERSION: "ashes-convoy-r65-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R66", CACHE_VERSION: "ashes-convoy-r66-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -821,16 +821,19 @@ const WEAPON_POWERUPS = {
   levelDamageMul: [1, 1.12, 1.24, 1.38, 1.55],
   modes: {
     standard: {
-      label: "標準彈"
+      label: "標準彈",
+      visual: { id: "standard", shape: "capsule", core: "#ffd36a", edge: "#fff1b8", trail: "#d5963f", trailShape: "spark", trailLife: 0.2, trailSize: 1.5, trailStretch: 2.4, length: 8, width: 3 }
     },
     spread: {
       label: "散射",
+      visual: { id: "scatter", shape: "pellet", core: "#8fe388", edge: "#e0ffd3", trail: "#4f9a63", trailShape: "debris", trailLife: 0.14, trailSize: 1.15, trailStretch: 1.2, length: 5, width: 4 },
       projectilesAdd: 2,
       spreadAdd: 0.06,
       damageMul: 0.72
     },
     laser: {
       label: "雷射",
+      visual: { id: "laser", shape: "beam", core: "#f06cff", edge: "#ffe0ff", trail: "#a94fcc", trailShape: "spark", trailLife: 0.12, trailSize: 1.2, trailStretch: 5.8, length: 14, width: 2 },
       pierceAdd: 3,
       projectileSpeedMul: 1.35,
       spread: 0,
@@ -839,6 +842,7 @@ const WEAPON_POWERUPS = {
     },
     homing: {
       label: "追蹤",
+      visual: { id: "homing", shape: "chevron", core: "#a9ff5f", edge: "#efffc4", trail: "#6cbe47", trailShape: "ember", trailLife: 0.24, trailSize: 1.45, trailStretch: 2, length: 8, width: 5 },
       homing: true,
       turnRate: 4.5,
       projectileSpeedMul: 0.9,
@@ -846,6 +850,7 @@ const WEAPON_POWERUPS = {
     },
     fracture: {
       label: "裂片",
+      visual: { id: "fracture", shape: "diamond", core: "#64ddff", edge: "#e0f8ff", trail: "#3b91c8", trailShape: "shard", trailLife: 0.28, trailSize: 1.45, trailStretch: 3.2, length: 8, width: 5 },
       damageMul: 0.68,
       shardCount: 2,
       shardDamageMul: 0.16,
@@ -856,6 +861,7 @@ const WEAPON_POWERUPS = {
     },
     ember: {
       label: "燼燃",
+      visual: { id: "ember", shape: "flame", core: "#ff7a38", edge: "#ffe18a", trail: "#b43c22", trailShape: "ember", trailLife: 0.34, trailSize: 2, trailStretch: 1.5, length: 9, width: 5 },
       damageMul: 0.78,
       projectileSpeedMul: 0.95,
       burnTicks: 3,
@@ -1491,11 +1497,38 @@ const FX = {
     low: { maxParticles: 48, emitRateMul: 0.5, vignette: false, trailEvery: 2, envDensityMul: 0.5 }
   },
   shapes: ["spark", "smoke", "debris", "foam", "dust", "ember", "shard"],
+  // Kenney Particle Pack CC0：原圖裁切、縮圖與廢土色預調後，載入時在離屏 canvas 建立有限 tint 變體。
+  textures: {
+    smoke: "assets/fx/kenney_smoke.png",
+    fire: "assets/fx/kenney_fire.png",
+    debris: "assets/fx/kenney_debris.png",
+    flash: "assets/fx/kenney_flash.png"
+  },
+  textureTints: ["#ffd36a", "#ff7a38", "#64ddff", "#f06cff", "#8fe388", "#a9ff5f", "#8f6a4d", "#5a514b"],
   // 擊殺爆發：依敵種類型（zombie 血綠碎塊＋骨屑 / mech 火花＋機油黑煙 / boss 多段大爆發）。
   killBurst: {
     zombie: [
       {
+        shape: "spark",
+        texture: "flash",
+        count: 1,
+        speedMin: 0,
+        speedMax: 3,
+        angleCenter: -Math.PI / 2,
+        angleSpread: Math.PI * 2,
+        lifeMin: 0.08,
+        lifeMax: 0.13,
+        sizeMin: 10,
+        sizeMax: 14,
+        sizeEnd: 18,
+        colors: ["#e8b568"],
+        gravity: 0,
+        drag: 8,
+        spin: 1
+      },
+      {
         shape: "debris",
+        texture: "debris",
         count: 9,
         speedMin: 24,
         speedMax: 68,
@@ -1527,9 +1560,45 @@ const FX = {
         gravity: 110,
         drag: 1.6,
         spin: 9
+      },
+      {
+        shape: "smoke",
+        texture: "smoke",
+        count: 2,
+        speedMin: 5,
+        speedMax: 14,
+        angleCenter: -Math.PI / 2,
+        angleSpread: 1.1,
+        lifeMin: 0.35,
+        lifeMax: 0.62,
+        sizeMin: 8,
+        sizeMax: 12,
+        sizeEnd: 20,
+        colors: ["#5b5147", "#786a58"],
+        gravity: -10,
+        drag: 1.4,
+        spin: 1.2
       }
     ],
     mech: [
+      {
+        shape: "spark",
+        texture: "flash",
+        count: 1,
+        speedMin: 0,
+        speedMax: 2,
+        angleCenter: -Math.PI / 2,
+        angleSpread: Math.PI * 2,
+        lifeMin: 0.08,
+        lifeMax: 0.14,
+        sizeMin: 12,
+        sizeMax: 16,
+        sizeEnd: 20,
+        colors: ["#ffd76a"],
+        gravity: 0,
+        drag: 8,
+        spin: 2
+      },
       {
         shape: "spark",
         count: 10,
@@ -1549,6 +1618,7 @@ const FX = {
       },
       {
         shape: "smoke",
+        texture: "smoke",
         count: 4,
         speedMin: 6,
         speedMax: 18,
@@ -1563,11 +1633,49 @@ const FX = {
         gravity: -14,
         drag: 1,
         spin: 1.5
+      },
+      {
+        shape: "debris",
+        texture: "debris",
+        count: 3,
+        speedMin: 22,
+        speedMax: 62,
+        angleCenter: -Math.PI / 2,
+        angleSpread: Math.PI * 1.5,
+        lifeMin: 0.28,
+        lifeMax: 0.55,
+        sizeMin: 5,
+        sizeMax: 8,
+        sizeEnd: 3,
+        colors: ["#8f6a4d", "#55443a"],
+        gravity: 84,
+        drag: 2,
+        spin: 7
       }
     ],
     boss: [
       {
+        shape: "spark",
+        texture: "flash",
+        count: 2,
+        delay: 0,
+        speedMin: 0,
+        speedMax: 5,
+        angleCenter: -Math.PI / 2,
+        angleSpread: Math.PI * 2,
+        lifeMin: 0.12,
+        lifeMax: 0.2,
+        sizeMin: 24,
+        sizeMax: 34,
+        sizeEnd: 48,
+        colors: ["#ffe08a", "#ff9b52"],
+        gravity: 0,
+        drag: 8,
+        spin: 2
+      },
+      {
         shape: "ember",
+        texture: "fire",
         count: 14,
         delay: 0,
         speedMin: 40,
@@ -1586,6 +1694,7 @@ const FX = {
       },
       {
         shape: "debris",
+        texture: "debris",
         count: 12,
         delay: 0.16,
         speedMin: 30,
@@ -1604,6 +1713,7 @@ const FX = {
       },
       {
         shape: "smoke",
+        texture: "smoke",
         count: 8,
         delay: 0.34,
         speedMin: 8,
@@ -1626,6 +1736,7 @@ const FX = {
   hitSpark: {
     base: {
       shape: "spark",
+      texture: "flash",
       count: 4,
       speedMin: 36,
       speedMax: 92,
@@ -1641,6 +1752,45 @@ const FX = {
       drag: 5,
       spin: 0
     },
+    layers: [
+      {
+        shape: "spark",
+        texture: "flash",
+        count: 1,
+        speedMin: 0,
+        speedMax: 1,
+        angleCenter: Math.PI / 2,
+        angleSpread: Math.PI * 2,
+        lifeMin: 0.055,
+        lifeMax: 0.09,
+        sizeMin: 6,
+        sizeMax: 9,
+        sizeEnd: 13,
+        colors: ["#ffd76a"],
+        gravity: 0,
+        drag: 8,
+        spin: 0
+      },
+      {
+        shape: "debris",
+        texture: "debris",
+        useHitColor: false,
+        count: 2,
+        speedMin: 18,
+        speedMax: 44,
+        angleCenter: Math.PI / 2,
+        angleSpread: 1.2,
+        lifeMin: 0.1,
+        lifeMax: 0.22,
+        sizeMin: 3,
+        sizeMax: 5,
+        sizeEnd: 2,
+        colors: ["#8f6a4d", "#5b4c42"],
+        gravity: 30,
+        drag: 4,
+        spin: 5
+      }
+    ],
     defaultColor: "#ffd76a",
     colorsByVehicle: {
       land_rig: "#ffd27f",
@@ -2001,6 +2151,8 @@ const FX = {
     air: { color: "#e8f1f8", strength: 0.16 },
     space: { color: "#170b2e", strength: 0.4 }
   },
+  bossArrival: { duration: 2.5, pulseHz: 1.45, strength: 0.56, color: "#26080a" },
+  lowHpPulse: { threshold: 0.25, pulseHz: 0.72, minAlpha: 0.1, maxAlpha: 0.3, color: "#7f1115" },
   // 補給箱重繪：像素木箱＋圖示＋浮動＋光暈（取代青色線框）。
   supplyCrate: {
     size: 16,

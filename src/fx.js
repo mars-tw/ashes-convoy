@@ -57,6 +57,7 @@ function createParticle() {
   return {
     active: false,
     shape: "spark",
+    texture: "",
     x: 0,
     y: 0,
     vx: 0,
@@ -161,6 +162,7 @@ function spawnBurstCore(fxState, spec, rng, ox, oy, angleOverride, colorOverride
     const speed = speedMin + (speedMax - speedMin) * rng();
     p.active = true;
     p.shape = spec.shape || "spark";
+    p.texture = typeof spec.texture === "string" ? spec.texture : "";
     p.x = baseX + (rng() - 0.5) * 2 * jitterX;
     p.y = baseY + (rng() - 0.5) * 2 * jitterY;
     p.vx = Math.cos(angle) * speed;
@@ -201,6 +203,7 @@ function spawnTrailPoint(fxState, spec, rng) {
   const p = fxState.pool[index];
   p.active = true;
   p.shape = spec.shape || "spark";
+  p.texture = typeof spec.texture === "string" ? spec.texture : "";
   p.x = finiteOr(spec.x, 0) + (jitter ? (jitter() - 0.5) * 2 * finiteOr(spec.jitterX, 0) : 0);
   p.y = finiteOr(spec.y, 0) + (jitter ? (jitter() - 0.5) * 2 * finiteOr(spec.jitterY, 0) : 0);
   p.vx = finiteOr(spec.vx, 0);
@@ -305,7 +308,13 @@ function spawnHitSpark(fxState, fxConfig, opts, rng) {
   const byVehicle = table.colorsByVehicle || {};
   const color = opts.color || (opts.vehicleId && byVehicle[opts.vehicleId]) || table.defaultColor || "#ffd76a";
   const angle = Number.isFinite(opts.angle) ? opts.angle : NaN;
-  return spawnBurstCore(fxState, table.base, rng, opts.x, opts.y, angle, color);
+  const layers = Array.isArray(table.layers) && table.layers.length ? table.layers : [table.base];
+  let total = 0;
+  for (let i = 0; i < layers.length; i += 1) {
+    const spec = layers[i];
+    total += spawnBurstCore(fxState, spec, rng, opts.x, opts.y, angle, spec.useHitColor === false ? null : color);
+  }
+  return total;
 }
 
 function environmentLayers(fxConfig, environment) {
