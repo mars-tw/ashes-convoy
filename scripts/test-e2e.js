@@ -1520,7 +1520,7 @@ async function checkAdaptivePerformance(page) {
     const meta = window.__test.getMeta();
     meta.settings.performanceMode = "low";
     window.__test.setMeta(meta);
-    window.__test.step(120);
+    window.__test.samplePerformanceFrames([120], { reset: true, constrainedDevice: false });
   });
   let perf = await page.evaluate(() => window.__test.getState().performance);
   assert.strictEqual(perf.quality, "low", "locked low performance mode should force low quality");
@@ -1530,21 +1530,33 @@ async function checkAdaptivePerformance(page) {
     const meta = window.__test.getMeta();
     meta.settings.performanceMode = "high";
     window.__test.setMeta(meta);
-    for (let i = 0; i < 70; i += 1) window.__test.step(90);
+    window.__test.samplePerformanceFrames(Array(70).fill(90), { reset: true, constrainedDevice: false });
   });
   perf = await page.evaluate(() => window.__test.getState().performance);
   assert.strictEqual(perf.quality, "high", "locked high performance mode should resist auto downgrade");
 
-  await page.evaluate(() => {
+  const transitions = await page.evaluate(() => {
     const meta = window.__test.getMeta();
     meta.settings.performanceMode = "auto";
     window.__test.setMeta(meta);
-    for (let i = 0; i < 70; i += 1) window.__test.step(90);
+    window.__test.samplePerformanceFrames(Array(70).fill(90), { reset: true, constrainedDevice: false });
+    const downgraded = window.__test.getState().performance;
+    const state = window.__test.getState();
+    window.__test.setState({ wave: state.wave + 1 });
+    window.__test.samplePerformanceFrames(Array(220).fill(10));
+    return {
+      downgraded,
+      recovered: window.__test.getState().performance
+    };
   });
-  perf = await page.evaluate(() => window.__test.getState().performance);
-  assert.strictEqual(perf.quality, "low", "auto performance mode should downgrade after sustained low FPS samples");
-  assert(perf.history && perf.history.length >= 1 && perf.history.length <= 5, "performance history should keep recent downgrade/recovery events");
-  assert(perf.history[0].reason.includes("FPS"), `performance history should include a reason, got ${JSON.stringify(perf.history)}`);
+  assert.strictEqual(transitions.downgraded.quality, "low", "synthetic slow frames should produce an auto downgrade");
+  assert.strictEqual(transitions.downgraded.constrainedDevice, false, "performance transition test should bypass device preflight");
+  assert.strictEqual(transitions.downgraded.history.length, 1, "downgrade should record exactly one performance event");
+  assert(transitions.downgraded.history[0].reason.includes("FPS"), `downgrade history should include a reason, got ${JSON.stringify(transitions.downgraded.history)}`);
+  assert.strictEqual(transitions.recovered.quality, "high", "synthetic fast frames should produce a recovery on the next wave");
+  assert.strictEqual(transitions.recovered.history.length, 2, "recovery should append a second performance event");
+  assert(transitions.recovered.history.every((entry) => entry.reason.includes("FPS")), `performance history should keep downgrade/recovery reasons, got ${JSON.stringify(transitions.recovered.history)}`);
+  assert(transitions.recovered.history.length <= 5, "performance history should remain bounded");
   await page.evaluate(() => {
     const meta = window.__test.getMeta();
     meta.settings.performanceMode = "high";

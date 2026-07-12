@@ -2887,6 +2887,27 @@
     }
   }
 
+  function samplePerformanceFrames(frameSamples, options) {
+    const settings = options || {};
+    if (settings.reset) {
+      performanceState = {
+        quality: "high",
+        fps: 60,
+        lowFrames: 0,
+        highFrames: 0,
+        lastFloatingTextAt: -Infinity,
+        reason: "測試重設",
+        constrainedDevice: settings.constrainedDevice === true,
+        downgradedWave: null,
+        history: []
+      };
+    }
+    (Array.isArray(frameSamples) ? frameSamples : []).forEach((frameMs) => {
+      updatePerformanceQuality(Math.max(0.001, Number(frameMs) / 1000));
+    });
+    return rules.deepClone(performanceState);
+  }
+
   function step(deltaMs) {
     if (!state) startRun(meta.selectedVehicle);
     const total = Math.max(0, Math.min(30000, Number(deltaMs) || 0)) / 1000;
@@ -4824,6 +4845,7 @@
       pushWave,
       clearStorage,
       getRenderDebug: () => rules.deepClone(renderDebug),
+      samplePerformanceFrames,
       config,
       spritesReady
     });
