@@ -13,10 +13,10 @@ const uiSource = read("src/ui.js");
 const htmlSource = read("index.html");
 const credits = read("CREDITS.md");
 
-assert.strictEqual(version.APP_VERSION, "R67", "visual release guard must target R67");
+assert.strictEqual(version.APP_VERSION, "R68", "visual release guard must target R68");
 
 const textureEntries = Object.entries(config.FX.textures || {});
-assert.strictEqual(textureEntries.length, 4, "R67 must ship smoke/fire/debris/flash texture layers");
+assert.strictEqual(textureEntries.length, 4, "R68 must ship smoke/fire/debris/flash texture layers");
 textureEntries.forEach(([name, relativePath]) => {
   const file = path.join(root, relativePath);
   assert(fs.existsSync(file), `missing Kenney texture: ${relativePath}`);
@@ -60,6 +60,12 @@ assert.strictEqual(config.FX.quality.low.maxParticles, 48, "visual polish must n
 assert(gameSource.includes("enemy.hitFlashColor = weaponVisual(projectile.weaponMode).core"), "enemy hit tint must follow projectile color");
 assert(gameSource.includes("hitScaleX") && gameSource.includes("hitScaleY"), "enemy hits must add directional squash");
 assert(gameSource.includes("drawVehicleNavigationLights") && gameSource.includes("const count = reduced ? 1 : 2"), "vehicle navigation lights must cover reduced mode");
+assert(gameSource.includes("drawDepthLayers") && gameSource.includes('depthLayerTier = off ? "off" : low ? "low" : "full"'), "land depth layers must cover off/low/full tiers");
+assert(gameSource.includes("drawVehicleDamageSmoke") && gameSource.includes("hpPct >= 0.35"), "vehicle hull smoke must start below 35% HP");
+assert(gameSource.includes("drawScorchMarks") && gameSource.includes("const fxScorches = new Array(12)"), "ground scorch marks must use a fixed visual pool");
+assert(gameSource.includes("reservedCritical") === false, "particle priority implementation must remain isolated in the FX module");
+const fxSource = read("src/fx.js");
+assert(fxSource.includes("reservedCritical") && fxSource.includes("priorityEvictions"), "FX pool must reserve critical capacity and expose priority recycling");
 assert(gameSource.includes("state.projectiles.forEach(drawProjectile)"), "projectiles must use the dedicated ammo renderer");
 assert(uiSource.includes("hud.dataset.weaponMode"), "HUD must switch its weapon signature immediately");
 

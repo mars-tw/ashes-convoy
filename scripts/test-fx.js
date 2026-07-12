@@ -166,7 +166,7 @@ assert(FX.waveBanner.boss.textTemplate.indexOf("警告") >= 0 || FX.waveBanner.b
 });
 assert(FX.waveBanner.boss.flashHz > 0 && FX.waveBanner.boss.shake > 0, "boss 橫幅需有 flash 與 shake 強化");
 
-// R67 combo reward flourish config.
+// R68 combo reward flourish config.
 assert(FX.combo && FX.combo.windowSeconds > 0 && FX.combo.fadeSeconds > 0, "FX.combo should define combo timing");
 assert(FX.combo.size >= 10 && HEX.test(FX.combo.color), "FX.combo should define readable text styling");
 
@@ -224,6 +224,22 @@ const capSpec = {
   fx.resetFxState(state);
   assert.strictEqual(state.activeCount, 0, "resetFxState 應清空池");
   assert.strictEqual(state.freeCount, state.maxParticles, "resetFxState 應還原 free 名單");
+}
+
+// 低優先環境／曳光保留 25% 池位；關鍵 smoke/flash 在滿池時可回收低優先粒子。
+{
+  const state = fx.createFxState({ fxConfig: FX, quality: "high" });
+  const trail = { x: 0, y: 0, vx: 0, vy: 0, life: 2, size: 1, color: "#ffffff" };
+  let trails = 0;
+  for (let i = 0; i < state.maxParticles * 2; i += 1) trails += fx.spawnTrailPoint(state, trail);
+  assert.strictEqual(trails, state.maxParticles - state.reservedCritical, "低優先曳光需保留 25% 關鍵池位");
+  const smoke = Object.assign({}, capSpec, { texture: "smoke", count: state.reservedCritical });
+  assert.strictEqual(fx.spawnBurst(state, smoke, fx.createSeededRng(8)), state.reservedCritical, "關鍵煙需可使用保留池位");
+  assert.strictEqual(state.activeCount, state.maxParticles, "優先發射後仍不得超過池上限");
+  const flash = Object.assign({}, capSpec, { texture: "flash", count: 1 });
+  assert.strictEqual(fx.spawnBurst(state, flash, fx.createSeededRng(9)), 1, "關鍵 flash 應可回收低優先粒子");
+  assert.strictEqual(state.priorityEvictions, 1, "關鍵發射需記錄一次低優先回收");
+  assert.strictEqual(state.activeCount + state.freeCount, state.maxParticles, "優先回收後池恆等式需成立");
 }
 
 // ---------- 5) rng 注入決定性：同 seed 同結果 ----------

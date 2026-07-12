@@ -85,6 +85,8 @@
   let fxPrevVehicleX = null;
   let fxBossKillFx = null;
   let fxStarLayer;
+  const fxScorches = new Array(12).fill(null).map(() => ({ active: false, x: 0, y: 0, scroll: 0, start: 0, life: 0, size: 0 }));
+  let fxScorchCursor = 0;
   const fxScratch = { muzzle: {}, motion: {}, crate: {}, banner: {}, anchor: { x: 0, y: 0 } };
   const fxHitOpts = { x: 0, y: 0, angle: 0, vehicleId: "", color: null };
   const hudAnchors = {
@@ -203,6 +205,8 @@
     fxMoveX = 0;
     fxPrevVehicleX = Number.isFinite(vehicleX) ? vehicleX : null;
     fxBossKillFx = null;
+    fxScorchCursor = 0;
+    for (let i = 0; i < fxScorches.length; i += 1) fxScorches[i].active = false;
     ensureFxState();
     fx.resetFxState(fxState);
   }
@@ -1781,6 +1785,7 @@
     if (!enemy || enemy.dead) return;
     const enemyConfig = config.ENEMIES[enemy.enemyId];
     enemy.dead = true;
+    addScorch(enemy.x, enemy.y + enemy.radius * 0.35, enemy.radius);
     updateCombo(enemy);
     state.stats.kills += 1;
     state.stats.score += enemy.score + state.wave * 3;
@@ -3155,6 +3160,62 @@
     return true;
   }
 
+  // raster 與 fallback 共用的景深：固定幾何、只讀視覺時間，不消耗遊戲 RNG。
+  function drawDepthLayers() {
+    if (currentEnvironment() !== "land") return;
+    const left = config.LOGIC.roadLeft;
+    const right = config.LOGIC.roadRight;
+    const scroll = state ? state.scroll : idleTime * 42;
+    const low = performanceState.quality === "low" || fxLevelSetting() === "reduced";
+    const off = fxLevelSetting() === "off";
+
+    ctx.save();
+    if (!off) {
+      const farOffset = (scroll * 0.15) % 76;
+      ctx.fillStyle = "rgba(42, 36, 28, 0.46)";
+      for (let side = 0; side < 2; side += 1) {
+        const baseX = side === 0 ? left - 22 : right + 22;
+        for (let y = -76 + farOffset; y < H + 76; y += low ? 152 : 76) {
+          const variant = Math.abs(Math.floor((y - farOffset) / 76) + side * 3) % 3;
+          const w = 13 + variant * 4;
+          const h = 7 + variant * 3;
+          ctx.beginPath();
+          ctx.moveTo(baseX - w, y + h);
+          ctx.lineTo(baseX - w * 0.38, y - h * 0.25);
+          ctx.lineTo(baseX + w * 0.18, y - h);
+          ctx.lineTo(baseX + w, y + h);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+    }
+
+    const haze = ctx.createLinearGradient(0, 0, 0, H);
+    haze.addColorStop(0, "rgba(90, 78, 62, 0.22)");
+    haze.addColorStop(0.48, "rgba(0, 0, 0, 0)");
+    haze.addColorStop(1, "rgba(20, 16, 12, 0.12)");
+    ctx.globalAlpha = off ? 0.55 : low ? 0.78 : 0.92 + Math.sin(visualStateTime() * 0.35) * 0.03;
+    ctx.fillStyle = haze;
+    ctx.fillRect(0, 0, W, H);
+
+    if (!off && !low) {
+      const nearOffset = (scroll * 0.4) % 58;
+      ctx.globalAlpha = 0.62;
+      ctx.fillStyle = "#1a1612";
+      for (let side = 0; side < 2; side += 1) {
+        const x = side === 0 ? left - 15 : right + 15;
+        for (let y = -58 + nearOffset; y < H + 58; y += 58) {
+          const notch = Math.abs(Math.floor((y - nearOffset) / 58) + side) % 3;
+          ctx.fillRect(x - 7 - notch, y, 14 + notch * 2, 5 + notch);
+          ctx.fillRect(x - 3, y - 4, 6, 4);
+        }
+      }
+    }
+    ctx.restore();
+    renderDebug.depthLayersDrawn = true;
+    renderDebug.depthLayerTier = off ? "off" : low ? "low" : "full";
+  }
+
   // 路面細節疊層獨立於底圖，因此 raster / fallback 都能共享；固定幾何避免引入遊戲 RNG。
   function drawRoadDetailOverlay() {
     if (currentEnvironment() !== "land") return;
@@ -3203,6 +3264,59 @@
     ctx.restore();
     renderDebug.roadDetailDrawn = true;
     renderDebug.roadDetailTier = low ? "low" : "high";
+  }
+
+  function addScorch(x, y, size) {
+    if (!state || currentEnvironment() !== "land" || fxLevelSetting() === "off") return;
+    const scorch = fxScorches[fxScorchCursor];
+    fxScorchCursor = (fxScorchCursor + 1) % fxScorches.length;
+    scorch.active = true;
+    scorch.x = x;
+    scorch.y = y;
+    scorch.scroll = state.scroll;
+    scorch.start = visualStateTime();
+    scorch.life = 0.8 + Math.min(0.6, Math.max(0, size - 7) * 0.025);
+    scorch.size = Math.min(18, Math.max(6, size * 0.72));
+  }
+
+  function drawScorchMarks() {
+    if (!state || currentEnvironment() !== "land" || fxLevelSetting() === "off") return;
+    const low = performanceState.quality === "low" || fxLevelSetting() === "reduced";
+    const visibleCap = low ? 4 : fxScorches.length;
+    let drawn = 0;
+    for (let offset = 0; offset < fxScorches.length && drawn < visibleCap; offset += 1) {
+      const index = (fxScorchCursor - 1 - offset + fxScorches.length) % fxScorches.length;
+      const scorch = fxScorches[index];
+      if (!scorch.active) continue;
+      const age = visualStateTime() - scorch.start;
+      if (age >= scorch.life) {
+        scorch.active = false;
+        continue;
+      }
+      const y = scorch.y + (state.scroll - scorch.scroll);
+      if (y > H + scorch.size) {
+        scorch.active = false;
+        continue;
+      }
+      const alpha = (1 - age / scorch.life) * (low ? 0.3 : 0.48);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = "#17130f";
+      ctx.beginPath();
+      ctx.ellipse(scorch.x, y, scorch.size, scorch.size * 0.42, 0, 0, TAU);
+      ctx.fill();
+      if (!low) {
+        ctx.globalAlpha = alpha * 0.52;
+        ctx.strokeStyle = "#6d4a2b";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.ellipse(scorch.x, y, scorch.size * 0.72, scorch.size * 0.28, 0, 0, TAU);
+        ctx.stroke();
+      }
+      ctx.restore();
+      drawn += 1;
+    }
+    renderDebug.scorchMarksDrawn = drawn;
   }
 
   function drawLandBackground(timeMs) {
@@ -3575,6 +3689,46 @@
     }
     ctx.restore();
     renderDebug.vehicleNavigationLightsDrawn += count;
+  }
+
+  // 低血車損煙固定直繪，不占粒子池；low/reduced 僅一縷且關閉火星，off 完全停用。
+  function drawVehicleDamageSmoke(vehicleConfig, vehicle) {
+    if (!vehicle || fxLevelSetting() === "off" || vehicle.maxHp <= 0 || vehicle.hp <= 0) return;
+    const hpPct = vehicle.hp / vehicle.maxHp;
+    if (hpPct >= 0.35) return;
+    const low = performanceState.quality === "low" || fxLevelSetting() === "reduced";
+    const width = vehicleConfig.visualWidth || (vehicleConfig.visualHalfWidth || 36) * 2;
+    const count = low ? 1 : 2;
+    const t = visualStateTime();
+    ctx.save();
+    for (let i = 0; i < count; i += 1) {
+      const phase = low ? 0.5 : (t * 0.72 + i * 0.47) % 1;
+      const x = vehicle.x + width * 0.16 + Math.sin(t * 2.3 + i * 2.1) * (low ? 0.6 : 1.5);
+      const y = vehicle.y - width * (0.36 + phase * 0.42);
+      const radius = (low ? 4.8 : 4.5 + phase * 3.8);
+      const smoke = ctx.createRadialGradient(x, y, 0.5, x, y, radius);
+      smoke.addColorStop(0, `rgba(90, 81, 75, ${low ? 0.42 : 0.54 * (1 - phase * 0.45)})`);
+      smoke.addColorStop(0.55, `rgba(55, 51, 48, ${low ? 0.25 : 0.34 * (1 - phase)})`);
+      smoke.addColorStop(1, "rgba(32, 30, 28, 0)");
+      ctx.fillStyle = smoke;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, TAU);
+      ctx.fill();
+    }
+    if (hpPct < 0.2 && !low && !(meta.settings && meta.settings.reducedFlash)) {
+      const sparkOn = Math.floor(t * 7) % 5 === 0;
+      if (sparkOn) {
+        ctx.strokeStyle = "rgba(255, 178, 74, 0.8)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(vehicle.x + width * 0.13, vehicle.y - width * 0.42);
+        ctx.lineTo(vehicle.x + width * 0.19, vehicle.y - width * 0.55);
+        ctx.stroke();
+        renderDebug.vehicleDamageSparksDrawn = 1;
+      }
+    }
+    ctx.restore();
+    renderDebug.vehicleDamageSmokeDrawn = count;
   }
 
   function enemyVisualWidth(enemy, enemyConfig) {
@@ -4684,6 +4838,7 @@
       anim: vehicleAnim,
       hitFlash: state.vehicle.recentHitUntil > state.time
     });
+    drawVehicleDamageSmoke(vehicleConfig, state.vehicle);
     drawVehicleNavigationLights(vehicleConfig, state.vehicle);
     drawVehicleShield(state.vehicle, timeMs);
     ctx.restore();
@@ -4716,6 +4871,8 @@
       vehicleFallbackDrawn: false,
       vehicleShieldDrawn: false,
       vehicleNavigationLightsDrawn: 0,
+      vehicleDamageSmokeDrawn: 0,
+      vehicleDamageSparksDrawn: 0,
       vehicleImageStatus: "none",
       runTrailerRasterDrawn: false,
       runTrailerFallbackDrawn: false,
@@ -4745,6 +4902,10 @@
       lowHpPulseDrawn: false,
       roadDetailDrawn: false,
       roadDetailTier: "none",
+      depthLayersDrawn: false,
+      depthLayerTier: "none",
+      scorchMarksDrawn: 0,
+      fxPriorityEvictions: fxState ? fxState.priorityEvictions : 0,
       projectileVisualModes: {},
       waveBannerDrawn: false,
       waveCelebrationDrawn: false,
@@ -4769,7 +4930,9 @@
       ctx.translate(Math.sin(state.time * 91) * amp, Math.cos(state.time * 73) * amp);
     }
     drawBackground(timeMs);
+    drawDepthLayers();
     drawRoadDetailOverlay();
+    drawScorchMarks();
     if (state && FXC && fxEnabled() && currentEnvironment() === "space") drawStarDust();
     if (state) drawGame(timeMs);
     else drawIdlePreview(timeMs);

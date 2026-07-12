@@ -74,7 +74,8 @@ function createParticle() {
     color: "#ffffff",
     alpha: 0,
     rotation: 0,
-    spin: 0
+    spin: 0,
+    priority: 1
   };
 }
 
@@ -105,6 +106,8 @@ function createFxState(opts) {
     freeIndices,
     freeCount: maxParticles,
     activeCount: 0,
+    reservedCritical: Math.max(1, Math.floor(maxParticles * 0.25)),
+    priorityEvictions: 0,
     trailTick: 0,
     envAccum: {}
   };
@@ -115,14 +118,47 @@ function resetFxState(fxState) {
   for (let i = 0; i < fxState.pool.length; i += 1) {
     fxState.pool[i].active = false;
     fxState.pool[i].alpha = 0;
+    fxState.pool[i].priority = 1;
     fxState.freeIndices[i] = fxState.pool.length - 1 - i;
   }
   fxState.freeCount = fxState.pool.length;
   fxState.activeCount = 0;
+  fxState.priorityEvictions = 0;
   fxState.trailTick = 0;
   const keys = Object.keys(fxState.envAccum);
   for (let i = 0; i < keys.length; i += 1) fxState.envAccum[keys[i]] = 0;
   return fxState;
+}
+
+function particlePriority(spec) {
+  if (spec && Number.isFinite(spec.priority)) return clampInt(spec.priority, 0, 2);
+  const texture = spec && spec.texture;
+  return texture === "smoke" || texture === "flash" ? 2 : 1;
+}
+
+// priority 0（環境塵、曳光）不得吃掉最後 25%；priority 2（flash / smoke）池滿時可取代低優先粒子。
+function takeParticleIndex(fxState, priority) {
+  if (priority === 0 && fxState.freeCount <= fxState.reservedCritical) return -1;
+  if (fxState.freeCount > 0) {
+    const index = fxState.freeIndices[fxState.freeCount - 1];
+    fxState.freeCount -= 1;
+    return index;
+  }
+  if (priority < 2) return -1;
+  let candidate = -1;
+  let candidatePriority = priority;
+  for (let i = 0; i < fxState.pool.length; i += 1) {
+    const p = fxState.pool[i];
+    if (p.active && p.priority < candidatePriority) {
+      candidate = i;
+      candidatePriority = p.priority;
+      if (candidatePriority === 0) break;
+    }
+  }
+  if (candidate < 0) return -1;
+  fxState.activeCount -= 1;
+  fxState.priorityEvictions += 1;
+  return candidate;
 }
 
 // 依品質係數換算實際發射數量（低品質減發射率，但至少 1 顆以保留回饋）。
@@ -134,7 +170,7 @@ function effectiveCount(fxState, baseCount) {
 }
 
 // 核心發射：ox/oy/angleOverride 為 NaN 時退回 spec 內建值；colorOverride 為 null 時抽 spec.colors。
-function spawnBurstCore(fxState, spec, rng, ox, oy, angleOverride, colorOverride) {
+function spawnBurstCore(fxState, spec, rng, ox, oy, angleOverride, colorOverride, priorityOverride) {
   assertRng(rng);
   if (!fxState || !spec) return 0;
   const want = effectiveCount(fxState, spec.count != null ? spec.count : 1);
@@ -152,11 +188,11 @@ function spawnBurstCore(fxState, spec, rng, ox, oy, angleOverride, colorOverride
   const jitterX = finiteOr(spec.jitterX, 0);
   const jitterY = finiteOr(spec.jitterY, 0);
   const delay = Math.max(0, finiteOr(spec.delay, 0));
+  const priority = Number.isFinite(priorityOverride) ? clampInt(priorityOverride, 0, 2) : particlePriority(spec);
   let spawned = 0;
   for (let i = 0; i < want; i += 1) {
-    if (fxState.freeCount <= 0) break;
-    const index = fxState.freeIndices[fxState.freeCount - 1];
-    fxState.freeCount -= 1;
+    const index = takeParticleIndex(fxState, priority);
+    if (index < 0) break;
     const p = fxState.pool[index];
     const angle = angleCenter + (rng() - 0.5) * angleSpread;
     const speed = speedMin + (speedMax - speedMin) * rng();
@@ -180,6 +216,7 @@ function spawnBurstCore(fxState, spec, rng, ox, oy, angleOverride, colorOverride
     p.alpha = delay > 0 ? 0 : 1;
     p.rotation = rng() * TAU;
     p.spin = (rng() - 0.5) * 2 * finiteOr(spec.spin, 0);
+    p.priority = priority;
     fxState.activeCount += 1;
     spawned += 1;
   }
@@ -196,7 +233,7 @@ function spawnTrailPoint(fxState, spec, rng) {
   if (!fxState || !spec) return 0;
   fxState.trailTick += 1;
   if (fxState.trailTick % fxState.trailEvery !== 0) return 0;
-  if (fxState.freeCount <= 0) return 0;
+  if (fxState.freeCount <= fxState.reservedCritical) return 0;
   const jitter = rng != null ? assertRng(rng) : null;
   const index = fxState.freeIndices[fxState.freeCount - 1];
   fxState.freeCount -= 1;
@@ -221,6 +258,7 @@ function spawnTrailPoint(fxState, spec, rng) {
   p.alpha = 1;
   p.rotation = 0;
   p.spin = 0;
+  p.priority = 0;
   fxState.activeCount += 1;
   return 1;
 }
@@ -334,7 +372,7 @@ function spawnEnvironmentLayer(fxState, layer, dt, anchorX, anchorY, rng) {
   let spawned = 0;
   while (acc >= 1) {
     acc -= 1;
-    spawned += spawnBurstCore(fxState, layer, rng, anchorX, anchorY, NaN, null);
+    spawned += spawnBurstCore(fxState, layer, rng, anchorX, anchorY, NaN, null, 0);
   }
   fxState.envAccum[key] = acc;
   return spawned;
