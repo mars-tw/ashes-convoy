@@ -11,8 +11,8 @@
     <meta name="theme-color" content="#111317" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="manifest.webmanifest?v=R68" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R68" />
+    <link rel="manifest" href="manifest.webmanifest?v=R69" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R69" />
     <title>灰燼護航</title>
     <style>
       :root {
@@ -53,6 +53,29 @@
         min-height: 100svh;
         display: grid;
         place-items: center;
+        overflow: hidden;
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        inset: -24px;
+        pointer-events: none;
+      }
+
+      body::before {
+        background:
+          linear-gradient(90deg, rgba(4, 6, 9, 0.18), rgba(4, 6, 9, 0.72) 34%, rgba(4, 6, 9, 0.72) 66%, rgba(4, 6, 9, 0.18)),
+          url("assets/env/land.png") center / cover no-repeat;
+        filter: blur(12px) saturate(0.72) brightness(0.48);
+        transform: scale(1.06);
+      }
+
+      body::after {
+        background:
+          radial-gradient(ellipse at center, rgba(240, 182, 74, 0.08), rgba(2, 3, 5, 0.82) 68%),
+          repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 7px);
       }
 
       button {
@@ -84,20 +107,25 @@
 
       .app {
         position: relative;
+        z-index: 1;
         width: min(100vw, calc(100svh * 390 / 844));
-        max-width: 820px;
         height: min(100svh, calc(100vw * 844 / 390));
-        max-height: 1180px;
         aspect-ratio: 390 / 844;
+        container-type: inline-size;
         overflow: hidden;
         background: #0a0c0f;
       }
 
       @media (min-width: 860px) {
         .app {
-          width: min(46vw, 520px);
-          height: min(96vh, 1125px);
+          width: auto;
+          height: 96vh;
+          height: 96svh;
           border: 1px solid rgba(244, 234, 216, 0.16);
+          box-shadow:
+            0 0 0 6px rgba(54, 43, 30, 0.5),
+            0 0 0 8px rgba(191, 139, 58, 0.18),
+            0 28px 80px rgba(0, 0, 0, 0.72);
         }
       }
 
@@ -349,8 +377,26 @@
 
       .gate-choice-layer {
         position: absolute;
-        inset: 0;
+        top: max(92px, calc(env(safe-area-inset-top) + 82px));
+        left: 50%;
         z-index: 5;
+        width: max-content;
+        max-width: calc(100% - 28px);
+        min-height: 30px;
+        padding: 6px 11px;
+        transform: translateX(-50%);
+        overflow: hidden;
+        border: 1px solid rgba(240, 182, 74, 0.58);
+        border-radius: 999px;
+        background: rgba(9, 12, 16, 0.82);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.34);
+        color: #fff2bd;
+        font-size: 12px;
+        font-weight: 900;
+        line-height: 16px;
+        text-align: center;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         pointer-events: none;
       }
 
@@ -358,79 +404,33 @@
         display: none;
       }
 
-      .gate-choice-btn {
+      .supply-choice-overlay {
         position: absolute;
-        left: 0;
-        top: 0;
-        width: 112px;
-        min-height: 68px;
-        padding: 7px 8px;
-        transform: translate3d(var(--gate-x, 0), var(--gate-y, 0), 0) translate(-50%, -50%);
-        will-change: transform;
-        border-color: rgba(240, 182, 74, 0.88);
-        background: rgba(9, 12, 16, 0.78);
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.34);
-        pointer-events: auto;
-        touch-action: manipulation;
-      }
-
-      .gate-choice-btn b,
-      .gate-choice-btn span,
-      .gate-choice-btn small {
-        display: block;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .gate-choice-btn b {
-        color: var(--text);
-        font-size: 16px;
-      }
-
-      .gate-choice-btn span {
-        color: var(--accent);
-        font-size: 18px;
-        line-height: 1.1;
-      }
-
-      .gate-choice-btn small {
-        color: var(--muted);
-        font-size: 10px;
-      }
-
-      .supply-choice-overlay,
-      .gate-choice-overlay {
-        position: absolute;
-        inset: 0;
+        top: max(132px, calc(env(safe-area-inset-top) + 122px));
+        left: max(10px, env(safe-area-inset-left));
+        right: max(10px, env(safe-area-inset-right));
         z-index: 8;
-        display: grid;
-        place-items: center;
-        padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
-        background: rgba(4, 6, 10, 0.56);
-        pointer-events: auto;
+        pointer-events: none;
       }
 
-      .supply-choice-overlay[hidden],
-      .gate-choice-overlay[hidden] {
+      .supply-choice-overlay[hidden] {
         display: none;
       }
 
       .supply-choice-panel {
-        width: min(356px, 100%);
-        max-height: min(calc(100dvh - 24px), calc(100% - 24px));
-        overflow-y: auto;
-        padding: 12px;
+        width: 100%;
+        padding: 9px;
         border: 1px solid rgba(94, 212, 203, 0.55);
         border-radius: 8px;
-        background: rgba(9, 12, 16, 0.92);
+        background: rgba(9, 12, 16, 0.88);
         box-shadow: 0 18px 44px rgba(0, 0, 0, 0.48);
+        pointer-events: auto;
       }
 
       .supply-choice-head {
         display: grid;
         gap: 3px;
-        margin-bottom: 10px;
+        margin-bottom: 7px;
       }
 
       .supply-choice-head strong {
@@ -446,12 +446,13 @@
 
       .supply-choice-list {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(142px, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 8px;
       }
 
       .supply-choice-btn {
         min-height: 68px;
+        min-width: 0;
         padding: 9px 10px;
         text-align: left;
         border-color: rgba(94, 212, 203, 0.72);
@@ -482,19 +483,6 @@
         margin-top: 2px;
         color: var(--muted);
         font-size: 10px;
-      }
-
-      .gate-choice-overlay .supply-choice-panel {
-        border-color: rgba(240, 182, 74, 0.62);
-      }
-
-      .gate-option-btn {
-        border-color: rgba(240, 182, 74, 0.74);
-        background: rgba(31, 22, 12, 0.84);
-      }
-
-      .gate-option-btn span {
-        color: var(--accent);
       }
 
       .supply-choice-btn.is-maxed {
@@ -743,7 +731,7 @@
         font-size: 12px;
       }
 
-      @media (max-width: 430px), (max-height: 740px) {
+      @container (max-width: 430px) {
         .trailer-overlay {
           grid-template-rows: minmax(220px, 38%) minmax(0, 1fr);
         }
@@ -1418,12 +1406,31 @@
 
       .hotspot-primary {
         grid-column: 1 / -1;
-        min-height: 50px;
+        min-height: 64px;
         background: rgba(213, 147, 47, 0.88);
         border-color: rgba(243, 207, 112, 0.92);
         color: #17110a;
-        font-size: 18px;
+        font-size: 22px;
         text-shadow: none;
+      }
+
+      .hotspot-base-toggle {
+        grid-column: 1 / -1;
+        min-height: 50px;
+        border-color: rgba(94, 212, 203, 0.58);
+        background: rgba(12, 28, 31, 0.82);
+        color: #bdeee9;
+      }
+
+      .base-actions {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .base-actions[hidden] {
+        display: none;
       }
 
       .meta-drawer {
@@ -1578,20 +1585,11 @@
         <span id="eventBannerBody"></span>
       </div>
       <div class="gate-choice-layer" id="gateChoiceLayer" hidden></div>
-      <div class="gate-choice-overlay" id="gateChoiceOverlay" role="dialog" aria-modal="true" aria-labelledby="gateChoiceTitle" hidden>
-        <div class="supply-choice-panel">
-          <div class="supply-choice-head">
-            <strong id="gateChoiceTitle">增益門</strong>
-            <span id="gateChoiceHint">選擇一項增益後繼續出勤</span>
-          </div>
-          <div class="supply-choice-list" id="gateChoiceList"></div>
-        </div>
-      </div>
-      <div class="supply-choice-overlay" id="supplyChoiceOverlay" role="dialog" aria-modal="true" aria-labelledby="supplyChoiceTitle" hidden>
+      <div class="supply-choice-overlay" id="supplyChoiceOverlay" role="region" aria-labelledby="supplyChoiceTitle" hidden>
         <div class="supply-choice-panel">
           <div class="supply-choice-head">
             <strong id="supplyChoiceTitle">補給箱</strong>
-            <span id="supplyChoiceHint">選擇一項補給後繼續出勤</span>
+            <span id="supplyChoiceHint">點一下領取；戰鬥不中斷</span>
           </div>
           <div class="supply-choice-list" id="supplyChoiceList"></div>
         </div>
@@ -1617,7 +1615,7 @@
             <span id="trailerBonusText">HP +0% · 傷害 +0% · 射速 +0% · 承傷 -0%</span>
           </div>
           <section class="story-log-section" id="storyLogSection" aria-label="無線電日誌" hidden>
-            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R68" alt="熹" decoding="async" draggable="false" />
+            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R69" alt="熹" decoding="async" draggable="false" />
             <div class="story-log-list" id="storyLogList"></div>
           </section>
           <div class="trailer-room-body">
@@ -1639,12 +1637,15 @@
 
         <div class="hotspot-layer" id="hotspotLayer" aria-label="避難所互動" hidden>
           <button class="hotspot-btn hotspot-primary" id="sortieBtn" type="button" aria-label="開始出勤">出勤</button>
-          <button class="hotspot-btn" id="upgradeHotspotBtn" type="button" aria-label="開啟升級工坊">升級</button>
-          <button class="hotspot-btn" id="vehicleHotspotBtn" type="button" aria-label="開啟載具棚">載具</button>
-          <button class="hotspot-btn" id="seriesHotspotBtn" type="button" aria-label="開啟成就牆">成就</button>
-          <button class="hotspot-btn" id="trailerHotspotBtn" type="button" aria-label="開啟拖車房間">拖車<span class="unread-badge" id="trailerUnreadBadge" hidden>0</span></button>
-          <button class="hotspot-btn" id="opsHotspotBtn" type="button" aria-label="開啟任務與設定">任務/設定</button>
-          <button class="hotspot-btn danger" id="resetOverlayBtn" type="button" aria-label="清除存檔">清存檔</button>
+          <button class="hotspot-btn hotspot-base-toggle" id="baseToggleBtn" type="button" aria-expanded="false" aria-controls="baseActions">基地</button>
+          <div class="base-actions" id="baseActions" hidden>
+            <button class="hotspot-btn" id="upgradeHotspotBtn" type="button" aria-label="開啟升級工坊">升級</button>
+            <button class="hotspot-btn" id="vehicleHotspotBtn" type="button" aria-label="開啟載具棚">載具</button>
+            <button class="hotspot-btn" id="seriesHotspotBtn" type="button" aria-label="開啟成就牆">成就</button>
+            <button class="hotspot-btn" id="trailerHotspotBtn" type="button" aria-label="開啟拖車房間">拖車<span class="unread-badge" id="trailerUnreadBadge" hidden>0</span></button>
+            <button class="hotspot-btn" id="opsHotspotBtn" type="button" aria-label="開啟任務與設定">任務/設定</button>
+            <button class="hotspot-btn danger" id="resetOverlayBtn" type="button" aria-label="清除存檔">清存檔</button>
+          </div>
         </div>
 
         <div class="meta-drawer" id="metaDrawer">
@@ -1803,7 +1804,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R68";
+        var key = "ashes_convoy_html_boot_reload_R69";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -1820,15 +1821,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R68"></script>
-    <script src="src/sprites.js?v=R68"></script>
-    <script src="src/sprite-renderer.js?v=R68"></script>
-    <script src="src/shelter-scene.js?v=R68"></script>
-    <script src="src/config.js?v=R68"></script>
-    <script src="src/rules.js?v=R68"></script>
-    <script src="src/fx.js?v=R68"></script>
-    <script src="src/audio.js?v=R68"></script>
-    <script src="src/game.js?v=R68"></script>
-    <script src="src/ui.js?v=R68"></script>
+    <script src="src/version.js?v=R69"></script>
+    <script src="src/sprites.js?v=R69"></script>
+    <script src="src/sprite-renderer.js?v=R69"></script>
+    <script src="src/shelter-scene.js?v=R69"></script>
+    <script src="src/config.js?v=R69"></script>
+    <script src="src/rules.js?v=R69"></script>
+    <script src="src/fx.js?v=R69"></script>
+    <script src="src/audio.js?v=R69"></script>
+    <script src="src/game.js?v=R69"></script>
+    <script src="src/ui.js?v=R69"></script>
   </body>
 </html>

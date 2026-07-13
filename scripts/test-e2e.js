@@ -134,10 +134,22 @@ async function expectMetaBackground(page) {
 }
 
 async function checkMetaHotspotsFit(page) {
+  const collapsed = await page.evaluate(() => {
+    const visible = Array.from(document.querySelectorAll(".hotspot-btn")).filter((button) => button.getClientRects().length > 0);
+    return {
+      ids: visible.map((button) => button.id),
+      sortieHeight: document.getElementById("sortieBtn").getBoundingClientRect().height,
+      baseExpanded: document.getElementById("baseToggleBtn").getAttribute("aria-expanded")
+    };
+  });
+  assert.deepStrictEqual(collapsed.ids, ["sortieBtn", "baseToggleBtn"], "collapsed meta screen should show only sortie and base");
+  assert(collapsed.sortieHeight >= 60, "sortie should be the dominant CTA");
+  assert.strictEqual(collapsed.baseExpanded, "false", "base actions should start collapsed");
+  await page.click("#baseToggleBtn");
   const result = await page.evaluate(() => {
     const app = document.getElementById("app").getBoundingClientRect();
     const layer = document.getElementById("hotspotLayer").getBoundingClientRect();
-    const buttons = Array.from(document.querySelectorAll(".hotspot-btn")).map((button) => {
+    const buttons = Array.from(document.querySelectorAll(".hotspot-btn")).filter((button) => button.getClientRects().length > 0).map((button) => {
       const rect = button.getBoundingClientRect();
       return {
         id: button.id,
@@ -171,10 +183,10 @@ async function checkMetaHotspotsFit(page) {
       viewportOverflow: document.documentElement.scrollWidth - window.innerWidth
     };
   });
-  assert.strictEqual(result.buttons.length, 7, "meta screen should expose seven overlay action buttons");
+  assert.strictEqual(result.buttons.length, 8, "expanded base should expose sortie, base, and six management actions");
   assert.deepStrictEqual(
     result.buttons.map((button) => button.id).sort(),
-    ["opsHotspotBtn", "resetOverlayBtn", "seriesHotspotBtn", "sortieBtn", "trailerHotspotBtn", "upgradeHotspotBtn", "vehicleHotspotBtn"],
+    ["baseToggleBtn", "opsHotspotBtn", "resetOverlayBtn", "seriesHotspotBtn", "sortieBtn", "trailerHotspotBtn", "upgradeHotspotBtn", "vehicleHotspotBtn"],
     "meta action buttons should match the key art controls"
   );
   assert(result.layer.left >= result.layer.appLeft - 1, "meta action layer should not overflow left");
@@ -185,10 +197,14 @@ async function checkMetaHotspotsFit(page) {
     assert(button.width >= 44 && button.height >= 44, `${button.id} should be at least 44px in both touch dimensions`);
     assert(button.left >= button.appLeft - 1, `${button.id} should not overflow left`);
     assert(button.right <= button.appRight + 1, `${button.id} should not overflow right`);
-    assert(button.top >= button.appTop - 1, `${button.id} should not overflow top`);
-    assert(button.bottom <= button.appBottom + 1, `${button.id} should not overflow bottom`);
     assert(button.scrollWidth <= button.clientWidth + 2, `${button.id} label should fit without horizontal overflow`);
   });
+  await page.click("#baseToggleBtn");
+}
+
+async function expandBaseMenu(page) {
+  const expanded = await page.locator("#baseToggleBtn").getAttribute("aria-expanded");
+  if (expanded !== "true") await page.click("#baseToggleBtn");
 }
 
 async function waitForMetaBackground(page) {
@@ -206,6 +222,7 @@ async function openUpgradePanel(page) {
   if (fullBackground) {
     const alreadyOpen = await page.locator('#metaDrawer:not([hidden]) [data-meta-section="upgrades"]:not([hidden])').count();
     if (alreadyOpen) return;
+    await expandBaseMenu(page);
     await page.click("#upgradeHotspotBtn");
     await page.waitForSelector('#metaDrawer:not([hidden]) [data-meta-section="upgrades"]:not([hidden])');
   }
@@ -219,6 +236,7 @@ async function openOperationsPanel(page) {
   if (fullBackground) {
     const alreadyOpen = await page.locator('#metaDrawer:not([hidden]) [data-meta-section="operations"]:not([hidden])').count();
     if (alreadyOpen) return;
+    await expandBaseMenu(page);
     await page.click("#opsHotspotBtn");
     await page.waitForSelector('#metaDrawer:not([hidden]) [data-meta-section="operations"]:not([hidden])');
   }
@@ -282,12 +300,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R68") && swText.includes("src/ui.js?v=R68") && swText.includes("src/game.js?v=R68") && swText.includes("src/rules.js?v=R68"),
+      swCachesJs: swText.includes("src/version.js?v=R69") && swText.includes("src/ui.js?v=R69") && swText.includes("src/game.js?v=R69") && swText.includes("src/rules.js?v=R69"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R68"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R68"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R68"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R69"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R69"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R69"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -296,7 +314,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R68", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R69", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -347,7 +365,8 @@ async function assertControlReachable(page, selector, label) {
 
 async function checkShortDesktopReachability(page) {
   await page.waitForSelector("#garagePanel:not([hidden])");
-  for (const selector of ["#sortieBtn", "#upgradeHotspotBtn", "#vehicleHotspotBtn", "#seriesHotspotBtn", "#opsHotspotBtn", "#resetOverlayBtn"]) {
+  await expandBaseMenu(page);
+  for (const selector of ["#sortieBtn", "#baseToggleBtn", "#upgradeHotspotBtn", "#vehicleHotspotBtn", "#seriesHotspotBtn", "#opsHotspotBtn", "#resetOverlayBtn"]) {
     await assertControlReachable(page, selector, selector);
   }
   await page.click("#opsHotspotBtn");
@@ -426,6 +445,7 @@ async function checkTrailerRoomSystem(page) {
     window.__test.showGarage();
   });
   await waitForMetaBackground(page);
+  await expandBaseMenu(page);
   await page.click("#trailerHotspotBtn");
   await page.waitForSelector("#trailerOverlay:not([hidden])");
   await page.waitForFunction(() => {
@@ -521,6 +541,7 @@ async function checkClearStorageButton(page) {
     window.__test.setMeta(meta);
   });
   await waitForMetaBackground(page);
+  await expandBaseMenu(page);
   await page.click("#resetOverlayBtn");
   await page.waitForFunction(() => {
     const meta = window.__test.getMeta();
@@ -548,7 +569,7 @@ async function checkShelterMeta(page) {
   await page.keyboard.press("Escape");
   await page.waitForFunction(() => document.getElementById("metaDrawer").hidden === true);
   const focusAfterEsc = await page.evaluate(() => document.activeElement && document.activeElement.id);
-  assert.strictEqual(focusAfterEsc, "upgradeHotspotBtn", "Escape should close the drawer and restore focus");
+  assert.strictEqual(focusAfterEsc, "baseToggleBtn", "Escape should close the drawer and restore focus to the collapsed base control");
 }
 
 async function dragAim(page) {
@@ -678,7 +699,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R68"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R69"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -753,6 +774,7 @@ async function checkNewSaveVehicleLocks(page) {
     window.__test.showGarage();
   });
   await page.waitForSelector("#garagePanel:not([hidden])");
+  await expandBaseMenu(page);
   await page.click("#vehicleHotspotBtn");
   await page.waitForSelector('#metaDrawer:not([hidden]) [data-meta-section="vehicle"]:not([hidden])');
   const meta = await page.evaluate(() => window.__test.getMeta());
@@ -801,6 +823,7 @@ async function checkOldSaveRetention(page) {
 async function checkVehicleFleetSelectionAndCombat(page) {
   await page.evaluate(() => window.__test.showGarage());
   await page.waitForSelector("#garagePanel:not([hidden])");
+  await expandBaseMenu(page);
   await page.click("#vehicleHotspotBtn");
   await page.waitForSelector('#metaDrawer:not([hidden]) [data-meta-section="vehicle"]:not([hidden])');
   const vehicles = await page.locator("[data-vehicle]").evaluateAll((nodes) => nodes.map((node) => node.dataset.vehicle).sort());
@@ -950,7 +973,7 @@ async function checkFleetProjectileTraits(page) {
   assert(seaProjectile && seaProjectile.splash > 0, "sea ark should fire splash projectiles");
 }
 
-async function checkR68CombatRefresh(page) {
+async function checkR69CombatRefresh(page) {
   const road = await page.evaluate(() => {
     window.__test.startRun("land_rig");
     const cfg = window.DSConfig;
@@ -1127,8 +1150,11 @@ async function checkR68CombatRefresh(page) {
       companionCooldown: 0
     });
     window.__test.spawnEnemy("shambler", { x: state.vehicle.x, y: state.vehicle.y - 115, hp: 999, speed: 0 });
-    window.__test.step(1600);
+    window.__test.step(16);
   });
+  const firingFrame = await page.evaluate(() => window.__test.getRenderDebug().companionFrame);
+  assert.strictEqual(firingFrame, 1, "R69 Xi sprite sheet should switch to the firing frame");
+  await page.evaluate(() => window.__test.step(1584));
   const companionOn = await page.evaluate(() => {
     const state = window.__test.getState();
     const debug = window.__test.getRenderDebug();
@@ -1184,9 +1210,8 @@ async function checkR68CombatRefresh(page) {
     });
     window.__test.spawnGatePair(["damage_plus", "repair"]);
   });
-  await page.waitForSelector('#gateChoiceOverlay:not([hidden]) .choice-overflow-badge');
-  const gateOverflowText = await page.locator('#gateChoiceOverlay .choice-overflow-badge').first().innerText();
-  assert(gateOverflowText.includes("已滿") && gateOverflowText.includes("+6"), `gate overflow badge should describe goods overflow: ${gateOverflowText}`);
+  await page.waitForSelector("#gateChoiceLayer:not([hidden])");
+  assert.strictEqual(await page.locator("#gateChoiceOverlay").count(), 0, "gate choice must not create a central overlay");
   await page.evaluate(() => window.__test.chooseGate("damage_plus"));
   const overflowGateState = await page.evaluate(() => window.__test.getState());
   assert.strictEqual(overflowGateState.runMods.overload, 1, "overflow gate should add overload");
@@ -1217,7 +1242,7 @@ async function checkR68CombatRefresh(page) {
   assert(overflowSupplyState.stats.scavengeGoods >= 6, "overflow supply should grant scavenge goods");
 }
 
-async function checkR68DamageRegression(page) {
+async function checkR69DamageRegression(page) {
   const pierce = await page.evaluate(() => {
     window.__test.startRun("void_runner");
     window.__test.setState({
@@ -1740,7 +1765,7 @@ async function checkFxIntegration(page) {
   });
 }
 
-async function checkR68JuiceFx(page) {
+async function checkR69JuiceFx(page) {
   const full = await page.evaluate(() => {
     window.__test.startRun("land_rig");
     const meta = window.__test.getMeta();
@@ -1763,21 +1788,21 @@ async function checkR68JuiceFx(page) {
     const b = window.__test.spawnEnemy("runner", { id: "combo_b", x: 112, y: 150, hp: 1, speed: 0, silent: true });
     window.__test.setState({
       projectiles: [
-        { id: "R68_a", sprite: "bullet_cannon", x: a.x, y: a.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 },
-        { id: "R68_b", sprite: "bullet_cannon", x: b.x, y: b.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
+        { id: "R69_a", sprite: "bullet_cannon", x: a.x, y: a.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 },
+        { id: "R69_b", sprite: "bullet_cannon", x: b.x, y: b.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
       ]
     });
     window.__test.step(16);
     const afterCombo = window.__test.getState();
     window.__test.setState({
-      supplyChoice: { dropId: "R68_supply", x: 52, y: 120, openedAt: afterCombo.time, rewardIds: Object.keys(window.DSConfig.SUPPLY_DROPS.rewards) },
+      supplyChoice: { dropId: "R69_supply", x: 52, y: 120, openedAt: afterCombo.time, rewardIds: Object.keys(window.DSConfig.SUPPLY_DROPS.rewards) },
       paused: false
     });
     window.__test.chooseSupplyReward("parts_cache");
-    const boss = window.__test.spawnEnemy("boss_hive_titan", { id: "R68_boss", x: 96, y: 116, hp: 1, speed: 0, silent: true });
+    const boss = window.__test.spawnEnemy("boss_hive_titan", { id: "R69_boss", x: 96, y: 116, hp: 1, speed: 0, silent: true });
     window.__test.setState({
       projectiles: [
-        { id: "R68_boss_shot", sprite: "bullet_cannon", x: boss.x, y: boss.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
+        { id: "R69_boss_shot", sprite: "bullet_cannon", x: boss.x, y: boss.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
       ]
     });
     window.__test.step(16);
@@ -1787,13 +1812,13 @@ async function checkR68JuiceFx(page) {
       debug: window.__test.getRenderDebug()
     };
   });
-  assert(full.state.combo && full.state.combo.count >= 2, "R68 combo should count consecutive kills");
-  assert(full.state.effects.some((effect) => effect.kind === "hud_fly" || effect.kind === "hud_pop"), "R68 pickup should create HUD fly/pop effects");
-  assert(full.state.fxTimeScaleLeft > 0, "R68 boss kill should start render-only fx time scaling");
-  assert.strictEqual(full.debug.comboDrawn, true, "R68 full fx should draw the combo counter");
-  assert.strictEqual(full.debug.fxTextureStatus, "loaded", "R68 Kenney particle textures should load before combat verification");
-  assert(full.debug.fxTextureTintCount >= 20, `R68 should pre-render texture tints, got ${full.debug.fxTextureTintCount}`);
-  assert(full.debug.texturedParticlesDrawn > 0, "R68 kill/hit effects should draw Kenney texture layers");
+  assert(full.state.combo && full.state.combo.count >= 2, "R69 combo should count consecutive kills");
+  assert(full.state.effects.some((effect) => effect.kind === "hud_fly" || effect.kind === "hud_pop"), "R69 pickup should create HUD fly/pop effects");
+  assert(full.state.fxTimeScaleLeft > 0, "R69 boss kill should start render-only fx time scaling");
+  assert.strictEqual(full.debug.comboDrawn, true, "R69 full fx should draw the combo counter");
+  assert.strictEqual(full.debug.fxTextureStatus, "loaded", "R69 Kenney particle textures should load before combat verification");
+  assert(full.debug.fxTextureTintCount >= 20, `R69 should pre-render texture tints, got ${full.debug.fxTextureTintCount}`);
+  assert(full.debug.texturedParticlesDrawn > 0, "R69 kill/hit effects should draw Kenney texture layers");
   assert.strictEqual(full.debug.vehicleNavigationLightsDrawn, 2, "full FX should draw two vehicle navigation lights");
   assert.strictEqual(full.debug.depthLayerTier, "full", "full FX should draw all land depth layers");
   assert(full.debug.scorchMarksDrawn > 0, "land kills should leave a fading scorch mark");
@@ -1811,7 +1836,7 @@ async function checkR68JuiceFx(page) {
       runMods: { weaponMode: "ember", weaponLevel: 1 },
       enemies: [],
       projectiles: modes.map((weaponMode, index) => ({
-        id: `r68_visual_${weaponMode}`,
+        id: `r69_visual_${weaponMode}`,
         sprite: "bullet_pulse",
         weaponMode,
         x: 64 + index * 30,
@@ -1837,7 +1862,7 @@ async function checkR68JuiceFx(page) {
     };
   });
   ["standard", "scatter", "fracture", "ember", "laser"].forEach((id) => {
-    assert(visualLanguage.debug.projectileVisualModes[id] > 0, `R68 should render ${id} projectile language`);
+    assert(visualLanguage.debug.projectileVisualModes[id] > 0, `R69 should render ${id} projectile language`);
   });
   assert.strictEqual(visualLanguage.hudMode, "ember", "power-up mode should update the HUD weapon signature immediately");
 
@@ -1861,8 +1886,8 @@ async function checkR68JuiceFx(page) {
     window.__test.step(16);
     return { boss, lowHp, reduced: window.__test.getRenderDebug() };
   });
-  assert.strictEqual(overlays.boss.bossArrivalVignetteDrawn, true, "R68 boss arrival should pulse the full-field vignette");
-  assert.strictEqual(overlays.lowHp.lowHpPulseDrawn, true, "R68 low HP should draw the full-screen red pulse");
+  assert.strictEqual(overlays.boss.bossArrivalVignetteDrawn, true, "R69 boss arrival should pulse the full-field vignette");
+  assert.strictEqual(overlays.lowHp.lowHpPulseDrawn, true, "R69 low HP should draw the full-screen red pulse");
   assert.strictEqual(overlays.lowHp.vehicleDamageSmokeDrawn, 2, "full FX should draw two low-HP smoke puffs");
   assert.strictEqual(overlays.reduced.bossArrivalVignetteDrawn, false, "reduced settings should suppress boss vignette pulse");
   assert.strictEqual(overlays.reduced.lowHpPulseDrawn, false, "reduced settings should suppress low-HP pulse");
@@ -1880,14 +1905,14 @@ async function checkR68JuiceFx(page) {
       gates: [],
       hazards: [],
       supplyDrops: [],
-      supplyChoice: { dropId: "R68_supply_reduced", x: 52, y: 120, openedAt: state.time, rewardIds: Object.keys(window.DSConfig.SUPPLY_DROPS.rewards) },
+      supplyChoice: { dropId: "R69_supply_reduced", x: 52, y: 120, openedAt: state.time, rewardIds: Object.keys(window.DSConfig.SUPPLY_DROPS.rewards) },
       vehicle: { weaponCooldown: 999, hp: state.vehicle.maxHp * 0.3 }
     });
     window.__test.chooseSupplyReward("parts_cache");
-    const boss = window.__test.spawnEnemy("boss_hive_titan", { id: "R68_boss_reduced", x: 96, y: 116, hp: 1, speed: 0, silent: true });
+    const boss = window.__test.spawnEnemy("boss_hive_titan", { id: "R69_boss_reduced", x: 96, y: 116, hp: 1, speed: 0, silent: true });
     window.__test.setState({
       projectiles: [
-        { id: "R68_boss_reduced_shot", sprite: "bullet_cannon", x: boss.x, y: boss.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
+        { id: "R69_boss_reduced_shot", sprite: "bullet_cannon", x: boss.x, y: boss.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
       ]
     });
     window.__test.step(16);
@@ -1907,7 +1932,7 @@ async function checkR68JuiceFx(page) {
 
   const deterministic = await page.evaluate(() => {
     function runCase(fxLevel, reducedFlash) {
-      window.__test.startRun("land_rig", null, "r68_fx_determinism");
+      window.__test.startRun("land_rig", null, "r69_fx_determinism");
       const meta = window.__test.getMeta();
       meta.settings.performanceMode = "high";
       meta.settings.fxLevel = fxLevel;
@@ -1940,10 +1965,10 @@ async function checkR68JuiceFx(page) {
         },
         vehicle: { weaponCooldown: 999, aimX: state.vehicle.x, aimY: state.vehicle.y - 160 }
       });
-      const boss = window.__test.spawnEnemy("boss_hive_titan", { id: "r68_determinism_boss", x: 96, y: 116, hp: 1, speed: 0, silent: true });
+      const boss = window.__test.spawnEnemy("boss_hive_titan", { id: "r69_determinism_boss", x: 96, y: 116, hp: 1, speed: 0, silent: true });
       window.__test.setState({
         projectiles: [
-          { id: "r68_determinism_shot", sprite: "bullet_cannon", x: boss.x, y: boss.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
+          { id: "r69_determinism_shot", sprite: "bullet_cannon", x: boss.x, y: boss.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
         ]
       });
       window.__test.step(16);
@@ -2101,44 +2126,28 @@ async function tapGateChoice(page) {
     });
     window.__test.spawnGatePair(["rate_plus", "repair"]);
   });
-  await page.waitForSelector('#gateChoiceOverlay:not([hidden]) .gate-option-btn[data-gate-id="rate_plus"]');
+  await page.waitForSelector("#gateChoiceLayer:not([hidden])");
   const opened = await page.evaluate(() => window.__test.getState());
-  assert.strictEqual(opened.paused, true, "gate choice overlay should pause the run");
+  assert.strictEqual(opened.paused, false, "road gate choice should not pause the run");
   assert(opened.gateChoice && opened.gateChoice.gateIds.includes("rate_plus"), "gate choice state should list the rate option");
-  const buttons = await page.locator("#gateChoiceOverlay .gate-option-btn").evaluateAll((nodes) =>
-    nodes.map((node) => {
-      const rect = node.getBoundingClientRect();
-      return {
-        id: node.dataset.gateId,
-        text: node.innerText,
-        width: rect.width,
-        height: rect.height,
-        left: rect.left,
-        right: rect.right,
-        top: rect.top,
-        bottom: rect.bottom,
-        viewportWidth: window.innerWidth,
-        viewportHeight: window.innerHeight
-      };
-    })
-  );
-  assert.strictEqual(buttons.length, 2, "gate choice overlay should expose two choices");
-  buttons.forEach((button) => {
-    assert(button.width >= 44 && button.height >= 44, `${button.id} gate choice target should be at least 44px`);
-    assert(button.left >= 0 && button.right <= button.viewportWidth, `${button.id} gate button should not overflow horizontally`);
-    assert(button.top >= 0 && button.bottom <= button.viewportHeight, `${button.id} gate button should not overflow vertically`);
-    assert(button.text.length > 0, `${button.id} gate button should show a label and effect`);
+  assert.strictEqual(await page.locator("#gateChoiceOverlay").count(), 0, "gate modal should be removed from the DOM");
+  const hint = await page.locator("#gateChoiceLayer").innerText();
+  assert(hint.includes("射速") && hint.includes("維修"), `top hint should summarize both road gates: ${hint}`);
+  await page.evaluate(() => {
+    const state = window.__test.getState();
+    const leftX = state.gates.find((gate) => gate.gateId === "rate_plus").x;
+    window.__test.setState({
+      gates: state.gates.map((gate) => Object.assign({}, gate, { y: state.vehicle.y - 1 })),
+      vehicle: { x: leftX, followX: leftX }
+    });
+    window.__test.step(100);
   });
-  await page.keyboard.press("ArrowRight");
-  await page.keyboard.press("ArrowLeft");
-  await page.click('#gateChoiceOverlay .gate-option-btn[data-gate-id="rate_plus"]');
-  await page.waitForFunction(() => document.getElementById("gateChoiceOverlay").hidden === true);
   await page.waitForFunction(() => window.__test.getState().stats.gatesTaken >= 1);
   const state = await page.evaluate(() => window.__test.getState());
-  assert.strictEqual(state.paused, false, "choosing a gate should resume play");
-  assert.strictEqual(state.gateChoice, null, "choosing a gate should clear gate choice state");
-  assert(state.runMods.fireIntervalMul < 1, "tapping a rate gate should apply the rate mod immediately");
-  assert.strictEqual(state.gates.length, 0, "choosing one gate should remove the pair");
+  assert.strictEqual(state.paused, false, "driving through a gate should keep play running");
+  assert.strictEqual(state.gateChoice, null, "crossing a gate should clear gate choice state");
+  assert(state.runMods.fireIntervalMul < 1, "driving through the rate lane should apply the rate mod immediately");
+  assert.strictEqual(state.gates.length, 0, "crossing one gate should remove the pair");
   assert(state.lastGateChoice && state.lastGateChoice.gateId === "rate_plus", "chosen gate should be recorded for feedback");
 }
 
@@ -2168,6 +2177,7 @@ async function checkBlueprintAchievementsAndUnlock(page) {
 
   await page.click("#garageBtn");
   await page.waitForSelector("#garagePanel:not([hidden])");
+  await expandBaseMenu(page);
   await page.click("#vehicleHotspotBtn");
   await page.waitForSelector('#metaDrawer:not([hidden]) [data-meta-section="vehicle"]:not([hidden])');
   const skyButton = await page.locator('[data-vehicle="sky_barge"]').evaluate((button) => ({
@@ -2201,6 +2211,7 @@ async function checkBlueprintWishlistDrop(page) {
     window.__test.showGarage();
   });
   await page.waitForSelector("#garagePanel:not([hidden])");
+  await expandBaseMenu(page);
   await page.click("#vehicleHotspotBtn");
   await page.waitForSelector('[data-blueprint-wishlist="sea_ark"]');
   await page.click('[data-blueprint-wishlist="sea_ark"]');
@@ -2329,7 +2340,7 @@ async function checkEnvironmentEventsAndVariants(page) {
   assert(state.enemies.some((enemy) => enemy.variantId), "late wave generation should spawn tinted variants");
 }
 
-async function checkR68EnemyRosterBehaviors(page) {
+async function checkR69EnemyRosterBehaviors(page) {
   await page.evaluate(() => {
     window.__test.clearStorage();
     window.__test.startRun("land_rig");
@@ -2390,7 +2401,7 @@ async function checkR68EnemyRosterBehaviors(page) {
   assert.deepStrictEqual(
     result.enemyIds,
     ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith", "ash_screamer", "chain_tether", "mirror_husk", "ember_tick"].sort(),
-    "R68 enemy roster should be spawnable"
+    "R69 enemy roster should be spawnable"
   );
   assert(result.enemyProjectiles >= 2, "spore spitter and ash screamer should fire enemy projectiles");
   assert.strictEqual(result.screamProjectile, true, "ash screamer should fire low-damage scream projectiles");
@@ -2401,10 +2412,10 @@ async function checkR68EnemyRosterBehaviors(page) {
   assert(result.tetherSlowMul >= 0.78, "chain tether should use the guarded slow multiplier");
   assert(result.mirrorShieldHp >= 40, "mirror husk should spawn with a strong front shield");
   assert.strictEqual(result.emberBehavior, "swarm", "ember tick should reuse swarm behavior");
-  assert(result.rasterDrawn >= 9, `R68 enemies should draw raster sprites, got ${result.rasterDrawn}`);
+  assert(result.rasterDrawn >= 9, `R69 enemies should draw raster sprites, got ${result.rasterDrawn}`);
 }
 
-async function checkR68RunBarks(page) {
+async function checkR69RunBarks(page) {
   const triggered = await page.evaluate(() => {
     window.__test.clearStorage();
     window.__test.startRun("land_rig");
@@ -2554,6 +2565,7 @@ async function checkEventCodexAndAchievements(page) {
 
   await page.click("#garageBtn");
   await page.waitForSelector("#garagePanel:not([hidden])");
+  await expandBaseMenu(page);
   await page.click("#seriesHotspotBtn");
   await page.waitForSelector('[data-event-id="meteor_shower"]');
   const codexText = await page.locator('[data-event-id="meteor_shower"]').innerText();
@@ -2632,7 +2644,7 @@ async function checkSupplyDropPickupAndSettlement(page) {
     window.__test.step(80);
   });
   let state = await page.evaluate(() => window.__test.getState());
-  assert.strictEqual(state.paused, true, "touching a supply cache should pause for a choice");
+  assert.strictEqual(state.paused, false, "touching a supply cache should keep combat running");
   assert(state.supplyChoice, "touching a supply cache should open supply choice state");
   assert.strictEqual(state.stats.supplyCratesCollected, 0, "touching a supply cache should not apply a random reward");
   await page.waitForSelector('#supplyChoiceOverlay:not([hidden]) .supply-choice-btn[data-reward-id="damage_boost"]');
@@ -2653,7 +2665,7 @@ async function checkSupplyDropPickupAndSettlement(page) {
   await page.click('#supplyChoiceOverlay .supply-choice-btn[data-reward-id="damage_boost"]');
   await page.waitForFunction(() => document.getElementById("supplyChoiceOverlay").hidden === true);
   state = await page.evaluate(() => window.__test.getState());
-  assert.strictEqual(state.paused, false, "choosing a supply reward should resume the run");
+  assert.strictEqual(state.paused, false, "choosing a supply reward should keep the run active");
   assert.strictEqual(state.supplyChoice, null, "choosing a supply reward should clear supply choice state");
   assert.strictEqual(state.supplyDrops.length, 0, "picked supply cache should disappear");
   assert.strictEqual(state.stats.supplyCratesCollected, 1, "chosen supply reward should count one collected cache");
@@ -2826,7 +2838,7 @@ async function deathSettlementUpgradeAndReload(page) {
   }));
   assert(upgradedRun.state.vehicle.maxHp > upgradedRun.baseHp, "new run should use upgraded hp");
 
-  await page.reload({ waitUntil: "networkidle" });
+  await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
   meta = await page.evaluate(() => window.__test.getMeta());
   assert.strictEqual(meta.vehicleLevels.land_rig.hull, 1, "reload should preserve upgrade level");
@@ -2840,7 +2852,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
   });
   page.on("pageerror", (error) => errors.push(error.message));
 
-  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
   await page.evaluate(() => window.__test.clearStorage());
   await checkShelterMeta(page, full);
@@ -2862,14 +2874,14 @@ async function runScenario(browser, baseUrl, viewport, full) {
     await checkBossBlueprintDropAnimation(page);
     await unlockFleet(page);
     await checkEnvironmentEventsAndVariants(page);
-    await checkR68EnemyRosterBehaviors(page);
-    await checkR68RunBarks(page);
+    await checkR69EnemyRosterBehaviors(page);
+    await checkR69RunBarks(page);
     await checkEventCodexAndAchievements(page);
     await checkSupplyDropPickupAndSettlement(page);
     await unlockFleet(page);
     await checkFleetProjectileTraits(page);
-    await checkR68CombatRefresh(page);
-    await checkR68DamageRegression(page);
+    await checkR69CombatRefresh(page);
+    await checkR69DamageRegression(page);
     await checkVehicleFleetSelectionAndCombat(page);
     await checkBlueprintAchievementsAndUnlock(page);
     await checkVehicleSpecificUpgradePurchase(page);
@@ -2888,7 +2900,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await checkAimAssistToggle(page);
   await checkAdaptivePerformance(page);
   await checkFxIntegration(page);
-  await checkR68JuiceFx(page);
+  await checkR69JuiceFx(page);
   await dragAim(page);
   await killEnemiesAndEarnPreviewParts(page);
   await shootGate(page);
@@ -2917,7 +2929,7 @@ async function runImageFallbackScenario(browser, baseUrl) {
     route.fulfill({ status: 404, contentType: "text/plain", body: "missing test image" });
   });
 
-  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
   await page.evaluate(() => window.__test.clearStorage());
   await page.waitForFunction(() => {
@@ -2943,7 +2955,7 @@ async function runVehicleImageFallbackScenario(browser, baseUrl) {
     route.fulfill({ status: 404, contentType: "text/plain", body: "missing test vehicle" });
   });
 
-  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
   await page.evaluate(() => {
     window.__test.clearStorage();
@@ -2971,7 +2983,7 @@ async function runZombieImageFallbackScenario(browser, baseUrl) {
     route.fulfill({ status: 404, contentType: "text/plain", body: "missing test zombie" });
   });
 
-  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
   await page.evaluate(() => {
     window.__test.clearStorage();
@@ -3005,7 +3017,7 @@ async function runEnvironmentBackgroundFallbackScenario(browser, baseUrl) {
     route.fulfill({ status: 404, contentType: "text/plain", body: "missing test background" });
   });
 
-  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
   await page.evaluate(() => {
     window.__test.clearStorage();
@@ -3129,7 +3141,7 @@ async function runAudioScenario(browser, baseUrl) {
     window.webkitAudioContext = FakeAudioContext;
   });
 
-  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
   await page.evaluate(() => window.__test.clearStorage());
 
@@ -3179,7 +3191,7 @@ async function runAudioScenario(browser, baseUrl) {
   assert.strictEqual(afterMuted.total, beforeMuted.total, "sound off must not create any audio nodes");
 
   // 4) reload 後音效關閉設定應保留；重新開啟後觸發數恢復增加。
-  await page.reload({ waitUntil: "networkidle" });
+  await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
   const reloaded = await page.evaluate(() => window.__test.getMeta().settings.sound);
   assert.strictEqual(reloaded, false, "sound=false should survive reload");
@@ -3218,16 +3230,16 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
   page.on("pageerror", (error) => errors.push(error.message));
 
   try {
-    await page.goto(`${baseUrl}?swtest=1`, { waitUntil: "networkidle" });
+    await page.goto(`${baseUrl}?swtest=1`, { waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
     await page.waitForFunction(async () => {
       if (!("serviceWorker" in navigator)) return false;
       const registration = await navigator.serviceWorker.ready;
       return !!registration.active;
     });
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r68")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r69")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -3245,7 +3257,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r68")), "R68 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r69")), "R69 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

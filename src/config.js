@@ -4,7 +4,7 @@ const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 3;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R68", CACHE_VERSION: "ashes-convoy-r68-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R69", CACHE_VERSION: "ashes-convoy-r69-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -48,6 +48,8 @@ const RUN_TRAILER = {
 const TRAILER_GUNNER = {
   enabledDefault: true,
   sprite: "assets/vehicles/xi_gunner.png",
+  frames: 2,
+  visualWidth: 28,
   offsetX: 0,
   offsetY: 34,
   followLerp: 0.12,
@@ -61,7 +63,8 @@ const TRAILER_GUNNER = {
     bulletSprite: "bullet_machine",
     color: "#ffd27f"
   },
-  muzzleOffsetY: -12
+  muzzleOffsetY: -12,
+  firingFrameSeconds: 0.14
 };
 
 const STORY = {

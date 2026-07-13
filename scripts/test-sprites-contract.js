@@ -254,7 +254,8 @@ check(frameCount === expectedFrameCount, `frame count must be ${expectedFrameCou
   { path: "assets/shelter/trailer/mycelium_rack.png", width: 300, height: 160, alphaBinary: true },
   { path: "assets/shelter/trailer/reload_bench.png", width: 300, height: 210, alphaBinary: true },
   { path: "assets/shelter/trailer/welding_kit.png", width: 220, height: 150, alphaBinary: true },
-  { path: "assets/vehicles/trailer.png", width: 709, height: 1291, alphaBinary: true }
+  { path: "assets/vehicles/trailer.png", width: 709, height: 1291, alphaBinary: true },
+  { path: "assets/vehicles/xi_gunner.png", width: 512, height: 384, alphaBinary: false }
 ].forEach(checkPngContract);
 
 if (errors.length > 0) {

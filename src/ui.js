@@ -20,15 +20,9 @@
   const swAutoReloadStartedAt = Date.now();
   const SW_AUTO_RELOAD_WINDOW_MS = 15000;
   const SW_AUTO_RELOAD_SESSION_KEY = "ashes_convoy_sw_auto_reload";
-  const gateChoiceButtons = new Map();
-  let lastGateChoiceKey = "";
   let lastSupplyChoiceKey = "";
   let trailerRoomMetrics = null;
   let trailerRedrawTimer = 0;
-  let gateChoiceLayerSize = {
-    width: config.LOGIC.displayWidth,
-    height: config.LOGIC.displayHeight
-  };
 
   const els = {};
   const shelter = {
@@ -221,7 +215,17 @@
     }
   }
 
+  function setBaseMenu(open) {
+    if (!els.baseActions || !els.baseToggleBtn) return;
+    const expanded = !!open;
+    els.baseActions.hidden = !expanded;
+    els.baseToggleBtn.setAttribute("aria-expanded", String(expanded));
+    els.baseToggleBtn.textContent = expanded ? "收合基地" : "基地";
+    collectActionRects();
+  }
+
   function openMetaDrawer(kind, trigger) {
+    setBaseMenu(false);
     if (trigger && typeof trigger.focus === "function") lastDrawerTrigger = trigger;
     shelter.drawerKind = kind || "garage";
     setSectionVisibility(shelter.drawerKind);
@@ -238,7 +242,10 @@
     }
     els.metaDrawer.hidden = true;
     shelter.drawerKind = "";
-    if (lastDrawerTrigger && typeof lastDrawerTrigger.focus === "function") lastDrawerTrigger.focus();
+    const focusTarget = lastDrawerTrigger && lastDrawerTrigger.getClientRects().length > 0
+      ? lastDrawerTrigger
+      : els.baseToggleBtn;
+    if (focusTarget && typeof focusTarget.focus === "function") focusTarget.focus();
   }
 
   function applyMetaBackgroundMode(mode) {
@@ -250,6 +257,7 @@
     els.shelterImage.hidden = mode !== "image";
     els.shelterCanvas.hidden = mode !== "scene";
     els.hotspotLayer.hidden = false;
+    setBaseMenu(false);
     if (hasFullMetaBackground()) {
       closeMetaDrawer();
     } else {
@@ -260,6 +268,7 @@
   function collectActionRects() {
     const buttons = [
       els.sortieBtn,
+      els.baseToggleBtn,
       els.upgradeHotspotBtn,
       els.vehicleHotspotBtn,
       els.seriesHotspotBtn,
@@ -270,7 +279,7 @@
     const panelRect = els.garagePanel.getBoundingClientRect();
     shelter.hotspotRects = {};
     buttons.forEach((button) => {
-      if (!button) return;
+      if (!button || button.getClientRects().length === 0) return;
       const rect = button.getBoundingClientRect();
       shelter.hotspotRects[button.id] = {
         left: rect.left - panelRect.left,
@@ -460,35 +469,6 @@
     if (reward.type === "parts") return "本局結算列入補給收益";
     if (reward.type === "shield") return "立即加到護盾上限";
     return "";
-  }
-
-  function syncGateChoiceLayerSize() {
-    if (!els.gateChoiceLayer) return;
-    const host = els.gateChoiceLayer.parentElement || els.gateChoiceLayer;
-    const rect = host.getBoundingClientRect();
-    gateChoiceLayerSize = {
-      width: rect.width || config.LOGIC.displayWidth,
-      height: rect.height || config.LOGIC.displayHeight
-    };
-  }
-
-  function updateGateChoiceButtonPosition(button, gate) {
-    const x = Math.round(((gate.x / config.LOGIC.width) * gateChoiceLayerSize.width) / 4) * 4;
-    const y = Math.round(((gate.y / config.LOGIC.height) * gateChoiceLayerSize.height) / 4) * 4;
-    button.style.setProperty("--gate-x", `${x}px`);
-    button.style.setProperty("--gate-y", `${y}px`);
-  }
-
-  function removeGateChoiceButton(entityId) {
-    const record = gateChoiceButtons.get(entityId);
-    if (!record) return;
-    record.button.removeEventListener("click", record.onClick);
-    record.button.remove();
-    gateChoiceButtons.delete(entityId);
-  }
-
-  function clearGateChoiceButtons() {
-    Array.from(gateChoiceButtons.keys()).forEach(removeGateChoiceButton);
   }
 
   function achievementLabel(id) {
@@ -1248,57 +1228,21 @@
 
   function renderGateChoices(state) {
     if (!els.gateChoiceLayer) return;
-    els.gateChoiceLayer.hidden = true;
-    clearGateChoiceButtons();
-  }
-
-  function renderGateChoiceOverlay(state) {
-    if (!els.gateChoiceOverlay || !els.gateChoiceList) return;
     const choice = state && state.gateChoice;
-    if (!choice) {
-      els.gateChoiceOverlay.hidden = true;
-      els.gateChoiceList.textContent = "";
-      lastGateChoiceKey = "";
+    if (!choice || state.time - choice.openedAt > 3.8) {
+      els.gateChoiceLayer.hidden = true;
+      els.gateChoiceLayer.textContent = "";
       return;
     }
     const gateIds = Array.isArray(choice.gateIds) && choice.gateIds.length
       ? choice.gateIds
       : (choice.options || []).map((option) => option.gateId).filter(Boolean);
-    const key = `${choice.pairId}:${gateIds.join(",")}`;
-    if (lastGateChoiceKey !== key) {
-      els.gateChoiceList.textContent = "";
-      gateIds.forEach((gateId, index) => {
-        const gate = config.GATES[gateId];
-        if (!gate) return;
-        const optionState = rules.gateOptionState({
-          gateId,
-          runMods: state.runMods,
-          vehicle: state.vehicle,
-          vehicleLevels: rules.getVehicleLevels(state.meta, state.vehicleId, config),
-          config
-        });
-        const button = root.document.createElement("button");
-        button.type = "button";
-        button.className = "supply-choice-btn gate-option-btn";
-        if (optionState.maxed) button.classList.add("is-maxed");
-        button.dataset.gateId = gateId;
-        button.setAttribute("aria-label", `${gate.label} ${gateValueText(gateId)}`);
-        button.innerHTML = `<b>${index + 1}. ${gate.label}</b><span>${gateValueText(gateId)}</span><small>選擇後立即套用</small>`;
-        if (optionState.maxed && optionState.overflowText) {
-          button.insertAdjacentHTML("beforeend", `<em class="choice-overflow-badge">已滿 → 溢出：${optionState.overflowText}</em>`);
-        }
-        button.addEventListener("click", () => {
-          game.chooseGate(gateId);
-        });
-        els.gateChoiceList.appendChild(button);
-      });
-      lastGateChoiceKey = key;
-      root.requestAnimationFrame(() => {
-        const first = els.gateChoiceList.querySelector(".gate-option-btn");
-        if (first && typeof first.focus === "function") first.focus();
-      });
-    }
-    els.gateChoiceOverlay.hidden = false;
+    const labels = gateIds.map((gateId) => {
+      const gate = config.GATES[gateId];
+      return gate ? `${gate.shortLabel} ${gateValueText(gateId)}` : gateId;
+    });
+    els.gateChoiceLayer.textContent = `← ${labels[0] || ""} ｜ ${labels[1] || ""} →`;
+    els.gateChoiceLayer.hidden = false;
   }
 
   function renderSupplyChoice(state) {
@@ -1349,33 +1293,6 @@
     els.supplyChoiceOverlay.hidden = false;
   }
 
-  function handleGateChoiceKey(event) {
-    if (!els.gateChoiceOverlay || els.gateChoiceOverlay.hidden) return false;
-    const buttons = Array.from(els.gateChoiceList.querySelectorAll(".gate-option-btn"));
-    if (!buttons.length) return false;
-    const activeIndex = Math.max(0, buttons.indexOf(root.document.activeElement));
-    function focusAt(index) {
-      buttons[(index + buttons.length) % buttons.length].focus();
-    }
-    if (/^[1-2]$/.test(event.key)) {
-      const button = buttons[Number(event.key) - 1];
-      if (button) button.click();
-    } else if (event.key === "ArrowRight" || event.key === "ArrowDown") {
-      focusAt(activeIndex + 1);
-    } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
-      focusAt(activeIndex - 1);
-    } else if (event.key === "Enter" || event.key === " ") {
-      (buttons[activeIndex] || buttons[0]).click();
-    } else if (event.key === "Escape") {
-      // Gate choices are mandatory once presented.
-    } else {
-      return false;
-    }
-    event.preventDefault();
-    event.stopPropagation();
-    return true;
-  }
-
   function handleSupplyChoiceKey(event) {
     if (!els.supplyChoiceOverlay || els.supplyChoiceOverlay.hidden) return false;
     const buttons = Array.from(els.supplyChoiceList.querySelectorAll(".supply-choice-btn"));
@@ -1394,7 +1311,7 @@
     } else if (event.key === "Enter" || event.key === " ") {
       (buttons[activeIndex] || buttons[0]).click();
     } else if (event.key === "Escape") {
-      // Supply choices are mandatory once picked up.
+      return false;
     } else {
       return false;
     }
@@ -1434,8 +1351,8 @@
     if (!state || (state.mode !== "playing" && state.mode !== "paused")) {
       els.hud.classList.remove("is-visible");
       els.hud.classList.remove("is-reduced");
+      els.hudMods.style.visibility = "";
       renderGateChoices(null);
-      renderGateChoiceOverlay(null);
       renderEventBanner(null);
       renderSupplyChoice(null);
       return;
@@ -1444,7 +1361,8 @@
     const reducedMotion = !!(meta.settings && meta.settings.reducedFlash);
     els.hud.classList.toggle("is-reduced", reducedMotion);
     renderGateChoices(state);
-    renderGateChoiceOverlay(state);
+    const gateHintVisible = !!(state.gateChoice && state.time - state.gateChoice.openedAt <= 3.8);
+    els.hudMods.style.visibility = gateHintVisible ? "hidden" : "";
     renderEventBanner(state);
     renderSupplyChoice(state);
     const vehicle = config.VEHICLES[state.vehicleId];
@@ -1809,8 +1727,7 @@
     } else if (state.mode === "paused") {
       renderHud(state);
       renderPerformanceDiagnostics(state);
-      if (state.supplyChoice || state.gateChoice) els.pausePanel.hidden = true;
-      else showPause();
+      showPause();
     }
   }
 
@@ -1828,16 +1745,19 @@
   function bindEvents() {
     els.startBtn.addEventListener("click", startSelectedRun);
     els.sortieBtn.addEventListener("click", startSelectedRun);
+    els.baseToggleBtn.addEventListener("click", () => setBaseMenu(els.baseActions.hidden));
     els.upgradeHotspotBtn.addEventListener("click", () => openMetaDrawer("upgrades", els.upgradeHotspotBtn));
     els.vehicleHotspotBtn.addEventListener("click", () => openMetaDrawer("vehicle", els.vehicleHotspotBtn));
     els.seriesHotspotBtn.addEventListener("click", () => openMetaDrawer("achievements", els.seriesHotspotBtn));
-    els.trailerHotspotBtn.addEventListener("click", () => openTrailerRoom(els.trailerHotspotBtn));
+    els.trailerHotspotBtn.addEventListener("click", () => {
+      setBaseMenu(false);
+      openTrailerRoom(els.trailerHotspotBtn);
+    });
     els.opsHotspotBtn.addEventListener("click", () => openMetaDrawer("operations", els.opsHotspotBtn));
     els.resetOverlayBtn.addEventListener("click", clearStorage);
     els.closeMetaDrawer.addEventListener("click", closeMetaDrawer);
     if (els.storyLogBtn) els.storyLogBtn.addEventListener("click", toggleStoryLog);
     els.closeTrailerRoomBtn.addEventListener("click", closeTrailerRoom);
-    root.addEventListener("resize", syncGateChoiceLayerSize);
     root.addEventListener("ashes-trailer-asset-ready", () => {
       if (els.trailerOverlay && !els.trailerOverlay.hidden) renderTrailerRoom();
     });
@@ -1876,7 +1796,6 @@
       selectVehicle(next);
     });
     root.document.addEventListener("keydown", (event) => {
-      if (handleGateChoiceKey(event)) return;
       if (handleSupplyChoiceKey(event)) return;
       if (event.key !== "Escape") return;
       if (els.trailerOverlay && !els.trailerOverlay.hidden) {
@@ -1985,10 +1904,6 @@
       "eventBannerTitle",
       "eventBannerBody",
       "gateChoiceLayer",
-      "gateChoiceOverlay",
-      "gateChoiceTitle",
-      "gateChoiceHint",
-      "gateChoiceList",
       "supplyChoiceOverlay",
       "supplyChoiceTitle",
       "supplyChoiceHint",
@@ -1999,6 +1914,8 @@
       "shelterImage",
       "hotspotLayer",
       "sortieBtn",
+      "baseToggleBtn",
+      "baseActions",
       "upgradeHotspotBtn",
       "vehicleHotspotBtn",
       "seriesHotspotBtn",
@@ -2073,7 +1990,6 @@
 
   function init() {
     collectElements();
-    syncGateChoiceLayerSize();
     installErrorRecovery();
     loadMeta();
     bindEvents();

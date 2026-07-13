@@ -166,7 +166,7 @@ assert(FX.waveBanner.boss.textTemplate.indexOf("警告") >= 0 || FX.waveBanner.b
 });
 assert(FX.waveBanner.boss.flashHz > 0 && FX.waveBanner.boss.shake > 0, "boss 橫幅需有 flash 與 shake 強化");
 
-// R68 combo reward flourish config.
+// R69 combo reward flourish config.
 assert(FX.combo && FX.combo.windowSeconds > 0 && FX.combo.fadeSeconds > 0, "FX.combo should define combo timing");
 assert(FX.combo.size >= 10 && HEX.test(FX.combo.color), "FX.combo should define readable text styling");
 

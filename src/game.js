@@ -1189,11 +1189,8 @@
       openedAt: state.time,
       rewardIds: Object.keys((config.SUPPLY_DROPS && config.SUPPLY_DROPS.rewards) || {})
     };
-    state.paused = true;
-    state.mode = "playing";
-    state.input.dragging = false;
-    state.input.lastPointer = null;
-    pushEventBanner("補給箱", "選擇一項補給", { kind: "supply", ttl: 1.6 });
+    // Keep combat moving: the compact supply strip is a one-tap, non-modal choice.
+    pushEventBanner("補給箱", "選一項補給，戰鬥不中斷", { kind: "supply", ttl: 1.6 });
     emitState();
   }
 
@@ -1217,8 +1214,6 @@
     state.stats = Object.assign(state.stats, result.stats);
     applyOverflowReward(result.overflow, choice.x, choice.y - 10);
     state.supplyChoice = null;
-    state.paused = false;
-    state.mode = "playing";
     state.messages.push({ text: `補給箱：${result.reward.label}`, time: state.time, ttl: 1.8 });
     pushEventBanner("補給箱", result.reward.label, { kind: "supply", ttl: 1.5 });
     pushRunBark("first_supply");
@@ -1299,6 +1294,7 @@
       companionPose: null,
       companionUpdatedAt: 0,
       companionCooldown: 0,
+      companionFiringUntil: 0,
       runMods: rules.defaultRunMods(),
       enemies: [],
       hazards: [],
@@ -1399,7 +1395,6 @@
 
   function pause() {
     if (!state || state.over) return;
-    if (state.supplyChoice || state.gateChoice) return;
     state.paused = true;
     state.mode = "paused";
     emitState();
@@ -1407,10 +1402,6 @@
 
   function resume() {
     if (!state || state.over) return;
-    if (state.supplyChoice || state.gateChoice) {
-      emitState();
-      return;
-    }
     state.paused = false;
     state.mode = "playing";
     emitState();
@@ -1418,7 +1409,6 @@
 
   function togglePause() {
     if (!state || state.over) return;
-    if (state.supplyChoice || state.gateChoice) return;
     if (state.paused) resume();
     else pause();
   }
@@ -1559,8 +1549,8 @@
     const pairId = nextId("gatepair");
     const ids = options && options.length ? options : ["damage_plus", "repair"];
     const gateHalf = 32 * 1.75 * 0.5;
-    const left = spawnGate(ids[0], { pairId, x: config.LOGIC.roadLeft + gateHalf + 1, y: 104, silent: true });
-    const right = spawnGate(ids[1], { pairId, x: config.LOGIC.roadRight - gateHalf - 1, y: 104, silent: true });
+    const left = spawnGate(ids[0], { pairId, x: config.LOGIC.roadLeft + gateHalf + 1, y: -42, silent: true });
+    const right = spawnGate(ids[1], { pairId, x: config.LOGIC.roadRight - gateHalf - 1, y: -42, silent: true });
     openGateChoice(pairId, [left, right]);
     emitState();
     return [left, right];
@@ -1585,11 +1575,10 @@
       gateIds: options.map((gate) => gate.gateId),
       options
     };
-    state.paused = true;
+    // The road gates are the choice. Steering through a lane resolves it.
     state.mode = "playing";
-    state.input.dragging = false;
-    state.input.lastPointer = null;
-    pushEventBanner("增益門", "選擇一項增益後繼續出勤", { kind: "gate", ttl: 1.6 });
+    const labels = options.map((option) => config.GATES[option.gateId].shortLabel).join(" ｜ ");
+    pushEventBanner("增益門逼近", `← ${labels} →`, { kind: "gate", ttl: 2.8 });
   }
 
   function grantGate(gateId, options) {
@@ -1631,8 +1620,7 @@
   function resolveGateChoice(gate) {
     if (!gate || gate.broken) return;
     gate.broken = true;
-    state.gateChoice = null;
-    state.paused = false;
+    if (state.gateChoice && state.gateChoice.pairId === gate.pairId) state.gateChoice = null;
     state.mode = "playing";
     grantGate(gate.gateId, { silent: true });
     addEffect({
@@ -2635,8 +2623,23 @@
   }
 
   function updateGatesAndEffects(dt) {
+    const crossingPairs = new Map();
     state.gates.forEach((gate) => {
+      const previousY = gate.y;
       gate.y += config.WAVE.gateSpeed * dt;
+      if (previousY < state.vehicle.y && gate.y >= state.vehicle.y) {
+        const candidates = crossingPairs.get(gate.pairId) || [];
+        candidates.push(gate);
+        crossingPairs.set(gate.pairId, candidates);
+      }
+    });
+    crossingPairs.forEach((gates) => {
+      const selected = gates
+        .slice()
+        .sort((a, b) => Math.abs(a.x - state.vehicle.x) - Math.abs(b.x - state.vehicle.x))[0];
+      if (!selected) return;
+      const reach = (selected.touchRadius || selected.radius || 0) + (state.vehicle.radius || 0);
+      if (Math.abs(selected.x - state.vehicle.x) <= reach) resolveGateChoice(selected);
     });
     state.gates = state.gates.filter((gate) => gate.y < H + 70 && !gate.broken);
     state.effects.forEach((effect) => {
@@ -2807,6 +2810,7 @@
       scale: 0.78,
       color: weapon.color || "#ffd27f"
     });
+    state.companionFiringUntil = state.time + (spec.firingFrameSeconds || 0.14);
     state.companionCooldown += weapon.fireInterval || 0.9;
   }
 
@@ -2986,7 +2990,6 @@
       }
     });
     root.addEventListener("keydown", (event) => {
-      if (state && (state.supplyChoice || state.gateChoice)) return;
       if (event.key === "Escape") {
         togglePause();
       } else if (event.key === "r" || event.key === "R") {
@@ -4457,17 +4460,23 @@
     const pose = state.companionPose || updateCompanionPose(0);
     const status = companionImageStatus(spec);
     const record = spec.sprite ? companionImages[spec.sprite] : null;
+    const frameCount = Math.max(1, Number.isFinite(spec.frames) ? Math.floor(spec.frames) : 1);
+    const frameWidth = record && record.image && record.image.naturalWidth > 0
+      ? record.image.naturalWidth / frameCount
+      : 0;
     const width = spec.visualWidth || 30;
     const height =
-      record && record.image && record.image.naturalWidth > 0
-        ? width * (record.image.naturalHeight / record.image.naturalWidth)
+      record && record.image && frameWidth > 0
+        ? width * (record.image.naturalHeight / frameWidth)
         : width * 1.33;
+    const frame = frameCount > 1 && state.companionFiringUntil > state.time ? 1 : 0;
     renderDebug.companionImageStatus = status;
     renderDebug.companionPose = {
       x: Math.round(pose.x * 10) / 10,
       y: Math.round(pose.y * 10) / 10,
       rotation: Math.round(pose.rotation * 1000) / 1000
     };
+    renderDebug.companionFrame = frame;
 
     if (record && status === "loaded") {
       ctx.save();
@@ -4475,7 +4484,17 @@
       ctx.rotate(pose.rotation);
       ctx.globalAlpha *= spec.alpha == null ? 0.96 : spec.alpha;
       ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(record.image, -width * 0.5, -height * 0.64, width, height);
+      ctx.drawImage(
+        record.image,
+        frame * frameWidth,
+        0,
+        frameWidth,
+        record.image.naturalHeight,
+        -width * 0.5,
+        -height * 0.64,
+        width,
+        height
+      );
       ctx.restore();
       renderDebug.companionRasterDrawn = true;
       return;
@@ -4882,6 +4901,7 @@
       companionFallbackDrawn: false,
       companionImageStatus: "none",
       companionPose: null,
+      companionFrame: 0,
       backgroundRasterDrawn: false,
       backgroundFallbackDrawn: false,
       backgroundImageStatus: "none",

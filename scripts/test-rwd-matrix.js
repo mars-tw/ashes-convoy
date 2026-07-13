@@ -137,6 +137,7 @@ const STATES = [
   {
     name: "meta-ops-drawer",
     prepare: async (page) => {
+      await page.click("#baseToggleBtn");
       await page.waitForSelector("#opsHotspotBtn", { state: "visible" });
       await page.click("#opsHotspotBtn");
       await page.waitForSelector('#metaDrawer:not([hidden]) [data-meta-section="operations"]:not([hidden])');
@@ -150,6 +151,7 @@ const STATES = [
         meta.trailerGoods = 200;
         window.__test.setMeta(meta);
       });
+      await page.click("#baseToggleBtn");
       await page.waitForSelector("#trailerHotspotBtn", { state: "visible" });
       await page.click("#trailerHotspotBtn");
       await page.waitForSelector("#trailerOverlay:not([hidden]) #trailerFurnitureList");
@@ -237,6 +239,10 @@ async function runMatrix(browser, baseUrl) {
         await state.prepare(page);
         await page.waitForTimeout(300);
         const res = await auditViewport(page);
+        const appBox = await page.locator("#app").boundingBox();
+        assert(appBox, `${label} app shell 應可見`);
+        assert(appBox.height >= vp.h * 0.9, `${label} app 高度 ${appBox.height}px 應至少佔視口 90%`);
+        assert(Math.abs(appBox.width / appBox.height - 390 / 844) < 0.01, `${label} app 應維持 390:844 等比，實際 ${appBox.width}x${appBox.height}`);
         assert.strictEqual(
           res.violations.length,
           0,
