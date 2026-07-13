@@ -63,6 +63,7 @@
   const companionImages = {};
   const fxTextureImages = {};
   const fxTextureTintCache = Object.create(null);
+  const roadDetailImage = { image: null, status: "none" };
 
   function detectConstrainedDevice() {
     const navigatorInfo = root.navigator || {};
@@ -479,6 +480,23 @@
     });
   }
 
+  function preloadRoadDetailImage() {
+    const spec = config.ROAD_DETAIL_ATLAS;
+    if (!spec || !spec.image || typeof root.Image !== "function" || roadDetailImage.image) return;
+    roadDetailImage.image = new root.Image();
+    roadDetailImage.status = "loading";
+    roadDetailImage.image.onload = () => {
+      roadDetailImage.status = "loaded";
+      draw();
+    };
+    roadDetailImage.image.onerror = () => {
+      roadDetailImage.status = "failed";
+      draw();
+    };
+    roadDetailImage.image.decoding = "async";
+    roadDetailImage.image.src = spec.image;
+  }
+
   function environmentImageStatus(environment) {
     const record = environmentImages[environment];
     if (!record) return "none";
@@ -551,10 +569,13 @@
     if (typeof root.Image !== "function") return;
     Object.keys(config.ENEMIES).forEach((enemyId) => {
       const enemy = config.ENEMIES[enemyId];
-      if (!enemy.spriteImage || enemyImages[enemyId]) return;
-      const record = { image: new root.Image(), status: "loading" };
+      const animation = enemy.spriteAnimation || null;
+      const src = (animation && animation.image) || enemy.spriteImage;
+      if (!src || enemyImages[enemyId]) return;
+      const record = { image: new root.Image(), status: "loading", src, tintCanvas: null };
       record.image.onload = () => {
         record.status = "loaded";
+        buildEnemyAnimationTint(enemyId);
         draw();
       };
       record.image.onerror = () => {
@@ -562,9 +583,31 @@
         draw();
       };
       record.image.decoding = "async";
-      record.image.src = enemy.spriteImage;
+      record.image.src = src;
       enemyImages[enemyId] = record;
     });
+  }
+
+  // 每種敵人的廢土暖色只在貼圖載入時合成一次；150+ 實體共享同一張離屏 atlas。
+  function buildEnemyAnimationTint(enemyId) {
+    const record = enemyImages[enemyId];
+    const enemy = config.ENEMIES[enemyId];
+    const animation = enemy && enemy.spriteAnimation;
+    if (!record || record.status !== "loaded" || !record.image.naturalWidth || !animation) return null;
+    const buffer = root.document.createElement("canvas");
+    buffer.width = record.image.naturalWidth;
+    buffer.height = record.image.naturalHeight;
+    const bufferCtx = buffer.getContext("2d");
+    bufferCtx.imageSmoothingEnabled = false;
+    bufferCtx.drawImage(record.image, 0, 0);
+    if (animation.warmTint) {
+      bufferCtx.globalCompositeOperation = "source-atop";
+      bufferCtx.fillStyle = animation.warmTint;
+      bufferCtx.fillRect(0, 0, buffer.width, buffer.height);
+      bufferCtx.globalCompositeOperation = "source-over";
+    }
+    record.tintCanvas = buffer;
+    return buffer;
   }
 
   function enemyImageStatus(enemyId) {
@@ -3269,6 +3312,48 @@
     renderDebug.roadDetailTier = low ? "low" : "high";
   }
 
+  function drawRoadDebrisAtlas() {
+    const spec = config.ROAD_DETAIL_ATLAS;
+    const image = roadDetailImage.image;
+    if (!state || currentEnvironment() !== "land" || !spec || roadDetailImage.status !== "loaded" || !image) return;
+    const low = performanceState.quality === "low";
+    const reduced = fxLevelSetting() !== "full";
+    const step = low ? 310 : reduced ? 238 : 184;
+    const scroll = state.scroll || 0;
+    const offset = (scroll * 1.08) % step;
+    let drawn = 0;
+    ctx.save();
+    ctx.globalAlpha = low ? 0.38 : reduced ? 0.48 : 0.58;
+    ctx.imageSmoothingEnabled = false;
+    for (let y = -step + offset; y < H + step && drawn < (low ? 2 : 4); y += step) {
+      const slot = Math.abs(Math.floor((y - offset) / step));
+      const frame = (slot * 3 + 1) % spec.frames;
+      const side = slot % 2;
+      const x = side ? config.LOGIC.roadRight - 10 : config.LOGIC.roadLeft + 10;
+      const size = low ? 13 : 15 + (slot % 2) * 2;
+      const rotation = side ? -0.12 : 0.1;
+      ctx.save();
+      ctx.translate(Math.round(x), Math.round(y));
+      ctx.rotate(rotation);
+      ctx.drawImage(
+        image,
+        frame * spec.frameWidth,
+        0,
+        spec.frameWidth,
+        spec.frameHeight,
+        -size * 0.5,
+        -size * 0.5,
+        size,
+        size
+      );
+      ctx.restore();
+      drawn += 1;
+    }
+    ctx.restore();
+    renderDebug.roadDebrisDrawn = drawn;
+    renderDebug.roadDebrisStatus = roadDetailImage.status;
+  }
+
   function addScorch(x, y, size) {
     if (!state || currentEnvironment() !== "land" || fxLevelSetting() === "off") return;
     const scorch = fxScorches[fxScorchCursor];
@@ -3762,9 +3847,25 @@
     renderDebug.enemyShadowDrawn += 1;
   }
 
+  function enemyAnimationFrame(enemy, animation) {
+    const frames = Math.max(1, animation.frames || 1);
+    if (performanceState.quality === "low") return { frame: 0, tier: "single" };
+    const moving = Math.hypot(enemy.vx || 0, enemy.vy || 0) > 1;
+    if (!moving) return { frame: 0, tier: "idle" };
+    const reduced = fxLevelSetting() === "reduced" || (meta.settings && meta.settings.reducedFlash);
+    const visibleFrames = reduced ? Math.min(2, frames) : frames;
+    const phaseOffset = ((enemy.animPhase || 0) / TAU) * visibleFrames;
+    const sequenceFrame = Math.floor(stateTime() * (animation.fps || 5) + phaseOffset) % visibleFrames;
+    return {
+      frame: reduced ? sequenceFrame * Math.ceil(frames / visibleFrames) : sequenceFrame,
+      tier: reduced ? "reduced" : "full"
+    };
+  }
+
   function drawEnemyEntity(enemy, timeMs, alpha, anim) {
     const enemyConfig = config.ENEMIES[enemy.enemyId] || null;
-    const record = enemyConfig && enemyConfig.spriteImage ? enemyImages[enemy.enemyId] : null;
+    const animation = enemyConfig && enemyConfig.spriteAnimation ? enemyConfig.spriteAnimation : null;
+    const record = enemyConfig && (enemyConfig.spriteImage || animation) ? enemyImages[enemy.enemyId] : null;
     const status = enemyImageStatus(enemy.enemyId);
     const width = enemyVisualWidth(enemy, enemyConfig);
     const phase = stateTime() * (enemy.animFreq || (enemy.boss ? 1.35 : 2.75)) + (enemy.animPhase || 0);
@@ -3791,16 +3892,30 @@
     drawEnemyShadow(enemy, width, lift, drawAlpha, knockX, knockY);
 
     if (record && status === "loaded") {
-      const image = record.image;
-      const height = width * (image.naturalHeight / image.naturalWidth);
+      const image = record.tintCanvas || record.image;
+      const frameState = animation ? enemyAnimationFrame(enemy, animation) : { frame: 0, tier: "static" };
+      const frameWidth = animation ? animation.frameWidth : record.image.naturalWidth;
+      const frameHeight = animation ? animation.frameHeight : record.image.naturalHeight;
+      const height = width * (frameHeight / frameWidth);
+      const faceLeft = (enemy.vx || 0) < -0.5;
       ctx.save();
       ctx.translate(enemy.x + knockX, enemy.y + knockY + lift);
       ctx.rotate(wobble);
-      ctx.scale(squashX * hitScaleX, squashY * hitScaleY);
+      ctx.scale((faceLeft ? -1 : 1) * squashX * hitScaleX, squashY * hitScaleY);
       ctx.globalAlpha *= flash ? drawAlpha * 0.9 : drawAlpha;
       ctx.imageSmoothingEnabled = false;
       if (enemy.filter && performanceState.quality !== "low") ctx.filter = enemy.filter;
-      ctx.drawImage(image, -width * 0.5, -height * 0.5, width, height);
+      ctx.drawImage(
+        image,
+        frameState.frame * frameWidth,
+        0,
+        frameWidth,
+        frameHeight,
+        -width * 0.5,
+        -height * 0.5,
+        width,
+        height
+      );
       if (enemy.tint) {
         ctx.globalCompositeOperation = "source-atop";
         ctx.fillStyle = enemy.tint;
@@ -3815,6 +3930,13 @@
       }
       ctx.restore();
       renderDebug.enemyRasterDrawn += 1;
+      if (animation) {
+        renderDebug.enemyAnimatedDrawn += 1;
+        renderDebug.enemyAnimationFrames[enemy.enemyId] = frameState.frame;
+        renderDebug.enemyAnimationTier = frameState.tier;
+        if (animation.armored) renderDebug.enemyArmoredDrawn += 1;
+        if (faceLeft) renderDebug.enemyFacingLeftDrawn += 1;
+      }
       return;
     }
 
@@ -3834,12 +3956,15 @@
 
   function drawEnemyCorpse(effect, timeMs) {
     const enemyConfig = config.ENEMIES[effect.enemyId] || null;
-    const record = enemyConfig && enemyConfig.spriteImage ? enemyImages[effect.enemyId] : null;
+    const animation = enemyConfig && enemyConfig.spriteAnimation ? enemyConfig.spriteAnimation : null;
+    const record = enemyConfig && (enemyConfig.spriteImage || animation) ? enemyImages[effect.enemyId] : null;
     const status = enemyImageStatus(effect.enemyId);
     const width = enemyVisualWidth(effect, enemyConfig);
     if (record && status === "loaded") {
-      const image = record.image;
-      const height = width * (image.naturalHeight / image.naturalWidth);
+      const image = record.tintCanvas || record.image;
+      const frameWidth = animation ? animation.frameWidth : record.image.naturalWidth;
+      const frameHeight = animation ? animation.frameHeight : record.image.naturalHeight;
+      const height = width * (frameHeight / frameWidth);
       drawEnemyShadow(effect, width, 0, effect.alpha * 0.55);
       ctx.save();
       ctx.translate(effect.x, effect.y + Math.min(7, effect.radius * 0.18));
@@ -3848,7 +3973,7 @@
       ctx.globalAlpha *= effect.alpha * 0.78;
       ctx.imageSmoothingEnabled = false;
       if (effect.filter && performanceState.quality !== "low") ctx.filter = effect.filter;
-      ctx.drawImage(image, -width * 0.5, -height * 0.5, width, height);
+      ctx.drawImage(image, 0, 0, frameWidth, frameHeight, -width * 0.5, -height * 0.5, width, height);
       if (effect.tint) {
         ctx.globalCompositeOperation = "source-atop";
         ctx.fillStyle = effect.tint;
@@ -4910,6 +5035,12 @@
       enemyFallbackDrawn: 0,
       enemyShadowDrawn: 0,
       enemyImageStatus: {},
+      enemyAnimatedDrawn: 0,
+      enemyArmoredDrawn: 0,
+      enemyFacingLeftDrawn: 0,
+      enemyAnimationFrames: {},
+      enemyAnimationTier: "none",
+      enemyTintCacheCount: Object.values(enemyImages).filter((record) => !!record.tintCanvas).length,
       fxActive: fxState ? fxState.activeCount : 0,
       fxMaxParticles: fxState ? fxState.maxParticles : 0,
       fxQuality: fxState ? fxState.quality : "none",
@@ -4922,6 +5053,8 @@
       lowHpPulseDrawn: false,
       roadDetailDrawn: false,
       roadDetailTier: "none",
+      roadDebrisDrawn: 0,
+      roadDebrisStatus: roadDetailImage.status,
       depthLayersDrawn: false,
       depthLayerTier: "none",
       scorchMarksDrawn: 0,
@@ -4952,6 +5085,7 @@
     drawBackground(timeMs);
     drawDepthLayers();
     drawRoadDetailOverlay();
+    drawRoadDebrisAtlas();
     drawScorchMarks();
     if (state && FXC && fxEnabled() && currentEnvironment() === "space") drawStarDust();
     if (state) drawGame(timeMs);
@@ -5021,6 +5155,7 @@
     if (callbacks.meta) meta = rules.migrateMeta(callbacks.meta, { config });
     renderer.preRenderSprites({ pixelRatio: 1, smoothing: false });
     preloadEnvironmentImages();
+    preloadRoadDetailImage();
     preloadVehicleImages();
     preloadRunTrailerImages();
     preloadCompanionImages();

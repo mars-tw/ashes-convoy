@@ -9,7 +9,7 @@
 
 - Vanilla HTML/CSS/JS + Canvas，手機優先，邏輯畫布 195 x 422，顯示尺寸 390 x 844。
 - 四台載具、四種出擊環境：陸地重裝車、空艇、海上方舟、虛空穿梭機。
-- AI key art 已接入：開始畫面、四台載具、四張避難所背景、四種殭屍圖像。
+- AI key art 已接入：開始畫面、四台載具與四張避難所背景；敵人另以 OGA／Kenney CC0 素材升級為多幀步行與裝甲動畫。
 - 增益門 2.0：傷害、射速、多重射擊、維修四類門，門核心有 HP 且隨波次成長。
 - Boss 事件化：每 5 波一隻 `boss_hive_titan`，血量階段會觸發召喚與衝鋒。
 - 單手觸控：拖曳同時控制載具橫移與上移準星，放開後仍會自動射擊（射擊間隔較長）；手機操作不依賴 hover。
@@ -63,6 +63,10 @@ npm start
 ```bash
 python -m http.server 8000
 ```
+
+## 素材授權
+
+敵人步態使用 Curt 在 OpenGameArt 發布的 CC0「Characters, Zombies, and Weapons. Oh My!」；敵方裝甲與低密度路面殘骸使用 Kenney CC0「Top-Down Tanks」系列。完整來源、下載包、使用檔名與修改方式見 [CREDITS.md](CREDITS.md)。
 
 ## 📋 更新日誌
 

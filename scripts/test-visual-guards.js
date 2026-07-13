@@ -13,10 +13,10 @@ const uiSource = read("src/ui.js");
 const htmlSource = read("index.html");
 const credits = read("CREDITS.md");
 
-assert.strictEqual(version.APP_VERSION, "R69", "visual release guard must target R69");
+assert.strictEqual(version.APP_VERSION, "R70", "visual release guard must target R70");
 
 const textureEntries = Object.entries(config.FX.textures || {});
-assert.strictEqual(textureEntries.length, 4, "R69 must preserve smoke/fire/debris/flash texture layers");
+assert.strictEqual(textureEntries.length, 4, "R70 must preserve smoke/fire/debris/flash texture layers");
 textureEntries.forEach(([name, relativePath]) => {
   const file = path.join(root, relativePath);
   assert(fs.existsSync(file), `missing Kenney texture: ${relativePath}`);
