@@ -300,12 +300,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R70") && swText.includes("src/ui.js?v=R70") && swText.includes("src/game.js?v=R70") && swText.includes("src/rules.js?v=R70"),
+      swCachesJs: swText.includes("src/version.js?v=R71") && swText.includes("src/ui.js?v=R71") && swText.includes("src/game.js?v=R71") && swText.includes("src/rules.js?v=R71"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R70"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R70"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R70"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R71"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R71"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R71"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -314,7 +314,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R70", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R71", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -525,6 +525,9 @@ async function checkTrailerRoomSystem(page) {
   assert(bought.maxHp > bought.baseHp, "trailer furniture HP bonus should affect vehicle stats");
   assert(bought.bonusText.includes("HP +0.6%"), `trailer bonus text should show the shelf effect: ${bought.bonusText}`);
   assert(bought.metrics && bought.metrics.itemsDrawn >= 1 && bought.metrics.assetsReady, "furnished room should draw purchased raster furniture");
+  assert.strictEqual(bought.metrics.characterCount, 1, "R71 trailer room should contain exactly one Xi");
+  assert.strictEqual(bought.metrics.characterEmbedded, true, "R71 Xi should be embedded in the sharp room master instead of layered twice");
+  assert(Math.abs(bought.metrics.contentRect.w / bought.metrics.contentRect.h - 780 / 900) < 0.001, "R71 room must render at the source aspect ratio without stretching");
   await page.keyboard.press("Escape");
   await page.waitForFunction(() => document.getElementById("trailerOverlay").hidden === true);
   await page.evaluate(() => {
@@ -699,7 +702,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R70"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R71"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -973,7 +976,7 @@ async function checkFleetProjectileTraits(page) {
   assert(seaProjectile && seaProjectile.splash > 0, "sea ark should fire splash projectiles");
 }
 
-async function checkR70CombatRefresh(page) {
+async function checkR71CombatRefresh(page) {
   const road = await page.evaluate(() => {
     window.__test.startRun("land_rig");
     const cfg = window.DSConfig;
@@ -1153,7 +1156,7 @@ async function checkR70CombatRefresh(page) {
     window.__test.step(16);
   });
   const firingFrame = await page.evaluate(() => window.__test.getRenderDebug().companionFrame);
-  assert.strictEqual(firingFrame, 1, "R70 Xi sprite sheet should switch to the firing frame");
+  assert.strictEqual(firingFrame, 1, "R71 Xi sprite sheet should switch to the firing frame");
   await page.evaluate(() => window.__test.step(1584));
   const companionOn = await page.evaluate(() => {
     const state = window.__test.getState();
@@ -1242,7 +1245,7 @@ async function checkR70CombatRefresh(page) {
   assert(overflowSupplyState.stats.scavengeGoods >= 6, "overflow supply should grant scavenge goods");
 }
 
-async function checkR70DamageRegression(page) {
+async function checkR71DamageRegression(page) {
   const pierce = await page.evaluate(() => {
     window.__test.startRun("void_runner");
     window.__test.setState({
@@ -1765,7 +1768,7 @@ async function checkFxIntegration(page) {
   });
 }
 
-async function checkR70JuiceFx(page) {
+async function checkR71JuiceFx(page) {
   const full = await page.evaluate(() => {
     window.__test.startRun("land_rig");
     const meta = window.__test.getMeta();
@@ -1788,21 +1791,21 @@ async function checkR70JuiceFx(page) {
     const b = window.__test.spawnEnemy("runner", { id: "combo_b", x: 112, y: 150, hp: 1, speed: 0, silent: true });
     window.__test.setState({
       projectiles: [
-        { id: "R70_a", sprite: "bullet_cannon", x: a.x, y: a.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 },
-        { id: "R70_b", sprite: "bullet_cannon", x: b.x, y: b.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
+        { id: "R71_a", sprite: "bullet_cannon", x: a.x, y: a.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 },
+        { id: "R71_b", sprite: "bullet_cannon", x: b.x, y: b.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
       ]
     });
     window.__test.step(16);
     const afterCombo = window.__test.getState();
     window.__test.setState({
-      supplyChoice: { dropId: "R70_supply", x: 52, y: 120, openedAt: afterCombo.time, rewardIds: Object.keys(window.DSConfig.SUPPLY_DROPS.rewards) },
+      supplyChoice: { dropId: "R71_supply", x: 52, y: 120, openedAt: afterCombo.time, rewardIds: Object.keys(window.DSConfig.SUPPLY_DROPS.rewards) },
       paused: false
     });
     window.__test.chooseSupplyReward("parts_cache");
-    const boss = window.__test.spawnEnemy("boss_hive_titan", { id: "R70_boss", x: 96, y: 116, hp: 1, speed: 0, silent: true });
+    const boss = window.__test.spawnEnemy("boss_hive_titan", { id: "R71_boss", x: 96, y: 116, hp: 1, speed: 0, silent: true });
     window.__test.setState({
       projectiles: [
-        { id: "R70_boss_shot", sprite: "bullet_cannon", x: boss.x, y: boss.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
+        { id: "R71_boss_shot", sprite: "bullet_cannon", x: boss.x, y: boss.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
       ]
     });
     window.__test.step(16);
@@ -1812,13 +1815,13 @@ async function checkR70JuiceFx(page) {
       debug: window.__test.getRenderDebug()
     };
   });
-  assert(full.state.combo && full.state.combo.count >= 2, "R70 combo should count consecutive kills");
-  assert(full.state.effects.some((effect) => effect.kind === "hud_fly" || effect.kind === "hud_pop"), "R70 pickup should create HUD fly/pop effects");
-  assert(full.state.fxTimeScaleLeft > 0, "R70 boss kill should start render-only fx time scaling");
-  assert.strictEqual(full.debug.comboDrawn, true, "R70 full fx should draw the combo counter");
-  assert.strictEqual(full.debug.fxTextureStatus, "loaded", "R70 Kenney particle textures should load before combat verification");
-  assert(full.debug.fxTextureTintCount >= 20, `R70 should pre-render texture tints, got ${full.debug.fxTextureTintCount}`);
-  assert(full.debug.texturedParticlesDrawn > 0, "R70 kill/hit effects should draw Kenney texture layers");
+  assert(full.state.combo && full.state.combo.count >= 2, "R71 combo should count consecutive kills");
+  assert(full.state.effects.some((effect) => effect.kind === "hud_fly" || effect.kind === "hud_pop"), "R71 pickup should create HUD fly/pop effects");
+  assert(full.state.fxTimeScaleLeft > 0, "R71 boss kill should start render-only fx time scaling");
+  assert.strictEqual(full.debug.comboDrawn, true, "R71 full fx should draw the combo counter");
+  assert.strictEqual(full.debug.fxTextureStatus, "loaded", "R71 Kenney particle textures should load before combat verification");
+  assert(full.debug.fxTextureTintCount >= 20, `R71 should pre-render texture tints, got ${full.debug.fxTextureTintCount}`);
+  assert(full.debug.texturedParticlesDrawn > 0, "R71 kill/hit effects should draw Kenney texture layers");
   assert.strictEqual(full.debug.vehicleNavigationLightsDrawn, 2, "full FX should draw two vehicle navigation lights");
   assert.strictEqual(full.debug.depthLayerTier, "full", "full FX should draw all land depth layers");
   assert(full.debug.scorchMarksDrawn > 0, "land kills should leave a fading scorch mark");
@@ -1836,7 +1839,7 @@ async function checkR70JuiceFx(page) {
       runMods: { weaponMode: "ember", weaponLevel: 1 },
       enemies: [],
       projectiles: modes.map((weaponMode, index) => ({
-        id: `r70_visual_${weaponMode}`,
+        id: `r71_visual_${weaponMode}`,
         sprite: "bullet_pulse",
         weaponMode,
         x: 64 + index * 30,
@@ -1862,7 +1865,7 @@ async function checkR70JuiceFx(page) {
     };
   });
   ["standard", "scatter", "fracture", "ember", "laser"].forEach((id) => {
-    assert(visualLanguage.debug.projectileVisualModes[id] > 0, `R70 should render ${id} projectile language`);
+    assert(visualLanguage.debug.projectileVisualModes[id] > 0, `R71 should render ${id} projectile language`);
   });
   assert.strictEqual(visualLanguage.hudMode, "ember", "power-up mode should update the HUD weapon signature immediately");
 
@@ -1886,8 +1889,8 @@ async function checkR70JuiceFx(page) {
     window.__test.step(16);
     return { boss, lowHp, reduced: window.__test.getRenderDebug() };
   });
-  assert.strictEqual(overlays.boss.bossArrivalVignetteDrawn, true, "R70 boss arrival should pulse the full-field vignette");
-  assert.strictEqual(overlays.lowHp.lowHpPulseDrawn, true, "R70 low HP should draw the full-screen red pulse");
+  assert.strictEqual(overlays.boss.bossArrivalVignetteDrawn, true, "R71 boss arrival should pulse the full-field vignette");
+  assert.strictEqual(overlays.lowHp.lowHpPulseDrawn, true, "R71 low HP should draw the full-screen red pulse");
   assert.strictEqual(overlays.lowHp.vehicleDamageSmokeDrawn, 2, "full FX should draw two low-HP smoke puffs");
   assert.strictEqual(overlays.reduced.bossArrivalVignetteDrawn, false, "reduced settings should suppress boss vignette pulse");
   assert.strictEqual(overlays.reduced.lowHpPulseDrawn, false, "reduced settings should suppress low-HP pulse");
@@ -1905,14 +1908,14 @@ async function checkR70JuiceFx(page) {
       gates: [],
       hazards: [],
       supplyDrops: [],
-      supplyChoice: { dropId: "R70_supply_reduced", x: 52, y: 120, openedAt: state.time, rewardIds: Object.keys(window.DSConfig.SUPPLY_DROPS.rewards) },
+      supplyChoice: { dropId: "R71_supply_reduced", x: 52, y: 120, openedAt: state.time, rewardIds: Object.keys(window.DSConfig.SUPPLY_DROPS.rewards) },
       vehicle: { weaponCooldown: 999, hp: state.vehicle.maxHp * 0.3 }
     });
     window.__test.chooseSupplyReward("parts_cache");
-    const boss = window.__test.spawnEnemy("boss_hive_titan", { id: "R70_boss_reduced", x: 96, y: 116, hp: 1, speed: 0, silent: true });
+    const boss = window.__test.spawnEnemy("boss_hive_titan", { id: "R71_boss_reduced", x: 96, y: 116, hp: 1, speed: 0, silent: true });
     window.__test.setState({
       projectiles: [
-        { id: "R70_boss_reduced_shot", sprite: "bullet_cannon", x: boss.x, y: boss.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
+        { id: "R71_boss_reduced_shot", sprite: "bullet_cannon", x: boss.x, y: boss.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
       ]
     });
     window.__test.step(16);
@@ -1932,7 +1935,7 @@ async function checkR70JuiceFx(page) {
 
   const deterministic = await page.evaluate(() => {
     function runCase(fxLevel, reducedFlash) {
-      window.__test.startRun("land_rig", null, "r70_fx_determinism");
+      window.__test.startRun("land_rig", null, "r71_fx_determinism");
       const meta = window.__test.getMeta();
       meta.settings.performanceMode = "high";
       meta.settings.fxLevel = fxLevel;
@@ -1965,10 +1968,10 @@ async function checkR70JuiceFx(page) {
         },
         vehicle: { weaponCooldown: 999, aimX: state.vehicle.x, aimY: state.vehicle.y - 160 }
       });
-      const boss = window.__test.spawnEnemy("boss_hive_titan", { id: "r70_determinism_boss", x: 96, y: 116, hp: 1, speed: 0, silent: true });
+      const boss = window.__test.spawnEnemy("boss_hive_titan", { id: "r71_determinism_boss", x: 96, y: 116, hp: 1, speed: 0, silent: true });
       window.__test.setState({
         projectiles: [
-          { id: "r70_determinism_shot", sprite: "bullet_cannon", x: boss.x, y: boss.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
+          { id: "r71_determinism_shot", sprite: "bullet_cannon", x: boss.x, y: boss.y, vx: 0, vy: 0, damage: 20, damageSources: [{ key: "land_rig", ratio: 1 }], vehicleId: "land_rig", pierce: 0, hitIds: {}, radius: 8, rotation: 0, life: 1, scale: 1 }
         ]
       });
       window.__test.step(16);
@@ -2383,7 +2386,58 @@ async function checkEnvironmentEventsAndVariants(page) {
   assert(state.enemies.some((enemy) => enemy.variantId), "late wave generation should spawn tinted variants");
 }
 
-async function checkR70EnemyRosterBehaviors(page) {
+async function checkR71SandstormComfort(page) {
+  const result = await page.evaluate(() => {
+    window.__test.clearStorage();
+    let meta = window.__test.getMeta();
+    meta.settings.performanceMode = "high";
+    meta.settings.fxLevel = "full";
+    meta.settings.reducedFlash = false;
+    window.__test.setMeta(meta);
+    window.__test.startRun("land_rig");
+    window.__test.setState({ rng: () => 0, enemies: [], projectiles: [], gates: [], hazards: [] });
+    window.__test.pushWave(4);
+    window.__test.step(16);
+    const eventId = window.__test.getState().wavePlan.environmentEvent.id;
+    const full = window.__test.getRenderDebug();
+    window.__test.step(1200);
+    const fullLater = window.__test.getRenderDebug();
+
+    meta = window.__test.getMeta();
+    meta.settings.fxLevel = "reduced";
+    meta.settings.reducedFlash = true;
+    window.__test.setMeta(meta);
+    window.__test.step(16);
+    const reduced = window.__test.getRenderDebug();
+
+    meta = window.__test.getMeta();
+    meta.settings.performanceMode = "low";
+    meta.settings.fxLevel = "full";
+    meta.settings.reducedFlash = false;
+    window.__test.setMeta(meta);
+    window.__test.step(16);
+    const low = window.__test.getRenderDebug();
+
+    meta.settings.performanceMode = "auto";
+    meta.settings.fxLevel = "reduced";
+    window.__test.setMeta(meta);
+    return { eventId, full, fullLater, reduced, low };
+  });
+
+  assert.strictEqual(result.eventId, "sandstorm", "low land event roll should select sandstorm");
+  assert.strictEqual(result.full.sandstormFlowTier, "full");
+  assert.strictEqual(result.full.sandstormFlickerHz, 0, "sandstorm must not use contrast flicker");
+  assert(result.full.sandstormSaturation <= 0.5, "sandstorm color veil must stay desaturated");
+  assert.strictEqual(result.full.sandstormIntensity, result.fullLater.sandstormIntensity, "sandstorm opacity must remain stable during sustained viewing");
+  assert.strictEqual(result.reduced.sandstormFlowTier, "reduced");
+  assert(result.reduced.sandstormIntensity <= result.full.sandstormIntensity * 0.5, "reduced mode must halve sandstorm intensity");
+  assert(result.reduced.sandstormFlowCount < result.full.sandstormFlowCount, "reduced mode must also lower flowing dust density");
+  assert.strictEqual(result.low.sandstormFlowTier, "low");
+  assert(result.low.sandstormIntensity <= result.full.sandstormIntensity * 0.65, "low quality must further soften the sandstorm veil");
+  assert(result.low.sandstormFlowCount < result.full.sandstormFlowCount, "low quality must use fewer soft dust elements");
+}
+
+async function checkR71EnemyRosterBehaviors(page) {
   await page.evaluate(() => {
     window.__test.clearStorage();
     window.__test.startRun("land_rig");
@@ -2446,7 +2500,7 @@ async function checkR70EnemyRosterBehaviors(page) {
   assert.deepStrictEqual(
     result.enemyIds,
     ["shield_husk", "spore_spitter", "swarm_mite", "tar_brute", "void_wraith", "ash_screamer", "chain_tether", "mirror_husk", "ember_tick"].sort(),
-    "R70 enemy roster should be spawnable"
+    "R71 enemy roster should be spawnable"
   );
   assert(result.enemyProjectiles >= 2, "spore spitter and ash screamer should fire enemy projectiles");
   assert.strictEqual(result.screamProjectile, true, "ash screamer should fire low-damage scream projectiles");
@@ -2457,12 +2511,12 @@ async function checkR70EnemyRosterBehaviors(page) {
   assert(result.tetherSlowMul >= 0.78, "chain tether should use the guarded slow multiplier");
   assert(result.mirrorShieldHp >= 40, "mirror husk should spawn with a strong front shield");
   assert.strictEqual(result.emberBehavior, "swarm", "ember tick should reuse swarm behavior");
-  assert(result.rasterDrawn >= 9, `R70 enemies should draw raster sprites, got ${result.rasterDrawn}`);
-  assert(result.animatedDrawn >= 9, `R70 enemies should draw animated atlases, got ${result.animatedDrawn}`);
-  assert(result.armoredDrawn >= 2, `R70 brute/tether should draw layered Kenney armor, got ${result.armoredDrawn}`);
+  assert(result.rasterDrawn >= 9, `R71 enemies should draw raster sprites, got ${result.rasterDrawn}`);
+  assert(result.animatedDrawn >= 9, `R71 enemies should draw animated atlases, got ${result.animatedDrawn}`);
+  assert(result.armoredDrawn >= 2, `R71 brute/tether should draw layered Kenney armor, got ${result.armoredDrawn}`);
 }
 
-async function checkR70RunBarks(page) {
+async function checkR71RunBarks(page) {
   const triggered = await page.evaluate(() => {
     window.__test.clearStorage();
     window.__test.startRun("land_rig");
@@ -2921,14 +2975,15 @@ async function runScenario(browser, baseUrl, viewport, full) {
     await checkBossBlueprintDropAnimation(page);
     await unlockFleet(page);
     await checkEnvironmentEventsAndVariants(page);
-    await checkR70EnemyRosterBehaviors(page);
-    await checkR70RunBarks(page);
+    await checkR71SandstormComfort(page);
+    await checkR71EnemyRosterBehaviors(page);
+    await checkR71RunBarks(page);
     await checkEventCodexAndAchievements(page);
     await checkSupplyDropPickupAndSettlement(page);
     await unlockFleet(page);
     await checkFleetProjectileTraits(page);
-    await checkR70CombatRefresh(page);
-    await checkR70DamageRegression(page);
+    await checkR71CombatRefresh(page);
+    await checkR71DamageRegression(page);
     await checkVehicleFleetSelectionAndCombat(page);
     await checkBlueprintAchievementsAndUnlock(page);
     await checkVehicleSpecificUpgradePurchase(page);
@@ -2947,7 +3002,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await checkAimAssistToggle(page);
   await checkAdaptivePerformance(page);
   await checkFxIntegration(page);
-  await checkR70JuiceFx(page);
+  await checkR71JuiceFx(page);
   await dragAim(page);
   await killEnemiesAndEarnPreviewParts(page);
   await shootGate(page);
@@ -3286,7 +3341,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r70")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r71")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -3304,7 +3359,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r70")), "R70 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r71")), "R71 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

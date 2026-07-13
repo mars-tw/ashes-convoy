@@ -1,21 +1,24 @@
-"""Build the compact R70 runtime atlases from downloaded CC0 source packs.
+"""Build the compact R71 runtime art and atlases from production masters.
 
 Sources are intentionally kept under tools/asset_sources/ (gitignored). Run this
-after downloading the archives documented in CREDITS.md. Only the derived PNGs
+after downloading the archives documented in CREDITS.md and placing the R71
+image-gen masters in tools/asset_sources/imagegen_r71/. Only the derived PNGs
 written to assets/ are shipped with the game.
 """
 
 from pathlib import Path
-from PIL import Image, ImageChops, ImageEnhance
+from PIL import Image, ImageChops, ImageEnhance, ImageOps
 
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = ROOT / "tools" / "asset_sources"
 OGA = SOURCES / "oga_characters_parts" / "PartsSpriteSheetVersion1" / "PartsForSheet"
 KENNEY = SOURCES / "kenney_top_down_tanks_remastered" / "PNG" / "Default size"
+IMAGEGEN = SOURCES / "imagegen_r71"
 ZOMBIES = ROOT / "assets" / "zombies"
 OUT = ROOT / "assets" / "enemies"
 ENV_OUT = ROOT / "assets" / "env"
+TRAILER_OUT = ROOT / "assets" / "shelter" / "trailer"
 OUT.mkdir(parents=True, exist_ok=True)
 
 
@@ -82,6 +85,19 @@ def animate_existing(source_name: str, output: str, size: tuple[int, int]) -> No
     sheet.save(OUT / output, optimize=True)
 
 
+def build_imagegen_sprite(source_name: str, output_name: str, size: tuple[int, int], padding: int = 4) -> None:
+    """Downscale a keyed/cleaned high-res master into the legacy static interface."""
+    sprite = fit_source(rgba(IMAGEGEN / source_name), size, padding=padding)
+    sprite.save(ZOMBIES / output_name, optimize=True)
+
+
+def build_trailer_room() -> None:
+    """Crop the high-res 13:15 room master without distortion, then downscale once."""
+    master = rgba(IMAGEGEN / "room-master.png")
+    room = ImageOps.fit(master, (780, 900), method=Image.Resampling.LANCZOS, centering=(0.5, 0.5))
+    room.save(TRAILER_OUT / "base_escape_pod.png", optimize=True)
+
+
 def build_armored_brute() -> None:
     tracks = rgba(KENNEY / "tracksLarge.png")
     hull = rgba(KENNEY / "tankBody_darkLarge.png")
@@ -120,24 +136,15 @@ def build_road_debris() -> None:
     sheet.save(ENV_OUT / "kenney_road_debris.png", optimize=True)
 
 
-compose_oga_walk(
-    "oga_shambler_walk.png",
-    "Male",
-    "Balding",
-    {"legs": (72, 62, 50), "feet": (46, 37, 30), "body": (119, 72, 45), "skin": (117, 126, 83), "eyes": (244, 190, 79), "wound": (98, 37, 31), "hair": (47, 38, 31)},
-)
-compose_oga_walk(
-    "oga_runner_walk.png",
-    "Female",
-    "Spiked",
-    {"legs": (63, 51, 47), "feet": (40, 34, 31), "body": (132, 62, 44), "skin": (135, 137, 84), "eyes": (248, 173, 59), "wound": (104, 31, 27), "hair": (54, 42, 32)},
-)
-compose_oga_walk(
-    "oga_spitter_walk.png",
-    "Male",
-    "Dreads",
-    {"legs": (69, 55, 43), "feet": (43, 35, 29), "body": (92, 77, 47), "skin": (101, 125, 72), "eyes": (224, 199, 84), "wound": (88, 39, 29), "hair": (52, 37, 28)},
-)
+build_trailer_room()
+build_imagegen_sprite("shambler-master.png", "shambler.png", (160, 249), padding=7)
+build_imagegen_sprite("runner-master.png", "runner.png", (160, 242), padding=7)
+build_imagegen_sprite("spitter-master.png", "spore_spitter.png", (160, 240), padding=6)
+build_imagegen_sprite("titan-master.png", "titan.png", (256, 234), padding=5)
+
+animate_existing("shambler.png", "oga_shambler_walk.png", (40, 40))
+animate_existing("runner.png", "oga_runner_walk.png", (40, 40))
+animate_existing("spore_spitter.png", "oga_spitter_walk.png", (40, 40))
 
 animate_existing("bloater.png", "bloater_walk.png", (52, 52))
 animate_existing("shield_husk.png", "shield_husk_walk.png", (48, 64))
@@ -147,4 +154,4 @@ animate_existing("titan.png", "titan_walk.png", (88, 80))
 build_armored_brute()
 build_road_debris()
 
-print("Built R70 CC0 animation and road-detail atlases")
+print("Built R71 room, image-gen enemy, CC0 support, and road-detail assets")

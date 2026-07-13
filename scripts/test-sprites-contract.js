@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const zlib = require("zlib");
 const { PALETTES, SPRITES, SPRITE_SPECS } = require("../src/sprites.js");
-const { SHELTER_HOTSPOTS } = require("../src/shelter-scene.js");
+const { SHELTER_HOTSPOTS, TRAILER_ROOM_ASSETS } = require("../src/shelter-scene.js");
 
 const rootDir = path.resolve(__dirname, "..");
 const errors = [];
@@ -257,6 +257,10 @@ check(frameCount === expectedFrameCount, `frame count must be ${expectedFrameCou
   { path: "assets/vehicles/trailer.png", width: 709, height: 1291, alphaBinary: true },
   { path: "assets/vehicles/xi_gunner.png", width: 512, height: 384, alphaBinary: false }
 ].forEach(checkPngContract);
+
+check(TRAILER_ROOM_ASSETS.base === "assets/shelter/trailer/base_escape_pod.png", "R71 trailer room must use the redesigned full-scene raster");
+check(!Object.prototype.hasOwnProperty.call(TRAILER_ROOM_ASSETS, "character"), "R71 room must not layer a second Xi portrait over the embedded single character");
+check(!Object.prototype.hasOwnProperty.call(TRAILER_ROOM_ASSETS, "characterAnchor"), "R71 room must not retain the duplicate-character anchor");
 
 if (errors.length > 0) {
   console.error("Sprite contract FAIL");

@@ -9,14 +9,15 @@ const version = require("../src/version.js");
 const root = path.resolve(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 const gameSource = read("src/game.js");
+const shelterSource = read("src/shelter-scene.js");
 const uiSource = read("src/ui.js");
 const htmlSource = read("index.html");
 const credits = read("CREDITS.md");
 
-assert.strictEqual(version.APP_VERSION, "R70", "visual release guard must target R70");
+assert.strictEqual(version.APP_VERSION, "R71", "visual release guard must target R71");
 
 const textureEntries = Object.entries(config.FX.textures || {});
-assert.strictEqual(textureEntries.length, 4, "R70 must preserve smoke/fire/debris/flash texture layers");
+assert.strictEqual(textureEntries.length, 4, "R71 must preserve smoke/fire/debris/flash texture layers");
 textureEntries.forEach(([name, relativePath]) => {
   const file = path.join(root, relativePath);
   assert(fs.existsSync(file), `missing Kenney texture: ${relativePath}`);
@@ -73,6 +74,15 @@ assert(gameSource.includes("drawRoadDetailOverlay") && gameSource.includes("road
 assert(gameSource.includes("drawBossArrivalVignette") && config.FX.bossArrival.strength > 0, "boss arrival vignette pulse must exist");
 assert(gameSource.includes("drawLowHpPulse") && config.FX.lowHpPulse.threshold === 0.25, "low-HP full-screen pulse must exist");
 assert(gameSource.includes('event.id === "sandstorm"') && gameSource.includes('event.id === "undertow"'), "event color filters must cover sandstorm and undertow");
+assert(gameSource.includes("sandstormFlickerHz = 0") && gameSource.includes("sandstormSaturation = 0.42"), "sandstorm must remove flicker and use a restrained saturation profile");
+assert(gameSource.includes("(reduced ? 0.5 : 1)") && gameSource.includes("(low ? 0.65 : 1)"), "sandstorm must explicitly halve reduced intensity and cover low quality");
+assert(gameSource.includes("ctx.bezierCurveTo") && gameSource.includes("ctx.ellipse"), "sandstorm must use soft flowing bands and sparse motes instead of high-frequency noise");
+assert(!gameSource.includes("(state.scroll * 1.8) % 44"), "legacy high-frequency sandstorm streaks must be removed");
+assert(!shelterSource.includes("getTrailerImage(TRAILER_ROOM_ASSETS.character)"), "trailer room must not draw a second Xi layer");
+const roomPng = fs.readFileSync(path.join(root, "assets/shelter/trailer/base_escape_pod.png"));
+assert.strictEqual(roomPng.readUInt32BE(16), 780, "R71 room width must preserve the 780px interface");
+assert.strictEqual(roomPng.readUInt32BE(20), 900, "R71 room height must preserve the 900px interface");
+assert(roomPng.length > 500000, "R71 room should retain high-resolution downscaled detail");
 assert(htmlSource.includes("hud-number-pop") && uiSource.includes("setAnimatedHudValue"), "HUD numbers must have pop animation wiring");
 
 assert(config.FX.quality.low.maxParticles <= config.FX.quality.high.maxParticles / 2, "low tier must cap particles at half of high");

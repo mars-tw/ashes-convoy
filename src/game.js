@@ -4799,32 +4799,67 @@
     if (!state || !state.wavePlan || !state.wavePlan.environmentEvent) return;
     const event = state.wavePlan.environmentEvent;
     const visibilityLoss = rules.clamp(Number(event.visibilityLoss) || 0, 0, 0.55);
+    const settings = (meta && meta.settings) || {};
+    const sandstorm = event.id === "sandstorm";
+    const reduced = sandstorm && (settings.fxLevel === "reduced" || settings.reducedFlash === true);
+    const off = sandstorm && settings.fxLevel === "off";
+    const low = sandstorm && performanceState.quality === "low";
+    const sandstormIntensity = sandstorm
+      ? (off ? 0.24 : 1) * (reduced ? 0.5 : 1) * (low ? 0.65 : 1)
+      : 1;
     renderDebug.environmentOverlayDrawn = true;
     renderDebug.environmentVisibilityLoss = visibilityLoss;
     ctx.save();
     if (visibilityLoss > 0) {
-      ctx.globalAlpha = 0.28 + visibilityLoss * 0.82;
-      ctx.fillStyle = event.environment === "land" ? "#11100d" : "#07121c";
+      ctx.globalAlpha = sandstorm
+        ? (0.16 + visibilityLoss * 0.42) * sandstormIntensity
+        : 0.28 + visibilityLoss * 0.82;
+      ctx.fillStyle = sandstorm ? "#332f2a" : event.environment === "land" ? "#11100d" : "#07121c";
       ctx.fillRect(0, 0, W, H);
-      ctx.globalAlpha = visibilityLoss * 0.8;
-      ctx.fillStyle = event.id === "land_blackout" ? "#050504" : "#d3a45f";
+      ctx.globalAlpha = visibilityLoss * (sandstorm ? 0.38 * sandstormIntensity : 0.8);
+      ctx.fillStyle = event.id === "land_blackout" ? "#050504" : sandstorm ? "#796b5b" : "#d3a45f";
       ctx.fillRect(0, 0, W, H * 0.18);
       ctx.fillRect(0, H * 0.82, W, H * 0.18);
       const side = Math.max(12, W * visibilityLoss);
       ctx.fillRect(0, 0, side, H);
       ctx.fillRect(W - side, 0, side, H);
     }
-    if (event.id === "sandstorm") {
-      ctx.globalAlpha = performanceState.quality === "low" ? 0.2 : 0.3;
-      ctx.fillStyle = "#c89443";
+    if (sandstorm) {
+      const flowTier = off ? "off" : low && reduced ? "low-reduced" : low ? "low" : reduced ? "reduced" : "full";
+      const bandCount = off ? 0 : low ? 3 : reduced ? 4 : 7;
+      const moteCount = off ? 0 : low ? 6 : reduced ? 8 : 14;
+      const visualTime = visualStateTime();
+      const drift = (visualTime * (reduced || low ? 6 : 10)) % (H + 96);
+      renderDebug.sandstormFlowTier = flowTier;
+      renderDebug.sandstormIntensity = sandstormIntensity;
+      renderDebug.sandstormFlowCount = bandCount + moteCount;
+      renderDebug.sandstormFlickerHz = 0;
+      renderDebug.sandstormSaturation = 0.42;
+
+      // Constant alpha removes contrast flicker; broad bands and sparse motes
+      // move continuously instead of sampling a high-frequency noise field.
+      ctx.globalAlpha = 0.11 * sandstormIntensity;
+      ctx.fillStyle = "#8a7865";
       ctx.fillRect(0, 0, W, H);
-      ctx.globalAlpha = 0.24;
-      ctx.strokeStyle = "#f0d199";
-      for (let y = -20 + (state.scroll * 1.8) % 44; y < H + 40; y += 22) {
+      ctx.lineCap = "round";
+      ctx.lineWidth = low ? 7 : 9;
+      ctx.strokeStyle = "#c4ad8b";
+      ctx.globalAlpha = 0.045 * sandstormIntensity;
+      for (let index = 0; index < bandCount; index += 1) {
+        const y = ((index * 113 + drift) % (H + 96)) - 48;
         ctx.beginPath();
-        ctx.moveTo(-10, y);
-        ctx.lineTo(W + 10, y + 18);
+        ctx.moveTo(-24, y + 20);
+        ctx.bezierCurveTo(W * 0.24, y - 12, W * 0.72, y + 38, W + 24, y + 10);
         ctx.stroke();
+      }
+      ctx.fillStyle = "#d1b996";
+      ctx.globalAlpha = 0.055 * sandstormIntensity;
+      for (let index = 0; index < moteCount; index += 1) {
+        const px = ((index * 79 + visualTime * (reduced || low ? 7 : 12)) % (W + 48)) - 24;
+        const py = ((index * 131 + drift * 0.72) % (H + 48)) - 24;
+        ctx.beginPath();
+        ctx.ellipse(px, py, low ? 4 : 5.5, low ? 1.5 : 2, 0.22, 0, Math.PI * 2);
+        ctx.fill();
       }
     } else if (event.id === "turbulence") {
       ctx.globalAlpha = 0.22;
@@ -5065,6 +5100,11 @@
       comboDrawn: false,
       environmentOverlayDrawn: false,
       environmentVisibilityLoss: 0,
+      sandstormFlowTier: "none",
+      sandstormIntensity: 0,
+      sandstormFlowCount: 0,
+      sandstormFlickerHz: 0,
+      sandstormSaturation: 0,
       supplyCrateDrawn: 0,
       weaponPowerupDrawn: 0,
       supplyCrateStyle: ""
