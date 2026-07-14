@@ -14,7 +14,7 @@ const uiSource = read("src/ui.js");
 const htmlSource = read("index.html");
 const credits = read("CREDITS.md");
 
-assert.strictEqual(version.APP_VERSION, "R71", "visual release guard must target R71");
+assert.strictEqual(version.APP_VERSION, "R72", "visual release guard must target R72");
 
 const textureEntries = Object.entries(config.FX.textures || {});
 assert.strictEqual(textureEntries.length, 4, "R71 must preserve smoke/fire/debris/flash texture layers");
@@ -62,6 +62,10 @@ assert(gameSource.includes("enemy.hitFlashColor = weaponVisual(projectile.weapon
 assert(gameSource.includes("hitScaleX") && gameSource.includes("hitScaleY"), "enemy hits must add directional squash");
 assert(gameSource.includes("drawVehicleNavigationLights") && gameSource.includes("const count = reduced ? 1 : 2"), "vehicle navigation lights must cover reduced mode");
 assert(gameSource.includes("drawDepthLayers") && gameSource.includes('depthLayerTier = off ? "off" : low ? "low" : "full"'), "land depth layers must cover off/low/full tiers");
+assert(gameSource.includes("drawR72EnvironmentDepth") && gameSource.includes('environment === "air"') && gameSource.includes('environment === "sea"') && gameSource.includes('environment === "space"'), "R72 must add deterministic parallax depth to every non-land environment");
+assert(gameSource.includes("depthLayerEnvironment") && gameSource.includes("nearOffset"), "R72 environment depth must expose diagnostics and a distinct near-scroll rate");
+assert(gameSource.includes("enemyHurtPoseDrawn") && gameSource.includes('drawSprite(enemy.sprite, "hit"'), "raster enemies must retain a frame-authored hurt reaction");
+assert(gameSource.includes("enemyDeathPoseDrawn") && gameSource.includes("effect.age * 1000"), "raster enemies must retain time-based death frames instead of flattening one walk frame");
 assert(gameSource.includes("drawVehicleDamageSmoke") && gameSource.includes("hpPct >= 0.35"), "vehicle hull smoke must start below 35% HP");
 assert(gameSource.includes("drawScorchMarks") && gameSource.includes("const fxScorches = new Array(12)"), "ground scorch marks must use a fixed visual pool");
 assert(gameSource.includes("reservedCritical") === false, "particle priority implementation must remain isolated in the FX module");

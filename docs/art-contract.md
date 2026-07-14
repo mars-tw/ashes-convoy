@@ -7,6 +7,8 @@
 | 類型 | 路徑 | 用途 |
 |---|---|---|
 | 開始圖 | `assets/ui/start.png` | 首屏 key art |
+| 封面圖 | `assets/cover.png` | GitHub / 分享用橫式 key art |
+| 角色定裝 | `assets/vehicles/xi_gunner.png` | 希・洛威雙格 idle / fire 圖集 |
 | 載具 | `assets/vehicles/land.png` | `land_rig` |
 | 載具 | `assets/vehicles/air.png` | `sky_barge` |
 | 載具 | `assets/vehicles/sea.png` | `sea_ark` |
@@ -15,6 +17,11 @@
 | 殭屍 | `assets/zombies/runner.png` | `runner` |
 | 殭屍 | `assets/zombies/bloater.png` | `bloater` |
 | 殭屍 | `assets/zombies/titan.png` | `boss_hive_titan` |
+| 殭屍 | `assets/zombies/tar_brute.png` | `tar_brute` / `chain_tether` 靜態主圖 |
+| 殭屍 | `assets/zombies/shield_husk.png` | `shield_husk` 靜態主圖 |
+| 殭屍 | `assets/zombies/swarm_mite.png` | `swarm_mite` 靜態主圖 |
+| 敵人動畫 | `assets/enemies/*_walk.png` | 4 格真姿勢移動圖集 |
+| 捲軸背景 | `assets/env/{land,air,sea,space}.png` | 780 x 1560 環境基底；Canvas 疊加遠／中／近景視差 |
 | 避難所 | `assets/shelter/snow.png` | 預設主題 |
 | 避難所 | `assets/shelter/workshop.png` | 工作間主題 |
 | 避難所 | `assets/shelter/greenhouse.png` | 溫室主題 |
@@ -39,6 +46,8 @@
 - 新圖像不應破壞 390 x 844 手機版構圖；載具縮圖也需在車庫卡片內完整顯示。
 - 透明背景載具與殭屍圖要保留主體可讀性，避免裁切輪廓。
 - `reducedFlash` 開啟時，閃光、爆炸與避難所燈光效果需降低刺激。
+- 新敵人移動圖集固定為 4 格逐幀真姿勢；每格必須有肢體或身體接觸姿勢差異，不得只平移、縮放、旋轉或整圖晃動。
+- 物理 root / collider 與視覺動畫分離。傷害只在碰撞／命中成立時結算；缺少專用 raster hurt / death 圖集時，必須使用具獨立姿勢的可替換 fallback 動畫，不得刪除受擊與死亡反應。
 
 ## Pixel Matrix Fallback
 
@@ -90,6 +99,17 @@ drawSpriteAnim(ctx, name, anim, timeMs, x, y, scale, options)
 | `runner` | `assets/zombies/runner.png` | `zombie_runner` | 快速步行、受擊、死亡 |
 | `bloater` | `assets/zombies/bloater.png` | `zombie_bloater` | 步行、受擊、死亡爆裂 |
 | `boss_hive_titan` | `assets/zombies/titan.png` | `boss_hive_titan` | 步行、攻擊、階段事件、死亡 |
+| `tar_brute` | `assets/zombies/tar_brute.png` + `assets/enemies/tar_brute_walk.png` | `zombie_bloater` | 4 格重步；受擊／死亡使用姿勢 fallback |
+| `chain_tether` | `assets/zombies/tar_brute.png` + `assets/enemies/tar_brute_walk.png` | `zombie_bloater` | 共用 4 格重步；受擊／死亡使用姿勢 fallback |
+| `shield_husk` | `assets/zombies/shield_husk.png` + `assets/enemies/shield_husk_walk.png` | `zombie_shambler` | 4 格盾步；受擊／死亡使用姿勢 fallback |
+| `swarm_mite` | `assets/zombies/swarm_mite.png` + `assets/enemies/swarm_mite_walk.png` | `zombie_runner` | 4 格爬行；受擊／死亡使用姿勢 fallback |
+
+## R72 首屏與環境契約
+
+- `assets/ui/start.png` 固定 820 x 1728、上方約 18% 與下方約 22% 保留低資訊安全區，供標題、版本與 CTA 疊字。
+- `assets/cover.png` 固定 1280 x 640，不烘焙文字或 logo。
+- `assets/vehicles/xi_gunner.png` 固定 512 x 384，左右各 256 x 384；角色識別鎖定短深棕髮、棕圍巾、黑色裝甲與白色 V 胸徽。
+- 四張環境基底固定 780 x 1560、各檔不超過 350 KB。`src/game.js` 以環境別的遠／中／近景、明暗與前景剪影補足視差；不得把單張背景上下平移宣稱為完整景深。
 
 ## 避難所場景
 

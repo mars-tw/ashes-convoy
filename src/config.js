@@ -4,7 +4,7 @@ const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 3;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R71", CACHE_VERSION: "ashes-convoy-r71-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R72", CACHE_VERSION: "ashes-convoy-r72-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -528,7 +528,7 @@ const ENEMIES = {
     id: "tar_brute",
     name: "瀝青肉盾",
     spriteImage: "assets/zombies/tar_brute.png",
-    spriteAnimation: { image: "assets/enemies/kenney_armored_brute_walk.png", frames: 4, frameWidth: 56, frameHeight: 68, fps: 3, warmTint: "rgba(142, 72, 34, 0.24)", armored: true },
+    spriteAnimation: { image: "assets/enemies/tar_brute_walk.png", frames: 4, frameWidth: 56, frameHeight: 68, fps: 3, warmTint: "rgba(142, 72, 34, 0.24)" },
     sprite: "zombie_tar_brute",
     hp: 155,
     speed: 11,
@@ -612,7 +612,7 @@ const ENEMIES = {
     id: "chain_tether",
     name: "鐵鏈拖屍",
     spriteImage: "assets/zombies/tar_brute.png",
-    spriteAnimation: { image: "assets/enemies/kenney_armored_brute_walk.png", frames: 4, frameWidth: 56, frameHeight: 68, fps: 3, warmTint: "rgba(132, 76, 45, 0.2)", armored: true },
+    spriteAnimation: { image: "assets/enemies/tar_brute_walk.png", frames: 4, frameWidth: 56, frameHeight: 68, fps: 3, warmTint: "rgba(132, 76, 45, 0.2)" },
     sprite: "zombie_tar_brute",
     hp: 90,
     speed: 14,

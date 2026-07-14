@@ -54,8 +54,22 @@ Object.entries(regeneratedR71).forEach(([enemyId, expected]) => {
   assert.strictEqual(enemy.spriteAnimation.frames, 4, `${enemyId} must preserve the four-frame R71 animation pipe`);
 });
 
-assert(config.ENEMIES.tar_brute.spriteAnimation.armored, "tar brute must use the layered Kenney armored visual");
-assert(config.ENEMIES.chain_tether.spriteAnimation.armored, "chain tether must use the layered Kenney armored visual");
+const regeneratedR72 = {
+  tar_brute: { width: 190, height: 190, walk: "assets/enemies/tar_brute_walk.png", minBytes: 20000 },
+  shield_husk: { width: 160, height: 240, walk: "assets/enemies/shield_husk_walk.png", minBytes: 20000 },
+  swarm_mite: { width: 140, height: 170, walk: "assets/enemies/swarm_mite_walk.png", minBytes: 9000 }
+};
+Object.entries(regeneratedR72).forEach(([enemyId, expected]) => {
+  const enemy = config.ENEMIES[enemyId];
+  const png = readPngHeader(enemy.spriteImage);
+  const bytes = fs.statSync(path.join(root, enemy.spriteImage)).size;
+  assert.deepStrictEqual({ width: png.width, height: png.height }, { width: expected.width, height: expected.height }, `${enemyId} must preserve its R72 static sprite interface`);
+  assert(bytes >= expected.minBytes, `${enemyId} R72 sprite appears stale or over-compressed: ${bytes} bytes`);
+  assert.strictEqual(enemy.spriteAnimation.image, expected.walk, `${enemyId} must use its R72 true-pose atlas`);
+  assert.strictEqual(enemy.spriteAnimation.frames, 4, `${enemyId} must preserve the four-frame R72 animation pipe`);
+  assert(!enemy.spriteAnimation.armored, `${enemyId} must not fall back to the Kenney tank silhouette`);
+});
+assert.strictEqual(config.ENEMIES.chain_tether.spriteAnimation.image, "assets/enemies/tar_brute_walk.png", "chain tether must inherit the humanoid brute atlas instead of the Kenney tank");
 assert(config.ROAD_DETAIL_ATLAS && config.ROAD_DETAIL_ATLAS.density <= 0.25, "road debris density must remain decorative and sparse");
 const roadPng = readPngHeader(config.ROAD_DETAIL_ATLAS.image);
 assert.strictEqual(roadPng.width, config.ROAD_DETAIL_ATLAS.frames * config.ROAD_DETAIL_ATLAS.frameWidth, "road debris atlas width mismatch");
@@ -68,7 +82,8 @@ assert(gameSource.includes('performanceState.quality === "low"') && gameSource.i
 assert(gameSource.includes('tier: reduced ? "reduced" : "full"'), "reduced and full animation tiers must be explicit");
 assert(gameSource.includes("Math.hypot(enemy.vx || 0, enemy.vy || 0) > 1"), "walk frames must only advance while moving");
 assert(gameSource.includes("const faceLeft = (enemy.vx || 0) < -0.5"), "enemy animation must flip with lateral movement");
+assert(gameSource.includes('drawSprite(enemy.sprite, "hit"') && gameSource.includes("effect.age * 1000"), "hurt/death must use authored fallback frames when raster action atlases are absent");
 assert(gameSource.includes("drawRoadDebrisAtlas") && gameSource.includes("roadDebrisDrawn"), "road debris must expose render diagnostics");
-assert(credits.includes("R71 image-generated production art") && credits.includes("Top-down Tanks Remastered"), "R71 image-gen and CC0 support provenance must be documented");
+assert(credits.includes("R72 image-generated production art") && credits.includes("Top-down Tanks Remastered"), "R72 image-gen and CC0 support provenance must be documented");
 
 console.log(`Animation asset guards PASS (${shipped.size} files, ${shippedBytes} bytes)`);

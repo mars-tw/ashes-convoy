@@ -3206,14 +3206,165 @@
     return true;
   }
 
+  // R72 非陸地景深：遠景帶、中景航標、近景剪影以不同 scroll
+  // 倍率直繪。固定幾何、不消耗遊戲 RNG，raster / fallback 共用。
+  function drawR72EnvironmentDepth(environment, scroll, low, off) {
+    const farOffset = (scroll * 0.16) % 112;
+    const midOffset = (scroll * 0.58) % 78;
+    const nearOffset = (scroll * 1.18) % 126;
+    ctx.save();
+
+    if (environment === "air") {
+      // Soft sky glaze suppresses the old asphalt-like lane language.
+      const corridor = ctx.createLinearGradient(0, 0, W, 0);
+      corridor.addColorStop(0, "rgba(72, 101, 124, 0)");
+      corridor.addColorStop(0.22, "rgba(90, 127, 151, 0.28)");
+      corridor.addColorStop(0.5, "rgba(109, 145, 167, 0.34)");
+      corridor.addColorStop(0.78, "rgba(90, 127, 151, 0.28)");
+      corridor.addColorStop(1, "rgba(72, 101, 124, 0)");
+      ctx.fillStyle = corridor;
+      ctx.fillRect(0, 0, W, H);
+
+      if (!off) {
+        ctx.fillStyle = "rgba(34, 59, 78, 0.24)";
+        for (let y = -112 + farOffset; y < H + 112; y += low ? 224 : 112) {
+          ctx.beginPath();
+          ctx.ellipse(38, y, 48, 10, -0.08, 0, TAU);
+          ctx.ellipse(W - 34, y + 42, 54, 12, 0.08, 0, TAU);
+          ctx.fill();
+        }
+        ctx.strokeStyle = "rgba(238, 219, 174, 0.34)";
+        ctx.lineWidth = 1;
+        for (let y = -78 + midOffset; y < H + 78; y += low ? 156 : 78) {
+          ctx.beginPath();
+          ctx.moveTo(W * 0.18, y + 9);
+          ctx.bezierCurveTo(W * 0.38, y - 6, W * 0.62, y + 13, W * 0.82, y - 2);
+          ctx.stroke();
+        }
+      }
+      if (!off && !low) {
+        ctx.fillStyle = "rgba(23, 40, 52, 0.72)";
+        ctx.strokeStyle = "rgba(214, 183, 121, 0.54)";
+        for (let y = -126 + nearOffset; y < H + 126; y += 126) {
+          for (let side = 0; side < 2; side += 1) {
+            const x = side ? W - 13 : 13;
+            ctx.fillRect(x - 2, y - 12, 4, 30);
+            ctx.beginPath();
+            ctx.moveTo(x, y - 12);
+            ctx.lineTo(x + (side ? -8 : 8), y - 3);
+            ctx.lineTo(x, y + 6);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+          }
+        }
+      }
+    } else if (environment === "sea") {
+      const deep = ctx.createLinearGradient(0, 0, W, 0);
+      deep.addColorStop(0, "rgba(3, 28, 38, 0.36)");
+      deep.addColorStop(0.24, "rgba(8, 58, 70, 0.08)");
+      deep.addColorStop(0.76, "rgba(8, 58, 70, 0.08)");
+      deep.addColorStop(1, "rgba(3, 28, 38, 0.36)");
+      ctx.fillStyle = deep;
+      ctx.fillRect(0, 0, W, H);
+      if (!off) {
+        ctx.fillStyle = "rgba(94, 72, 42, 0.13)";
+        for (let y = -112 + farOffset; y < H + 112; y += low ? 224 : 112) {
+          ctx.beginPath();
+          ctx.ellipse(W * 0.24, y, 34, 8, 0.12, 0, TAU);
+          ctx.ellipse(W * 0.72, y + 48, 42, 9, -0.09, 0, TAU);
+          ctx.fill();
+        }
+        ctx.strokeStyle = "rgba(150, 219, 215, 0.34)";
+        ctx.lineWidth = 1;
+        for (let y = -78 + midOffset; y < H + 78; y += low ? 156 : 78) {
+          ctx.beginPath();
+          ctx.moveTo(W * 0.12, y);
+          ctx.bezierCurveTo(W * 0.36, y + 8, W * 0.64, y - 8, W * 0.88, y + 1);
+          ctx.stroke();
+        }
+      }
+      if (!off && !low) {
+        for (let y = -126 + nearOffset; y < H + 126; y += 126) {
+          for (let side = 0; side < 2; side += 1) {
+            const x = side ? W - 15 : 15;
+            ctx.strokeStyle = "rgba(18, 29, 31, 0.86)";
+            ctx.fillStyle = side ? "#8c4b2c" : "#a86b32";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x, y + 11);
+            ctx.lineTo(x, y - 8);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, TAU);
+            ctx.fill();
+            ctx.fillStyle = "rgba(235, 202, 125, 0.72)";
+            ctx.fillRect(x - 1, y - 2, 2, 3);
+          }
+        }
+      }
+    } else if (environment === "space") {
+      ctx.globalAlpha = off ? 0.42 : low ? 0.62 : 0.82;
+      ctx.strokeStyle = "rgba(84, 117, 157, 0.18)";
+      ctx.lineWidth = low ? 18 : 24;
+      for (let y = -112 + farOffset; y < H + 112; y += low ? 224 : 112) {
+        ctx.beginPath();
+        ctx.moveTo(-18, y + 18);
+        ctx.bezierCurveTo(W * 0.32, y - 16, W * 0.66, y + 24, W + 18, y - 4);
+        ctx.stroke();
+      }
+      if (!off) {
+        ctx.strokeStyle = "rgba(118, 132, 168, 0.48)";
+        ctx.lineWidth = 1;
+        for (let y = -156 + midOffset; y < H + 156; y += low ? 312 : 156) {
+          const side = Math.abs(Math.floor((y - midOffset) / 156)) % 2;
+          const x = side ? W - 28 : 28;
+          ctx.strokeRect(x - 13, y - 4, 26, 8);
+          ctx.beginPath();
+          ctx.moveTo(x - 19, y);
+          ctx.lineTo(x + 19, y);
+          ctx.moveTo(x, y - 12);
+          ctx.lineTo(x, y + 12);
+          ctx.stroke();
+        }
+      }
+      if (!off && !low) {
+        ctx.fillStyle = "rgba(8, 10, 18, 0.88)";
+        ctx.strokeStyle = "rgba(89, 111, 145, 0.58)";
+        for (let y = -126 + nearOffset; y < H + 126; y += 126) {
+          for (let side = 0; side < 2; side += 1) {
+            const x = side ? W - 8 : 8;
+            ctx.fillRect(x - 7, y - 18, 14, 36);
+            ctx.beginPath();
+            ctx.moveTo(x - 12, y - 16);
+            ctx.lineTo(x + 12, y + 16);
+            ctx.moveTo(x + 12, y - 16);
+            ctx.lineTo(x - 12, y + 16);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    ctx.restore();
+    renderDebug.depthLayersDrawn = true;
+    renderDebug.depthLayerEnvironment = environment;
+    renderDebug.depthLayerTier = off ? "off" : low ? "low" : "full";
+  }
+
   // raster 與 fallback 共用的景深：固定幾何、只讀視覺時間，不消耗遊戲 RNG。
   function drawDepthLayers() {
-    if (currentEnvironment() !== "land") return;
+    const environment = currentEnvironment();
     const left = config.LOGIC.roadLeft;
     const right = config.LOGIC.roadRight;
     const scroll = state ? state.scroll : idleTime * 42;
     const low = performanceState.quality === "low" || fxLevelSetting() === "reduced";
     const off = fxLevelSetting() === "off";
+
+    if (environment !== "land") {
+      drawR72EnvironmentDepth(environment, scroll, low, off);
+      return;
+    }
 
     ctx.save();
     if (!off) {
@@ -3259,6 +3410,7 @@
     }
     ctx.restore();
     renderDebug.depthLayersDrawn = true;
+    renderDebug.depthLayerEnvironment = environment;
     renderDebug.depthLayerTier = off ? "off" : low ? "low" : "full";
   }
 
@@ -3891,6 +4043,25 @@
     if (renderDebug.enemyImageStatus) renderDebug.enemyImageStatus[enemy.enemyId] = status;
     drawEnemyShadow(enemy, width, lift, drawAlpha, knockX, knockY);
 
+    // R72 action-pose fallback: raster sheets currently carry locomotion only.
+    // A hit therefore switches briefly to the independently authored code
+    // sprite hurt pose instead of faking damage by scaling the walk frame.
+    if (flash && enemy.sprite) {
+      const hurtTimeMs = Math.max(0, ((enemy.hitFlashMax || 0.2) - enemy.hitFlash) * 1000);
+      ctx.save();
+      ctx.translate(enemy.x + knockX, enemy.y + knockY + lift);
+      if (enemy.filter && performanceState.quality !== "low") ctx.filter = enemy.filter;
+      drawSprite(enemy.sprite, "hit", hurtTimeMs, 0, 0, enemy.scale, {
+        alpha: drawAlpha,
+        tint: hitColor,
+        flipX: (enemy.vx || 0) < -0.5
+      });
+      ctx.restore();
+      renderDebug.enemyFallbackDrawn += 1;
+      renderDebug.enemyHurtPoseDrawn += 1;
+      return;
+    }
+
     if (record && status === "loaded") {
       const image = record.tintCanvas || record.image;
       const frameState = animation ? enemyAnimationFrame(enemy, animation) : { frame: 0, tier: "static" };
@@ -3956,33 +4127,16 @@
 
   function drawEnemyCorpse(effect, timeMs) {
     const enemyConfig = config.ENEMIES[effect.enemyId] || null;
-    const animation = enemyConfig && enemyConfig.spriteAnimation ? enemyConfig.spriteAnimation : null;
-    const record = enemyConfig && (enemyConfig.spriteImage || animation) ? enemyImages[effect.enemyId] : null;
-    const status = enemyImageStatus(effect.enemyId);
     const width = enemyVisualWidth(effect, enemyConfig);
-    if (record && status === "loaded") {
-      const image = record.tintCanvas || record.image;
-      const frameWidth = animation ? animation.frameWidth : record.image.naturalWidth;
-      const frameHeight = animation ? animation.frameHeight : record.image.naturalHeight;
-      const height = width * (frameHeight / frameWidth);
-      drawEnemyShadow(effect, width, 0, effect.alpha * 0.55);
-      ctx.save();
-      ctx.translate(effect.x, effect.y + Math.min(7, effect.radius * 0.18));
-      ctx.rotate(effect.rotation || 0);
-      ctx.scale(1.08, 0.9);
-      ctx.globalAlpha *= effect.alpha * 0.78;
-      ctx.imageSmoothingEnabled = false;
-      if (effect.filter && performanceState.quality !== "low") ctx.filter = effect.filter;
-      ctx.drawImage(image, 0, 0, frameWidth, frameHeight, -width * 0.5, -height * 0.5, width, height);
-      if (effect.tint) {
-        ctx.globalCompositeOperation = "source-atop";
-        ctx.fillStyle = effect.tint;
-        ctx.fillRect(-width * 0.5, -height * 0.5, width, height);
-      }
-      ctx.restore();
-      return;
-    }
-    drawSprite(effect.sprite, effect.anim, timeMs, effect.x, effect.y, effect.scale, { alpha: effect.alpha, tint: effect.tint || null });
+    drawEnemyShadow(effect, width, 0, effect.alpha * 0.55);
+    // Raster sheets are locomotion-only.  Keep death frame-based by routing to
+    // the replaceable code-sprite death sequence until dedicated raster action
+    // atlases exist; never rotate/squash one walk frame as a fake death.
+    drawSprite(effect.sprite, effect.anim, Math.max(0, effect.age * 1000), effect.x, effect.y, effect.scale, {
+      alpha: effect.alpha,
+      tint: effect.tint || null
+    });
+    renderDebug.enemyDeathPoseDrawn += 1;
   }
 
   function drawHazard(hazard) {
@@ -5072,6 +5226,8 @@
       enemyImageStatus: {},
       enemyAnimatedDrawn: 0,
       enemyArmoredDrawn: 0,
+      enemyHurtPoseDrawn: 0,
+      enemyDeathPoseDrawn: 0,
       enemyFacingLeftDrawn: 0,
       enemyAnimationFrames: {},
       enemyAnimationTier: "none",
@@ -5091,6 +5247,7 @@
       roadDebrisDrawn: 0,
       roadDebrisStatus: roadDetailImage.status,
       depthLayersDrawn: false,
+      depthLayerEnvironment: "none",
       depthLayerTier: "none",
       scorchMarksDrawn: 0,
       fxPriorityEvictions: fxState ? fxState.priorityEvictions : 0,

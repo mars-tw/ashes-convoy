@@ -147,8 +147,8 @@ animate_existing("runner.png", "oga_runner_walk.png", (40, 40))
 animate_existing("spore_spitter.png", "oga_spitter_walk.png", (40, 40))
 
 animate_existing("bloater.png", "bloater_walk.png", (52, 52))
-animate_existing("shield_husk.png", "shield_husk_walk.png", (48, 64))
-animate_existing("swarm_mite.png", "swarm_mite_walk.png", (44, 44))
+# R72 owns shield_husk_walk.png and swarm_mite_walk.png.  Do not overwrite
+# their independently drawn limb poses with the legacy whole-sprite transform.
 animate_existing("void_wraith.png", "void_wraith_walk.png", (48, 64))
 animate_existing("titan.png", "titan_walk.png", (88, 80))
 build_armored_brute()

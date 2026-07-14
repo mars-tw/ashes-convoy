@@ -89,7 +89,7 @@ expectedCached.forEach((resource) => {
   assert(fileExists(resource), `service worker cache entry does not exist: ${resource}`);
 });
 
-assert.strictEqual(version.APP_VERSION, "R71");
+assert.strictEqual(version.APP_VERSION, "R72");
 assert.strictEqual(version.CACHE_VERSION, `ashes-convoy-${version.APP_VERSION.toLowerCase()}-v1`);
 assert.strictEqual(config.APP_VERSION, version.APP_VERSION, "config APP_VERSION should use src/version.js");
 assert.strictEqual(config.CACHE_VERSION, version.CACHE_VERSION, "config CACHE_VERSION should use src/version.js");
@@ -111,7 +111,7 @@ assert(uiText.includes("controllerchange"), "page should listen for service work
 assert(uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"), "page should gate service worker auto reload to 15 seconds");
 assert(uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"), "page should guard service worker auto reload by session");
 assert(uiText.includes("root.location.reload()"), "page should auto reload after a fresh service worker takes control");
-assert(indexHtml.includes("ashes_convoy_html_boot_reload_R71"), "HTML boot guard should cover pre-JS service worker skew");
+assert(indexHtml.includes("ashes_convoy_html_boot_reload_R72"), "HTML boot guard should cover pre-JS service worker skew");
 
 const userVisibleFiles = ["index.html", ...listFiles("src", ".js")];
 const mojibakePatterns = [

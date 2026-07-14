@@ -1,5 +1,14 @@
 # Asset provenance
 
+## R72 image-generated production art
+
+- Tool: OpenAI built-in image generation (`image_gen`), generated for this project in R72.
+- Game files: `assets/vehicles/xi_gunner.png`, `assets/ui/start.png`, `assets/cover.png`; `assets/zombies/tar_brute.png`, `shield_husk.png`, `swarm_mite.png`; and their four-frame `tar_brute_walk.png`, `shield_husk_walk.png`, `swarm_mite_walk.png` atlases.
+- Character reference: R71 `assets/shelter/trailer/base_escape_pod.png` is the canonical Xi identity (short deep-brown hair, brown scarf/poncho, dark trousers and boots). The R72 gunner keeps separate idle and firing/recoil poses.
+- Enemy reference: R71 shambler, runner, spore spitter, and titan established the shared painterly-pixel linework, warm ash palette, and volume-light pipeline.
+- Modifications: high-resolution generation, flat-magenta chroma-key removal with soft matte/despill, alpha cleanup, a single Lanczos downsample into fixed runtime interfaces, and deterministic packing of four independently drawn locomotion poses through `scripts/build-r72-assets.py`.
+- Prompts, measurement definitions, and production constraints are recorded in `docs/CODEX_RESPONSE_ashes_R72.md`.
+
 ## R71 image-generated production art
 
 - Tool: OpenAI built-in image generation (`image_gen`), generated for this project in R71.
@@ -35,7 +44,7 @@ Kenney's CC0 license does not require attribution; this credit is included for p
 - License: [Creative Commons Zero (CC0 1.0)](https://creativecommons.org/publicdomain/zero/1.0/), as stated on both source pages and in both downloaded `license.txt` files.
 - Downloaded sources: both complete ZIP packages (kept in the gitignored `tools/asset_sources/` provenance archive).
 - Used Remastered sources: `tracksLarge.png`, `tankBody_darkLarge.png`, `tankDark_barrel3.png`, `barricadeMetal.png`, `barricadeWood.png`, `barrelRust_top.png`, and `sandbagBrown.png` from `PNG/Default size/`.
-- Game files: `assets/enemies/kenney_armored_brute_walk.png` and `assets/env/kenney_road_debris.png`.
-- Modifications: layered tread/hull/turret composition with four lightweight tread/recoil poses; debris crop, scale, transparent atlas packing, and muted rust-brown palette. The original Top-Down Tanks pack is retained as provenance/reference; shipped derivatives use the Remastered files listed above.
+- Current game file: `assets/env/kenney_road_debris.png`. The historical `assets/enemies/kenney_armored_brute_walk.png` derivative remains in the repository for provenance/reference but R72 no longer uses or offline-caches it as an enemy; tar brute and chain tether now use the humanoid R72 true-pose atlas.
+- Modifications: the retired historical derivative layered tread/hull/turret parts; the active debris atlas uses crop, scale, transparent packing, and a muted rust-brown palette. The original Top-Down Tanks pack is retained as provenance/reference.
 
 All third-party sources listed here are CC0/public-domain material and are compatible with this project's MIT-licensed code. Attribution is included voluntarily for provenance and thanks.
