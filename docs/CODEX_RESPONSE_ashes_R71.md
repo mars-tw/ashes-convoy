@@ -1,6 +1,6 @@
 # 《灰燼護航》R71 美術回饋修正
 
-三項玩家回饋已全修；戰鬥數值、敵人行為、掉落、波次、RNG 與粒子池上限未改。工作樹維持未提交，HEAD 仍為 `f8bdab6`。
+三項玩家回饋已全修；戰鬥數值、敵人行為、掉落、波次、RNG 與粒子池上限未改。本回合未執行 `git commit`／`git push`；工作期間外部程序將主變更提交並同步為 `1a48662`，目前僅本回應文件的末次校正維持未提交。
 
 ## 交付
 
@@ -46,7 +46,7 @@
 ## R71 同步與護欄
 
 - `src/version.js`、config fallback、HTML manifest/icon/script query、boot reload key、SW app shell/cache、測試名稱與斷言均同步為 `R71` / `ashes-convoy-r71-v1`。
-- active runtime 範圍 `index.html sw.js manifest.webmanifest README.md CREDITS.md src/** scripts/**` 的 `R70|r70` grep = `0`；歷史回應／review 文件保留當時版本記錄。
+- active runtime 範圍 `index.html sw.js manifest.webmanifest README.md CREDITS.md src/** scripts/**` 的前版大小寫 token grep = `0`；歷史回應／review 文件保留當時版本記錄。
 - 新增護欄：單一熹、房間 `780×900` 與等比顯示、高細節靜態圖尺寸、4 幀 atlas、沙暴 0 Hz／低彩度／soft flow、reduced/low 分級。
 
 ## 驗證
@@ -56,4 +56,4 @@
 - `npm test` ×3：config、automation、visual、animation assets、rules、supply、economy、storage、sprite contract、FX、audio 全 PASS；14 個動畫／重製靜態檔共 `367881` bytes，低於 1.5 MiB 上限。
 - `npm run test:rwd` ×3：shelter／ops drawer／trailer room，`1920×1080` 至 `360×640` 與 `844×390` 共 9 視口全 PASS，頁捲與橫溢皆 0。
 - `npm run test:e2e` ×3：`390×844`、`820×1180`、`1280×900`、`1366×700`，image/vehicle/zombie/environment fallback、audio、service-worker offline 全 PASS。
-- `git diff --check` PASS；未執行 `git commit` 或 `git push`。
+- `git diff --check` PASS；本回合未執行 `git commit` 或 `git push`。外部程序於工作期間將 HEAD／`origin/main` 從輸入的 `f8bdab6` 推進到 `1a48662`，本回合未回退或覆寫該外部狀態。
