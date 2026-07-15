@@ -8,24 +8,39 @@
 |---|---|---|
 | 開始圖 | `assets/ui/start.png` | 首屏 key art |
 | 封面圖 | `assets/cover.png` | GitHub / 分享用橫式 key art |
-| 角色定裝 | `assets/vehicles/xi_gunner.png` | 希・洛威雙格 idle / fire 圖集 |
+| 角色定裝 | `assets/vehicles/xi_gunner.png` | 熹的雙格 idle / fire 圖集 |
+| 角色立繪 | `assets/story/xi.png` | 無線電日誌與早期角色識別參考 |
 | 載具 | `assets/vehicles/land.png` | `land_rig` |
 | 載具 | `assets/vehicles/air.png` | `sky_barge` |
 | 載具 | `assets/vehicles/sea.png` | `sea_ark` |
 | 載具 | `assets/vehicles/space.png` | `void_runner` |
+| 拖車 | `assets/vehicles/trailer.png` | 出勤護送拖車 |
 | 殭屍 | `assets/zombies/shambler.png` | `shambler` |
 | 殭屍 | `assets/zombies/runner.png` | `runner` |
 | 殭屍 | `assets/zombies/bloater.png` | `bloater` |
+| 殭屍 | `assets/zombies/spore_spitter.png` | `spore_spitter` 與衍生變體 |
+| 殭屍 | `assets/zombies/void_wraith.png` | `void_wraith` 與衍生變體 |
 | 殭屍 | `assets/zombies/titan.png` | `boss_hive_titan` |
 | 殭屍 | `assets/zombies/tar_brute.png` | `tar_brute` / `chain_tether` 靜態主圖 |
 | 殭屍 | `assets/zombies/shield_husk.png` | `shield_husk` 靜態主圖 |
 | 殭屍 | `assets/zombies/swarm_mite.png` | `swarm_mite` 靜態主圖 |
-| 敵人動畫 | `assets/enemies/*_walk.png` | 4 格真姿勢移動圖集 |
+| 敵人動畫 | `assets/enemies/*_walk.png` | 4 格移動圖集；是否為獨立姿勢依各 release provenance，不以檔名推定 |
 | 捲軸背景 | `assets/env/{land,air,sea,space}.png` | 780 x 1560 環境基底；Canvas 疊加遠／中／近景視差 |
+| 路面裝飾 | `assets/env/kenney_road_debris.png` | Kenney CC0 路障／殘骸 atlas |
+| 粒子材質 | `assets/fx/kenney_*.png` | Kenney CC0 煙、火、碎片與閃光 |
 | 避難所 | `assets/shelter/snow.png` | 預設主題 |
 | 避難所 | `assets/shelter/workshop.png` | 工作間主題 |
 | 避難所 | `assets/shelter/greenhouse.png` | 溫室主題 |
 | 避難所 | `assets/shelter/bunker.png` | 地堡主題 |
+| 拖車房間 | `assets/shelter/trailer/base_escape_pod.png` | 熹的房間主圖 |
+| 拖車物件 | `assets/shelter/trailer/*.png` | 家具、升級與故事裝飾 |
+| PWA 圖示 | `assets/icons/icon-{192,512}.png` | 安裝與捷徑圖示 |
+
+## 來源與標註
+
+完整來源、第三方授權、使用檔名、修改方式與 `image_gen` 批次標註規則以 [`CREDITS.md`](../CREDITS.md) 為準。新增或替換資產時，必須同步更新該文件；無法確認的工具、prompt 或來源不得推測補寫。
+
+R71／R72 的 prompt 摘要、母圖位置、後製與量測另見 [R71 美術報告](CODEX_RESPONSE_ashes_R71.md) 與 [R72 素材報告](CODEX_RESPONSE_ashes_R72.md)。第三方原包只保存在 gitignored `tools/asset_sources/`，runtime 僅收錄文件所列的衍生檔。
 
 ## 工程接點
 

@@ -1,75 +1,95 @@
-# 灰燼護航（ashes-convoy）
+# 灰燼護航 Ashes Convoy
 
-![cover](assets/cover.png)
+[![CI & Deploy Pages](https://github.com/mars-tw/ashes-convoy/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mars-tw/ashes-convoy/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/badge/release-R72-f0b64a)](src/version.js)
+[![License: MIT](https://img.shields.io/badge/license-MIT-5ed4cb)](LICENSE)
 
+《灰燼護航》是一款手機直式優先的 Canvas 2D 末世護送射擊遊戲。駕駛裝甲載具拖著倖存者車廂穿越屍潮，在每一波中清敵、打破增益門、收集補給，並把零件、藍圖與戰績帶回基地。
 
-阿軒小遊戲系列的末日護航小品。玩家從避難所出車，操控載具沿路線推進，拆增益門、清殭屍群、撐過每 5 波出現的 Boss，並把零件、藍圖與成就進度帶回車庫。
+**[立即線上遊玩](https://mars-tw.github.io/ashes-convoy/)**
 
-## 現況重點
+![灰燼護航 R72 封面](assets/cover.png)
 
-- Vanilla HTML/CSS/JS + Canvas，手機優先，邏輯畫布 195 x 422，顯示尺寸 390 x 844。
-- 四台載具、四種出擊環境：陸地重裝車、空艇、海上方舟、虛空穿梭機。
-- AI key art 已接入：開始畫面、四台載具與四張避難所背景；敵人另以 OGA／Kenney CC0 素材升級為多幀步行與裝甲動畫。
-- 增益門 2.0：傷害、射速、多重射擊、維修四類門，門核心有 HP 且隨波次成長。
-- Boss 事件化：每 5 波一隻 `boss_hive_titan`，血量階段會觸發召喚與衝鋒。
-- 單手觸控：拖曳同時控制載具橫移與上移準星，放開後仍會自動射擊（射擊間隔較長）；手機操作不依賴 hover。
-- 車庫 meta v2：藍圖解鎖、成就牆、通用升級與載具專屬分支都會保存。
+## 最新特色
+
+- **R71–R72 素材重製**：重製首屏、封面、熹的砲手姿勢、主要敵人與 Boss，並統一暖灰燼 painterly-pixel 視覺；R72 的瀝青巨屍、盾殼屍與蜱群使用四個獨立移動姿勢的圖集，環境也加入遠／中／近景深層。
+- **熹的拖車房間**：基地內可進入熹的末世房間，閱讀無線電日誌、查看角色狀態，並以出擊進度解鎖或配置房間物件。
+- **波次護送玩法**：每波護送車隊深入四種環境，處理屍群、菁英敵人、補給與四類增益門；每 5 波迎戰階段式 Boss。
+- **基地系統**：切換與解鎖四台載具、投資通用／專屬升級、領取成就、管理行動與設定，進度保存於瀏覽器本機。
+- **行動裝置與 PWA**：單手拖曳操作、響應式直式畫面、離線快取、可調特效／閃光／效能與存檔匯出入。
+
+## 遊戲畫面
+
+| 手機首屏 | 手機戰鬥 | 桌機戰鬥 |
+|---|---|---|
+| ![R72 手機首屏](docs/evidence/R72/phone-start.png) | ![R72 手機戰鬥](docs/evidence/R72/phone-battle.png) | ![R72 桌機戰鬥](docs/evidence/R72/desktop-battle.png) |
 
 ## 玩法
 
-1. 在避難所選擇「出擊」或進車庫調整載具。
-2. 戰鬥中拖曳控制載具與瞄準線；觸控準星會顯示在手指上方，優先打破想要的增益門核心。放開仍會自動射擊，但射速較慢。
-3. 一般波次結束取得零件；擊敗 Boss 有機率取得下一台鎖定載具的藍圖。
-4. 回到車庫使用零件升級 `hull`、`weapon`、`energy`、`gate`，或投資載具專屬節點。
-5. 透過成就牆領取一次性零件獎勵，推進全載具解鎖。
+1. 從基地整備載具、升級與拖車房間後出擊。
+2. 在戰鬥中移動載具並控制上方準星，優先打破想要的增益門核心。
+3. 撐過一般波次、補給抉擇與每 5 波一次的 Boss；波長由 30 秒逐步增加，最高 45 秒。
+4. 結算零件、Boss 藍圖、成就與最佳紀錄，再回基地強化下一次出擊。
 
-## 主要數值
+目前有陸地重裝車、空艇、海上方舟與虛空穿梭機四種載具，各自對應不同環境、武器與專屬成長路線。
 
-| 載具 | 解鎖 | 環境 | HP | 護甲 | 武器 | 定位 |
-|---|---|---|---:|---:|---|---|
-| `land_rig` | 預設 | land | 520 | 10 | `rig_cannon` | 高耐久、復仇火力 |
-| `sky_barge` | 3 藍圖 | air | 300 | 3 | `sky_autocannon` | 高射速、低防禦 |
-| `sea_ark` | 3 藍圖 | sea | 420 | 6 | `ark_cannon` | 低射速、範圍爆風 |
-| `void_runner` | 3 藍圖 | space | 360 | 4 | `void_lance` | 高頻穿透、破甲疊層 |
+## 操作說明
 
-| 系統 | 數值 |
+| 輸入 | 操作 |
 |---|---|
-| 波次 | 基礎 30 秒，每波 +1 秒，上限 45 秒；Boss 每 5 波 |
-| 敵人成長 | HP x1.13/波，速度每波 +1.5%，速度成長上限 +45% |
-| 門出現 | 首門 8-11 秒，之後每 20-30 秒，門速 22，HP x1.09/波 |
-| 零件 | 每波 4、擊殺 `floor(min(kills, 360) / 6)`、Boss 每隻 24，最低有效場次 2 |
-| 藍圖 | Boss 後 35% 掉 1 張，連 3 隻 Boss 未掉則保底，鎖定下一台未解鎖載具 |
-| 成就 | 首殺、首 Boss、5/10 波、四環境出擊、累計 100 殺、全載具解鎖 |
+| 觸控／滑鼠按住拖曳 | 移動載具並調整準星；觸控準星會顯示在手指上方 |
+| 放開拖曳 | 保持自動射擊與輔助瞄準，但射擊間隔較長 |
+| `←`／`→` | 鍵盤向左／向右移動載具 |
+| `Esc` | 暫停／繼續；也可關閉最上層基地面板 |
+| `R` | 以目前選定載具重新開始出擊 |
+| `1`–`4`，或方向鍵＋`Enter`／空白鍵 | 選擇補給獎勵 |
 
-## 文件
+基地、設定與升級使用畫面上的按鈕操作；手機不需要 hover。
 
-| 文件 | 用途 |
-|---|---|
-| `docs/gdd.md` | 現行遊戲設計、核心循環、R8/R12 系統狀態 |
-| `docs/stage-plan.md` | 已完成里程碑、測試 Gate、後續文件維護規則 |
-| `docs/art-contract.md` | AI 圖像與 pixel matrix fallback 的美術/工程契約 |
-| `references/data-model.md` | meta v2、config、rules、經濟與測試契約 |
+## 技術棧
 
-## 開發與驗證
+- 原生 HTML、CSS、JavaScript；無前端框架與打包器。
+- HTML5 Canvas 2D 渲染、Web Audio API 程序音效。
+- Service Worker、Web App Manifest、localStorage，提供 PWA、離線與本機進度。
+- Node.js 測試守門與 Playwright 瀏覽器／RWD 測試。
+- GitHub Actions 執行 Node 20 測試並部署 GitHub Pages。
+
+## 本地開發
+
+需求：Node.js 20、npm、Python 3。首次執行瀏覽器測試時另安裝 Playwright Chromium。
 
 ```bash
-npm test
-npm run test:e2e
+git clone https://github.com/mars-tw/ashes-convoy.git
+cd ashes-convoy
+npm ci
 npm start
 ```
 
-若只要靜態預覽：
+開啟 <http://localhost:8000/>。專案是靜態網站，`npm start` 實際執行 `python -m http.server 8000`，不需要建置步驟。
+
+### 測試指令
 
 ```bash
-python -m http.server 8000
+npm test
+
+# 首次執行 E2E / RWD 前
+npx playwright install chromium
+
+npm run test:e2e
+npm run test:rwd
 ```
 
-## 素材授權
+| 指令 | 範圍 |
+|---|---|
+| `npm test` | config、automation、visual、animation asset、rules、supply、economy、storage、sprite、FX、audio |
+| `npm run test:e2e` | Playwright 遊戲流程、資產 fallback、音訊與離線行為 |
+| `npm run test:rwd` | 桌機、平板、手機與橫向視口矩陣 |
 
-敵人步態使用 Curt 在 OpenGameArt 發布的 CC0「Characters, Zombies, and Weapons. Oh My!」；敵方裝甲與低密度路面殘骸使用 Kenney CC0「Top-Down Tanks」系列。完整來源、下載包、使用檔名與修改方式見 [CREDITS.md](CREDITS.md)。
+## 文件、素材與授權
 
-## 📋 更新日誌
+- [遊戲設計文件](docs/gdd.md)
+- [美術與資產契約](docs/art-contract.md)
+- [素材來源與致謝](CREDITS.md)
+- [MIT License](LICENSE)
 
-- R12：加入載具藍圖解鎖、成就牆、四載具專屬升級分支，meta 升級到 v2。
-- R8：增益門 2.0、觸控分離、Boss 事件化，讓中後段出擊有明確決策節奏。
-- 早期更新：接入 AI key art、四載具四環境、AI 殭屍圖像與動畫 fallback，補齊車庫/避難所流程。
+目前遊戲版本為 **R72**，權威版本值在 [`src/version.js`](src/version.js)。專案程式碼採 MIT License；第三方素材與開發工具的來源、授權及 `image_gen` 產出標註方式請見 [CREDITS.md](CREDITS.md)。

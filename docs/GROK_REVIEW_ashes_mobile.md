@@ -2,7 +2,7 @@
 
 | 項目 | 內容 |
 |------|------|
-| 對象 | https://mars-tw.github.io/doomsday-shooter/（vanilla JS 直式射擊 PWA） |
+| 對象 | https://mars-tw.github.io/ashes-convoy/（vanilla JS 直式射擊 PWA） |
 | 版本 | **R64**（`src/version.js:4`，`CACHE_VERSION` = `ashes-convoy-r64-v1`） |
 | 視角 | 手機玩家／單手直式可玩性 |
 | 姿態 | **只審不改** |
