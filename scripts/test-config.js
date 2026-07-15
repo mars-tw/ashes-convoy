@@ -12,11 +12,11 @@ function assertFinitePositive(value, label) {
 
 assert.strictEqual(config.STORAGE_KEY, "ashes_convoy_meta_v1");
 assert.strictEqual(config.META_VERSION, 3);
-assert.strictEqual(config.APP_VERSION, "R72");
-assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r72-v1");
+assert.strictEqual(config.APP_VERSION, "R73");
+assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r73-v1");
 const indexHtml = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-assert(indexHtml.includes("manifest.webmanifest?v=R72"), "index.html should version the web manifest for R72");
-assert(indexHtml.includes("assets/icons/icon-192.png?v=R72"), "index.html should version the app icon for R72");
+assert(indexHtml.includes("manifest.webmanifest?v=R73"), "index.html should version the web manifest for R73");
+assert(indexHtml.includes("assets/icons/icon-192.png?v=R73"), "index.html should version the app icon for R73");
 assert.strictEqual(config.LOGIC.width, 195);
 assert.strictEqual(config.LOGIC.height, 422);
 assert.strictEqual(config.LOGIC.displayWidth, 390);

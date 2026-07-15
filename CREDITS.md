@@ -14,6 +14,14 @@
 
 R71、R72 已依此格式標註。更早的專案自製圖像只保有 repo 歷史中的「AI 生成／圖生圖」紀錄，精確工具與完整 prompt 未全部保存；下方如實列出檔案範圍，不補寫無法驗證的資訊。
 
+## R73 image-generated action atlases
+
+- 工具：OpenAI built-in image generation（`image_gen`），以既有 walk atlas 為畫風／鏡位參考、既有高解析敵人圖為角色身分參考。
+- 遊戲檔案：`assets/enemies/*_hurt.png`（每套 2 幀）與 `assets/enemies/*_death.png`（每套 3 幀），涵蓋 shambler、runner、bloater、spore spitter、shield husk、swarm mite、tar brute、void wraith、hive titan；共用外觀的變種沿用同一套 action atlas。
+- Prompt 摘要：每張母圖固定一列六個獨立全身姿勢；前兩格為受擊反衝／恢復，後四格為屈膝／側摔／接地／最終倒地；禁止以同一姿勢平移、旋轉、縮放、擠壓或 bob 製造動畫。
+- 背景與後製：平坦洋紅鍵色（void wraith 使用綠色），經 imagegen skill 的 `remove_chroma_key.py`（auto-key border、soft matte、despill）清理，再由 `scripts/build-r73-action-atlases.py` 以共同比例單次 Lanczos 下採樣到 walk frame 介面。
+- 母圖：`tools/asset_sources/imagegen_r73/`（刻意 gitignored，不進 runtime cache）；生成提示、逐敵量測與驗收證據見 [R73 清償報告](docs/CODEX_RESPONSE_ashes_R73.md)。
+
 ## R72 image-generated production art
 
 - 工具：OpenAI built-in image generation（`image_gen`），為本專案於 R72 產出，不是從外部素材網站下載。

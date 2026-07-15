@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>灰燼護航 R73 raster action atlas proof</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 28px; color: #f4ead8; background: #101217; font: 16px/1.45 system-ui, sans-serif; }
+    h1 { margin: 0 0 8px; color: #f0b64a; }
+    p { margin: 0 0 22px; color: #bfc4c8; }
+    .enemy { margin: 0 0 18px; padding: 16px; border: 1px solid #55472f; background: #191b20; }
+    .enemy h2 { margin: 0 0 12px; font-size: 18px; }
+    .grid { display: grid; grid-template-columns: 190px minmax(120px, .7fr) minmax(160px, 1fr) minmax(220px, 1.4fr); gap: 16px; align-items: center; }
+    .label { color: #d3b77b; font-size: 13px; letter-spacing: .04em; }
+    .samples { display: flex; gap: 10px; align-items: end; }
+    .frame { overflow: hidden; flex: 0 0 auto; border: 1px solid #444951; background: repeating-conic-gradient(#20242a 0 25%, #171a1f 0 50%) 0 / 12px 12px; }
+    .frame img { display: block; max-width: none; image-rendering: pixelated; }
+    .sheet { display: block; max-width: 100%; height: auto; image-rendering: pixelated; background: repeating-conic-gradient(#20242a 0 25%, #171a1f 0 50%) 0 / 12px 12px; border: 1px solid #444951; }
+    .metric { margin-left: 8px; color: #7bd8a1; font-size: 13px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .enemy { overflow: auto; } .sheet { max-width: none; } }
+  </style>
+</head>
+<body>
+  <h1>灰燼護航 R73 — Raster Action Atlas 守門證據</h1>
+  <p>Low locomotion 固定交替 walk frame 0 / 2；hurt 為 2 個獨立姿勢；death 為跪倒／側摔／最終倒地 3 幀。下列數字為 atlas 內任意兩幀 alpha 差的最低值，門檻 &gt; 0.08。</p>
+
+  <script>
+    const enemies = [
+      ["shambler", "oga_shambler", 40, 40, .293, .241],
+      ["runner", "oga_runner", 40, 40, .296, .239],
+      ["bloater", "bloater", 52, 52, .205, .155],
+      ["spore_spitter / ash_screamer", "oga_spitter", 40, 40, .240, .230],
+      ["shield_husk / mirror_husk", "shield_husk", 48, 64, .251, .166],
+      ["swarm_mite / ember_tick", "swarm_mite", 44, 44, .315, .102],
+      ["tar_brute / chain_tether", "tar_brute", 56, 68, .268, .150],
+      ["void_wraith", "void_wraith", 48, 64, .254, .209],
+      ["boss_hive_titan", "titan", 88, 80, .319, .211]
+    ];
+    const scale = 3;
+    for (const [name, prefix, fw, fh, hurtDiff, deathDiff] of enemies) {
+      const section = document.createElement("section");
+      section.className = "enemy";
+      section.innerHTML = `<h2>${name}<span class="metric">hurt ${hurtDiff.toFixed(3)} · death ${deathDiff.toFixed(3)}</span></h2>
+        <div class="grid">
+          <div><div class="label">LOW WALK：frame 0 / 2</div><div class="samples">
+            <div class="frame" style="width:${fw * scale}px;height:${fh * scale}px"><img alt="${name} walk frame 0" src="../../../assets/enemies/${prefix}_walk.png" style="height:${fh * scale}px;transform:translateX(0)"></div>
+            <div class="frame" style="width:${fw * scale}px;height:${fh * scale}px"><img alt="${name} walk frame 2" src="../../../assets/enemies/${prefix}_walk.png" style="height:${fh * scale}px;transform:translateX(-${fw * 2 * scale}px)"></div>
+          </div></div>
+          <div><div class="label">WALK 4 frames</div><img class="sheet" alt="${name} walk atlas" src="../../../assets/enemies/${prefix}_walk.png"></div>
+          <div><div class="label">HURT 2 frames</div><img class="sheet" alt="${name} hurt atlas" src="../../../assets/enemies/${prefix}_hurt.png"></div>
+          <div><div class="label">DEATH 3 frames</div><img class="sheet" alt="${name} death atlas" src="../../../assets/enemies/${prefix}_death.png"></div>
+        </div>`;
+      document.body.append(section);
+    }
+  </script>
+</body>
+</html>

@@ -3,6 +3,7 @@
 const assert = require("assert");
 const fs = require("fs");
 const path = require("path");
+const zlib = require("zlib");
 const config = require("../src/config.js");
 const { SPRITES } = require("../src/sprites.js");
 
@@ -26,6 +27,96 @@ function readPngHeader(relativePath) {
   return { width: png.readUInt32BE(16), height: png.readUInt32BE(20) };
 }
 
+function readPngAlpha(relativePath) {
+  const png = fs.readFileSync(path.join(root, relativePath));
+  const width = png.readUInt32BE(16);
+  const height = png.readUInt32BE(20);
+  const bitDepth = png[24];
+  const colorType = png[25];
+  assert.strictEqual(bitDepth, 8, `${relativePath} must use 8-bit channels`);
+  assert([4, 6].includes(colorType), `${relativePath} must use grayscale-alpha or RGBA pixels`);
+  const bytesPerPixel = colorType === 6 ? 4 : 2;
+  const chunks = [];
+  let offset = 8;
+  while (offset < png.length) {
+    const length = png.readUInt32BE(offset);
+    const type = png.subarray(offset + 4, offset + 8).toString("ascii");
+    if (type === "IDAT") chunks.push(png.subarray(offset + 8, offset + 8 + length));
+    offset += 12 + length;
+    if (type === "IEND") break;
+  }
+  const encoded = zlib.inflateSync(Buffer.concat(chunks));
+  const stride = width * bytesPerPixel;
+  const pixels = Buffer.alloc(stride * height);
+  let sourceOffset = 0;
+  for (let y = 0; y < height; y += 1) {
+    const filter = encoded[sourceOffset];
+    sourceOffset += 1;
+    for (let x = 0; x < stride; x += 1) {
+      const raw = encoded[sourceOffset + x];
+      const left = x >= bytesPerPixel ? pixels[y * stride + x - bytesPerPixel] : 0;
+      const up = y > 0 ? pixels[(y - 1) * stride + x] : 0;
+      const upperLeft = y > 0 && x >= bytesPerPixel ? pixels[(y - 1) * stride + x - bytesPerPixel] : 0;
+      let value = raw;
+      if (filter === 1) value += left;
+      else if (filter === 2) value += up;
+      else if (filter === 3) value += Math.floor((left + up) / 2);
+      else if (filter === 4) {
+        const estimate = left + up - upperLeft;
+        const leftDistance = Math.abs(estimate - left);
+        const upDistance = Math.abs(estimate - up);
+        const upperLeftDistance = Math.abs(estimate - upperLeft);
+        value += leftDistance <= upDistance && leftDistance <= upperLeftDistance
+          ? left
+          : upDistance <= upperLeftDistance
+            ? up
+            : upperLeft;
+      } else {
+        assert.strictEqual(filter, 0, `${relativePath} uses unsupported PNG filter ${filter}`);
+      }
+      pixels[y * stride + x] = value & 0xff;
+    }
+    sourceOffset += stride;
+  }
+  const alpha = Buffer.alloc(width * height);
+  for (let index = 0; index < width * height; index += 1) {
+    alpha[index] = pixels[index * bytesPerPixel + bytesPerPixel - 1];
+  }
+  return { width, height, alpha };
+}
+
+function minimumFrameAlphaDifference(relativePath, frameWidth, frameHeight, frames) {
+  const png = readPngAlpha(relativePath);
+  const differences = [];
+  for (let left = 0; left < frames; left += 1) {
+    for (let right = left + 1; right < frames; right += 1) {
+      let total = 0;
+      for (let y = 0; y < frameHeight; y += 1) {
+        for (let x = 0; x < frameWidth; x += 1) {
+          const leftIndex = y * png.width + left * frameWidth + x;
+          const rightIndex = y * png.width + right * frameWidth + x;
+          total += Math.abs(png.alpha[leftIndex] - png.alpha[rightIndex]);
+        }
+      }
+      differences.push(total / (255 * frameWidth * frameHeight));
+    }
+  }
+  return Math.min(...differences);
+}
+
+function selectedFrameAlphaDifference(relativePath, frameWidth, frameHeight, left, right) {
+  const png = readPngAlpha(relativePath);
+  let total = 0;
+  for (let y = 0; y < frameHeight; y += 1) {
+    for (let x = 0; x < frameWidth; x += 1) {
+      const leftIndex = y * png.width + left * frameWidth + x;
+      const rightIndex = y * png.width + right * frameWidth + x;
+      total += Math.abs(png.alpha[leftIndex] - png.alpha[rightIndex]);
+    }
+  }
+  return total / (255 * frameWidth * frameHeight);
+}
+
 Object.entries(config.ENEMIES).forEach(([enemyId, enemy]) => {
   const animation = enemy.spriteAnimation;
   assert(animation, `${enemyId} must define a raster walk animation`);
@@ -35,8 +126,23 @@ Object.entries(config.ENEMIES).forEach(([enemyId, enemy]) => {
   const png = readPngHeader(animation.image);
   assert.strictEqual(png.width, animation.frameWidth * animation.frames, `${enemyId} sheet width must match frame contract`);
   assert.strictEqual(png.height, animation.frameHeight, `${enemyId} sheet height must match frame contract`);
+  const lowPairDifference = selectedFrameAlphaDifference(animation.image, animation.frameWidth, animation.frameHeight, 0, 2);
+  assert(lowPairDifference > 0.08, `${enemyId} low-quality walk frames 0/2 must visibly differ, got ${lowPairDifference.toFixed(3)}`);
   assert(SPRITES[enemy.sprite], `${enemyId} must keep a code-sprite fallback`);
   assert(swSource.includes(`"${animation.image}"`), `${animation.image} must be in the offline app cache`);
+  assert(enemy.spriteActions, `${enemyId} must define raster hurt/death action atlases`);
+  Object.entries(enemy.spriteActions).forEach(([actionName, action]) => {
+    assert.strictEqual(action.frameWidth, animation.frameWidth, `${enemyId} ${actionName} must match walk frame width`);
+    assert.strictEqual(action.frameHeight, animation.frameHeight, `${enemyId} ${actionName} must match walk frame height`);
+    assert.strictEqual(action.frames, actionName === "hurt" ? 2 : 3, `${enemyId} ${actionName} frame count mismatch`);
+    assert(action.fps > 0 && action.fps <= 12, `${enemyId} ${actionName} cadence must stay lightweight`);
+    const actionPng = readPngHeader(action.image);
+    assert.strictEqual(actionPng.width, action.frameWidth * action.frames, `${enemyId} ${actionName} sheet width mismatch`);
+    assert.strictEqual(actionPng.height, action.frameHeight, `${enemyId} ${actionName} sheet height mismatch`);
+    assert(swSource.includes(`"${action.image}"`), `${action.image} must be in the offline app cache`);
+    const minimumDifference = minimumFrameAlphaDifference(action.image, action.frameWidth, action.frameHeight, action.frames);
+    assert(minimumDifference > 0.08, `${enemyId} ${actionName} any-frame alpha difference must exceed 0.08, got ${minimumDifference.toFixed(3)}`);
+  });
 });
 
 const regeneratedR71 = {
@@ -78,12 +184,19 @@ assert(swSource.includes(`"${config.ROAD_DETAIL_ATLAS.image}"`), "road debris at
 assert(shippedBytes < 1.5 * 1024 * 1024, `R71 derived asset budget exceeded: ${shippedBytes} bytes`);
 
 assert(gameSource.includes("buildEnemyAnimationTint") && gameSource.includes("record.tintCanvas"), "enemy tint must be pre-rendered and shared");
-assert(gameSource.includes('performanceState.quality === "low"') && gameSource.includes('tier: "single"'), "low quality must use a single animation frame");
-assert(gameSource.includes('tier: reduced ? "reduced" : "full"'), "reduced and full animation tiers must be explicit");
+assert(gameSource.includes('performanceState.quality === "low"') && gameSource.includes('tier: low ? "low-two"'), "low quality must alternate two authored walk frames");
+assert(gameSource.includes('tier: low ? "low-two" : reduced ? "reduced" : "full"'), "low, reduced and full animation tiers must be explicit");
 assert(gameSource.includes("Math.hypot(enemy.vx || 0, enemy.vy || 0) > 1"), "walk frames must only advance while moving");
 assert(gameSource.includes("const faceLeft = (enemy.vx || 0) < -0.5"), "enemy animation must flip with lateral movement");
-assert(gameSource.includes('drawSprite(enemy.sprite, "hit"') && gameSource.includes("effect.age * 1000"), "hurt/death must use authored fallback frames when raster action atlases are absent");
+assert(gameSource.includes("buildEnemyActionTint") && gameSource.includes('tier: "hurt"'), "hurt reactions must use pre-tinted raster action frames");
+assert(!gameSource.includes('drawSprite(enemy.sprite, "hit"'), "raster hurt may not switch to the code-sprite art style");
+const enemyEntitySource = gameSource.slice(gameSource.indexOf("function drawEnemyEntity"), gameSource.indexOf("function drawEnemyCorpse"));
+assert(!/ctx\.(?:rotate|scale)\(/.test(enemyEntitySource), "enemy raster locomotion may not fake poses with rotate/scale transforms");
+assert(!/\b(?:lift|wobble|squashX|squashY)\b/.test(enemyEntitySource), "enemy raster locomotion may not fake poses with bob/squash variables");
+const enemyCorpseSource = gameSource.slice(gameSource.indexOf("function drawEnemyCorpse"), gameSource.indexOf("function drawHazard"));
+assert(enemyCorpseSource.includes("spriteActions.death") && enemyCorpseSource.includes("ctx.drawImage"), "enemy corpses must draw their raster death atlas");
+assert(!enemyCorpseSource.includes("drawSprite(") && !enemyCorpseSource.includes("effect.sprite"), "drawEnemyCorpse may not reference the code-sprite path");
 assert(gameSource.includes("drawRoadDebrisAtlas") && gameSource.includes("roadDebrisDrawn"), "road debris must expose render diagnostics");
-assert(credits.includes("R72 image-generated production art") && credits.includes("Top-down Tanks Remastered"), "R72 image-gen and CC0 support provenance must be documented");
+assert(credits.includes("R73 image-generated action atlases") && credits.includes("Top-down Tanks Remastered"), "R73 image-gen and CC0 support provenance must be documented");
 
 console.log(`Animation asset guards PASS (${shipped.size} files, ${shippedBytes} bytes)`);

@@ -4,7 +4,7 @@ const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 3;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R72", CACHE_VERSION: "ashes-convoy-r72-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R73", CACHE_VERSION: "ashes-convoy-r73-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -389,12 +389,55 @@ const WEAPONS = {
   }
 };
 
+// R73 action atlases share each walk atlas' frame interface and warm tint.
+// Variant enemy ids intentionally reuse the same authored body/action set as
+// their base visual; runtime tint/filter remains a separate presentation layer.
+const ENEMY_ACTION_ATLASES = {
+  shambler: {
+    hurt: { image: "assets/enemies/oga_shambler_hurt.png", frames: 2, frameWidth: 40, frameHeight: 40, fps: 10 },
+    death: { image: "assets/enemies/oga_shambler_death.png", frames: 3, frameWidth: 40, frameHeight: 40, fps: 6 }
+  },
+  runner: {
+    hurt: { image: "assets/enemies/oga_runner_hurt.png", frames: 2, frameWidth: 40, frameHeight: 40, fps: 10 },
+    death: { image: "assets/enemies/oga_runner_death.png", frames: 3, frameWidth: 40, frameHeight: 40, fps: 6 }
+  },
+  bloater: {
+    hurt: { image: "assets/enemies/bloater_hurt.png", frames: 2, frameWidth: 52, frameHeight: 52, fps: 10 },
+    death: { image: "assets/enemies/bloater_death.png", frames: 3, frameWidth: 52, frameHeight: 52, fps: 6 }
+  },
+  spore_spitter: {
+    hurt: { image: "assets/enemies/oga_spitter_hurt.png", frames: 2, frameWidth: 40, frameHeight: 40, fps: 10 },
+    death: { image: "assets/enemies/oga_spitter_death.png", frames: 3, frameWidth: 40, frameHeight: 40, fps: 6 }
+  },
+  shield_husk: {
+    hurt: { image: "assets/enemies/shield_husk_hurt.png", frames: 2, frameWidth: 48, frameHeight: 64, fps: 10 },
+    death: { image: "assets/enemies/shield_husk_death.png", frames: 3, frameWidth: 48, frameHeight: 64, fps: 6 }
+  },
+  swarm_mite: {
+    hurt: { image: "assets/enemies/swarm_mite_hurt.png", frames: 2, frameWidth: 44, frameHeight: 44, fps: 10 },
+    death: { image: "assets/enemies/swarm_mite_death.png", frames: 3, frameWidth: 44, frameHeight: 44, fps: 6 }
+  },
+  tar_brute: {
+    hurt: { image: "assets/enemies/tar_brute_hurt.png", frames: 2, frameWidth: 56, frameHeight: 68, fps: 10 },
+    death: { image: "assets/enemies/tar_brute_death.png", frames: 3, frameWidth: 56, frameHeight: 68, fps: 6 }
+  },
+  void_wraith: {
+    hurt: { image: "assets/enemies/void_wraith_hurt.png", frames: 2, frameWidth: 48, frameHeight: 64, fps: 10 },
+    death: { image: "assets/enemies/void_wraith_death.png", frames: 3, frameWidth: 48, frameHeight: 64, fps: 6 }
+  },
+  boss_hive_titan: {
+    hurt: { image: "assets/enemies/titan_hurt.png", frames: 2, frameWidth: 88, frameHeight: 80, fps: 10 },
+    death: { image: "assets/enemies/titan_death.png", frames: 3, frameWidth: 88, frameHeight: 80, fps: 6 }
+  }
+};
+
 const ENEMIES = {
   shambler: {
     id: "shambler",
     name: "遊蕩屍",
     spriteImage: "assets/zombies/shambler.png",
     spriteAnimation: { image: "assets/enemies/oga_shambler_walk.png", frames: 4, frameWidth: 40, frameHeight: 40, fps: 5, warmTint: "rgba(154, 83, 40, 0.2)" },
+    spriteActions: ENEMY_ACTION_ATLASES.shambler,
     sprite: "zombie_shambler",
     hp: 30,
     speed: 24,
@@ -413,6 +456,7 @@ const ENEMIES = {
     name: "疾奔屍",
     spriteImage: "assets/zombies/runner.png",
     spriteAnimation: { image: "assets/enemies/oga_runner_walk.png", frames: 4, frameWidth: 40, frameHeight: 40, fps: 9, warmTint: "rgba(178, 76, 35, 0.2)" },
+    spriteActions: ENEMY_ACTION_ATLASES.runner,
     sprite: "zombie_runner",
     hp: 18,
     speed: 42,
@@ -431,6 +475,7 @@ const ENEMIES = {
     name: "腫囊屍",
     spriteImage: "assets/zombies/bloater.png",
     spriteAnimation: { image: "assets/enemies/bloater_walk.png", frames: 4, frameWidth: 52, frameHeight: 52, fps: 4, warmTint: "rgba(139, 80, 38, 0.2)" },
+    spriteActions: ENEMY_ACTION_ATLASES.bloater,
     sprite: "zombie_bloater",
     hp: 95,
     speed: 16,
@@ -450,6 +495,7 @@ const ENEMIES = {
     name: "孢囊吐射者",
     spriteImage: "assets/zombies/spore_spitter.png",
     spriteAnimation: { image: "assets/enemies/oga_spitter_walk.png", frames: 4, frameWidth: 40, frameHeight: 40, fps: 4, warmTint: "rgba(156, 91, 42, 0.2)" },
+    spriteActions: ENEMY_ACTION_ATLASES.spore_spitter,
     sprite: "zombie_spore_spitter",
     hp: 34,
     speed: 18,
@@ -480,6 +526,7 @@ const ENEMIES = {
     name: "盾殼屍",
     spriteImage: "assets/zombies/shield_husk.png",
     spriteAnimation: { image: "assets/enemies/shield_husk_walk.png", frames: 4, frameWidth: 48, frameHeight: 64, fps: 4, warmTint: "rgba(142, 82, 43, 0.18)" },
+    spriteActions: ENEMY_ACTION_ATLASES.shield_husk,
     sprite: "zombie_shield_husk",
     hp: 52,
     speed: 20,
@@ -505,6 +552,7 @@ const ENEMIES = {
     name: "碎牙蟲群",
     spriteImage: "assets/zombies/swarm_mite.png",
     spriteAnimation: { image: "assets/enemies/swarm_mite_walk.png", frames: 4, frameWidth: 44, frameHeight: 44, fps: 10, warmTint: "rgba(172, 87, 34, 0.22)" },
+    spriteActions: ENEMY_ACTION_ATLASES.swarm_mite,
     sprite: "zombie_swarm_mite",
     hp: 9,
     speed: 52,
@@ -529,6 +577,7 @@ const ENEMIES = {
     name: "瀝青肉盾",
     spriteImage: "assets/zombies/tar_brute.png",
     spriteAnimation: { image: "assets/enemies/tar_brute_walk.png", frames: 4, frameWidth: 56, frameHeight: 68, fps: 3, warmTint: "rgba(142, 72, 34, 0.24)" },
+    spriteActions: ENEMY_ACTION_ATLASES.tar_brute,
     sprite: "zombie_tar_brute",
     hp: 155,
     speed: 11,
@@ -553,6 +602,7 @@ const ENEMIES = {
     name: "虛空漂影",
     spriteImage: "assets/zombies/void_wraith.png",
     spriteAnimation: { image: "assets/enemies/void_wraith_walk.png", frames: 4, frameWidth: 48, frameHeight: 64, fps: 5, warmTint: "rgba(133, 73, 43, 0.16)" },
+    spriteActions: ENEMY_ACTION_ATLASES.void_wraith,
     sprite: "zombie_void_wraith",
     hp: 42,
     speed: 28,
@@ -580,6 +630,7 @@ const ENEMIES = {
     name: "灰喉尖嘯屍",
     spriteImage: "assets/zombies/spore_spitter.png",
     spriteAnimation: { image: "assets/enemies/oga_spitter_walk.png", frames: 4, frameWidth: 40, frameHeight: 40, fps: 5, warmTint: "rgba(160, 91, 45, 0.18)" },
+    spriteActions: ENEMY_ACTION_ATLASES.spore_spitter,
     sprite: "zombie_spore_spitter",
     hp: 30,
     speed: 20,
@@ -613,6 +664,7 @@ const ENEMIES = {
     name: "鐵鏈拖屍",
     spriteImage: "assets/zombies/tar_brute.png",
     spriteAnimation: { image: "assets/enemies/tar_brute_walk.png", frames: 4, frameWidth: 56, frameHeight: 68, fps: 3, warmTint: "rgba(132, 76, 45, 0.2)" },
+    spriteActions: ENEMY_ACTION_ATLASES.tar_brute,
     sprite: "zombie_tar_brute",
     hp: 90,
     speed: 14,
@@ -639,6 +691,7 @@ const ENEMIES = {
     name: "反光殼屍",
     spriteImage: "assets/zombies/shield_husk.png",
     spriteAnimation: { image: "assets/enemies/shield_husk_walk.png", frames: 4, frameWidth: 48, frameHeight: 64, fps: 3, warmTint: "rgba(147, 82, 40, 0.16)" },
+    spriteActions: ENEMY_ACTION_ATLASES.shield_husk,
     sprite: "zombie_shield_husk",
     hp: 58,
     speed: 18,
@@ -666,6 +719,7 @@ const ENEMIES = {
     name: "餘燼蜱群",
     spriteImage: "assets/zombies/swarm_mite.png",
     spriteAnimation: { image: "assets/enemies/swarm_mite_walk.png", frames: 4, frameWidth: 44, frameHeight: 44, fps: 11, warmTint: "rgba(193, 83, 27, 0.26)" },
+    spriteActions: ENEMY_ACTION_ATLASES.swarm_mite,
     sprite: "zombie_swarm_mite",
     hp: 7,
     speed: 58,
@@ -692,6 +746,7 @@ const ENEMIES = {
     name: "母巢巨屍",
     spriteImage: "assets/zombies/titan.png",
     spriteAnimation: { image: "assets/enemies/titan_walk.png", frames: 4, frameWidth: 88, frameHeight: 80, fps: 2, warmTint: "rgba(137, 70, 35, 0.2)" },
+    spriteActions: ENEMY_ACTION_ATLASES.boss_hive_titan,
     sprite: "boss_hive_titan",
     hp: 850,
     speed: 9,

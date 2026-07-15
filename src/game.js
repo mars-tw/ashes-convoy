@@ -55,7 +55,8 @@
     companionFallbackDrawn: false,
     companionImageStatus: "none",
     companionPose: null,
-    enemyImageStatus: {}
+    enemyImageStatus: {},
+    enemyActionImageStatus: {}
   };
   const environmentImages = {};
   const vehicleImages = {};
@@ -572,19 +573,30 @@
       const animation = enemy.spriteAnimation || null;
       const src = (animation && animation.image) || enemy.spriteImage;
       if (!src || enemyImages[enemyId]) return;
-      const record = { image: new root.Image(), status: "loading", src, tintCanvas: null };
-      record.image.onload = () => {
-        record.status = "loaded";
-        buildEnemyAnimationTint(enemyId);
-        draw();
-      };
-      record.image.onerror = () => {
-        record.status = "failed";
-        draw();
-      };
-      record.image.decoding = "async";
-      record.image.src = src;
+      const record = { image: new root.Image(), status: "loading", src, tintCanvas: null, actions: {} };
       enemyImages[enemyId] = record;
+
+      const prepareRecord = (target, actionName) => {
+        target.image.onload = () => {
+          target.status = "loaded";
+          if (actionName) buildEnemyActionTint(enemyId, actionName);
+          else buildEnemyAnimationTint(enemyId);
+          draw();
+        };
+        target.image.onerror = () => {
+          target.status = "failed";
+          draw();
+        };
+        target.image.decoding = "async";
+        target.image.src = target.src;
+      };
+
+      prepareRecord(record, null);
+      Object.entries(enemy.spriteActions || {}).forEach(([actionName, action]) => {
+        const actionRecord = { image: new root.Image(), status: "loading", src: action.image, tintCanvas: null };
+        record.actions[actionName] = actionRecord;
+        prepareRecord(actionRecord, actionName);
+      });
     });
   }
 
@@ -612,6 +624,37 @@
 
   function enemyImageStatus(enemyId) {
     const record = enemyImages[enemyId];
+    if (!record) return "none";
+    if (record.status === "loaded" && record.image.complete && record.image.naturalWidth > 0) return "loaded";
+    return record.status;
+  }
+
+  function buildEnemyActionTint(enemyId, actionName) {
+    const enemy = config.ENEMIES[enemyId];
+    const rootRecord = enemyImages[enemyId];
+    const record = rootRecord && rootRecord.actions ? rootRecord.actions[actionName] : null;
+    const animation = enemy && enemy.spriteActions ? enemy.spriteActions[actionName] : null;
+    if (!record || record.status !== "loaded" || !record.image.naturalWidth || !animation) return null;
+    const buffer = root.document.createElement("canvas");
+    buffer.width = record.image.naturalWidth;
+    buffer.height = record.image.naturalHeight;
+    const bufferCtx = buffer.getContext("2d");
+    bufferCtx.imageSmoothingEnabled = false;
+    bufferCtx.drawImage(record.image, 0, 0);
+    const warmTint = animation.warmTint || (enemy.spriteAnimation && enemy.spriteAnimation.warmTint);
+    if (warmTint) {
+      bufferCtx.globalCompositeOperation = "source-atop";
+      bufferCtx.fillStyle = warmTint;
+      bufferCtx.fillRect(0, 0, buffer.width, buffer.height);
+      bufferCtx.globalCompositeOperation = "source-over";
+    }
+    record.tintCanvas = buffer;
+    return buffer;
+  }
+
+  function enemyActionImageStatus(enemyId, actionName) {
+    const rootRecord = enemyImages[enemyId];
+    const record = rootRecord && rootRecord.actions ? rootRecord.actions[actionName] : null;
     if (!record) return "none";
     if (record.status === "loaded" && record.image.complete && record.image.naturalWidth > 0) return "loaded";
     return record.status;
@@ -1851,12 +1894,14 @@
     }
     applyBroadsideEcho(enemy);
     if (cause !== "burst") {
+      const deathAction = enemyConfig && enemyConfig.spriteActions ? enemyConfig.spriteActions.death : null;
+      const actionDuration = deathAction
+        ? deathAction.frames / Math.max(1, deathAction.fps || 6)
+        : 0;
       addEffect({
         id: nextId("effect"),
         kind: "enemy_corpse",
         enemyId: enemy.enemyId,
-        sprite: enemy.sprite,
-        anim: "death",
         x: enemy.x,
         y: enemy.y,
         radius: enemy.radius,
@@ -1864,11 +1909,13 @@
         boss: enemy.boss,
         tint: enemy.tint || "",
         filter: enemy.filter || "",
-        rotation: Math.sin((enemy.animPhase || 0) + state.time) * (enemy.boss ? 0.08 : 0.18),
+        flipX: (enemy.vx || 0) < -0.5,
         scale: enemy.scale,
-        ttl: config.PERFORMANCE.corpseFadeSeconds,
+        actionDuration,
+        ttl: Math.max(config.PERFORMANCE.corpseFadeSeconds, actionDuration + 0.16),
         age: 0,
-        alpha: 0.88
+        alpha: 0.88,
+        baseAlpha: 0.88
       });
       addEffect({
         id: nextId("effect"),
@@ -2700,7 +2747,14 @@
         effect.x = effect.startX + (effect.targetX - effect.startX) * eased;
         effect.y = effect.startY + (effect.targetY - effect.startY) * eased - Math.sin(t * Math.PI) * 18;
       }
-      effect.alpha = Math.max(0, 1 - effect.age / effect.ttl);
+      if (effect.kind === "enemy_corpse") {
+        const fadeStart = Math.min(effect.ttl, Math.max(0, effect.actionDuration || 0));
+        const fadeDuration = Math.max(0.01, effect.ttl - fadeStart);
+        const fadeProgress = Math.max(0, (effect.age - fadeStart) / fadeDuration);
+        effect.alpha = (effect.baseAlpha || 0.88) * Math.max(0, 1 - fadeProgress);
+      } else {
+        effect.alpha = Math.max(0, 1 - effect.age / effect.ttl);
+      }
     });
     state.effects = state.effects.filter((effect) => effect.age < effect.ttl);
     if (state.combo && state.combo.count > 0) {
@@ -4001,17 +4055,26 @@
 
   function enemyAnimationFrame(enemy, animation) {
     const frames = Math.max(1, animation.frames || 1);
-    if (performanceState.quality === "low") return { frame: 0, tier: "single" };
     const moving = Math.hypot(enemy.vx || 0, enemy.vy || 0) > 1;
     if (!moving) return { frame: 0, tier: "idle" };
+    const low = performanceState.quality === "low";
     const reduced = fxLevelSetting() === "reduced" || (meta.settings && meta.settings.reducedFlash);
-    const visibleFrames = reduced ? Math.min(2, frames) : frames;
+    const sampleTwoFrames = low || reduced;
+    const visibleFrames = sampleTwoFrames ? Math.min(2, frames) : frames;
     const phaseOffset = ((enemy.animPhase || 0) / TAU) * visibleFrames;
-    const sequenceFrame = Math.floor(stateTime() * (animation.fps || 5) + phaseOffset) % visibleFrames;
+    const cadence = low
+      ? Math.max(2, Math.min(4, (animation.fps || 5) * 0.5))
+      : animation.fps || 5;
+    const sequenceFrame = Math.floor(stateTime() * cadence + phaseOffset) % visibleFrames;
     return {
-      frame: reduced ? sequenceFrame * Math.ceil(frames / visibleFrames) : sequenceFrame,
-      tier: reduced ? "reduced" : "full"
+      frame: sampleTwoFrames ? sequenceFrame * Math.ceil(frames / visibleFrames) : sequenceFrame,
+      tier: low ? "low-two" : reduced ? "reduced" : "full"
     };
+  }
+
+  function enemyActionFrame(elapsedSeconds, animation) {
+    const frames = Math.max(1, animation.frames || 1);
+    return Math.min(frames - 1, Math.floor(Math.max(0, elapsedSeconds) * (animation.fps || 6)));
   }
 
   function drawEnemyEntity(enemy, timeMs, alpha, anim) {
@@ -4020,59 +4083,45 @@
     const record = enemyConfig && (enemyConfig.spriteImage || animation) ? enemyImages[enemy.enemyId] : null;
     const status = enemyImageStatus(enemy.enemyId);
     const width = enemyVisualWidth(enemy, enemyConfig);
-    const phase = stateTime() * (enemy.animFreq || (enemy.boss ? 1.35 : 2.75)) + (enemy.animPhase || 0);
-    const bobAmp = enemy.boss ? 1.1 : enemy.enemyId === "runner" ? 2.6 : enemy.enemyId === "bloater" ? 1.25 : 2.0;
-    const lift = Math.sin(phase) * bobAmp;
-    const pulse = Math.sin(phase + Math.PI * 0.5);
-    const squashX = 1 + pulse * (enemy.boss ? 0.022 : 0.045);
-    const squashY = 1 - pulse * (enemy.boss ? 0.018 : 0.055);
-    const speedLean = rules.clamp((enemy.vx || 0) / Math.max(1, enemy.speed || 1), -1, 1) * 0.035;
-    const wobble = Math.sin(phase * 0.52) * (enemy.boss ? 0.022 : 0.075) + speedLean;
     const drawAlpha = alpha == null ? 1 : alpha;
-    const flash = enemy.hitFlash > 0 && flourishFxEnabled();
-    const hitPulse = flash ? rules.clamp(enemy.hitFlash / Math.max(0.01, enemy.hitFlashMax || 0.2), 0, 1) : 0;
-    const hitWeight = hitPulse * (enemy.boss ? 0.55 : 1);
-    const impactX = Math.abs(enemy.hitDirectionX || 0);
-    const impactY = Math.abs(enemy.hitDirectionY || 1);
-    const hitScaleX = 1 - impactX * hitWeight * 0.12 + impactY * hitWeight * 0.08;
-    const hitScaleY = 1 - impactY * hitWeight * 0.12 + impactX * hitWeight * 0.08;
+    const hurtActive = enemy.hitFlash > 0;
+    const flash = hurtActive && flourishFxEnabled();
     const hitColor = enemy.hitFlashColor || "#ffd36a";
     const knockX = flourishFxEnabled() ? enemy.knockbackX || 0 : 0;
     const knockY = flourishFxEnabled() ? enemy.knockbackY || 0 : 0;
+    const hurtAnimation = hurtActive && enemyConfig && enemyConfig.spriteActions
+      ? enemyConfig.spriteActions.hurt
+      : null;
+    const hurtRecord = hurtAnimation && record && record.actions ? record.actions.hurt : null;
+    const useHurtAtlas = !!hurtRecord && enemyActionImageStatus(enemy.enemyId, "hurt") === "loaded";
 
     if (renderDebug.enemyImageStatus) renderDebug.enemyImageStatus[enemy.enemyId] = status;
-    drawEnemyShadow(enemy, width, lift, drawAlpha, knockX, knockY);
-
-    // R72 action-pose fallback: raster sheets currently carry locomotion only.
-    // A hit therefore switches briefly to the independently authored code
-    // sprite hurt pose instead of faking damage by scaling the walk frame.
-    if (flash && enemy.sprite) {
-      const hurtTimeMs = Math.max(0, ((enemy.hitFlashMax || 0.2) - enemy.hitFlash) * 1000);
-      ctx.save();
-      ctx.translate(enemy.x + knockX, enemy.y + knockY + lift);
-      if (enemy.filter && performanceState.quality !== "low") ctx.filter = enemy.filter;
-      drawSprite(enemy.sprite, "hit", hurtTimeMs, 0, 0, enemy.scale, {
-        alpha: drawAlpha,
-        tint: hitColor,
-        flipX: (enemy.vx || 0) < -0.5
-      });
-      ctx.restore();
-      renderDebug.enemyFallbackDrawn += 1;
-      renderDebug.enemyHurtPoseDrawn += 1;
-      return;
+    if (hurtActive && renderDebug.enemyActionImageStatus) {
+      renderDebug.enemyActionImageStatus[`${enemy.enemyId}:hurt`] = enemyActionImageStatus(enemy.enemyId, "hurt");
     }
+    // The physics root/collider stays at enemy.x/y.  R73 raster locomotion and
+    // hurt poses carry all visual motion; only authored hit knockback offsets
+    // the visual root, and low quality still alternates two real walk frames.
+    drawEnemyShadow(enemy, width, 0, drawAlpha, knockX, knockY);
 
     if (record && status === "loaded") {
-      const image = record.tintCanvas || record.image;
-      const frameState = animation ? enemyAnimationFrame(enemy, animation) : { frame: 0, tier: "static" };
-      const frameWidth = animation ? animation.frameWidth : record.image.naturalWidth;
-      const frameHeight = animation ? animation.frameHeight : record.image.naturalHeight;
+      const activeRecord = useHurtAtlas ? hurtRecord : record;
+      const activeAnimation = useHurtAtlas ? hurtAnimation : animation;
+      const image = activeRecord.tintCanvas || activeRecord.image;
+      const hurtElapsed = Math.max(0, (enemy.hitFlashMax || 0.2) - (enemy.hitFlash || 0));
+      const frameState = useHurtAtlas
+        ? { frame: enemyActionFrame(hurtElapsed, activeAnimation), tier: "hurt" }
+        : activeAnimation
+          ? enemyAnimationFrame(enemy, activeAnimation)
+          : { frame: 0, tier: "static" };
+      const frameWidth = activeAnimation ? activeAnimation.frameWidth : activeRecord.image.naturalWidth;
+      const frameHeight = activeAnimation ? activeAnimation.frameHeight : activeRecord.image.naturalHeight;
       const height = width * (frameHeight / frameWidth);
       const faceLeft = (enemy.vx || 0) < -0.5;
+      const destinationX = faceLeft ? width * 0.5 : -width * 0.5;
+      const destinationWidth = faceLeft ? -width : width;
       ctx.save();
-      ctx.translate(enemy.x + knockX, enemy.y + knockY + lift);
-      ctx.rotate(wobble);
-      ctx.scale((faceLeft ? -1 : 1) * squashX * hitScaleX, squashY * hitScaleY);
+      ctx.translate(enemy.x + knockX, enemy.y + knockY);
       ctx.globalAlpha *= flash ? drawAlpha * 0.9 : drawAlpha;
       ctx.imageSmoothingEnabled = false;
       if (enemy.filter && performanceState.quality !== "low") ctx.filter = enemy.filter;
@@ -4082,9 +4131,9 @@
         0,
         frameWidth,
         frameHeight,
-        -width * 0.5,
+        destinationX,
         -height * 0.5,
-        width,
+        destinationWidth,
         height
       );
       if (enemy.tint) {
@@ -4101,20 +4150,19 @@
       }
       ctx.restore();
       renderDebug.enemyRasterDrawn += 1;
-      if (animation) {
+      if (activeAnimation) {
         renderDebug.enemyAnimatedDrawn += 1;
         renderDebug.enemyAnimationFrames[enemy.enemyId] = frameState.frame;
         renderDebug.enemyAnimationTier = frameState.tier;
-        if (animation.armored) renderDebug.enemyArmoredDrawn += 1;
+        if (useHurtAtlas) renderDebug.enemyHurtPoseDrawn += 1;
+        if (activeAnimation.armored) renderDebug.enemyArmoredDrawn += 1;
         if (faceLeft) renderDebug.enemyFacingLeftDrawn += 1;
       }
       return;
     }
 
     ctx.save();
-    ctx.translate(enemy.x + knockX, enemy.y + knockY + lift);
-    ctx.rotate(wobble);
-    ctx.scale(squashX * hitScaleX, squashY * hitScaleY);
+    ctx.translate(enemy.x + knockX, enemy.y + knockY);
     enemySpriteOptions.flipX = enemy.vx < -8;
     enemySpriteOptions.alpha = flash ? drawAlpha * 0.9 : drawAlpha;
     enemySpriteOptions.tint = flash ? hitColor : enemy.tint || null;
@@ -4127,16 +4175,44 @@
 
   function drawEnemyCorpse(effect, timeMs) {
     const enemyConfig = config.ENEMIES[effect.enemyId] || null;
+    const animation = enemyConfig && enemyConfig.spriteActions ? enemyConfig.spriteActions.death : null;
+    const rootRecord = enemyImages[effect.enemyId] || null;
+    const record = rootRecord && rootRecord.actions ? rootRecord.actions.death : null;
+    if (renderDebug.enemyActionImageStatus) {
+      renderDebug.enemyActionImageStatus[`${effect.enemyId}:death`] = enemyActionImageStatus(effect.enemyId, "death");
+    }
+    if (!animation || !record || enemyActionImageStatus(effect.enemyId, "death") !== "loaded") return;
+    const image = record.tintCanvas || record.image;
     const width = enemyVisualWidth(effect, enemyConfig);
+    const height = width * (animation.frameHeight / animation.frameWidth);
+    const frame = enemyActionFrame(effect.age, animation);
+    const destinationX = effect.flipX ? width * 0.5 : -width * 0.5;
+    const destinationWidth = effect.flipX ? -width : width;
     drawEnemyShadow(effect, width, 0, effect.alpha * 0.55);
-    // Raster sheets are locomotion-only.  Keep death frame-based by routing to
-    // the replaceable code-sprite death sequence until dedicated raster action
-    // atlases exist; never rotate/squash one walk frame as a fake death.
-    drawSprite(effect.sprite, effect.anim, Math.max(0, effect.age * 1000), effect.x, effect.y, effect.scale, {
-      alpha: effect.alpha,
-      tint: effect.tint || null
-    });
+    ctx.save();
+    ctx.translate(effect.x, effect.y);
+    ctx.globalAlpha *= effect.alpha;
+    ctx.imageSmoothingEnabled = false;
+    if (effect.filter && performanceState.quality !== "low") ctx.filter = effect.filter;
+    ctx.drawImage(
+      image,
+      frame * animation.frameWidth,
+      0,
+      animation.frameWidth,
+      animation.frameHeight,
+      destinationX,
+      -height * 0.5,
+      destinationWidth,
+      height
+    );
+    if (effect.tint) {
+      ctx.globalCompositeOperation = "source-atop";
+      ctx.fillStyle = effect.tint;
+      ctx.fillRect(-width * 0.5, -height * 0.5, width, height);
+    }
+    ctx.restore();
     renderDebug.enemyDeathPoseDrawn += 1;
+    renderDebug.enemyDeathAtlasFrame = frame;
   }
 
   function drawHazard(hazard) {
@@ -5224,10 +5300,12 @@
       enemyFallbackDrawn: 0,
       enemyShadowDrawn: 0,
       enemyImageStatus: {},
+      enemyActionImageStatus: {},
       enemyAnimatedDrawn: 0,
       enemyArmoredDrawn: 0,
       enemyHurtPoseDrawn: 0,
       enemyDeathPoseDrawn: 0,
+      enemyDeathAtlasFrame: -1,
       enemyFacingLeftDrawn: 0,
       enemyAnimationFrames: {},
       enemyAnimationTier: "none",

@@ -1,18 +1,19 @@
 # 灰燼護航 Ashes Convoy
 
 [![CI & Deploy Pages](https://github.com/mars-tw/ashes-convoy/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mars-tw/ashes-convoy/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/badge/release-R72-f0b64a)](src/version.js)
+[![Release](https://img.shields.io/badge/release-R73-f0b64a)](src/version.js)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5ed4cb)](LICENSE)
 
 《灰燼護航》是一款手機直式優先的 Canvas 2D 末世護送射擊遊戲。駕駛裝甲載具拖著倖存者車廂穿越屍潮，在每一波中清敵、打破增益門、收集補給，並把零件、藍圖與戰績帶回基地。
 
 **[立即線上遊玩](https://mars-tw.github.io/ashes-convoy/)**
 
-![灰燼護航 R72 封面](assets/cover.png)
+![灰燼護航 R73 封面](assets/cover.png)
 
 ## 最新特色
 
 - **R71–R72 素材重製**：重製首屏、封面、熹的砲手姿勢、主要敵人與 Boss，並統一暖灰燼 painterly-pixel 視覺；R72 的瀝青巨屍、盾殼屍與蜱群使用四個獨立移動姿勢的圖集，環境也加入遠／中／近景深層。
+- **R73 敵人動作圖集**：九組 raster 敵人視覺均新增 2 幀受擊與 3 幀死亡動作；low 品質仍以兩個真實 walk 姿勢交替，不再用單張圖位移、旋轉或縮放冒充動畫。
 - **熹的拖車房間**：基地內可進入熹的末世房間，閱讀無線電日誌、查看角色狀態，並以出擊進度解鎖或配置房間物件。
 - **波次護送玩法**：每波護送車隊深入四種環境，處理屍群、菁英敵人、補給與四類增益門；每 5 波迎戰階段式 Boss。
 - **基地系統**：切換與解鎖四台載具、投資通用／專屬升級、領取成就、管理行動與設定，進度保存於瀏覽器本機。
@@ -22,7 +23,9 @@
 
 | 手機首屏 | 手機戰鬥 | 桌機戰鬥 |
 |---|---|---|
-| ![R72 手機首屏](docs/evidence/R72/phone-start.png) | ![R72 手機戰鬥](docs/evidence/R72/phone-battle.png) | ![R72 桌機戰鬥](docs/evidence/R72/desktop-battle.png) |
+| ![R73 手機 low 戰鬥](docs/evidence/R73/phone-low-death.png) | ![R73 平板 low 戰鬥](docs/evidence/R73/tablet-low-death.png) | ![R73 桌機 low 戰鬥](docs/evidence/R73/desktop-low-death.png) |
+
+完整 walk／hurt／death 動作序列與 alpha 差異量測見 [R73 action atlas 證據頁](docs/evidence/R73/action-atlas-proof.html)。
 
 ## 玩法
 
@@ -92,4 +95,4 @@ npm run test:rwd
 - [素材來源與致謝](CREDITS.md)
 - [MIT License](LICENSE)
 
-目前遊戲版本為 **R72**，權威版本值在 [`src/version.js`](src/version.js)。專案程式碼採 MIT License；第三方素材與開發工具的來源、授權及 `image_gen` 產出標註方式請見 [CREDITS.md](CREDITS.md)。
+目前遊戲版本為 **R73**，權威版本值在 [`src/version.js`](src/version.js)。專案程式碼採 MIT License；第三方素材與開發工具的來源、授權及 `image_gen` 產出標註方式請見 [CREDITS.md](CREDITS.md)。

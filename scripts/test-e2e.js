@@ -300,12 +300,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R72") && swText.includes("src/ui.js?v=R72") && swText.includes("src/game.js?v=R72") && swText.includes("src/rules.js?v=R72"),
+      swCachesJs: swText.includes("src/version.js?v=R73") && swText.includes("src/ui.js?v=R73") && swText.includes("src/game.js?v=R73") && swText.includes("src/rules.js?v=R73"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R72"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R72"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R72"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R73"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R73"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R73"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -314,7 +314,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R72", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R73", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -702,7 +702,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R72"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R73"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -2035,7 +2035,7 @@ async function checkOpeningHordeGateAndFps(page) {
   assert(enemyDebug.enemyAnimatedDrawn > 0, "moving enemies should draw multi-frame raster animation");
   const enemyKindCount = await page.evaluate(() => Object.keys(window.DSConfig.ENEMIES).length);
   assert(enemyDebug.enemyTintCacheCount >= enemyKindCount, "enemy wasteland tints should be shared from offscreen caches");
-  assert(["reduced", "full", "single"].includes(enemyDebug.enemyAnimationTier), `enemy animation quality tier should be tracked, got ${enemyDebug.enemyAnimationTier}`);
+  assert(["reduced", "full", "low-two"].includes(enemyDebug.enemyAnimationTier), `enemy animation quality tier should be tracked, got ${enemyDebug.enemyAnimationTier}`);
   assert.strictEqual(enemyDebug.roadDebrisStatus, "loaded", "Kenney road debris atlas should load on land runs");
   assert(enemyDebug.roadDebrisDrawn > 0, "land runs should draw sparse Kenney road debris");
   assert(
@@ -2069,15 +2069,18 @@ async function checkOpeningHordeGateAndFps(page) {
     const second = window.__test.getRenderDebug();
     meta.settings.performanceMode = "low";
     window.__test.setMeta(meta);
-    window.__test.step(130);
-    const low = window.__test.getRenderDebug();
+    window.__test.step(0);
+    const lowFirst = window.__test.getRenderDebug();
+    window.__test.step(260);
+    const lowSecond = window.__test.getRenderDebug();
     const result = {
       firstFrame: first.enemyAnimationFrames.runner,
       secondFrame: second.enemyAnimationFrames.runner,
       fullTier: second.enemyAnimationTier,
       facingLeft: second.enemyFacingLeftDrawn,
-      lowFrame: low.enemyAnimationFrames.runner,
-      lowTier: low.enemyAnimationTier
+      lowFirstFrame: lowFirst.enemyAnimationFrames.runner,
+      lowSecondFrame: lowSecond.enemyAnimationFrames.runner,
+      lowTier: lowSecond.enemyAnimationTier
     };
     meta.settings.performanceMode = "auto";
     meta.settings.fxLevel = "reduced";
@@ -2087,8 +2090,10 @@ async function checkOpeningHordeGateAndFps(page) {
   assert.notStrictEqual(animationTiers.firstFrame, animationTiers.secondFrame, "full-quality moving runner should advance its walk frame");
   assert.strictEqual(animationTiers.fullTier, "full", "high/full mode should use all four walk frames");
   assert(animationTiers.facingLeft > 0, "enemy moving left should render with horizontal facing flip");
-  assert.strictEqual(animationTiers.lowFrame, 0, "low performance mode should pin enemy animation to frame zero");
-  assert.strictEqual(animationTiers.lowTier, "single", "low performance mode should expose the single-frame tier");
+  assert([0, 2].includes(animationTiers.lowFirstFrame), "low performance mode should sample one of the two authored walk poses");
+  assert([0, 2].includes(animationTiers.lowSecondFrame), "low performance mode should sample one of the two authored walk poses");
+  assert.notStrictEqual(animationTiers.lowFirstFrame, animationTiers.lowSecondFrame, "low performance mode must alternate two real walk frames");
+  assert.strictEqual(animationTiers.lowTier, "low-two", "low performance mode should expose the two-frame tier");
 
   await page.evaluate(() => {
     const state = window.__test.getState();
@@ -2513,7 +2518,7 @@ async function checkR71EnemyRosterBehaviors(page) {
   assert.strictEqual(result.emberBehavior, "swarm", "ember tick should reuse swarm behavior");
   assert(result.rasterDrawn >= 9, `R71 enemies should draw raster sprites, got ${result.rasterDrawn}`);
   assert(result.animatedDrawn >= 9, `R71 enemies should draw animated atlases, got ${result.animatedDrawn}`);
-  assert.strictEqual(result.armoredDrawn, 0, `R72 brute/tether must not draw the retired Kenney tank armor, got ${result.armoredDrawn}`);
+  assert.strictEqual(result.armoredDrawn, 0, `R73 brute/tether must not draw the retired Kenney tank armor, got ${result.armoredDrawn}`);
 }
 
 async function checkR71RunBarks(page) {
@@ -3341,7 +3346,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r72")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r73")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -3359,7 +3364,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r72")), "R72 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r73")), "R73 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());
