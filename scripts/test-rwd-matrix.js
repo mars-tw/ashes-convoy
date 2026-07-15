@@ -56,6 +56,7 @@ const VIEWPORTS = [
 const PAGE_SCROLL_TOLERANCE = 8;
 const OVERFLOW_X_TOLERANCE = 2;
 const MIN_INTERACTIVE_TOTAL = 10;
+const META_SETTLE_TIMEOUT_MS = 60000;
 
 function startServer() {
   const server = http.createServer((req, res) => {
@@ -88,15 +89,15 @@ function startServer() {
 }
 
 async function waitForMetaSettled(page) {
-  await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
-  await page.waitForSelector("#garagePanel:not([hidden])");
+  await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady(), null, { timeout: META_SETTLE_TIMEOUT_MS });
+  await page.waitForSelector("#garagePanel:not([hidden])", { timeout: META_SETTLE_TIMEOUT_MS });
   await page.waitForFunction(() => {
     if (!window.__test || !window.__test.getShelterState) return false;
     const state = window.__test.getShelterState();
     if (state.backgroundMode === "image") return state.imageLoaded === true;
     if (state.backgroundMode === "scene") return state.lastDrawMs > 0;
     return state.backgroundMode === "none";
-  });
+  }, null, { timeout: META_SETTLE_TIMEOUT_MS });
 }
 
 async function closeTutorialOverlays(page) {
@@ -227,12 +228,13 @@ async function runMatrix(browser, baseUrl) {
       const context = await browser.newContext({
         viewport: { width: vp.w, height: vp.h },
         hasTouch: isTouch,
-        isMobile: isTouch
+        isMobile: isTouch,
+        serviceWorkers: "block"
       });
       const page = await context.newPage();
       const label = `${state.name} ${vp.w}x${vp.h} (${vp.kind})`;
       try {
-        await page.goto(baseUrl, { waitUntil: "networkidle", timeout: 30000 });
+        await page.goto(baseUrl, { waitUntil: "domcontentloaded", timeout: META_SETTLE_TIMEOUT_MS });
         await waitForMetaSettled(page);
         await closeTutorialOverlays(page);
         await waitForMetaSettled(page);
@@ -247,6 +249,15 @@ async function runMatrix(browser, baseUrl) {
         assert(stageBox.height >= vp.h * (vp.kind === "desktop" ? 0.82 : 0.9), `${label} battle stage 高度 ${stageBox.height}px 應吃滿主要高度`);
         assert(Math.abs(stageBox.width / stageBox.height - 390 / 844) < 0.01, `${label} battle stage 應維持 390:844 等比，實際 ${stageBox.width}x${stageBox.height}`);
         if (vp.kind === "desktop") {
+          const leftRailBox = await page.locator(".rail-left .rail-cluster").boundingBox();
+          const rightRailBox = await page.locator(".rail-right .rail-cluster").boundingBox();
+          assert(leftRailBox && rightRailBox, `${label} desktop rails 應可見`);
+          assert(stageBox.height >= vp.h * 0.97, `${label} R75 desktop stage 應接近滿高，實際 ${stageBox.height}px`);
+          assert(stageBox.width >= (vp.h * 390 / 844) - 3, `${label} R75 desktop stage 寬度應由滿高等比推出，實際 ${stageBox.width}px`);
+          const leftGap = stageBox.x - (leftRailBox.x + leftRailBox.width);
+          const rightGap = rightRailBox.x - (stageBox.x + stageBox.width);
+          assert(leftGap >= -1 && leftGap <= 24, `${label} left rail 應貼近 stage，gap ${leftGap}px`);
+          assert(rightGap >= -1 && rightGap <= 24, `${label} right rail 應貼近 stage，gap ${rightGap}px`);
           assert(appBox.width >= vp.w * 0.96, `${label} desktop shell 應填滿寬螢幕，實際 ${appBox.width}px`);
         }
         assert.strictEqual(

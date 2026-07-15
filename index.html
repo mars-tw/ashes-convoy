@@ -13,8 +13,8 @@
     <meta name="theme-color" content="#111317" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="manifest.webmanifest?v=R74" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R74" />
+    <link rel="manifest" href="manifest.webmanifest?v=R75" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R75" />
     <link rel="canonical" href="https://mars-tw.github.io/ashes-convoy/" />
     <title>灰燼護航</title>
     <style>
@@ -139,20 +139,23 @@
         }
 
         .app {
-          --app-pad: clamp(12px, 1.8vw, 24px);
-          --desktop-gap: clamp(12px, 2vw, 28px);
-          --rail-min: clamp(90px, 9vw, 150px);
-          --stage-h: calc(100svh - (var(--app-pad) * 2));
-          --stage-w: min(
-            calc(var(--stage-h) * 390 / 844),
-            calc(100vw - (var(--app-pad) * 2) - (var(--rail-min) * 2) - (var(--desktop-gap) * 2))
+          --desktop-side-pad: clamp(8px, 1vw, 18px);
+          --desktop-gap: clamp(8px, 0.9vw, 14px);
+          --rail-w: clamp(64px, 5vw, 92px);
+          --stage-max-h: clamp(844px, 74vw, 1644px);
+          --stage-h: min(
+            100svh,
+            var(--stage-max-h),
+            calc((100vw - (var(--desktop-side-pad) * 2) - (var(--rail-w) * 2) - (var(--desktop-gap) * 2)) * 844 / 390)
           );
+          --stage-w: calc(var(--stage-h) * 390 / 844);
           width: 100vw;
           height: 100vh;
           height: 100svh;
-          padding: var(--app-pad);
-          grid-template-columns: minmax(var(--rail-min), 1fr) minmax(280px, var(--stage-w)) minmax(var(--rail-min), 1fr);
+          padding: 0 var(--desktop-side-pad);
+          grid-template-columns: var(--rail-w) var(--stage-w) var(--rail-w);
           gap: var(--desktop-gap);
+          justify-content: center;
           align-items: center;
           background:
             linear-gradient(90deg, rgba(10, 13, 16, 0.86), rgba(10, 13, 16, 0.34) 22%, rgba(10, 13, 16, 0.34) 78%, rgba(10, 13, 16, 0.86)),
@@ -191,7 +194,7 @@
         .rail-cluster {
           display: grid;
           gap: 10px;
-          width: min(96px, 100%);
+          width: 58px;
         }
 
         .rail-btn {
@@ -1890,7 +1893,7 @@
             <span id="trailerBonusText">HP +0% · 傷害 +0% · 射速 +0% · 承傷 -0%</span>
           </div>
           <section class="story-log-section" id="storyLogSection" aria-label="無線電日誌" hidden>
-            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R74" alt="熹" decoding="async" draggable="false" />
+            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R75" alt="熹" decoding="async" draggable="false" />
             <div class="story-log-list" id="storyLogList"></div>
           </section>
           <div class="trailer-room-body">
@@ -2097,7 +2100,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R74";
+        var key = "ashes_convoy_html_boot_reload_R75";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -2114,15 +2117,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R74"></script>
-    <script src="src/sprites.js?v=R74"></script>
-    <script src="src/sprite-renderer.js?v=R74"></script>
-    <script src="src/shelter-scene.js?v=R74"></script>
-    <script src="src/config.js?v=R74"></script>
-    <script src="src/rules.js?v=R74"></script>
-    <script src="src/fx.js?v=R74"></script>
-    <script src="src/audio.js?v=R74"></script>
-    <script src="src/game.js?v=R74"></script>
-    <script src="src/ui.js?v=R74"></script>
+    <script src="src/version.js?v=R75"></script>
+    <script src="src/sprites.js?v=R75"></script>
+    <script src="src/sprite-renderer.js?v=R75"></script>
+    <script src="src/shelter-scene.js?v=R75"></script>
+    <script src="src/config.js?v=R75"></script>
+    <script src="src/rules.js?v=R75"></script>
+    <script src="src/fx.js?v=R75"></script>
+    <script src="src/audio.js?v=R75"></script>
+    <script src="src/game.js?v=R75"></script>
+    <script src="src/ui.js?v=R75"></script>
   </body>
 </html>

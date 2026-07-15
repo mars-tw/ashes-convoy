@@ -1,0 +1,57 @@
+{
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "stage": {
+    "x": 0,
+    "y": 0,
+    "width": 390,
+    "height": 844,
+    "left": 0,
+    "right": 390,
+    "top": 0,
+    "bottom": 844
+  },
+  "canvas": {
+    "x": 0,
+    "y": 0,
+    "width": 390,
+    "height": 844,
+    "left": 0,
+    "right": 390,
+    "top": 0,
+    "bottom": 844
+  },
+  "touchControls": {
+    "x": 14,
+    "y": 718,
+    "width": 362,
+    "height": 112,
+    "left": 14,
+    "right": 376,
+    "top": 718,
+    "bottom": 830
+  },
+  "touchDisplay": "grid",
+  "joystick": {
+    "x": 14,
+    "y": 718,
+    "width": 112,
+    "height": 112,
+    "left": 14,
+    "right": 126,
+    "top": 718,
+    "bottom": 830
+  },
+  "actionPad": {
+    "x": 202,
+    "y": 778,
+    "width": 174,
+    "height": 52,
+    "left": 202,
+    "right": 376,
+    "top": 778,
+    "bottom": 830
+  }
+}

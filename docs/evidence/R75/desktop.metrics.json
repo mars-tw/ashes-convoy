@@ -1,0 +1,188 @@
+[
+  {
+    "name": "desktop-1366",
+    "metrics": {
+      "app": {
+        "bottom": 700,
+        "height": 700,
+        "left": 0,
+        "right": 1366,
+        "top": 0,
+        "width": 1366,
+        "x": 0,
+        "y": 0
+      },
+      "canvas": {
+        "bottom": 699,
+        "height": 698,
+        "left": 522,
+        "right": 844,
+        "top": 1,
+        "width": 322,
+        "x": 522,
+        "y": 1
+      },
+      "leftGap": 12,
+      "leftRail": {
+        "bottom": 413,
+        "height": 126,
+        "left": 451,
+        "right": 509,
+        "top": 287,
+        "width": 58,
+        "x": 451,
+        "y": 287
+      },
+      "rightGap": 12,
+      "rightRail": {
+        "bottom": 447,
+        "height": 194,
+        "left": 857,
+        "right": 915,
+        "top": 253,
+        "width": 58,
+        "x": 857,
+        "y": 253
+      },
+      "stage": {
+        "bottom": 700,
+        "height": 700,
+        "left": 521,
+        "right": 845,
+        "top": 0,
+        "width": 323,
+        "x": 521,
+        "y": 0
+      },
+      "touchDisplay": "none",
+      "viewport": {
+        "height": 700,
+        "width": 1366
+      }
+    }
+  },
+  {
+    "name": "desktop-1680",
+    "metrics": {
+      "app": {
+        "bottom": 900,
+        "height": 900,
+        "left": 0,
+        "right": 1680,
+        "top": 0,
+        "width": 1680,
+        "x": 0,
+        "y": 0
+      },
+      "canvas": {
+        "bottom": 899,
+        "height": 898,
+        "left": 633,
+        "right": 1047,
+        "top": 1,
+        "width": 414,
+        "x": 633,
+        "y": 1
+      },
+      "leftGap": 14,
+      "leftRail": {
+        "bottom": 513,
+        "height": 126,
+        "left": 560,
+        "right": 618,
+        "top": 387,
+        "width": 58,
+        "x": 560,
+        "y": 387
+      },
+      "rightGap": 14,
+      "rightRail": {
+        "bottom": 547,
+        "height": 194,
+        "left": 1062,
+        "right": 1120,
+        "top": 353,
+        "width": 58,
+        "x": 1062,
+        "y": 353
+      },
+      "stage": {
+        "bottom": 900,
+        "height": 900,
+        "left": 632,
+        "right": 1048,
+        "top": 0,
+        "width": 416,
+        "x": 632,
+        "y": 0
+      },
+      "touchDisplay": "none",
+      "viewport": {
+        "height": 900,
+        "width": 1680
+      }
+    }
+  },
+  {
+    "name": "desktop-1920",
+    "metrics": {
+      "app": {
+        "bottom": 1080,
+        "height": 1080,
+        "left": 0,
+        "right": 1920,
+        "top": 0,
+        "width": 1920,
+        "x": 0,
+        "y": 0
+      },
+      "canvas": {
+        "bottom": 1079,
+        "height": 1078,
+        "left": 711,
+        "right": 1209,
+        "top": 1,
+        "width": 497,
+        "x": 711,
+        "y": 1
+      },
+      "leftGap": 14,
+      "leftRail": {
+        "bottom": 603,
+        "height": 126,
+        "left": 638,
+        "right": 696,
+        "top": 477,
+        "width": 58,
+        "x": 638,
+        "y": 477
+      },
+      "rightGap": 14,
+      "rightRail": {
+        "bottom": 637,
+        "height": 194,
+        "left": 1224,
+        "right": 1282,
+        "top": 443,
+        "width": 58,
+        "x": 1224,
+        "y": 443
+      },
+      "stage": {
+        "bottom": 1080,
+        "height": 1080,
+        "left": 710,
+        "right": 1210,
+        "top": 0,
+        "width": 499,
+        "x": 710,
+        "y": 0
+      },
+      "touchDisplay": "none",
+      "viewport": {
+        "height": 1080,
+        "width": 1920
+      }
+    }
+  }
+]
