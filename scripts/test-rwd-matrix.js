@@ -43,8 +43,9 @@ const MIME = {
 
 const VIEWPORTS = [
   { w: 1920, h: 1080, kind: "desktop" },
-  { w: 1366, h: 700, kind: "desktop" },
-  { w: 1280, h: 720, kind: "desktop" },
+  { w: 1440, h: 780, kind: "desktop" },
+  { w: 1366, h: 600, kind: "desktop" },
+  { w: 1280, h: 640, kind: "desktop" },
   { w: 1024, h: 768, kind: "desktop" },
   { w: 820, h: 1180, kind: "tablet" },
   { w: 768, h: 1024, kind: "tablet" },
@@ -252,8 +253,8 @@ async function runMatrix(browser, baseUrl) {
           const leftRailBox = await page.locator(".rail-left .rail-cluster").boundingBox();
           const rightRailBox = await page.locator(".rail-right .rail-cluster").boundingBox();
           assert(leftRailBox && rightRailBox, `${label} desktop rails 應可見`);
-          assert(stageBox.height >= vp.h * 0.97, `${label} R75 desktop stage 應接近滿高，實際 ${stageBox.height}px`);
-          assert(stageBox.width >= (vp.h * 390 / 844) - 3, `${label} R75 desktop stage 寬度應由滿高等比推出，實際 ${stageBox.width}px`);
+          assert(stageBox.height >= vp.h * 0.97, `${label} R76 desktop stage 應接近滿高，實際 ${stageBox.height}px`);
+          assert(stageBox.width >= (vp.h * 390 / 844) - 3, `${label} R76 desktop stage 寬度應由滿高等比推出，實際 ${stageBox.width}px`);
           const leftGap = stageBox.x - (leftRailBox.x + leftRailBox.width);
           const rightGap = rightRailBox.x - (stageBox.x + stageBox.width);
           assert(leftGap >= -1 && leftGap <= 24, `${label} left rail 應貼近 stage，gap ${leftGap}px`);

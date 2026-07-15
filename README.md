@@ -1,7 +1,7 @@
 # 灰燼護航 Ashes Convoy
 
 [![CI & Deploy Pages](https://github.com/mars-tw/ashes-convoy/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mars-tw/ashes-convoy/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/badge/release-R75-f0b64a)](src/version.js)
+[![Release](https://img.shields.io/badge/release-R76-f0b64a)](src/version.js)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5ed4cb)](LICENSE)
 
 《灰燼護航》是一款手機直式優先的 Canvas 2D 末世護送射擊遊戲。駕駛裝甲載具拖著倖存者車廂穿越屍潮，在每一波中清敵、打破增益門、收集補給，並把零件、藍圖與戰績帶回基地。
@@ -14,6 +14,7 @@
 
 - **R71–R72 素材重製**：重製首屏、封面、熹的砲手姿勢、主要敵人與 Boss，並統一暖灰燼 painterly-pixel 視覺；R72 的瀝青巨屍、盾殼屍與蜱群使用四個獨立移動姿勢的圖集，環境也加入遠／中／近景深層。
 - **R73 敵人動作圖集**：九組 raster 敵人視覺均新增 2 幀受擊與 3 幀死亡動作；low 品質仍以兩個真實 walk 姿勢交替，不再用單張圖位移、旋轉或縮放冒充動畫。
+- **R76 控制可達性硬化**：桌機 rails、首屏出勤/基地、抽屜操作與 in-run 快速升級輪盤在短高視口維持可點；手機控制盤只在 primary pointer coarse 裝置顯示。
 - **R75 桌機戰場放大**：桌機直式戰場改以可用視口高度滿版等比放大，左右 rails 貼住戰場兩側；手機控制盤與直式滿版延續 R74。
 - **熹的拖車房間**：基地內可進入熹的末世房間，閱讀無線電日誌、查看角色狀態，並以出擊進度解鎖或配置房間物件。
 - **波次護送玩法**：每波護送車隊深入四種環境，處理屍群、菁英敵人、補給與四類增益門；每 5 波迎戰階段式 Boss。
@@ -98,4 +99,4 @@ npm run test:rwd
 - [素材來源與致謝](CREDITS.md)
 - [MIT License](LICENSE)
 
-目前遊戲版本為 **R75**，權威版本值在 [`src/version.js`](src/version.js)。專案程式碼採 MIT License；第三方素材與開發工具的來源、授權及 `image_gen` 產出標註方式請見 [CREDITS.md](CREDITS.md)。
+目前遊戲版本為 **R76**，權威版本值在 [`src/version.js`](src/version.js)。專案程式碼採 MIT License；第三方素材與開發工具的來源、授權及 `image_gen` 產出標註方式請見 [CREDITS.md](CREDITS.md)。

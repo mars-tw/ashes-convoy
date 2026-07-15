@@ -13,8 +13,8 @@
     <meta name="theme-color" content="#111317" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="manifest.webmanifest?v=R75" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R75" />
+    <link rel="manifest" href="manifest.webmanifest?v=R76" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R76" />
     <link rel="canonical" href="https://mars-tw.github.io/ashes-convoy/" />
     <title>灰燼護航</title>
     <style>
@@ -221,6 +221,7 @@
           font-size: 20px;
           line-height: 1;
         }
+
       }
 
       #gameCanvas {
@@ -610,7 +611,7 @@
         touch-action: none;
       }
 
-      @media (hover: none), (pointer: coarse) {
+      @media (pointer: coarse) {
         .touch-controls.is-visible {
           position: absolute;
           z-index: 7;
@@ -676,8 +677,8 @@
       .quick-upgrade-wheel {
         position: absolute;
         z-index: 11;
-        width: 178px;
-        padding: 28px 10px 10px;
+        width: min(190px, calc(100% - 16px));
+        padding: 54px 10px 10px;
         border: 1px solid rgba(240, 182, 74, 0.62);
         border-radius: 8px;
         background: rgba(9, 12, 16, 0.92);
@@ -690,11 +691,12 @@
 
       .quick-upgrade-close {
         position: absolute;
-        top: 4px;
-        right: 4px;
-        width: 32px;
-        min-width: 32px;
-        min-height: 32px;
+        top: 6px;
+        right: 6px;
+        width: 44px;
+        min-width: 44px;
+        height: 44px;
+        min-height: 44px;
         padding: 0;
         border-radius: 50%;
       }
@@ -1226,6 +1228,11 @@
         max-width: 132px;
       }
 
+      .settings-row select,
+      .settings-row input:not([type="checkbox"]) {
+        min-width: 72px;
+      }
+
       .settings-row input[type="checkbox"] {
         min-width: 44px;
         width: 44px;
@@ -1601,6 +1608,12 @@
         overscroll-behavior: contain;
       }
 
+      @media (min-width: 860px) and (pointer: fine) {
+        .hotspot-layer {
+          max-height: min(56%, calc(100svh - 24px));
+        }
+      }
+
       .hotspot-btn {
         position: relative;
         min-width: 0;
@@ -1674,6 +1687,7 @@
       .meta-drawer {
         position: relative;
         z-index: 4;
+        scroll-padding-block: 72px 84px;
       }
 
       .is-illustration .meta-drawer,
@@ -1698,16 +1712,28 @@
       }
 
       .meta-drawer-head {
+        position: sticky;
+        top: 0;
+        z-index: 2;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 10px;
         margin-bottom: 10px;
+        padding-bottom: 8px;
+        background: linear-gradient(180deg, rgba(9, 12, 16, 0.98), rgba(9, 12, 16, 0.9));
       }
 
       .meta-drawer-head button {
         min-height: 44px;
         padding: 0 10px;
+      }
+
+      .meta-drawer button,
+      .meta-drawer select,
+      .meta-drawer input,
+      .meta-drawer textarea {
+        scroll-margin-block: 72px 84px;
       }
 
       .meta-section[hidden] {
@@ -1893,7 +1919,7 @@
             <span id="trailerBonusText">HP +0% · 傷害 +0% · 射速 +0% · 承傷 -0%</span>
           </div>
           <section class="story-log-section" id="storyLogSection" aria-label="無線電日誌" hidden>
-            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R75" alt="熹" decoding="async" draggable="false" />
+            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R76" alt="熹" decoding="async" draggable="false" />
             <div class="story-log-list" id="storyLogList"></div>
           </section>
           <div class="trailer-room-body">
@@ -2100,7 +2126,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R75";
+        var key = "ashes_convoy_html_boot_reload_R76";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -2117,15 +2143,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R75"></script>
-    <script src="src/sprites.js?v=R75"></script>
-    <script src="src/sprite-renderer.js?v=R75"></script>
-    <script src="src/shelter-scene.js?v=R75"></script>
-    <script src="src/config.js?v=R75"></script>
-    <script src="src/rules.js?v=R75"></script>
-    <script src="src/fx.js?v=R75"></script>
-    <script src="src/audio.js?v=R75"></script>
-    <script src="src/game.js?v=R75"></script>
-    <script src="src/ui.js?v=R75"></script>
+    <script src="src/version.js?v=R76"></script>
+    <script src="src/sprites.js?v=R76"></script>
+    <script src="src/sprite-renderer.js?v=R76"></script>
+    <script src="src/shelter-scene.js?v=R76"></script>
+    <script src="src/config.js?v=R76"></script>
+    <script src="src/rules.js?v=R76"></script>
+    <script src="src/fx.js?v=R76"></script>
+    <script src="src/audio.js?v=R76"></script>
+    <script src="src/game.js?v=R76"></script>
+    <script src="src/ui.js?v=R76"></script>
   </body>
 </html>

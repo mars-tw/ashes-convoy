@@ -26,6 +26,7 @@
   let joystickPointerId = null;
   let joystickVector = { x: 0, y: 0 };
   let canvasTapStart = null;
+  let primaryPointerCoarseQuery = null;
 
   const els = {};
   const shelter = {
@@ -330,13 +331,19 @@
     if (!els.quickUpgradeWheel || !els.battleStage) return;
     renderQuickUpgradeWheel();
     const rect = els.battleStage.getBoundingClientRect();
-    const width = 178;
-    const height = Math.min(260, 44 + Math.ceil(Math.max(1, availableUpgradeTracks().length) / 2) * 72);
-    const left = rules.clamp(clientX - rect.left - width * 0.5, 8, Math.max(8, rect.width - width - 8));
-    const top = rules.clamp(clientY - rect.top - height - 8, 88, Math.max(88, rect.height - height - 8));
+    els.quickUpgradeWheel.style.left = "8px";
+    els.quickUpgradeWheel.style.top = "8px";
+    els.quickUpgradeWheel.hidden = false;
+    const wheelRect = els.quickUpgradeWheel.getBoundingClientRect();
+    const width = Math.min(wheelRect.width || 190, Math.max(44, rect.width - 16));
+    const height = Math.min(wheelRect.height || 260, Math.max(44, rect.height - 16));
+    const maxLeft = Math.max(8, rect.width - width - 8);
+    const maxTop = Math.max(8, rect.height - height - 8);
+    const minTop = Math.min(88, maxTop);
+    const left = rules.clamp(clientX - rect.left - width * 0.5, 8, maxLeft);
+    const top = rules.clamp(clientY - rect.top - height - 8, minTop, maxTop);
     els.quickUpgradeWheel.style.left = `${Math.round(left)}px`;
     els.quickUpgradeWheel.style.top = `${Math.round(top)}px`;
-    els.quickUpgradeWheel.hidden = false;
   }
 
   function resetJoystick() {
@@ -381,11 +388,29 @@
     if (typeof game.focusRunObject === "function") game.focusRunObject("weapon");
   }
 
+  function getPrimaryPointerCoarseQuery() {
+    if (primaryPointerCoarseQuery || typeof root.matchMedia !== "function") return primaryPointerCoarseQuery;
+    try {
+      primaryPointerCoarseQuery = root.matchMedia("(pointer: coarse)");
+    } catch (error) {
+      primaryPointerCoarseQuery = null;
+    }
+    return primaryPointerCoarseQuery;
+  }
+
+  function primaryPointerIsCoarse() {
+    const query = getPrimaryPointerCoarseQuery();
+    return !!(query && query.matches);
+  }
+
   function renderTouchControls(state) {
     const playing = !!(state && state.mode === "playing" && !state.paused && !state.over);
-    if (els.touchControls) els.touchControls.classList.toggle("is-visible", playing);
-    if (!playing) {
+    const showTouchControls = playing && primaryPointerIsCoarse();
+    if (els.touchControls) els.touchControls.classList.toggle("is-visible", showTouchControls);
+    if (!showTouchControls && (joystickPointerId != null || joystickVector.x || joystickVector.y)) {
       resetJoystick();
+    }
+    if (!playing) {
       hideQuickUpgradeWheel();
     }
   }
@@ -1944,6 +1969,12 @@
     if (els.railOpsBtn) els.railOpsBtn.addEventListener("click", () => openShortcutPanel("operations", els.railOpsBtn, "#questList"));
     if (els.railAchievementsBtn) els.railAchievementsBtn.addEventListener("click", () => openShortcutPanel("achievements", els.railAchievementsBtn));
     if (els.railSettingsBtn) els.railSettingsBtn.addEventListener("click", () => openShortcutPanel("operations", els.railSettingsBtn, "#settingsPanel"));
+    const pointerQuery = getPrimaryPointerCoarseQuery();
+    if (pointerQuery) {
+      const updatePointerControls = () => renderTouchControls(latestState || game.getState());
+      if (typeof pointerQuery.addEventListener === "function") pointerQuery.addEventListener("change", updatePointerControls);
+      else if (typeof pointerQuery.addListener === "function") pointerQuery.addListener(updatePointerControls);
+    }
     if (els.quickUpgradeCloseBtn) els.quickUpgradeCloseBtn.addEventListener("click", hideQuickUpgradeWheel);
     if (els.virtualJoystick) {
       els.virtualJoystick.addEventListener("pointerdown", (event) => {
