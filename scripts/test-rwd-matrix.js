@@ -240,9 +240,15 @@ async function runMatrix(browser, baseUrl) {
         await page.waitForTimeout(300);
         const res = await auditViewport(page);
         const appBox = await page.locator("#app").boundingBox();
+        const stageBox = await page.locator("#battleStage").boundingBox();
         assert(appBox, `${label} app shell 應可見`);
+        assert(stageBox, `${label} battle stage 應可見`);
         assert(appBox.height >= vp.h * 0.9, `${label} app 高度 ${appBox.height}px 應至少佔視口 90%`);
-        assert(Math.abs(appBox.width / appBox.height - 390 / 844) < 0.01, `${label} app 應維持 390:844 等比，實際 ${appBox.width}x${appBox.height}`);
+        assert(stageBox.height >= vp.h * (vp.kind === "desktop" ? 0.82 : 0.9), `${label} battle stage 高度 ${stageBox.height}px 應吃滿主要高度`);
+        assert(Math.abs(stageBox.width / stageBox.height - 390 / 844) < 0.01, `${label} battle stage 應維持 390:844 等比，實際 ${stageBox.width}x${stageBox.height}`);
+        if (vp.kind === "desktop") {
+          assert(appBox.width >= vp.w * 0.96, `${label} desktop shell 應填滿寬螢幕，實際 ${appBox.width}px`);
+        }
         assert.strictEqual(
           res.violations.length,
           0,

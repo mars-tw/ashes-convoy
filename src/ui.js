@@ -23,6 +23,9 @@
   let lastSupplyChoiceKey = "";
   let trailerRoomMetrics = null;
   let trailerRedrawTimer = 0;
+  let joystickPointerId = null;
+  let joystickVector = { x: 0, y: 0 };
+  let canvasTapStart = null;
 
   const els = {};
   const shelter = {
@@ -246,6 +249,145 @@
       ? lastDrawerTrigger
       : els.baseToggleBtn;
     if (focusTarget && typeof focusTarget.focus === "function") focusTarget.focus();
+  }
+
+  function openShortcutPanel(kind, trigger, focusSelector) {
+    const state = game.getState();
+    if (state && state.mode === "playing" && !state.paused) game.pause();
+    showGarage();
+    openMetaDrawer(kind, trigger);
+    if (focusSelector) {
+      root.requestAnimationFrame(() => {
+        const target = root.document.querySelector(focusSelector);
+        if (target && typeof target.scrollIntoView === "function") {
+          target.scrollIntoView({ block: "nearest", inline: "nearest" });
+        }
+      });
+    }
+  }
+
+  function canvasWorldPoint(event) {
+    if (!els.gameCanvas) return null;
+    const rect = els.gameCanvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    return {
+      x: ((event.clientX - rect.left) / rect.width) * config.LOGIC.width,
+      y: ((event.clientY - rect.top) / rect.height) * config.LOGIC.height
+    };
+  }
+
+  function isVehiclePoint(point, state) {
+    if (!point || !state || state.mode !== "playing" || !state.vehicle) return false;
+    const vehicle = config.VEHICLES[state.vehicleId] || {};
+    const visualWidth = vehicle.visualWidth || (vehicle.visualHalfWidth || 30) * 2;
+    const halfWidth = Math.max(18, visualWidth * 0.82);
+    const upper = Math.max(28, visualWidth * 1.38);
+    const lower = Math.max(14, visualWidth * 0.46);
+    return Math.abs(point.x - state.vehicle.x) <= halfWidth && point.y >= state.vehicle.y - upper && point.y <= state.vehicle.y + lower;
+  }
+
+  function availableUpgradeTracks() {
+    const specific = (config.ECONOMY.vehicleUpgradeTracks && config.ECONOMY.vehicleUpgradeTracks[meta.selectedVehicle]) || {};
+    return ["hull", "weapon", "energy", "gate"]
+      .concat(Object.keys(specific))
+      .filter((track, index, tracks) => tracks.indexOf(track) === index);
+  }
+
+  function shortUpgradeLabel(label) {
+    const text = String(label || "").trim();
+    return text.length > 3 ? text.slice(0, 3) : text || "升級";
+  }
+
+  function renderQuickUpgradeWheel() {
+    if (!els.quickUpgradeList) return;
+    els.quickUpgradeList.textContent = "";
+    availableUpgradeTracks().forEach((track) => {
+      const upgrade = rules.getUpgradeDefinition(meta.selectedVehicle, track, config);
+      const levels = rules.getVehicleLevels(meta, meta.selectedVehicle, config);
+      const cost = rules.getUpgradeCost(meta, meta.selectedVehicle, track, config);
+      const button = root.document.createElement("button");
+      button.type = "button";
+      button.className = "quick-upgrade-option";
+      button.dataset.quickUpgrade = track;
+      button.disabled = cost == null || meta.parts < cost;
+      button.setAttribute("aria-label", `${upgrade.label} Lv.${levels[track]} ${cost == null ? "已滿" : `消耗 ${cost} 零件`}`);
+      button.innerHTML = `<b>${shortUpgradeLabel(upgrade.label)}</b><small>${cost == null ? "滿" : cost}</small>`;
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        buyUpgrade(track);
+        renderQuickUpgradeWheel();
+      });
+      els.quickUpgradeList.appendChild(button);
+    });
+  }
+
+  function hideQuickUpgradeWheel() {
+    if (els.quickUpgradeWheel) els.quickUpgradeWheel.hidden = true;
+  }
+
+  function showQuickUpgradeWheel(clientX, clientY) {
+    if (!els.quickUpgradeWheel || !els.battleStage) return;
+    renderQuickUpgradeWheel();
+    const rect = els.battleStage.getBoundingClientRect();
+    const width = 178;
+    const height = Math.min(260, 44 + Math.ceil(Math.max(1, availableUpgradeTracks().length) / 2) * 72);
+    const left = rules.clamp(clientX - rect.left - width * 0.5, 8, Math.max(8, rect.width - width - 8));
+    const top = rules.clamp(clientY - rect.top - height - 8, 88, Math.max(88, rect.height - height - 8));
+    els.quickUpgradeWheel.style.left = `${Math.round(left)}px`;
+    els.quickUpgradeWheel.style.top = `${Math.round(top)}px`;
+    els.quickUpgradeWheel.hidden = false;
+  }
+
+  function resetJoystick() {
+    joystickPointerId = null;
+    joystickVector = { x: 0, y: 0 };
+    if (els.virtualJoystickKnob) {
+      els.virtualJoystickKnob.style.transform = "translate(-50%, -50%)";
+    }
+    if (typeof game.releaseVirtualAim === "function") game.releaseVirtualAim();
+  }
+
+  function updateJoystick(event) {
+    if (!els.virtualJoystick || typeof game.setVirtualAim !== "function") return;
+    const rect = els.virtualJoystick.getBoundingClientRect();
+    const cx = rect.left + rect.width * 0.5;
+    const cy = rect.top + rect.height * 0.5;
+    const max = Math.max(1, rect.width * 0.34);
+    const rawX = event.clientX - cx;
+    const rawY = event.clientY - cy;
+    const length = Math.hypot(rawX, rawY);
+    const scale = length > max ? max / length : 1;
+    const x = (rawX * scale) / max;
+    const y = (rawY * scale) / max;
+    joystickVector = { x, y };
+    if (els.virtualJoystickKnob) {
+      els.virtualJoystickKnob.style.transform = `translate(calc(-50% + ${Math.round(x * max)}px), calc(-50% + ${Math.round(y * max)}px))`;
+    }
+    game.setVirtualAim(joystickVector);
+  }
+
+  function activateTouchSkill() {
+    const state = game.getState();
+    if (state && state.supplyChoice) {
+      const rewardIds = Array.isArray(state.supplyChoice.rewardIds) ? state.supplyChoice.rewardIds : [];
+      if (rewardIds[0]) game.chooseSupplyReward(rewardIds[0]);
+      return;
+    }
+    if (typeof game.focusRunObject === "function") game.focusRunObject("supply");
+  }
+
+  function activateTouchWeapon() {
+    if (typeof game.focusRunObject === "function") game.focusRunObject("weapon");
+  }
+
+  function renderTouchControls(state) {
+    const playing = !!(state && state.mode === "playing" && !state.paused && !state.over);
+    if (els.touchControls) els.touchControls.classList.toggle("is-visible", playing);
+    if (!playing) {
+      resetJoystick();
+      hideQuickUpgradeWheel();
+    }
   }
 
   function applyMetaBackgroundMode(mode) {
@@ -1352,12 +1494,14 @@
       els.hud.classList.remove("is-visible");
       els.hud.classList.remove("is-reduced");
       els.hudMods.style.visibility = "";
+      renderTouchControls(null);
       renderGateChoices(null);
       renderEventBanner(null);
       renderSupplyChoice(null);
       return;
     }
     els.hud.classList.add("is-visible");
+    renderTouchControls(state);
     const reducedMotion = !!(meta.settings && meta.settings.reducedFlash);
     els.hud.classList.toggle("is-reduced", reducedMotion);
     renderGateChoices(state);
@@ -1795,9 +1939,83 @@
       const next = ids[(index + 1) % ids.length];
       selectVehicle(next);
     });
+    if (els.railUpgradeBtn) els.railUpgradeBtn.addEventListener("click", () => openShortcutPanel("upgrades", els.railUpgradeBtn));
+    if (els.railVehicleBtn) els.railVehicleBtn.addEventListener("click", () => openShortcutPanel("vehicle", els.railVehicleBtn));
+    if (els.railOpsBtn) els.railOpsBtn.addEventListener("click", () => openShortcutPanel("operations", els.railOpsBtn, "#questList"));
+    if (els.railAchievementsBtn) els.railAchievementsBtn.addEventListener("click", () => openShortcutPanel("achievements", els.railAchievementsBtn));
+    if (els.railSettingsBtn) els.railSettingsBtn.addEventListener("click", () => openShortcutPanel("operations", els.railSettingsBtn, "#settingsPanel"));
+    if (els.quickUpgradeCloseBtn) els.quickUpgradeCloseBtn.addEventListener("click", hideQuickUpgradeWheel);
+    if (els.virtualJoystick) {
+      els.virtualJoystick.addEventListener("pointerdown", (event) => {
+        joystickPointerId = event.pointerId;
+        els.virtualJoystick.setPointerCapture(event.pointerId);
+        updateJoystick(event);
+        event.preventDefault();
+      });
+      els.virtualJoystick.addEventListener("pointermove", (event) => {
+        if (joystickPointerId !== event.pointerId) return;
+        updateJoystick(event);
+        event.preventDefault();
+      });
+      els.virtualJoystick.addEventListener("pointerup", (event) => {
+        if (joystickPointerId === event.pointerId) resetJoystick();
+        event.preventDefault();
+      });
+      els.virtualJoystick.addEventListener("pointercancel", resetJoystick);
+    }
+    if (els.touchBoostBtn) {
+      els.touchBoostBtn.addEventListener("pointerdown", (event) => {
+        els.touchBoostBtn.classList.add("is-active");
+        if (typeof game.setVirtualAim === "function") game.setVirtualAim({ x: joystickVector.x || 0, y: -0.55 });
+        event.preventDefault();
+      });
+      ["pointerup", "pointercancel", "pointerleave"].forEach((type) => {
+        els.touchBoostBtn.addEventListener(type, () => {
+          els.touchBoostBtn.classList.remove("is-active");
+          if (joystickPointerId == null && typeof game.releaseVirtualAim === "function") game.releaseVirtualAim();
+        });
+      });
+    }
+    if (els.touchSkillBtn) els.touchSkillBtn.addEventListener("click", activateTouchSkill);
+    if (els.touchWeaponBtn) els.touchWeaponBtn.addEventListener("click", activateTouchWeapon);
+    if (els.gameCanvas) {
+      els.gameCanvas.addEventListener("pointerdown", (event) => {
+        const state = game.getState();
+        if (!state || state.mode !== "playing" || state.paused || state.over) {
+          canvasTapStart = null;
+          return;
+        }
+        canvasTapStart = {
+          id: event.pointerId,
+          clientX: event.clientX,
+          clientY: event.clientY,
+          point: canvasWorldPoint(event)
+        };
+      });
+      els.gameCanvas.addEventListener("pointerup", (event) => {
+        if (!canvasTapStart || canvasTapStart.id !== event.pointerId) return;
+        const moved = Math.hypot(event.clientX - canvasTapStart.clientX, event.clientY - canvasTapStart.clientY);
+        const state = game.getState();
+        const point = canvasWorldPoint(event) || canvasTapStart.point;
+        if (moved <= 12 && isVehiclePoint(point, state)) {
+          showQuickUpgradeWheel(event.clientX, event.clientY);
+        } else if (els.quickUpgradeWheel && !els.quickUpgradeWheel.hidden) {
+          hideQuickUpgradeWheel();
+        }
+        canvasTapStart = null;
+      });
+      els.gameCanvas.addEventListener("pointercancel", () => {
+        canvasTapStart = null;
+      });
+    }
     root.document.addEventListener("keydown", (event) => {
       if (handleSupplyChoiceKey(event)) return;
       if (event.key !== "Escape") return;
+      if (els.quickUpgradeWheel && !els.quickUpgradeWheel.hidden) {
+        event.preventDefault();
+        hideQuickUpgradeWheel();
+        return;
+      }
       if (els.trailerOverlay && !els.trailerOverlay.hidden) {
         event.preventDefault();
         closeTrailerRoom();
@@ -1886,6 +2104,8 @@
   function collectElements() {
     [
       "hud",
+      "battleStage",
+      "gameCanvas",
       "hudVehicle",
       "hudHpText",
       "hpBar",
@@ -1908,6 +2128,15 @@
       "supplyChoiceTitle",
       "supplyChoiceHint",
       "supplyChoiceList",
+      "touchControls",
+      "virtualJoystick",
+      "virtualJoystickKnob",
+      "touchBoostBtn",
+      "touchSkillBtn",
+      "touchWeaponBtn",
+      "quickUpgradeWheel",
+      "quickUpgradeList",
+      "quickUpgradeCloseBtn",
       "pauseBtn",
       "garagePanel",
       "shelterCanvas",
@@ -1966,6 +2195,11 @@
       "startBtn",
       "resetBtn",
       "selectSkiffBtn",
+      "railUpgradeBtn",
+      "railVehicleBtn",
+      "railOpsBtn",
+      "railAchievementsBtn",
+      "railSettingsBtn",
       "garageStatus",
       "pausePanel",
       "resumeBtn",

@@ -13,8 +13,8 @@
     <meta name="theme-color" content="#111317" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="manifest.webmanifest?v=R73" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R73" />
+    <link rel="manifest" href="manifest.webmanifest?v=R74" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R74" />
     <link rel="canonical" href="https://mars-tw.github.io/ashes-convoy/" />
     <title>灰燼護航</title>
     <style>
@@ -113,22 +113,110 @@
         z-index: 1;
         width: min(100vw, calc(100svh * 390 / 844));
         height: min(100svh, calc(100vw * 844 / 390));
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        overflow: hidden;
+        background: transparent;
+      }
+
+      .battle-stage {
+        position: relative;
+        width: 100%;
+        height: 100%;
         aspect-ratio: 390 / 844;
         container-type: inline-size;
         overflow: hidden;
         background: #0a0c0f;
       }
 
-      @media (min-width: 860px) {
+      .desktop-rail {
+        display: none;
+      }
+
+      @media (min-width: 860px) and (pointer: fine) {
+        body {
+          place-items: stretch;
+        }
+
         .app {
-          width: auto;
-          height: 96vh;
-          height: 96svh;
+          --app-pad: clamp(12px, 1.8vw, 24px);
+          --desktop-gap: clamp(12px, 2vw, 28px);
+          --rail-min: clamp(90px, 9vw, 150px);
+          --stage-h: calc(100svh - (var(--app-pad) * 2));
+          --stage-w: min(
+            calc(var(--stage-h) * 390 / 844),
+            calc(100vw - (var(--app-pad) * 2) - (var(--rail-min) * 2) - (var(--desktop-gap) * 2))
+          );
+          width: 100vw;
+          height: 100vh;
+          height: 100svh;
+          padding: var(--app-pad);
+          grid-template-columns: minmax(var(--rail-min), 1fr) minmax(280px, var(--stage-w)) minmax(var(--rail-min), 1fr);
+          gap: var(--desktop-gap);
+          align-items: center;
+          background:
+            linear-gradient(90deg, rgba(10, 13, 16, 0.86), rgba(10, 13, 16, 0.34) 22%, rgba(10, 13, 16, 0.34) 78%, rgba(10, 13, 16, 0.86)),
+            rgba(12, 15, 18, 0.7);
+        }
+
+        .battle-stage {
+          width: var(--stage-w);
+          height: var(--stage-h);
+          justify-self: center;
+          align-self: center;
           border: 1px solid rgba(244, 234, 216, 0.16);
           box-shadow:
             0 0 0 6px rgba(54, 43, 30, 0.5),
             0 0 0 8px rgba(191, 139, 58, 0.18),
             0 28px 80px rgba(0, 0, 0, 0.72);
+        }
+
+        .desktop-rail {
+          display: grid;
+          align-self: stretch;
+          align-content: center;
+          min-width: 0;
+          padding: 10px 0;
+          border-block: 1px solid rgba(244, 234, 216, 0.1);
+        }
+
+        .rail-left {
+          justify-items: end;
+        }
+
+        .rail-right {
+          justify-items: start;
+        }
+
+        .rail-cluster {
+          display: grid;
+          gap: 10px;
+          width: min(96px, 100%);
+        }
+
+        .rail-btn {
+          width: 58px;
+          min-width: 58px;
+          min-height: 58px;
+          padding: 0;
+          display: grid;
+          place-items: center;
+          border-radius: 8px;
+          background: rgba(20, 24, 28, 0.82);
+          box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+        }
+
+        .rail-btn span {
+          display: block;
+          color: var(--muted);
+          font-size: 11px;
+          line-height: 1;
+        }
+
+        .rail-icon {
+          color: var(--accent);
+          font-size: 20px;
+          line-height: 1;
         }
       }
 
@@ -506,6 +594,140 @@
         font-weight: 900;
         line-height: 1.25;
         overflow-wrap: anywhere;
+      }
+
+      .touch-controls {
+        display: none;
+      }
+
+      .virtual-joystick,
+      .touch-action-btn,
+      .quick-upgrade-wheel,
+      .quick-upgrade-option {
+        touch-action: none;
+      }
+
+      @media (hover: none), (pointer: coarse) {
+        .touch-controls.is-visible {
+          position: absolute;
+          z-index: 7;
+          inset: auto max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+          display: grid;
+          grid-template-columns: 118px 1fr;
+          align-items: end;
+          gap: 14px;
+          pointer-events: none;
+        }
+
+        .virtual-joystick {
+          position: relative;
+          width: 112px;
+          height: 112px;
+          border: 1px solid rgba(244, 234, 216, 0.24);
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(94, 212, 203, 0.18), rgba(9, 12, 16, 0.62) 62%);
+          box-shadow: 0 16px 34px rgba(0, 0, 0, 0.38), inset 0 0 0 12px rgba(255, 255, 255, 0.035);
+          pointer-events: auto;
+        }
+
+        .virtual-joystick-stick {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          width: 46px;
+          height: 46px;
+          border: 1px solid rgba(94, 212, 203, 0.72);
+          border-radius: 50%;
+          background: rgba(94, 212, 203, 0.32);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.38);
+          transform: translate(-50%, -50%);
+        }
+
+        .touch-action-pad {
+          justify-self: end;
+          display: flex;
+          gap: 9px;
+          pointer-events: auto;
+        }
+
+        .touch-action-btn {
+          width: 52px;
+          min-width: 52px;
+          height: 52px;
+          min-height: 52px;
+          padding: 0;
+          border-radius: 50%;
+          background: rgba(24, 29, 35, 0.82);
+          box-shadow: 0 14px 28px rgba(0, 0, 0, 0.34);
+          color: #fff4cf;
+          font-size: 16px;
+        }
+
+        .touch-action-btn:active,
+        .touch-action-btn.is-active {
+          border-color: rgba(94, 212, 203, 0.86);
+          background: rgba(94, 212, 203, 0.26);
+        }
+      }
+
+      .quick-upgrade-wheel {
+        position: absolute;
+        z-index: 11;
+        width: 178px;
+        padding: 28px 10px 10px;
+        border: 1px solid rgba(240, 182, 74, 0.62);
+        border-radius: 8px;
+        background: rgba(9, 12, 16, 0.92);
+        box-shadow: 0 18px 38px rgba(0, 0, 0, 0.42);
+      }
+
+      .quick-upgrade-wheel[hidden] {
+        display: none;
+      }
+
+      .quick-upgrade-close {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 32px;
+        min-width: 32px;
+        min-height: 32px;
+        padding: 0;
+        border-radius: 50%;
+      }
+
+      .quick-upgrade-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .quick-upgrade-option {
+        min-height: 64px;
+        padding: 6px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        align-content: center;
+        gap: 2px;
+        text-align: center;
+        font-size: 11px;
+        line-height: 1.15;
+        background: rgba(35, 42, 49, 0.92);
+      }
+
+      .quick-upgrade-option b,
+      .quick-upgrade-option small {
+        display: block;
+        max-width: 58px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .quick-upgrade-option small {
+        color: var(--muted);
+        font-size: 10px;
       }
 
       .trailer-overlay {
@@ -974,6 +1196,8 @@
 
       .settings-list {
         margin-top: 10px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: stretch;
       }
 
       .settings-row,
@@ -988,13 +1212,15 @@
       }
 
       .settings-row {
-        grid-template-columns: 1fr auto;
+        grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
+        min-height: 54px;
       }
 
       .settings-row select,
       .settings-row input {
         min-height: 44px;
+        max-width: 132px;
       }
 
       .settings-row input[type="checkbox"] {
@@ -1003,12 +1229,18 @@
       }
 
       .save-manager {
+        grid-column: 1 / -1;
         display: grid;
         gap: 8px;
         padding: 9px 10px;
         border: 1px solid rgba(94, 212, 203, 0.28);
         border-radius: 8px;
         background: rgba(94, 212, 203, 0.055);
+      }
+
+      #performanceDiagnostics {
+        grid-column: 1 / -1;
+        min-height: 42px;
       }
 
       .save-manager textarea {
@@ -1479,6 +1711,16 @@
         display: none;
       }
 
+      .is-illustration .meta-drawer .garage-grid,
+      .is-shelter .meta-drawer .garage-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .is-illustration .meta-drawer .meta-section:not([hidden]),
+      .is-shelter .meta-drawer .meta-section:not([hidden]) {
+        grid-column: 1 / -1;
+      }
+
       .is-fallback .shelter-image,
       .is-fallback .shelter-canvas {
         display: none;
@@ -1554,6 +1796,20 @@
   </head>
   <body>
     <main class="app" id="app">
+      <nav class="desktop-rail rail-left" aria-label="基地捷徑">
+        <div class="rail-cluster">
+          <button class="rail-btn" id="railUpgradeBtn" type="button" aria-label="開啟升級工坊">
+            <i class="rail-icon" aria-hidden="true">▲</i>
+            <span>升級</span>
+          </button>
+          <button class="rail-btn" id="railVehicleBtn" type="button" aria-label="開啟載具棚">
+            <i class="rail-icon" aria-hidden="true">▣</i>
+            <span>載具</span>
+          </button>
+        </div>
+      </nav>
+
+      <section class="battle-stage" id="battleStage" aria-label="灰燼護航遊戲畫面">
       <canvas id="gameCanvas" width="390" height="844" aria-label="灰燼護航戰場"></canvas>
 
       <section class="hud" id="hud" aria-live="polite">
@@ -1598,6 +1854,22 @@
         </div>
       </div>
 
+      <div class="touch-controls" id="touchControls" aria-label="行動控制盤">
+        <div class="virtual-joystick" id="virtualJoystick" role="application" aria-label="虛擬搖桿">
+          <div class="virtual-joystick-stick" id="virtualJoystickKnob"></div>
+        </div>
+        <div class="touch-action-pad" aria-label="戰鬥快捷鍵">
+          <button class="touch-action-btn" id="touchBoostBtn" type="button" aria-label="衝刺轉向">衝</button>
+          <button class="touch-action-btn" id="touchSkillBtn" type="button" aria-label="補給技能">技</button>
+          <button class="touch-action-btn" id="touchWeaponBtn" type="button" aria-label="切換或追蹤彈種">彈</button>
+        </div>
+      </div>
+
+      <div class="quick-upgrade-wheel" id="quickUpgradeWheel" role="dialog" aria-label="快速升級輪盤" hidden>
+        <button class="quick-upgrade-close" id="quickUpgradeCloseBtn" type="button" aria-label="關閉快速升級">×</button>
+        <div class="quick-upgrade-list" id="quickUpgradeList"></div>
+      </div>
+
       <div class="trailer-overlay" id="trailerOverlay" role="dialog" aria-modal="true" aria-labelledby="trailerRoomTitle" hidden>
         <div class="trailer-room-stage">
           <canvas id="trailerRoomCanvas" class="trailer-room-canvas" width="390" height="844" aria-label="拖車少女房間"></canvas>
@@ -1618,7 +1890,7 @@
             <span id="trailerBonusText">HP +0% · 傷害 +0% · 射速 +0% · 承傷 -0%</span>
           </div>
           <section class="story-log-section" id="storyLogSection" aria-label="無線電日誌" hidden>
-            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R73" alt="熹" decoding="async" draggable="false" />
+            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R74" alt="熹" decoding="async" draggable="false" />
             <div class="story-log-list" id="storyLogList"></div>
           </section>
           <div class="trailer-room-body">
@@ -1801,13 +2073,31 @@
           <button class="secondary" id="garageBtn" type="button" aria-label="回車庫升級">回車庫升級</button>
         </div>
       </section>
+      </section>
+
+      <nav class="desktop-rail rail-right" aria-label="任務捷徑">
+        <div class="rail-cluster">
+          <button class="rail-btn" id="railOpsBtn" type="button" aria-label="開啟任務板">
+            <i class="rail-icon" aria-hidden="true">◎</i>
+            <span>任務</span>
+          </button>
+          <button class="rail-btn" id="railAchievementsBtn" type="button" aria-label="開啟成就牆">
+            <i class="rail-icon" aria-hidden="true">★</i>
+            <span>成就</span>
+          </button>
+          <button class="rail-btn" id="railSettingsBtn" type="button" aria-label="開啟設定">
+            <i class="rail-icon" aria-hidden="true">⚙</i>
+            <span>設定</span>
+          </button>
+        </div>
+      </nav>
     </main>
 
     <script>
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R73";
+        var key = "ashes_convoy_html_boot_reload_R74";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -1824,15 +2114,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R73"></script>
-    <script src="src/sprites.js?v=R73"></script>
-    <script src="src/sprite-renderer.js?v=R73"></script>
-    <script src="src/shelter-scene.js?v=R73"></script>
-    <script src="src/config.js?v=R73"></script>
-    <script src="src/rules.js?v=R73"></script>
-    <script src="src/fx.js?v=R73"></script>
-    <script src="src/audio.js?v=R73"></script>
-    <script src="src/game.js?v=R73"></script>
-    <script src="src/ui.js?v=R73"></script>
+    <script src="src/version.js?v=R74"></script>
+    <script src="src/sprites.js?v=R74"></script>
+    <script src="src/sprite-renderer.js?v=R74"></script>
+    <script src="src/shelter-scene.js?v=R74"></script>
+    <script src="src/config.js?v=R74"></script>
+    <script src="src/rules.js?v=R74"></script>
+    <script src="src/fx.js?v=R74"></script>
+    <script src="src/audio.js?v=R74"></script>
+    <script src="src/game.js?v=R74"></script>
+    <script src="src/ui.js?v=R74"></script>
   </body>
 </html>

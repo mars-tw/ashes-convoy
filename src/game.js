@@ -3046,6 +3046,52 @@
     state.vehicle.followX = state.vehicle.aimX;
   }
 
+  function setVirtualAim(vector) {
+    if (!state || state.over || state.paused) return getState();
+    const input = vector || {};
+    const x = rules.clamp(Number(input.x) || 0, -1, 1);
+    const y = rules.clamp(Number(input.y) || 0, -1, 1);
+    const roadCenter = (config.LOGIC.roadLeft + config.LOGIC.roadRight) * 0.5;
+    const roadHalf = (config.LOGIC.roadRight - config.LOGIC.roadLeft) * 0.5;
+    const aimPoint = {
+      x: roadCenter + x * roadHalf,
+      y: state.vehicle.y - 126 + y * 58
+    };
+    state.input.dragging = Math.abs(x) > 0.03 || Math.abs(y) > 0.03;
+    state.input.lastPointer = state.input.dragging ? "virtual" : null;
+    setAimFromPoint(aimPoint, "touch");
+    emitState();
+    return getState();
+  }
+
+  function releaseVirtualAim() {
+    if (state && state.input && state.input.lastPointer === "virtual") {
+      state.input.dragging = false;
+      state.input.lastPointer = null;
+      emitState();
+    }
+    return getState();
+  }
+
+  function focusRunObject(kind) {
+    if (!state || state.over || state.paused) return getState();
+    const list =
+      kind === "weapon"
+        ? state.weaponPowerups
+        : kind === "gate"
+          ? state.gates
+          : state.supplyDrops;
+    const target = (list || [])
+      .filter((item) => item && !item.picked && !item.broken)
+      .sort((a, b) => Math.abs(a.x - state.vehicle.x) - Math.abs(b.x - state.vehicle.x))[0];
+    if (!target) return getState();
+    state.input.dragging = false;
+    state.input.lastPointer = null;
+    setAimFromPoint({ x: target.x, y: Math.min(target.y, state.vehicle.y - 72) }, "touch");
+    emitState();
+    return getState();
+  }
+
   function pointFromEvent(event) {
     const rect = canvas.getBoundingClientRect();
     return {
@@ -5480,6 +5526,9 @@
       grantGate,
       chooseSupplyReward,
       chooseGate,
+      setVirtualAim,
+      releaseVirtualAim,
+      focusRunObject,
       damageVehicle,
       killAllEnemies,
       finishRun,
@@ -5507,6 +5556,9 @@
     grantGate,
     chooseSupplyReward,
     chooseGate,
+    setVirtualAim,
+    releaseVirtualAim,
+    focusRunObject,
     damageVehicle,
     killAllEnemies,
     finishRun,
