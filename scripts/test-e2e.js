@@ -2069,9 +2069,14 @@ async function checkOpeningHordeGateAndFps(page) {
     const second = window.__test.getRenderDebug();
     meta.settings.performanceMode = "low";
     window.__test.setMeta(meta);
+    // 低模換幀 cadence=clamp(fps*0.5,2,4)；runner fps=9 → cadence=4 → 每 250ms 換一幀。
+    // 前進「剛好一個換幀週期」讓 floor 參數精確 +1.0，保證跨幀邊界（不依賴 CI 機速）；
+    // 重新確保 runner 在低模取樣期間仍在移動。
+    window.__test.setState({ enemies: [], projectiles: [], gates: [], vehicle: { weaponCooldown: 999 } });
+    window.__test.spawnEnemy("runner", { x: cfg.LOGIC.roadRight - 6, y: state.vehicle.y - 170, speed: 42, animPhase: 0, silent: true });
     window.__test.step(0);
     const lowFirst = window.__test.getRenderDebug();
-    window.__test.step(260);
+    window.__test.step(250);
     const lowSecond = window.__test.getRenderDebug();
     const result = {
       firstFrame: first.enemyAnimationFrames.runner,
