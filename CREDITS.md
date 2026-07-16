@@ -12,7 +12,15 @@
 4. 去背、裁切、縮放、調色與 atlas 打包方式。
 5. 可重建母圖的 gitignored 保存位置，以及對應的製作／量測報告。
 
-R71、R72 已依此格式標註。更早的專案自製圖像只保有 repo 歷史中的「AI 生成／圖生圖」紀錄，精確工具與完整 prompt 未全部保存；下方如實列出檔案範圍，不補寫無法驗證的資訊。
+R71、R72、R73、R78 已依此格式標註。更早的專案自製圖像只保有 repo 歷史中的「AI 生成／圖生圖」紀錄，精確工具與完整 prompt 未全部保存；下方如實列出檔案範圍，不補寫無法驗證的資訊。
+
+## R78 image-generated attack atlases
+
+- 工具：OpenAI built-in image generation（`image_gen`），以每組正式 walk／hurt atlas 為角色身份、鏡位、比例與 painterly-pixel 畫風參考；席安使用 `assets/vehicles/xi_gunner.png` 為砲座與身份參考。
+- 遊戲檔案：`assets/enemies/*_attack.png` 九組四幀 atlas，涵蓋 shambler、runner、bloater、spore spitter、shield husk、swarm mite、tar brute、void wraith、hive titan；以及 `assets/vehicles/xi_gunner_attack.png`。共用外觀的 ash screamer、chain tether、mirror husk、ember tick 沿用基礎組 atlas 與 runtime tint/filter。
+- Prompt 摘要：每張母圖固定一列四個獨立全身姿勢；第 0、1 格為後仰／壓低蓄力，第 2 格為前撲、揮擊、盾撞、吐射或砲擊 impact，第 3 格為收勢；禁止把同一平面圖以平移、旋轉、縮放、擠壓或 bob 冒充姿勢。
+- 背景與後製：依角色色盤使用平坦綠色或洋紅鍵色，經 imagegen skill 的 `remove_chroma_key.py`（auto-key border、soft matte、despill）清理，再由 `scripts/build-r78-attack-atlases.py` 以共同縮放、共同基線與單次 Lanczos 下採樣封裝到 R73 walk frame 介面；席安保持每格 256×384。
+- 母圖：`tools/asset_sources/imagegen_r78/`（刻意 gitignored，不進 runtime cache）；完整 prompt、逐組 alpha 量測與驗收證據見 `docs/CODEX_RESPONSE_ashes_R78.md`。
 
 ## R73 image-generated action atlases
 

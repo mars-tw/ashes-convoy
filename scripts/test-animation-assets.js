@@ -134,7 +134,14 @@ Object.entries(config.ENEMIES).forEach(([enemyId, enemy]) => {
   Object.entries(enemy.spriteActions).forEach(([actionName, action]) => {
     assert.strictEqual(action.frameWidth, animation.frameWidth, `${enemyId} ${actionName} must match walk frame width`);
     assert.strictEqual(action.frameHeight, animation.frameHeight, `${enemyId} ${actionName} must match walk frame height`);
-    assert.strictEqual(action.frames, actionName === "hurt" ? 2 : 3, `${enemyId} ${actionName} frame count mismatch`);
+    const expectedFrames = actionName === "hurt" ? 2 : actionName === "death" ? 3 : actionName === "attack" ? 4 : 0;
+    assert(expectedFrames > 0, `${enemyId} exposes unknown raster action ${actionName}`);
+    assert.strictEqual(action.frames, expectedFrames, `${enemyId} ${actionName} frame count mismatch`);
+    if (actionName === "attack") {
+      assert.deepStrictEqual(action.anticipationFrames, [0, 1], `${enemyId} attack must expose two anticipation poses`);
+      assert.strictEqual(action.impactFrame, 2, `${enemyId} attack impact must use frame 2`);
+      assert.strictEqual(action.recoveryFrame, 3, `${enemyId} attack recovery must use frame 3`);
+    }
     assert(action.fps > 0 && action.fps <= 12, `${enemyId} ${actionName} cadence must stay lightweight`);
     const actionPng = readPngHeader(action.image);
     assert.strictEqual(actionPng.width, action.frameWidth * action.frames, `${enemyId} ${actionName} sheet width mismatch`);
@@ -144,6 +151,19 @@ Object.entries(config.ENEMIES).forEach(([enemyId, enemy]) => {
     assert(minimumDifference > 0.08, `${enemyId} ${actionName} any-frame alpha difference must exceed 0.08, got ${minimumDifference.toFixed(3)}`);
   });
 });
+
+const xiAttack = config.TRAILER_GUNNER && config.TRAILER_GUNNER.attackAtlas;
+assert(xiAttack, "Xi must define a formal raster attack atlas");
+assert.strictEqual(xiAttack.frames, 4, "Xi attack atlas must use four frames");
+assert.deepStrictEqual(xiAttack.anticipationFrames, [0, 1], "Xi must expose two anticipation poses");
+assert.strictEqual(xiAttack.impactFrame, 2, "Xi impact must use frame 2");
+assert.strictEqual(xiAttack.recoveryFrame, 3, "Xi recovery must use frame 3");
+const xiAttackPng = readPngHeader(xiAttack.image);
+assert.strictEqual(xiAttackPng.width, xiAttack.frameWidth * xiAttack.frames, "Xi attack sheet width mismatch");
+assert.strictEqual(xiAttackPng.height, xiAttack.frameHeight, "Xi attack sheet height mismatch");
+assert(swSource.includes(`"${xiAttack.image}"`), "Xi attack atlas must be in the offline app cache");
+const xiAttackDifference = minimumFrameAlphaDifference(xiAttack.image, xiAttack.frameWidth, xiAttack.frameHeight, xiAttack.frames);
+assert(xiAttackDifference > 0.08, `Xi attack any-frame alpha difference must exceed 0.08, got ${xiAttackDifference.toFixed(3)}`);
 
 const regeneratedR71 = {
   shambler: { width: 160, height: 249, minBytes: 30000 },
@@ -189,6 +209,7 @@ assert(gameSource.includes('tier: low ? "low-two" : reduced ? "reduced" : "full"
 assert(gameSource.includes("Math.hypot(enemy.vx || 0, enemy.vy || 0) > 1"), "walk frames must only advance while moving");
 assert(gameSource.includes("const faceLeft = (enemy.vx || 0) < -0.5"), "enemy animation must flip with lateral movement");
 assert(gameSource.includes("buildEnemyActionTint") && gameSource.includes('tier: "hurt"'), "hurt reactions must use pre-tinted raster action frames");
+assert(gameSource.includes("useAttackAtlas") && gameSource.includes("enemyAttackAtlasFrames"), "enemy attacks must prefer formal raster attack atlases and expose their frame index");
 assert(!gameSource.includes('drawSprite(enemy.sprite, "hit"'), "raster hurt may not switch to the code-sprite art style");
 const enemyEntitySource = gameSource.slice(gameSource.indexOf("function drawEnemyEntity"), gameSource.indexOf("function drawEnemyCorpse"));
 assert(!/ctx\.(?:rotate|scale)\(/.test(enemyEntitySource), "enemy raster locomotion may not fake poses with rotate/scale transforms");
@@ -198,5 +219,6 @@ assert(enemyCorpseSource.includes("spriteActions.death") && enemyCorpseSource.in
 assert(!enemyCorpseSource.includes("drawSprite(") && !enemyCorpseSource.includes("effect.sprite"), "drawEnemyCorpse may not reference the code-sprite path");
 assert(gameSource.includes("drawRoadDebrisAtlas") && gameSource.includes("roadDebrisDrawn"), "road debris must expose render diagnostics");
 assert(credits.includes("R73 image-generated action atlases") && credits.includes("Top-down Tanks Remastered"), "R73 image-gen and CC0 support provenance must be documented");
+assert(credits.includes("R78 image-generated attack atlases"), "R78 image-gen attack atlas provenance must be documented");
 
 console.log(`Animation asset guards PASS (${shipped.size} files, ${shippedBytes} bytes)`);

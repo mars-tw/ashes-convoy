@@ -300,12 +300,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R77") && swText.includes("src/ui.js?v=R77") && swText.includes("src/game.js?v=R77") && swText.includes("src/rules.js?v=R77"),
+      swCachesJs: swText.includes("src/version.js?v=R78") && swText.includes("src/ui.js?v=R78") && swText.includes("src/game.js?v=R78") && swText.includes("src/rules.js?v=R78"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R77"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R77"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R77"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R78"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R78"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R78"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -314,7 +314,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R77", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R78", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -704,7 +704,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R77"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R78"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -1160,20 +1160,30 @@ async function checkR71CombatRefresh(page) {
     const windup = {
       frame: windupDebug.companionFrame,
       phase: windupDebug.companionAttackPhase,
+      atlas: windupDebug.companionAttackAtlasDrawn,
       damage: window.__test.getState().stats.damageBySource.companion || 0
     };
     window.__test.step(120);
     const activeDebug = window.__test.getRenderDebug();
     const active = {
       frame: activeDebug.companionFrame,
-      phase: activeDebug.companionAttackPhase
+      phase: activeDebug.companionAttackPhase,
+      atlas: activeDebug.companionAttackAtlasDrawn
     };
-    window.__test.step(1464);
+    window.__test.step(60);
+    const recoveryDebug = window.__test.getRenderDebug();
+    const recovery = {
+      frame: recoveryDebug.companionFrame,
+      phase: recoveryDebug.companionAttackPhase,
+      atlas: recoveryDebug.companionAttackAtlasDrawn
+    };
+    window.__test.step(1404);
     const finalState = window.__test.getState();
     const finalDebug = window.__test.getRenderDebug();
     return {
       windup,
       active,
+      recovery,
       final: {
         damage: finalState.stats.damageBySource.companion || 0,
         drawn: finalDebug.companionRasterDrawn || finalDebug.companionFallbackDrawn
@@ -1182,9 +1192,14 @@ async function checkR71CombatRefresh(page) {
   });
   assert.strictEqual(companionTiming.windup.frame, 0, "Xi should stay out of firing frame during anticipation");
   assert.strictEqual(companionTiming.windup.phase, "anticipation", "Xi companion should expose an anticipation phase");
+  assert.strictEqual(companionTiming.windup.atlas, true, "Xi anticipation must draw the formal attack atlas");
   assert.strictEqual(companionTiming.windup.damage, 0, "Xi companion should not deal damage before the impact frame");
-  assert.strictEqual(companionTiming.active.frame, 1, "Xi sprite sheet should switch to the firing frame on the active impact");
+  assert.strictEqual(companionTiming.active.frame, 2, "Xi formal attack atlas should switch to frame 2 on impact");
   assert.strictEqual(companionTiming.active.phase, "active", "Xi companion should expose active impact phase");
+  assert.strictEqual(companionTiming.active.atlas, true, "Xi impact must draw the formal attack atlas");
+  assert.strictEqual(companionTiming.recovery.frame, 3, "Xi formal attack atlas should switch to frame 3 for recovery");
+  assert.strictEqual(companionTiming.recovery.phase, "recovery", "Xi companion should expose recovery phase");
+  assert.strictEqual(companionTiming.recovery.atlas, true, "Xi recovery must draw the formal attack atlas");
   const companionOn = companionTiming.final;
   assert(companionOn.damage > 0, "companion should deal damage by source");
   assert.strictEqual(companionOn.drawn, true, "companion should render when enabled");
@@ -1667,7 +1682,7 @@ async function checkAdaptivePerformance(page) {
   });
 }
 
-async function checkR77AttackImpactTiming(page) {
+async function checkR78AttackAtlasTiming(page) {
   const ranged = await page.evaluate(() => {
     window.__test.startRun("land_rig");
     const base = window.__test.getState();
@@ -1686,28 +1701,55 @@ async function checkR77AttackImpactTiming(page) {
       }
     });
     window.__test.spawnEnemy("spore_spitter", {
-      id: "r77_spitter",
+      id: "r78_spitter",
       x: base.vehicle.x,
       y: base.vehicle.y - 120,
       speed: 0,
       attackCooldown: 0,
       silent: true
     });
-    window.__test.step(120);
-    const before = window.__test.getState();
-    window.__test.step(320);
-    const after = window.__test.getState();
+    const capture = () => {
+      const current = window.__test.getState();
+      const debug = window.__test.getRenderDebug();
+      return {
+        shots: current.enemyProjectiles.length,
+        phase: current.enemies[0] && current.enemies[0].attackPhase,
+        frame: debug.enemyAttackAtlasFrames.spore_spitter,
+        atlasDrawn: debug.enemyAttackAtlasDrawn
+      };
+    };
+    window.__test.step(40);
+    const anticipationA = capture();
+    window.__test.step(180);
+    const anticipationB = capture();
+    window.__test.step(180);
+    const impact = capture();
+    window.__test.step(80);
+    const recovery = capture();
     return {
-      beforeShots: before.enemyProjectiles.length,
-      beforePhase: before.enemies[0] && before.enemies[0].attackPhase,
-      afterShots: after.enemyProjectiles.length,
-      afterPhase: after.enemies[0] && after.enemies[0].attackPhase
+      anticipationA,
+      anticipationB,
+      impact,
+      recovery
     };
   });
-  assert.strictEqual(ranged.beforeShots, 0, "ranged enemy should not spawn projectile before impact");
-  assert.strictEqual(ranged.beforePhase, "anticipation", "ranged enemy should expose anticipation before impact");
-  assert(ranged.afterShots >= 1, `ranged enemy should spawn projectile on impact: ${JSON.stringify(ranged)}`);
-  assert(["active", "recovery"].includes(ranged.afterPhase), `ranged enemy should enter active/recovery after impact: ${JSON.stringify(ranged)}`);
+  assert.deepStrictEqual(
+    [ranged.anticipationA.phase, ranged.anticipationB.phase, ranged.impact.phase, ranged.recovery.phase],
+    ["anticipation", "anticipation", "active", "recovery"],
+    `ranged attack should expose all ordered phases: ${JSON.stringify(ranged)}`
+  );
+  assert.deepStrictEqual(
+    [ranged.anticipationA.frame, ranged.anticipationB.frame, ranged.impact.frame, ranged.recovery.frame],
+    [0, 1, 2, 3],
+    `ranged formal attack atlas should switch 0/1/2/3 by phase: ${JSON.stringify(ranged)}`
+  );
+  assert.strictEqual(ranged.anticipationA.shots, 0, "ranged enemy must not spawn projectile during anticipation A");
+  assert.strictEqual(ranged.anticipationB.shots, 0, "ranged enemy must not spawn projectile during anticipation B");
+  assert(ranged.impact.shots >= 1, `ranged enemy should spawn projectile on impact frame 2: ${JSON.stringify(ranged)}`);
+  assert(ranged.recovery.shots >= ranged.impact.shots, "ranged recovery must not retract the impact projectile");
+  [ranged.anticipationA, ranged.anticipationB, ranged.impact, ranged.recovery].forEach((phase) => {
+    assert(phase.atlasDrawn > 0, `ranged ${phase.phase} must draw the formal attack atlas`);
+  });
 
   const contact = await page.evaluate(() => {
     window.__test.startRun("land_rig");
@@ -1722,7 +1764,7 @@ async function checkR77AttackImpactTiming(page) {
       vehicle: { x: base.vehicle.x, followX: base.vehicle.x, hp: base.vehicle.maxHp, weaponCooldown: 999 }
     });
     window.__test.spawnEnemy("runner", {
-      id: "r77_contact",
+      id: "r78_contact",
       x: base.vehicle.x,
       y: base.vehicle.y,
       speed: 0,
@@ -1731,20 +1773,41 @@ async function checkR77AttackImpactTiming(page) {
     });
     window.__test.step(40);
     const before = window.__test.getState();
-    window.__test.step(180);
+    const beforeDebug = window.__test.getRenderDebug();
+    window.__test.step(140);
+    const impact = window.__test.getState();
+    const impactDebug = window.__test.getRenderDebug();
+    window.__test.step(100);
+    const recovery = window.__test.getState();
+    const recoveryDebug = window.__test.getRenderDebug();
+    window.__test.step(220);
     const after = window.__test.getState();
     return {
       hpBefore: before.vehicle.hp,
       phaseBefore: before.enemies[0] && before.enemies[0].attackPhase,
+      frameBefore: beforeDebug.enemyAttackAtlasFrames.runner,
+      hpImpact: impact.vehicle.hp,
+      phaseImpact: impact.enemies[0] && impact.enemies[0].attackPhase,
+      frameImpact: impactDebug.enemyAttackAtlasFrames.runner,
+      hpRecovery: recovery.vehicle.hp,
+      phaseRecovery: recovery.enemies[0] && recovery.enemies[0].attackPhase,
+      frameRecovery: recoveryDebug.enemyAttackAtlasFrames.runner,
       hpAfter: after.vehicle.hp,
       enemiesAfter: after.enemies.length,
       corpse: after.effects.some((effect) => effect.kind === "enemy_corpse")
     };
   });
   assert.strictEqual(contact.phaseBefore, "anticipation", "contact enemy should wind up before damage");
-  assert(contact.hpAfter < contact.hpBefore, `contact enemy should damage only on impact: ${JSON.stringify(contact)}`);
-  assert.strictEqual(contact.enemiesAfter, 0, "contact enemy should be retired after impact");
-  assert.strictEqual(contact.corpse, true, "contact enemy should leave a death reaction after impact");
+  assert.strictEqual(contact.frameBefore, 0, "contact anticipation must start on formal frame 0");
+  assert.strictEqual(contact.phaseImpact, "active", "contact enemy should expose active impact before retirement");
+  assert.strictEqual(contact.frameImpact, 2, "contact active impact must draw formal frame 2");
+  assert(contact.hpImpact < contact.hpBefore, `contact enemy should damage only on impact: ${JSON.stringify(contact)}`);
+  assert.strictEqual(contact.phaseRecovery, "recovery", "contact enemy should play recovery after impact");
+  assert.strictEqual(contact.frameRecovery, 3, "contact recovery must draw formal frame 3");
+  assert.strictEqual(contact.hpRecovery, contact.hpImpact, "contact recovery must not deal damage twice");
+  assert.strictEqual(contact.hpAfter, contact.hpImpact, "contact retirement must not deal damage after recovery");
+  assert.strictEqual(contact.enemiesAfter, 0, "contact enemy should retire only after recovery completes");
+  assert.strictEqual(contact.corpse, true, "contact enemy should hand off to the death reaction after recovery");
 
   const boss = await page.evaluate(() => {
     window.__test.startRun("land_rig");
@@ -1759,7 +1822,7 @@ async function checkR77AttackImpactTiming(page) {
       vehicle: { x: base.vehicle.x, followX: base.vehicle.x, weaponCooldown: 999 }
     });
     window.__test.spawnEnemy("boss_hive_titan", {
-      id: "r77_boss",
+      id: "r78_boss",
       x: base.vehicle.x,
       y: 160,
       speed: 0,
@@ -1767,24 +1830,39 @@ async function checkR77AttackImpactTiming(page) {
     });
     window.__test.setState({
       enemies: window.__test.getState().enemies.map((enemy) =>
-        enemy.id === "r77_boss" ? Object.assign({}, enemy, { hp: enemy.maxHp * 0.6 }) : enemy
+        enemy.id === "r78_boss" ? Object.assign({}, enemy, { hp: enemy.maxHp * 0.6 }) : enemy
       )
     });
     window.__test.step(500);
-    const before = window.__test.getState();
-    window.__test.step(650);
-    const after = window.__test.getState();
-    return {
-      beforeAdds: before.enemies.filter((enemy) => enemy.enemyId === "shambler").length,
-      beforePhase: before.enemies.find((enemy) => enemy.id === "r77_boss") && before.enemies.find((enemy) => enemy.id === "r77_boss").attackPhase,
-      afterAdds: after.enemies.filter((enemy) => enemy.enemyId === "shambler").length,
-      afterPhase: after.enemies.find((enemy) => enemy.id === "r77_boss") && after.enemies.find((enemy) => enemy.id === "r77_boss").attackPhase
+    const capture = () => {
+      const current = window.__test.getState();
+      const debug = window.__test.getRenderDebug();
+      const titan = current.enemies.find((enemy) => enemy.id === "r78_boss");
+      return {
+        adds: current.enemies.filter((enemy) => enemy.enemyId === "shambler").length,
+        phase: titan && titan.attackPhase,
+        frame: debug.enemyAttackAtlasFrames.boss_hive_titan
+      };
     };
+    const anticipationA = capture();
+    window.__test.step(300);
+    const anticipationB = capture();
+    window.__test.step(200);
+    const impact = capture();
+    window.__test.step(120);
+    const recovery = capture();
+    return { anticipationA, anticipationB, impact, recovery };
   });
-  assert.strictEqual(boss.beforeAdds, 0, "Boss summon should not happen during anticipation");
-  assert.strictEqual(boss.beforePhase, "anticipation", "Boss phase should expose anticipation");
-  assert(boss.afterAdds >= 3, `Boss summon should happen on impact: ${JSON.stringify(boss)}`);
-  assert(["active", "recovery"].includes(boss.afterPhase), `Boss should enter active/recovery after phase impact: ${JSON.stringify(boss)}`);
+  assert.deepStrictEqual(
+    [boss.anticipationA.frame, boss.anticipationB.frame, boss.impact.frame, boss.recovery.frame],
+    [0, 1, 2, 3],
+    `Boss formal attack atlas should switch 0/1/2/3 by phase: ${JSON.stringify(boss)}`
+  );
+  assert.strictEqual(boss.anticipationA.adds, 0, "Boss summon must not happen during anticipation A");
+  assert.strictEqual(boss.anticipationB.adds, 0, "Boss summon must not happen during anticipation B");
+  assert(boss.impact.adds >= 3, `Boss summon should happen on impact frame 2: ${JSON.stringify(boss)}`);
+  assert.strictEqual(boss.impact.phase, "active", "Boss should expose active phase on impact frame");
+  assert.strictEqual(boss.recovery.phase, "recovery", "Boss should expose recovery after impact");
 }
 
 async function checkRunTrailerRendering(page) {
@@ -2768,7 +2846,9 @@ async function checkR71EnemyRosterBehaviors(page) {
     window.__test.spawnEnemy("chain_tether", { x: state.vehicle.x + 16, y: state.vehicle.y - 44, speed: 0, hp: 150, silent: true });
     window.__test.spawnEnemy("mirror_husk", { x: 164, y: state.vehicle.y - 154, speed: 0, hp: 120, silent: true });
     window.__test.spawnEnemy("ember_tick", { x: 58, y: state.vehicle.y - 130, speed: 0, hp: 80, silent: true });
-    for (let i = 0; i < 3; i += 1) window.__test.step(100);
+    // R77/R78 ranged attacks resolve only on their authored impact beat. Give
+    // both the 0.22s screamer and 0.35s spitter windups time to reach impact.
+    for (let i = 0; i < 5; i += 1) window.__test.step(100);
   });
   await page.waitForFunction(() => {
     const state = window.__test.getState();
@@ -3301,7 +3381,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await checkOpeningHordeGateAndFps(page);
   await checkAimAssistToggle(page);
   await checkAdaptivePerformance(page);
-  await checkR77AttackImpactTiming(page);
+  await checkR78AttackAtlasTiming(page);
   await checkFxIntegration(page);
   await checkR71JuiceFx(page);
   await dragAim(page);
@@ -3643,7 +3723,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r77")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r78")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -3661,7 +3741,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r77")), "R77 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r78")), "R78 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

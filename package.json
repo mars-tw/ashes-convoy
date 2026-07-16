@@ -7,6 +7,7 @@
     "test": "node scripts/test-config.js && node scripts/test-automation-guards.js && node scripts/test-visual-guards.js && node scripts/test-animation-assets.js && node scripts/test-rules.js && node scripts/test-supply-choice.js && node scripts/test-economy.js && node scripts/test-storage.js && node scripts/test-sprites-contract.js && node scripts/test-fx.js && node scripts/test-audio.js",
     "test:e2e": "node scripts/test-e2e.js && node scripts/test-r76-controls.js",
     "test:rwd": "node scripts/test-rwd-matrix.js",
+    "test:perf": "node scripts/test-r78-performance.js",
     "start": "python -m http.server 8000"
   },
   "keywords": [

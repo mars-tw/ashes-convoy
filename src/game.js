@@ -54,10 +54,14 @@
     companionRasterDrawn: false,
     companionFallbackDrawn: false,
     companionImageStatus: "none",
+    companionAttackAtlasStatus: "none",
+    companionAttackAtlasDrawn: false,
     companionPose: null,
     companionAttackPhase: "idle",
     enemyImageStatus: {},
     enemyActionImageStatus: {},
+    enemyAttackAtlasDrawn: 0,
+    enemyAttackAtlasFrames: {},
     enemyAttackPhaseDrawn: false,
     enemyAttackPhase: ""
   };
@@ -449,24 +453,28 @@
   function preloadCompanionImages() {
     if (typeof root.Image !== "function") return;
     const spec = config.TRAILER_GUNNER || {};
-    const src = spec.sprite;
-    if (!src || companionImages[src]) return;
-    const record = { image: new root.Image(), status: "loading", src };
-    record.image.onload = () => {
-      record.status = "loaded";
-      draw();
-    };
-    record.image.onerror = () => {
-      record.status = "failed";
-      draw();
-    };
-    record.image.decoding = "async";
-    record.image.src = src;
-    companionImages[src] = record;
+    const sources = [spec.sprite, spec.attackAtlas && spec.attackAtlas.image].filter(Boolean);
+    sources.forEach((src) => {
+      if (companionImages[src]) return;
+      const record = { image: new root.Image(), status: "loading", src };
+      record.image.onload = () => {
+        record.status = "loaded";
+        draw();
+      };
+      record.image.onerror = () => {
+        record.status = "failed";
+        draw();
+      };
+      record.image.decoding = "async";
+      record.image.src = src;
+      companionImages[src] = record;
+    });
   }
 
-  function companionImageStatus(spec) {
-    const src = spec && spec.sprite;
+  function companionImageStatus(spec, actionName) {
+    const src = actionName === "attack"
+      ? spec && spec.attackAtlas && spec.attackAtlas.image
+      : spec && spec.sprite;
     const record = src ? companionImages[src] : null;
     if (!record) return "none";
     if (record.status === "loaded" && record.image.complete && record.image.naturalWidth > 0) return "loaded";
@@ -2353,7 +2361,9 @@
     if (enemy.boss) {
       enemy.hitCooldown = 1.15;
     } else {
-      addContactDeathReaction(enemy);
+      // Preserve the authored impact and recovery poses before handing the
+      // visual over to the R73 death atlas. Damage has already resolved once.
+      enemy.contactRetirePending = true;
     }
   }
 
@@ -2384,6 +2394,11 @@
     if (state.time >= attack.recoverUntil || enemy.dead) {
       enemy.attackState = null;
       enemy.attackPhase = "idle";
+      if (!enemy.dead && enemy.contactRetirePending) {
+        enemy.contactRetirePending = false;
+        addContactDeathReaction(enemy);
+        return;
+      }
       if (!enemy.dead && !enemy.rageUntil) enemy.anim = "walk";
     }
   }
@@ -4479,12 +4494,23 @@
     return Math.min(frames - 1, Math.floor(Math.max(0, elapsedSeconds) * (animation.fps || 6)));
   }
 
-  function enemyAttackFrame(enemy, animation) {
+  function phasedAttackFrame(attackState, animation) {
     const frames = Math.max(1, animation.frames || 1);
-    const phase = enemy.attackPhase || (enemy.attackState && enemy.attackState.phase) || "anticipation";
-    if (phase === "active") return Math.min(frames - 1, Math.max(1, Math.floor(frames * 0.55)));
-    if (phase === "recovery") return Math.min(frames - 1, Math.max(1, frames - 1));
-    return Math.min(frames - 1, Math.max(0, Math.floor(frames * 0.25)));
+    const clampFrame = (frame, fallback) => Math.min(frames - 1, Math.max(0, Number.isFinite(frame) ? Math.floor(frame) : fallback));
+    const phase = (attackState && attackState.phase) || "anticipation";
+    if (phase === "active") return clampFrame(animation.impactFrame, Math.max(1, Math.floor(frames * 0.55)));
+    if (phase === "recovery") return clampFrame(animation.recoveryFrame, frames - 1);
+    const anticipationFrames = Array.isArray(animation.anticipationFrames) && animation.anticipationFrames.length
+      ? animation.anticipationFrames.map((frame) => clampFrame(frame, 0))
+      : [clampFrame(Math.floor(frames * 0.25), 0)];
+    if (!attackState || anticipationFrames.length === 1) return anticipationFrames[0];
+    const duration = Math.max(0.001, attackState.impactAt - attackState.startedAt);
+    const progress = Math.max(0, Math.min(0.999, (stateTime() - attackState.startedAt) / duration));
+    return anticipationFrames[Math.min(anticipationFrames.length - 1, Math.floor(progress * anticipationFrames.length))];
+  }
+
+  function enemyAttackFrame(enemy, animation) {
+    return phasedAttackFrame(enemy.attackState, animation);
   }
 
   function drawEnemyEntity(enemy, timeMs, alpha, anim) {
@@ -4505,10 +4531,18 @@
     const hurtRecord = hurtAnimation && record && record.actions ? record.actions.hurt : null;
     const useHurtAtlas = !!hurtRecord && enemyActionImageStatus(enemy.enemyId, "hurt") === "loaded";
     const attackActive = !hurtActive && enemy.attackState && enemy.attackPhase && enemy.attackPhase !== "idle";
+    const attackAnimation = attackActive && enemyConfig && enemyConfig.spriteActions
+      ? enemyConfig.spriteActions.attack
+      : null;
+    const attackRecord = attackAnimation && record && record.actions ? record.actions.attack : null;
+    const useAttackAtlas = !!attackRecord && enemyActionImageStatus(enemy.enemyId, "attack") === "loaded";
 
     if (renderDebug.enemyImageStatus) renderDebug.enemyImageStatus[enemy.enemyId] = status;
     if (hurtActive && renderDebug.enemyActionImageStatus) {
       renderDebug.enemyActionImageStatus[`${enemy.enemyId}:hurt`] = enemyActionImageStatus(enemy.enemyId, "hurt");
+    }
+    if (attackActive && renderDebug.enemyActionImageStatus) {
+      renderDebug.enemyActionImageStatus[`${enemy.enemyId}:attack`] = enemyActionImageStatus(enemy.enemyId, "attack");
     }
     // The physics root/collider stays at enemy.x/y.  R73 raster locomotion and
     // hurt poses carry all visual motion; only authored hit knockback offsets
@@ -4516,8 +4550,8 @@
     drawEnemyShadow(enemy, width, 0, drawAlpha, knockX, knockY);
 
     if (record && status === "loaded") {
-      const activeRecord = useHurtAtlas ? hurtRecord : record;
-      const activeAnimation = useHurtAtlas ? hurtAnimation : animation;
+      const activeRecord = useHurtAtlas ? hurtRecord : useAttackAtlas ? attackRecord : record;
+      const activeAnimation = useHurtAtlas ? hurtAnimation : useAttackAtlas ? attackAnimation : animation;
       const image = activeRecord.tintCanvas || activeRecord.image;
       const hurtElapsed = Math.max(0, (enemy.hitFlashMax || 0.2) - (enemy.hitFlash || 0));
       const frameState = useHurtAtlas
@@ -4571,6 +4605,10 @@
         if (attackActive) {
           renderDebug.enemyAttackPhaseDrawn = true;
           renderDebug.enemyAttackPhase = enemy.attackPhase;
+          if (useAttackAtlas) {
+            renderDebug.enemyAttackAtlasDrawn += 1;
+            renderDebug.enemyAttackAtlasFrames[enemy.enemyId] = frameState.frame;
+          }
         }
         if (activeAnimation.armored) renderDebug.enemyArmoredDrawn += 1;
         if (faceLeft) renderDebug.enemyFacingLeftDrawn += 1;
@@ -5232,19 +5270,31 @@
     const pose = state.companionPose || updateCompanionPose(0);
     const status = companionImageStatus(spec);
     const record = spec.sprite ? companionImages[spec.sprite] : null;
-    const frameCount = Math.max(1, Number.isFinite(spec.frames) ? Math.floor(spec.frames) : 1);
-    const frameWidth = record && record.image && record.image.naturalWidth > 0
-      ? record.image.naturalWidth / frameCount
+    const companionAttack = state.companionAttackState || null;
+    const companionAttackPhase = companionAttack ? companionAttack.phase : "idle";
+    const attackAtlas = spec.attackAtlas || null;
+    const attackStatus = companionImageStatus(spec, "attack");
+    const attackRecord = attackAtlas && attackAtlas.image ? companionImages[attackAtlas.image] : null;
+    const useAttackAtlas = companionAttackPhase !== "idle" && attackRecord && attackStatus === "loaded";
+    const activeRecord = useAttackAtlas ? attackRecord : record;
+    const frameCount = useAttackAtlas
+      ? Math.max(1, Number.isFinite(attackAtlas.frames) ? Math.floor(attackAtlas.frames) : 1)
+      : Math.max(1, Number.isFinite(spec.frames) ? Math.floor(spec.frames) : 1);
+    const frameWidth = activeRecord && activeRecord.image && activeRecord.image.naturalWidth > 0
+      ? activeRecord.image.naturalWidth / frameCount
       : 0;
     const width = spec.visualWidth || 30;
     const height =
-      record && record.image && frameWidth > 0
-        ? width * (record.image.naturalHeight / frameWidth)
+      activeRecord && activeRecord.image && frameWidth > 0
+        ? width * (activeRecord.image.naturalHeight / frameWidth)
         : width * 1.33;
-    const companionAttack = state.companionAttackState || null;
-    const companionAttackPhase = companionAttack ? companionAttack.phase : "idle";
-    const frame = frameCount > 1 && (companionAttackPhase === "active" || state.companionFiringUntil > state.time) ? 1 : 0;
+    const frame = useAttackAtlas
+      ? phasedAttackFrame(companionAttack, attackAtlas)
+      : frameCount > 1 && (companionAttackPhase === "active" || state.companionFiringUntil > state.time)
+        ? 1
+        : 0;
     renderDebug.companionImageStatus = status;
+    renderDebug.companionAttackAtlasStatus = attackStatus;
     renderDebug.companionPose = {
       x: Math.round(pose.x * 10) / 10,
       y: Math.round(pose.y * 10) / 10,
@@ -5253,18 +5303,18 @@
     renderDebug.companionFrame = frame;
     renderDebug.companionAttackPhase = companionAttackPhase;
 
-    if (record && status === "loaded") {
+    if (activeRecord && (useAttackAtlas ? attackStatus : status) === "loaded") {
       ctx.save();
       ctx.translate(pose.x, pose.y + pose.bobY);
       ctx.rotate(pose.rotation);
       ctx.globalAlpha *= spec.alpha == null ? 0.96 : spec.alpha;
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(
-        record.image,
+        activeRecord.image,
         frame * frameWidth,
         0,
         frameWidth,
-        record.image.naturalHeight,
+        activeRecord.image.naturalHeight,
         -width * 0.5,
         -height * 0.64,
         width,
@@ -5272,6 +5322,7 @@
       );
       ctx.restore();
       renderDebug.companionRasterDrawn = true;
+      renderDebug.companionAttackAtlasDrawn = !!useAttackAtlas;
       return;
     }
 
@@ -5710,6 +5761,8 @@
       companionRasterDrawn: false,
       companionFallbackDrawn: false,
       companionImageStatus: "none",
+      companionAttackAtlasStatus: "none",
+      companionAttackAtlasDrawn: false,
       companionPose: null,
       companionFrame: 0,
       companionAttackPhase: "idle",
@@ -5722,6 +5775,8 @@
       enemyShadowDrawn: 0,
       enemyImageStatus: {},
       enemyActionImageStatus: {},
+      enemyAttackAtlasDrawn: 0,
+      enemyAttackAtlasFrames: {},
       enemyAnimatedDrawn: 0,
       enemyArmoredDrawn: 0,
       enemyHurtPoseDrawn: 0,

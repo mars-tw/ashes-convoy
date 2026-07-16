@@ -1,0 +1,225 @@
+{
+  "createdAt": "2026-07-16T15:28:01.628Z",
+  "release": "R78",
+  "budgetMs": 18,
+  "method": "Playwright Chromium synchronous window.__test.step(16) simulation+draw wall time; 60 warmup steps; 220 measured steps; 54 seeded raster enemies; browser launched with --disable-gpu --disable-accelerated-2d-canvas",
+  "results": [
+    {
+      "scenario": "auto-reduced",
+      "settings": {
+        "performanceMode": "auto",
+        "fxLevel": "reduced"
+      },
+      "viewport": {
+        "label": "desktop-1366x700",
+        "width": 1366,
+        "height": 700
+      },
+      "seededEnemies": 54,
+      "logicalEnemyCap": 72,
+      "runs": [
+        {
+          "run": 1,
+          "sampleCount": 220,
+          "p50Ms": 2.4,
+          "p95Ms": 3.8,
+          "maxMs": 5.8,
+          "enemies": 54,
+          "quality": "low",
+          "attackAtlasSeen": true,
+          "enemyRasterDrawn": 54,
+          "enemyFallbackDrawn": 0
+        },
+        {
+          "run": 2,
+          "sampleCount": 220,
+          "p50Ms": 2.1,
+          "p95Ms": 3.7,
+          "maxMs": 6.4,
+          "enemies": 54,
+          "quality": "low",
+          "attackAtlasSeen": true,
+          "enemyRasterDrawn": 54,
+          "enemyFallbackDrawn": 0
+        },
+        {
+          "run": 3,
+          "sampleCount": 220,
+          "p50Ms": 2.1,
+          "p95Ms": 3,
+          "maxMs": 5.4,
+          "enemies": 54,
+          "quality": "low",
+          "attackAtlasSeen": true,
+          "enemyRasterDrawn": 54,
+          "enemyFallbackDrawn": 0
+        }
+      ],
+      "medianP95Ms": 3.7,
+      "pass": true
+    },
+    {
+      "scenario": "auto-reduced",
+      "settings": {
+        "performanceMode": "auto",
+        "fxLevel": "reduced"
+      },
+      "viewport": {
+        "label": "phone-390x844",
+        "width": 390,
+        "height": 844
+      },
+      "seededEnemies": 54,
+      "logicalEnemyCap": 72,
+      "runs": [
+        {
+          "run": 1,
+          "sampleCount": 220,
+          "p50Ms": 2.4,
+          "p95Ms": 4.7,
+          "maxMs": 8.2,
+          "enemies": 54,
+          "quality": "low",
+          "attackAtlasSeen": true,
+          "enemyRasterDrawn": 54,
+          "enemyFallbackDrawn": 0
+        },
+        {
+          "run": 2,
+          "sampleCount": 220,
+          "p50Ms": 2.2,
+          "p95Ms": 3.2,
+          "maxMs": 6.8,
+          "enemies": 54,
+          "quality": "low",
+          "attackAtlasSeen": true,
+          "enemyRasterDrawn": 54,
+          "enemyFallbackDrawn": 0
+        },
+        {
+          "run": 3,
+          "sampleCount": 220,
+          "p50Ms": 1.7,
+          "p95Ms": 2.1,
+          "maxMs": 4.7,
+          "enemies": 54,
+          "quality": "low",
+          "attackAtlasSeen": true,
+          "enemyRasterDrawn": 54,
+          "enemyFallbackDrawn": 0
+        }
+      ],
+      "medianP95Ms": 3.2,
+      "pass": true
+    },
+    {
+      "scenario": "low-reduced",
+      "settings": {
+        "performanceMode": "low",
+        "fxLevel": "reduced"
+      },
+      "viewport": {
+        "label": "desktop-1366x700",
+        "width": 1366,
+        "height": 700
+      },
+      "seededEnemies": 54,
+      "logicalEnemyCap": 72,
+      "runs": [
+        {
+          "run": 1,
+          "sampleCount": 220,
+          "p50Ms": 2.3,
+          "p95Ms": 3,
+          "maxMs": 5.7,
+          "enemies": 54,
+          "quality": "low",
+          "attackAtlasSeen": true,
+          "enemyRasterDrawn": 54,
+          "enemyFallbackDrawn": 0
+        },
+        {
+          "run": 2,
+          "sampleCount": 220,
+          "p50Ms": 2.3,
+          "p95Ms": 3.3,
+          "maxMs": 5.8,
+          "enemies": 54,
+          "quality": "low",
+          "attackAtlasSeen": true,
+          "enemyRasterDrawn": 54,
+          "enemyFallbackDrawn": 0
+        },
+        {
+          "run": 3,
+          "sampleCount": 220,
+          "p50Ms": 2.2,
+          "p95Ms": 3.5,
+          "maxMs": 5.7,
+          "enemies": 54,
+          "quality": "low",
+          "attackAtlasSeen": true,
+          "enemyRasterDrawn": 54,
+          "enemyFallbackDrawn": 0
+        }
+      ],
+      "medianP95Ms": 3.3,
+      "pass": true
+    },
+    {
+      "scenario": "low-reduced",
+      "settings": {
+        "performanceMode": "low",
+        "fxLevel": "reduced"
+      },
+      "viewport": {
+        "label": "phone-390x844",
+        "width": 390,
+        "height": 844
+      },
+      "seededEnemies": 54,
+      "logicalEnemyCap": 72,
+      "runs": [
+        {
+          "run": 1,
+          "sampleCount": 220,
+          "p50Ms": 2.4,
+          "p95Ms": 3.6,
+          "maxMs": 6.3,
+          "enemies": 54,
+          "quality": "low",
+          "attackAtlasSeen": true,
+          "enemyRasterDrawn": 54,
+          "enemyFallbackDrawn": 0
+        },
+        {
+          "run": 2,
+          "sampleCount": 220,
+          "p50Ms": 2.2,
+          "p95Ms": 3.7,
+          "maxMs": 6.5,
+          "enemies": 54,
+          "quality": "low",
+          "attackAtlasSeen": true,
+          "enemyRasterDrawn": 54,
+          "enemyFallbackDrawn": 0
+        },
+        {
+          "run": 3,
+          "sampleCount": 220,
+          "p50Ms": 2.2,
+          "p95Ms": 3.2,
+          "maxMs": 5,
+          "enemies": 54,
+          "quality": "low",
+          "attackAtlasSeen": true,
+          "enemyRasterDrawn": 54,
+          "enemyFallbackDrawn": 0
+        }
+      ],
+      "medianP95Ms": 3.6,
+      "pass": true
+    }
+  ],
+  "pass": true
+}

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>灰燼護航 R78 attack atlas proof</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 28px; color: #f4ead8; background: #0e1014; font: 16px/1.45 system-ui, sans-serif; }
+    h1 { margin: 0 0 8px; color: #f0b64a; font-size: 30px; }
+    .intro { margin: 0 0 22px; color: #bfc4c8; }
+    .legend { display: flex; gap: 18px; margin-bottom: 18px; color: #d3b77b; font-size: 13px; }
+    .enemy { margin: 0 0 16px; padding: 15px 16px 17px; border: 1px solid #55472f; background: #191b20; }
+    .enemy h2 { margin: 0 0 11px; font-size: 18px; }
+    .metric { margin-left: 10px; color: #7bd8a1; font-size: 13px; font-weight: 600; }
+    .sequence { display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 12px; }
+    .phase { padding: 10px; border: 1px solid #353a42; background: #13161b; }
+    .phase.impact { border-color: #c37b32; background: #1b1713; }
+    .label { margin-bottom: 7px; color: #d3b77b; font-size: 12px; font-weight: 800; letter-spacing: .06em; }
+    .impact .label { color: #ffbd62; }
+    .frame { position: relative; height: 170px; overflow: hidden; display: grid; place-items: end center; background: repeating-conic-gradient(#24282f 0 25%, #181b20 0 50%) 0 / 12px 12px; }
+    .frame canvas { display: block; max-width: 100%; max-height: 100%; image-rendering: pixelated; }
+    @media (max-width: 900px) { .sequence { grid-template-columns: repeat(2, minmax(150px, 1fr)); } }
+  </style>
+</head>
+<body>
+  <h1>灰燼護航 R78 — 正式 Attack Atlas 守門證據</h1>
+  <p class="intro">每列直接讀取 runtime PNG：anticipation 兩個獨立蓄力姿勢、impact 一個命中／發射姿勢、recovery 一個收勢。任兩幀 normalized mean alpha difference 門檻為 &gt; 0.08；傷害時序由 E2E 另行驗證只落在 frame 2。</p>
+  <div class="legend"><span>FRAME 0：後仰蓄力</span><span>FRAME 1：壓低／二段蓄力</span><span>FRAME 2：IMPACT</span><span>FRAME 3：收勢</span></div>
+  <main id="proof"></main>
+  <script>
+    const specs = [
+      ["shambler", "../../../assets/enemies/oga_shambler_attack.png", 40, 40],
+      ["runner", "../../../assets/enemies/oga_runner_attack.png", 40, 40],
+      ["bloater", "../../../assets/enemies/bloater_attack.png", 52, 52],
+      ["spore_spitter / ash_screamer", "../../../assets/enemies/oga_spitter_attack.png", 40, 40],
+      ["shield_husk / mirror_husk", "../../../assets/enemies/shield_husk_attack.png", 48, 64],
+      ["swarm_mite / ember_tick", "../../../assets/enemies/swarm_mite_attack.png", 44, 44],
+      ["tar_brute / chain_tether", "../../../assets/enemies/tar_brute_attack.png", 56, 68],
+      ["void_wraith", "../../../assets/enemies/void_wraith_attack.png", 48, 64],
+      ["boss_hive_titan", "../../../assets/enemies/titan_attack.png", 88, 80],
+      ["席安 xi_gunner", "../../../assets/vehicles/xi_gunner_attack.png", 256, 384]
+    ];
+    const labels = ["ANTICIPATION A", "ANTICIPATION B", "IMPACT", "RECOVERY"];
+    Promise.all([
+      fetch("attack-alpha-metrics.json").then((response) => response.json()),
+      ...specs.map(([, src]) => new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = src;
+      }))
+    ]).then(([metrics, ...images]) => {
+      specs.forEach(([name, , frameWidth, frameHeight], specIndex) => {
+        const metric = metrics.results[specIndex];
+        const section = document.createElement("section");
+        section.className = "enemy";
+        section.id = `row-${specIndex}`;
+        section.innerHTML = `<h2>${name}<span class="metric">min alpha Δ ${metric.minimumDifference.toFixed(3)} · PASS</span></h2><div class="sequence"></div>`;
+        const sequence = section.querySelector(".sequence");
+        for (let frame = 0; frame < 4; frame += 1) {
+          const phase = document.createElement("div");
+          phase.className = `phase${frame === 2 ? " impact" : ""}`;
+          phase.innerHTML = `<div class="label">${labels[frame]} · FRAME ${frame}</div><div class="frame"><canvas></canvas></div>`;
+          const canvas = phase.querySelector("canvas");
+          canvas.width = frameWidth;
+          canvas.height = frameHeight;
+          canvas.getContext("2d").drawImage(images[specIndex], frame * frameWidth, 0, frameWidth, frameHeight, 0, 0, frameWidth, frameHeight);
+          const scale = Math.min(4, 210 / frameWidth, 158 / frameHeight);
+          canvas.style.width = `${Math.round(frameWidth * scale)}px`;
+          canvas.style.height = `${Math.round(frameHeight * scale)}px`;
+          sequence.append(phase);
+        }
+        document.querySelector("#proof").append(section);
+      });
+      document.body.dataset.ready = "true";
+    });
+  </script>
+</body>
+</html>

@@ -4,7 +4,7 @@ const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 3;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R77", CACHE_VERSION: "ashes-convoy-r77-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R78", CACHE_VERSION: "ashes-convoy-r78-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -57,6 +57,15 @@ const TRAILER_GUNNER = {
   enabledDefault: true,
   sprite: "assets/vehicles/xi_gunner.png",
   frames: 2,
+  attackAtlas: {
+    image: "assets/vehicles/xi_gunner_attack.png",
+    frames: 4,
+    frameWidth: 256,
+    frameHeight: 384,
+    anticipationFrames: [0, 1],
+    impactFrame: 2,
+    recoveryFrame: 3
+  },
   visualWidth: 28,
   offsetX: 0,
   offsetY: 34,
@@ -399,38 +408,47 @@ const WEAPONS = {
 // their base visual; runtime tint/filter remains a separate presentation layer.
 const ENEMY_ACTION_ATLASES = {
   shambler: {
+    attack: { image: "assets/enemies/oga_shambler_attack.png", frames: 4, frameWidth: 40, frameHeight: 40, fps: 8, anticipationFrames: [0, 1], impactFrame: 2, recoveryFrame: 3 },
     hurt: { image: "assets/enemies/oga_shambler_hurt.png", frames: 2, frameWidth: 40, frameHeight: 40, fps: 10 },
     death: { image: "assets/enemies/oga_shambler_death.png", frames: 3, frameWidth: 40, frameHeight: 40, fps: 6 }
   },
   runner: {
+    attack: { image: "assets/enemies/oga_runner_attack.png", frames: 4, frameWidth: 40, frameHeight: 40, fps: 10, anticipationFrames: [0, 1], impactFrame: 2, recoveryFrame: 3 },
     hurt: { image: "assets/enemies/oga_runner_hurt.png", frames: 2, frameWidth: 40, frameHeight: 40, fps: 10 },
     death: { image: "assets/enemies/oga_runner_death.png", frames: 3, frameWidth: 40, frameHeight: 40, fps: 6 }
   },
   bloater: {
+    attack: { image: "assets/enemies/bloater_attack.png", frames: 4, frameWidth: 52, frameHeight: 52, fps: 7, anticipationFrames: [0, 1], impactFrame: 2, recoveryFrame: 3 },
     hurt: { image: "assets/enemies/bloater_hurt.png", frames: 2, frameWidth: 52, frameHeight: 52, fps: 10 },
     death: { image: "assets/enemies/bloater_death.png", frames: 3, frameWidth: 52, frameHeight: 52, fps: 6 }
   },
   spore_spitter: {
+    attack: { image: "assets/enemies/oga_spitter_attack.png", frames: 4, frameWidth: 40, frameHeight: 40, fps: 8, anticipationFrames: [0, 1], impactFrame: 2, recoveryFrame: 3 },
     hurt: { image: "assets/enemies/oga_spitter_hurt.png", frames: 2, frameWidth: 40, frameHeight: 40, fps: 10 },
     death: { image: "assets/enemies/oga_spitter_death.png", frames: 3, frameWidth: 40, frameHeight: 40, fps: 6 }
   },
   shield_husk: {
+    attack: { image: "assets/enemies/shield_husk_attack.png", frames: 4, frameWidth: 48, frameHeight: 64, fps: 7, anticipationFrames: [0, 1], impactFrame: 2, recoveryFrame: 3 },
     hurt: { image: "assets/enemies/shield_husk_hurt.png", frames: 2, frameWidth: 48, frameHeight: 64, fps: 10 },
     death: { image: "assets/enemies/shield_husk_death.png", frames: 3, frameWidth: 48, frameHeight: 64, fps: 6 }
   },
   swarm_mite: {
+    attack: { image: "assets/enemies/swarm_mite_attack.png", frames: 4, frameWidth: 44, frameHeight: 44, fps: 10, anticipationFrames: [0, 1], impactFrame: 2, recoveryFrame: 3 },
     hurt: { image: "assets/enemies/swarm_mite_hurt.png", frames: 2, frameWidth: 44, frameHeight: 44, fps: 10 },
     death: { image: "assets/enemies/swarm_mite_death.png", frames: 3, frameWidth: 44, frameHeight: 44, fps: 6 }
   },
   tar_brute: {
+    attack: { image: "assets/enemies/tar_brute_attack.png", frames: 4, frameWidth: 56, frameHeight: 68, fps: 6, anticipationFrames: [0, 1], impactFrame: 2, recoveryFrame: 3 },
     hurt: { image: "assets/enemies/tar_brute_hurt.png", frames: 2, frameWidth: 56, frameHeight: 68, fps: 10 },
     death: { image: "assets/enemies/tar_brute_death.png", frames: 3, frameWidth: 56, frameHeight: 68, fps: 6 }
   },
   void_wraith: {
+    attack: { image: "assets/enemies/void_wraith_attack.png", frames: 4, frameWidth: 48, frameHeight: 64, fps: 8, anticipationFrames: [0, 1], impactFrame: 2, recoveryFrame: 3 },
     hurt: { image: "assets/enemies/void_wraith_hurt.png", frames: 2, frameWidth: 48, frameHeight: 64, fps: 10 },
     death: { image: "assets/enemies/void_wraith_death.png", frames: 3, frameWidth: 48, frameHeight: 64, fps: 6 }
   },
   boss_hive_titan: {
+    attack: { image: "assets/enemies/titan_attack.png", frames: 4, frameWidth: 88, frameHeight: 80, fps: 6, anticipationFrames: [0, 1], impactFrame: 2, recoveryFrame: 3 },
     hurt: { image: "assets/enemies/titan_hurt.png", frames: 2, frameWidth: 88, frameHeight: 80, fps: 10 },
     death: { image: "assets/enemies/titan_death.png", frames: 3, frameWidth: 88, frameHeight: 80, fps: 6 }
   }
