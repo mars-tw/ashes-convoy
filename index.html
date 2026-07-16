@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-Hant-TW">
   <head>
     <meta charset="utf-8" />
@@ -13,8 +13,8 @@
     <meta name="theme-color" content="#111317" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="manifest.webmanifest?v=R76" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R76" />
+    <link rel="manifest" href="manifest.webmanifest?v=R77" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R77" />
     <link rel="canonical" href="https://mars-tw.github.io/ashes-convoy/" />
     <title>灰燼護航</title>
     <style>
@@ -1919,7 +1919,7 @@
             <span id="trailerBonusText">HP +0% · 傷害 +0% · 射速 +0% · 承傷 -0%</span>
           </div>
           <section class="story-log-section" id="storyLogSection" aria-label="無線電日誌" hidden>
-            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R76" alt="熹" decoding="async" draggable="false" />
+            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R77" alt="熹" decoding="async" draggable="false" />
             <div class="story-log-list" id="storyLogList"></div>
           </section>
           <div class="trailer-room-body">
@@ -2005,6 +2005,14 @@
                 <label class="settings-row">
                   <small>音效</small>
                   <input id="soundToggle" type="checkbox" />
+                </label>
+                <label class="settings-row">
+                  <small>音量</small>
+                  <select id="sfxVolumeSelect">
+                    <option value="low">低</option>
+                    <option value="medium">中</option>
+                    <option value="high">高</option>
+                  </select>
                 </label>
                 <label class="settings-row">
                   <small>出勤拖車</small>
@@ -2126,7 +2134,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R76";
+        var key = "ashes_convoy_html_boot_reload_R77";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -2143,15 +2151,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R76"></script>
-    <script src="src/sprites.js?v=R76"></script>
-    <script src="src/sprite-renderer.js?v=R76"></script>
-    <script src="src/shelter-scene.js?v=R76"></script>
-    <script src="src/config.js?v=R76"></script>
-    <script src="src/rules.js?v=R76"></script>
-    <script src="src/fx.js?v=R76"></script>
-    <script src="src/audio.js?v=R76"></script>
-    <script src="src/game.js?v=R76"></script>
-    <script src="src/ui.js?v=R76"></script>
+    <script src="src/version.js?v=R77"></script>
+    <script src="src/sprites.js?v=R77"></script>
+    <script src="src/sprite-renderer.js?v=R77"></script>
+    <script src="src/shelter-scene.js?v=R77"></script>
+    <script src="src/config.js?v=R77"></script>
+    <script src="src/rules.js?v=R77"></script>
+    <script src="src/fx.js?v=R77"></script>
+    <script src="src/audio.js?v=R77"></script>
+    <script src="src/game.js?v=R77"></script>
+    <script src="src/ui.js?v=R77"></script>
   </body>
 </html>

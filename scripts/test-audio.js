@@ -7,7 +7,7 @@ const path = require("path");
 const audio = require("../src/audio.js");
 const config = require("../src/config.js");
 
-const EVENTS = ["shoot", "hit", "kill", "bossWarn", "bossKill", "pickup", "hurt", "gateChoice", "waveStart"];
+const EVENTS = ["shoot", "hit", "kill", "bossWarn", "bossKill", "pickup", "hurt", "gateChoice", "gateBreak", "alarm", "ui", "waveStart"];
 const OSC_WAVES = ["sine", "triangle", "square", "sawtooth"];
 const NOISE_FILTERS = ["lowpass", "highpass", "bandpass"];
 
@@ -274,6 +274,7 @@ function createFakeContext() {
   // 不同變體與不同事件不受同 key 節流影響。
   assert(audio.playEvent(engine, "shoot", { variant: "void_runner" }) > 0, "不同載具變體應各自節流");
   assert(audio.playEvent(engine, "hit") > 0, "不同事件應各自節流");
+  assert(audio.playEvent(engine, "gateBreak", { volume: 0.45 }) > 0, "破門音效應可套用音量係數播放");
 
   // 時間前進超過節流窗後可再播。
   ctx.currentTime = 0.06;

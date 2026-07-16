@@ -1,0 +1,281 @@
+{
+  "createdAt": "2026-07-16T07:01:28.365Z",
+  "budgetMs": 18,
+  "method": "Playwright Chromium synchronous window.__test.step(16) simulation+draw wall time; 60 warmup steps; 220 measured steps; 54 seeded enemies plus natural spawns capped at 72; browser args match e2e --disable-gpu --disable-accelerated-2d-canvas",
+  "fairnessNote": "performanceMode/fxLevel change visual cost only; R77 config keeps high and low logical enemy cap at 72 and enemyAnimScale at 1.",
+  "results": [
+    {
+      "scenario": "auto-reduced-default-visual-cost",
+      "settings": {
+        "performanceMode": "auto",
+        "fxLevel": "reduced",
+        "reducedFlash": false,
+        "screenShake": false
+      },
+      "viewport": {
+        "label": "desktop-1366x700",
+        "width": 1366,
+        "height": 700
+      },
+      "seededEnemies": 54,
+      "logicalEnemyCap": 72,
+      "runs": [
+        {
+          "run": 1,
+          "sampleCount": 220,
+          "p50Ms": 8.4,
+          "p95Ms": 12.3,
+          "maxMs": 22.1,
+          "enemies": 72,
+          "render": {
+            "enemies": 72,
+            "quality": "low",
+            "fxLevel": "reduced",
+            "enemyRasterDrawn": 72,
+            "enemyFallbackDrawn": 0,
+            "fxActive": 9
+          }
+        },
+        {
+          "run": 2,
+          "sampleCount": 220,
+          "p50Ms": 4.1,
+          "p95Ms": 10.1,
+          "maxMs": 13.3,
+          "enemies": 72,
+          "render": {
+            "enemies": 72,
+            "quality": "low",
+            "fxLevel": "reduced",
+            "enemyRasterDrawn": 72,
+            "enemyFallbackDrawn": 0,
+            "fxActive": 6
+          }
+        },
+        {
+          "run": 3,
+          "sampleCount": 220,
+          "p50Ms": 2.8,
+          "p95Ms": 4.2,
+          "maxMs": 5.4,
+          "enemies": 72,
+          "render": {
+            "enemies": 72,
+            "quality": "low",
+            "fxLevel": "reduced",
+            "enemyRasterDrawn": 72,
+            "enemyFallbackDrawn": 0,
+            "fxActive": 7
+          }
+        }
+      ],
+      "medianP95Ms": 10.1,
+      "pass": true
+    },
+    {
+      "scenario": "auto-reduced-default-visual-cost",
+      "settings": {
+        "performanceMode": "auto",
+        "fxLevel": "reduced",
+        "reducedFlash": false,
+        "screenShake": false
+      },
+      "viewport": {
+        "label": "phone-390x844",
+        "width": 390,
+        "height": 844
+      },
+      "seededEnemies": 54,
+      "logicalEnemyCap": 72,
+      "runs": [
+        {
+          "run": 1,
+          "sampleCount": 220,
+          "p50Ms": 2.8,
+          "p95Ms": 4.5,
+          "maxMs": 9,
+          "enemies": 72,
+          "render": {
+            "enemies": 72,
+            "quality": "low",
+            "fxLevel": "reduced",
+            "enemyRasterDrawn": 72,
+            "enemyFallbackDrawn": 0,
+            "fxActive": 5
+          }
+        },
+        {
+          "run": 2,
+          "sampleCount": 220,
+          "p50Ms": 2.6,
+          "p95Ms": 4.7,
+          "maxMs": 8,
+          "enemies": 72,
+          "render": {
+            "enemies": 72,
+            "quality": "low",
+            "fxLevel": "reduced",
+            "enemyRasterDrawn": 72,
+            "enemyFallbackDrawn": 0,
+            "fxActive": 5
+          }
+        },
+        {
+          "run": 3,
+          "sampleCount": 220,
+          "p50Ms": 2.5,
+          "p95Ms": 3.9,
+          "maxMs": 6.9,
+          "enemies": 72,
+          "render": {
+            "enemies": 72,
+            "quality": "low",
+            "fxLevel": "reduced",
+            "enemyRasterDrawn": 72,
+            "enemyFallbackDrawn": 0,
+            "fxActive": 7
+          }
+        }
+      ],
+      "medianP95Ms": 4.5,
+      "pass": true
+    },
+    {
+      "scenario": "low-reduced-visual-cost",
+      "settings": {
+        "performanceMode": "low",
+        "fxLevel": "reduced",
+        "reducedFlash": true,
+        "screenShake": false
+      },
+      "viewport": {
+        "label": "desktop-1366x700",
+        "width": 1366,
+        "height": 700
+      },
+      "seededEnemies": 54,
+      "logicalEnemyCap": 72,
+      "runs": [
+        {
+          "run": 1,
+          "sampleCount": 220,
+          "p50Ms": 2.4,
+          "p95Ms": 4.3,
+          "maxMs": 13.5,
+          "enemies": 72,
+          "render": {
+            "enemies": 72,
+            "quality": "low",
+            "fxLevel": "reduced",
+            "enemyRasterDrawn": 72,
+            "enemyFallbackDrawn": 0,
+            "fxActive": 8
+          }
+        },
+        {
+          "run": 2,
+          "sampleCount": 220,
+          "p50Ms": 2.6,
+          "p95Ms": 4.4,
+          "maxMs": 7.1,
+          "enemies": 72,
+          "render": {
+            "enemies": 72,
+            "quality": "low",
+            "fxLevel": "reduced",
+            "enemyRasterDrawn": 72,
+            "enemyFallbackDrawn": 0,
+            "fxActive": 7
+          }
+        },
+        {
+          "run": 3,
+          "sampleCount": 220,
+          "p50Ms": 2.4,
+          "p95Ms": 3.5,
+          "maxMs": 4.7,
+          "enemies": 72,
+          "render": {
+            "enemies": 72,
+            "quality": "low",
+            "fxLevel": "reduced",
+            "enemyRasterDrawn": 72,
+            "enemyFallbackDrawn": 0,
+            "fxActive": 5
+          }
+        }
+      ],
+      "medianP95Ms": 4.3,
+      "pass": true
+    },
+    {
+      "scenario": "low-reduced-visual-cost",
+      "settings": {
+        "performanceMode": "low",
+        "fxLevel": "reduced",
+        "reducedFlash": true,
+        "screenShake": false
+      },
+      "viewport": {
+        "label": "phone-390x844",
+        "width": 390,
+        "height": 844
+      },
+      "seededEnemies": 54,
+      "logicalEnemyCap": 72,
+      "runs": [
+        {
+          "run": 1,
+          "sampleCount": 220,
+          "p50Ms": 4.4,
+          "p95Ms": 7.3,
+          "maxMs": 12.7,
+          "enemies": 72,
+          "render": {
+            "enemies": 72,
+            "quality": "low",
+            "fxLevel": "reduced",
+            "enemyRasterDrawn": 72,
+            "enemyFallbackDrawn": 0,
+            "fxActive": 5
+          }
+        },
+        {
+          "run": 2,
+          "sampleCount": 220,
+          "p50Ms": 6.8,
+          "p95Ms": 18.9,
+          "maxMs": 52.4,
+          "enemies": 72,
+          "render": {
+            "enemies": 72,
+            "quality": "low",
+            "fxLevel": "reduced",
+            "enemyRasterDrawn": 72,
+            "enemyFallbackDrawn": 0,
+            "fxActive": 7
+          }
+        },
+        {
+          "run": 3,
+          "sampleCount": 220,
+          "p50Ms": 8,
+          "p95Ms": 12.2,
+          "maxMs": 32.3,
+          "enemies": 72,
+          "render": {
+            "enemies": 72,
+            "quality": "low",
+            "fxLevel": "reduced",
+            "enemyRasterDrawn": 72,
+            "enemyFallbackDrawn": 0,
+            "fxActive": 6
+          }
+        }
+      ],
+      "medianP95Ms": 12.2,
+      "pass": true
+    }
+  ],
+  "pass": true
+}

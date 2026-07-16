@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const assert = require("assert");
 const fs = require("fs");
@@ -12,11 +12,11 @@ function assertFinitePositive(value, label) {
 
 assert.strictEqual(config.STORAGE_KEY, "ashes_convoy_meta_v1");
 assert.strictEqual(config.META_VERSION, 3);
-assert.strictEqual(config.APP_VERSION, "R76");
-assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r76-v1");
+assert.strictEqual(config.APP_VERSION, "R77");
+assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r77-v1");
 const indexHtml = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-assert(indexHtml.includes("manifest.webmanifest?v=R76"), "index.html should version the web manifest for R76");
-assert(indexHtml.includes("assets/icons/icon-192.png?v=R76"), "index.html should version the app icon for R76");
+assert(indexHtml.includes("manifest.webmanifest?v=R77"), "index.html should version the web manifest for R77");
+assert(indexHtml.includes("assets/icons/icon-192.png?v=R77"), "index.html should version the app icon for R77");
 assert.strictEqual(config.LOGIC.width, 195);
 assert.strictEqual(config.LOGIC.height, 422);
 assert.strictEqual(config.LOGIC.displayWidth, 390);
@@ -183,7 +183,8 @@ assert(config.WAVE.firstGateMinTime >= 8 && config.WAVE.firstGateMaxTime <= 11, 
 assert(config.PERFORMANCE.maxEnemies >= 60, "enemy cap should support large hordes");
 assert.strictEqual(config.PERFORMANCE.qualityProfiles.high.maxEffects, config.PERFORMANCE.maxEffects);
 assert(config.PERFORMANCE.qualityProfiles.low.maxEffects < config.PERFORMANCE.qualityProfiles.high.maxEffects, "low quality should reduce effect cap");
-assert(config.PERFORMANCE.qualityProfiles.low.maxEnemies < config.PERFORMANCE.qualityProfiles.high.maxEnemies, "low quality should reduce enemy cap");
+assert.strictEqual(config.PERFORMANCE.qualityProfiles.low.maxEnemies, config.PERFORMANCE.qualityProfiles.high.maxEnemies, "quality should not change logical enemy cap");
+assert.strictEqual(config.PERFORMANCE.qualityProfiles.low.enemyAnimScale, 1, "quality should not change enemy AI sway scale");
 assert.strictEqual(config.DIFFICULTIES.normal.locked, undefined);
 assert.strictEqual(config.ECONOMY.difficultyRewardMul.normal, 1);
 assert.strictEqual(config.ECONOMY.blueprintBundle, 1);
@@ -255,6 +256,7 @@ assert.strictEqual(config.META_DEFAULT.settings.damageTextDensity, "all");
 assert.strictEqual(config.META_DEFAULT.settings.performanceMode, "auto");
 assert.strictEqual(config.META_DEFAULT.settings.fxLevel, "reduced");
 assert.strictEqual(config.META_DEFAULT.settings.fontSize, "medium");
+assert.strictEqual(config.META_DEFAULT.settings.sfxVolume, "medium");
 assert(config.PERFORMANCE.downgradeFrames <= 20, "auto quality should react quickly to sustained low FPS");
 assert(config.PERFORMANCE.recoverFrames >= 180, "auto quality recovery should resist oscillation");
 assert.strictEqual(config.META_DEFAULT.questStats.variantKills, 0);

@@ -4,7 +4,7 @@ const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 3;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R76", CACHE_VERSION: "ashes-convoy-r76-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R77", CACHE_VERSION: "ashes-convoy-r77-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -72,7 +72,12 @@ const TRAILER_GUNNER = {
     color: "#ffd27f"
   },
   muzzleOffsetY: -12,
-  firingFrameSeconds: 0.14
+  firingFrameSeconds: 0.14,
+  attack: {
+    anticipation: 0.12,
+    active: 0.04,
+    recovery: 0.16
+  }
 };
 
 const STORY = {
@@ -2302,10 +2307,10 @@ const PERFORMANCE = {
       fx: FX.quality.high
     },
     low: {
-      maxEnemies: 54,
+      maxEnemies: 72,
       maxEffects: 48,
       floatingTextMinInterval: 0.08,
-      enemyAnimScale: 0.45,
+      enemyAnimScale: 1,
       fx: FX.quality.low
     }
   }
@@ -2746,7 +2751,8 @@ const META_DEFAULT = {
     performanceMode: "auto",
     fxLevel: "reduced",
     fontSize: "medium",
-    sound: true
+    sound: true,
+    sfxVolume: "medium"
   },
   tutorial: {
     seenIntro: false,

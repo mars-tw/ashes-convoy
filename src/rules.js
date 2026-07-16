@@ -163,6 +163,10 @@ function validFontSize(size) {
   return size === "small" || size === "medium" || size === "large";
 }
 
+function validSfxVolume(volume) {
+  return volume === "low" || volume === "medium" || volume === "high";
+}
+
 function sanitizeSettings(input, config) {
   const cfg = getConfig(config);
   const base = deepClone(cfg.META_DEFAULT.settings);
@@ -180,6 +184,7 @@ function sanitizeSettings(input, config) {
   if (validPerformanceMode(source.performanceMode)) output.performanceMode = source.performanceMode;
   if (validFxLevel(source.fxLevel)) output.fxLevel = source.fxLevel;
   if (validFontSize(source.fontSize)) output.fontSize = source.fontSize;
+  if (validSfxVolume(source.sfxVolume)) output.sfxVolume = source.sfxVolume;
   output.aimAssist = output.aimAssistLevel !== "off";
   return output;
 }

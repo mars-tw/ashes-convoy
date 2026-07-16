@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const assert = require("assert");
 const fs = require("fs");
@@ -300,12 +300,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R76") && swText.includes("src/ui.js?v=R76") && swText.includes("src/game.js?v=R76") && swText.includes("src/rules.js?v=R76"),
+      swCachesJs: swText.includes("src/version.js?v=R77") && swText.includes("src/ui.js?v=R77") && swText.includes("src/game.js?v=R77") && swText.includes("src/rules.js?v=R77"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R76"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R76"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R76"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R77"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R77"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R77"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -314,7 +314,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R76", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R77", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -663,6 +663,7 @@ async function checkSettingsAndQuestBoard(page) {
   await page.selectOption("#damageTextDensitySelect", "large");
   await page.selectOption("#performanceModeSelect", "low");
   await page.selectOption("#fontSizeSelect", "large");
+  await page.selectOption("#sfxVolumeSelect", "high");
   meta = await page.evaluate(() => window.__test.getMeta());
   assert.strictEqual(meta.settings.aimAssistLevel, "high", "aim assist level should persist from settings panel");
   assert.strictEqual(meta.settings.aimAssist, true, "high aim assist should keep compatibility boolean enabled");
@@ -672,6 +673,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(meta.settings.damageTextDensity, "large", "damage text density should persist");
   assert.strictEqual(meta.settings.performanceMode, "low", "performance mode should persist");
   assert.strictEqual(meta.settings.fontSize, "large", "font size setting should persist");
+  assert.strictEqual(meta.settings.sfxVolume, "high", "sfx volume setting should persist");
 
   // 畫面特效三段（完整/精簡/關閉）切換持久化＋migrate 兼容（手機友善預設精簡）
   const fxDefault = await page.evaluate(() => window.DSRules.migrateMeta(null, { config: window.DSConfig }).settings.fxLevel);
@@ -702,7 +704,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R76"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R77"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -1142,7 +1144,7 @@ async function checkR71CombatRefresh(page) {
   assert(ember.burnDamage > 0, "ember hit should deal burn damage over time");
   assert(ember.hp < 80, `ember burn should reduce target hp after the direct hit, got ${ember.hp}`);
 
-  await page.evaluate(() => {
+  const companionTiming = await page.evaluate(() => {
     window.__test.startRun("land_rig");
     const state = window.__test.getState();
     window.__test.setState({
@@ -1154,18 +1156,36 @@ async function checkR71CombatRefresh(page) {
     });
     window.__test.spawnEnemy("shambler", { x: state.vehicle.x, y: state.vehicle.y - 115, hp: 999, speed: 0 });
     window.__test.step(16);
-  });
-  const firingFrame = await page.evaluate(() => window.__test.getRenderDebug().companionFrame);
-  assert.strictEqual(firingFrame, 1, "R71 Xi sprite sheet should switch to the firing frame");
-  await page.evaluate(() => window.__test.step(1584));
-  const companionOn = await page.evaluate(() => {
-    const state = window.__test.getState();
-    const debug = window.__test.getRenderDebug();
+    const windupDebug = window.__test.getRenderDebug();
+    const windup = {
+      frame: windupDebug.companionFrame,
+      phase: windupDebug.companionAttackPhase,
+      damage: window.__test.getState().stats.damageBySource.companion || 0
+    };
+    window.__test.step(120);
+    const activeDebug = window.__test.getRenderDebug();
+    const active = {
+      frame: activeDebug.companionFrame,
+      phase: activeDebug.companionAttackPhase
+    };
+    window.__test.step(1464);
+    const finalState = window.__test.getState();
+    const finalDebug = window.__test.getRenderDebug();
     return {
-      damage: state.stats.damageBySource.companion || 0,
-      drawn: debug.companionRasterDrawn || debug.companionFallbackDrawn
+      windup,
+      active,
+      final: {
+        damage: finalState.stats.damageBySource.companion || 0,
+        drawn: finalDebug.companionRasterDrawn || finalDebug.companionFallbackDrawn
+      }
     };
   });
+  assert.strictEqual(companionTiming.windup.frame, 0, "Xi should stay out of firing frame during anticipation");
+  assert.strictEqual(companionTiming.windup.phase, "anticipation", "Xi companion should expose an anticipation phase");
+  assert.strictEqual(companionTiming.windup.damage, 0, "Xi companion should not deal damage before the impact frame");
+  assert.strictEqual(companionTiming.active.frame, 1, "Xi sprite sheet should switch to the firing frame on the active impact");
+  assert.strictEqual(companionTiming.active.phase, "active", "Xi companion should expose active impact phase");
+  const companionOn = companionTiming.final;
   assert(companionOn.damage > 0, "companion should deal damage by source");
   assert.strictEqual(companionOn.drawn, true, "companion should render when enabled");
 
@@ -1551,6 +1571,8 @@ async function checkAdaptivePerformance(page) {
   let perf = await page.evaluate(() => window.__test.getState().performance);
   assert.strictEqual(perf.quality, "low", "locked low performance mode should force low quality");
   assert(perf.maxEffects < windowlessEffectHigh(), "low quality should reduce effect cap");
+  const logicalEnemyCap = await page.evaluate(() => window.DSConfig.PERFORMANCE.maxEnemies);
+  assert.strictEqual(perf.maxEnemies, logicalEnemyCap, "low quality should keep logical enemy cap unchanged");
 
   await page.evaluate(() => {
     const meta = window.__test.getMeta();
@@ -1583,6 +1605,51 @@ async function checkAdaptivePerformance(page) {
   assert.strictEqual(transitions.recovered.history.length, 2, "recovery should append a second performance event");
   assert(transitions.recovered.history.every((entry) => entry.reason.includes("FPS")), `performance history should keep downgrade/recovery reasons, got ${JSON.stringify(transitions.recovered.history)}`);
   assert(transitions.recovered.history.length <= 5, "performance history should remain bounded");
+  const fairness = await page.evaluate(() => {
+    function capture(mode) {
+      const meta = window.__test.getMeta();
+      meta.settings.performanceMode = mode;
+      window.__test.setMeta(meta);
+      window.__test.samplePerformanceFrames([16], { reset: true, constrainedDevice: false });
+      window.__test.startRun("land_rig");
+      const state = window.__test.getState();
+      window.__test.setState({
+        enemies: [],
+        projectiles: [],
+        gates: [],
+        hazards: [],
+        supplyDrops: [],
+        enemyProjectiles: [],
+        companionCooldown: 999,
+        vehicle: { x: state.vehicle.x, followX: state.vehicle.x, weaponCooldown: 999 }
+      });
+      for (let i = 0; i < 80; i += 1) {
+        window.__test.spawnEnemy("shambler", { id: `${mode}_cap_${i}`, x: 80, y: 80 + i * 0.1, speed: 0, silent: true });
+      }
+      const count = window.__test.getState().enemies.length;
+      window.__test.setState({ enemies: [], projectiles: [], gates: [], enemyProjectiles: [], vehicle: { weaponCooldown: 999 } });
+      window.__test.spawnEnemy("runner", {
+        id: `${mode}_runner`,
+        x: 90,
+        y: state.vehicle.y - 180,
+        hp: 999,
+        swayPhase: 1.2,
+        swayAmp: 7,
+        eventDriftAmp: 6,
+        laneOffset: 0,
+        attackCooldown: 999,
+        silent: true
+      });
+      window.__test.step(1000);
+      return {
+        count,
+        runnerX: window.__test.getState().enemies[0].x
+      };
+    }
+    return { high: capture("high"), low: capture("low") };
+  });
+  assert.strictEqual(fairness.low.count, fairness.high.count, "quality must not change spawned logical enemy count");
+  assert(Math.abs(fairness.low.runnerX - fairness.high.runnerX) < 0.0001, `quality must not change enemy AI trajectory: ${JSON.stringify(fairness)}`);
   await page.evaluate(() => {
     const meta = window.__test.getMeta();
     meta.settings.performanceMode = "high";
@@ -1598,6 +1665,126 @@ async function checkAdaptivePerformance(page) {
     });
     window.__test.step(16);
   });
+}
+
+async function checkR77AttackImpactTiming(page) {
+  const ranged = await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    const base = window.__test.getState();
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      enemyProjectiles: [],
+      supplyDrops: [],
+      companionCooldown: 999,
+      vehicle: {
+        x: base.vehicle.x,
+        followX: base.vehicle.x,
+        hp: base.vehicle.maxHp,
+        weaponCooldown: 999
+      }
+    });
+    window.__test.spawnEnemy("spore_spitter", {
+      id: "r77_spitter",
+      x: base.vehicle.x,
+      y: base.vehicle.y - 120,
+      speed: 0,
+      attackCooldown: 0,
+      silent: true
+    });
+    window.__test.step(120);
+    const before = window.__test.getState();
+    window.__test.step(320);
+    const after = window.__test.getState();
+    return {
+      beforeShots: before.enemyProjectiles.length,
+      beforePhase: before.enemies[0] && before.enemies[0].attackPhase,
+      afterShots: after.enemyProjectiles.length,
+      afterPhase: after.enemies[0] && after.enemies[0].attackPhase
+    };
+  });
+  assert.strictEqual(ranged.beforeShots, 0, "ranged enemy should not spawn projectile before impact");
+  assert.strictEqual(ranged.beforePhase, "anticipation", "ranged enemy should expose anticipation before impact");
+  assert(ranged.afterShots >= 1, `ranged enemy should spawn projectile on impact: ${JSON.stringify(ranged)}`);
+  assert(["active", "recovery"].includes(ranged.afterPhase), `ranged enemy should enter active/recovery after impact: ${JSON.stringify(ranged)}`);
+
+  const contact = await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    const base = window.__test.getState();
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      enemyProjectiles: [],
+      supplyDrops: [],
+      companionCooldown: 999,
+      vehicle: { x: base.vehicle.x, followX: base.vehicle.x, hp: base.vehicle.maxHp, weaponCooldown: 999 }
+    });
+    window.__test.spawnEnemy("runner", {
+      id: "r77_contact",
+      x: base.vehicle.x,
+      y: base.vehicle.y,
+      speed: 0,
+      hitCooldown: 0,
+      silent: true
+    });
+    window.__test.step(40);
+    const before = window.__test.getState();
+    window.__test.step(180);
+    const after = window.__test.getState();
+    return {
+      hpBefore: before.vehicle.hp,
+      phaseBefore: before.enemies[0] && before.enemies[0].attackPhase,
+      hpAfter: after.vehicle.hp,
+      enemiesAfter: after.enemies.length,
+      corpse: after.effects.some((effect) => effect.kind === "enemy_corpse")
+    };
+  });
+  assert.strictEqual(contact.phaseBefore, "anticipation", "contact enemy should wind up before damage");
+  assert(contact.hpAfter < contact.hpBefore, `contact enemy should damage only on impact: ${JSON.stringify(contact)}`);
+  assert.strictEqual(contact.enemiesAfter, 0, "contact enemy should be retired after impact");
+  assert.strictEqual(contact.corpse, true, "contact enemy should leave a death reaction after impact");
+
+  const boss = await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    const base = window.__test.getState();
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      gates: [],
+      enemyProjectiles: [],
+      supplyDrops: [],
+      companionCooldown: 999,
+      vehicle: { x: base.vehicle.x, followX: base.vehicle.x, weaponCooldown: 999 }
+    });
+    window.__test.spawnEnemy("boss_hive_titan", {
+      id: "r77_boss",
+      x: base.vehicle.x,
+      y: 160,
+      speed: 0,
+      silent: true
+    });
+    window.__test.setState({
+      enemies: window.__test.getState().enemies.map((enemy) =>
+        enemy.id === "r77_boss" ? Object.assign({}, enemy, { hp: enemy.maxHp * 0.6 }) : enemy
+      )
+    });
+    window.__test.step(500);
+    const before = window.__test.getState();
+    window.__test.step(650);
+    const after = window.__test.getState();
+    return {
+      beforeAdds: before.enemies.filter((enemy) => enemy.enemyId === "shambler").length,
+      beforePhase: before.enemies.find((enemy) => enemy.id === "r77_boss") && before.enemies.find((enemy) => enemy.id === "r77_boss").attackPhase,
+      afterAdds: after.enemies.filter((enemy) => enemy.enemyId === "shambler").length,
+      afterPhase: after.enemies.find((enemy) => enemy.id === "r77_boss") && after.enemies.find((enemy) => enemy.id === "r77_boss").attackPhase
+    };
+  });
+  assert.strictEqual(boss.beforeAdds, 0, "Boss summon should not happen during anticipation");
+  assert.strictEqual(boss.beforePhase, "anticipation", "Boss phase should expose anticipation");
+  assert(boss.afterAdds >= 3, `Boss summon should happen on impact: ${JSON.stringify(boss)}`);
+  assert(["active", "recovery"].includes(boss.afterPhase), `Boss should enter active/recovery after phase impact: ${JSON.stringify(boss)}`);
 }
 
 async function checkRunTrailerRendering(page) {
@@ -2145,27 +2332,86 @@ async function killEnemiesAndEarnPreviewParts(page) {
 }
 
 async function shootGate(page) {
-  await page.evaluate(() => {
+  const nonCore = await page.evaluate(() => {
     window.__test.startRun("land_rig");
     const state = window.__test.getState();
-    window.__test.setState({
-      projectiles: [],
-      gates: [],
-      gateChoice: null,
-      paused: false,
-      vehicle: { aimX: state.vehicle.x, aimY: state.vehicle.y - 210, weaponCooldown: 0 }
-    });
-    window.__test.spawnGate("damage_plus", {
+    const gate = window.__test.spawnGate("damage_plus", {
       x: state.vehicle.x,
-      y: state.vehicle.y - 190,
-      hp: 1
+      y: state.vehicle.y - 160,
+      hp: 20,
+      coreRadius: 10
     });
-    window.__test.step(850);
+    window.__test.setState({
+      enemies: [],
+      gates: [],
+      projectiles: [],
+      gateChoice: null,
+      companionCooldown: 999,
+      vehicle: { weaponCooldown: 999 }
+    });
+    const probe = Object.assign({}, gate, { hp: 20, maxHp: 20, coreRadius: 10 });
+    window.__test.setState({
+      gates: [probe],
+      projectiles: [
+        {
+          id: "gate_non_core_probe",
+          x: probe.x + 24,
+          y: probe.y,
+          vx: 0,
+          vy: 0,
+          damage: 9,
+          radius: 4,
+          rotation: 0,
+          life: 1,
+          vehicleId: "land_rig",
+          weaponMode: "standard"
+        }
+      ]
+    });
+    window.__test.step(16);
+    return window.__test.getState();
   });
-  const state = await page.evaluate(() => window.__test.getState());
-  assert.strictEqual(state.stats.gatesTaken, 0, "shooting a gate core should no longer choose a gate");
-  assert.strictEqual(state.runMods.damageAdd, 0, "projectile contact should not apply a gate mod");
-  assert(state.gates.some((gate) => gate.gateId === "damage_plus" && gate.hp === 1), "projectile contact should not damage gate hp");
+  assert.strictEqual(nonCore.gates[0].hp, 20, "non-core projectile overlap should not damage gate hp");
+  assert.strictEqual(nonCore.stats.gatesTaken, 0, "non-core projectile overlap should not resolve a gate");
+
+  const core = await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    const state = window.__test.getState();
+    const gates = window.__test.spawnGatePair(["damage_plus", "repair"]);
+    const target = gates.find((gate) => gate.gateId === "damage_plus");
+    window.__test.setState({
+      enemies: [],
+      hazards: [],
+      supplyDrops: [],
+      weaponPowerups: [],
+      gates: window.__test.getState().gates.map((gate) => Object.assign({}, gate, { hp: gate.id === target.id ? 1 : gate.hp })),
+      projectiles: [
+        {
+          id: "gate_core_probe",
+          x: target.x,
+          y: target.y,
+          vx: 0,
+          vy: 0,
+          damage: 4,
+          radius: 5,
+          rotation: -Math.PI / 2,
+          life: 1,
+          vehicleId: "land_rig",
+          weaponMode: "standard"
+        }
+      ],
+      companionCooldown: 999,
+      vehicle: { weaponCooldown: 999, x: state.vehicle.x, followX: state.vehicle.x }
+    });
+    window.__test.step(16);
+    return window.__test.getState();
+  });
+  assert.strictEqual(core.stats.gatesTaken, 1, "shooting a gate core should choose that gate");
+  assert(core.runMods.damageAdd > 0, "breaking damage gate core should apply the gate mod");
+  assert.strictEqual(core.gateChoice, null, "breaking a gate core should clear gate choice");
+  assert.strictEqual(core.gates.length, 0, "resolved gate pair should be removed after core break");
+  const resolvedPair = Object.values(core.gatePairs).find((pair) => pair.selectedGateId === "damage_plus");
+  assert(resolvedPair && resolvedPair.status === "resolved" && resolvedPair.resolvedBy === "projectile", `gate pair should resolve by projectile: ${JSON.stringify(core.gatePairs)}`);
 }
 
 async function tapGateChoice(page) {
@@ -2205,6 +2451,50 @@ async function tapGateChoice(page) {
   assert(state.runMods.fireIntervalMul < 1, "driving through the rate lane should apply the rate mod immediately");
   assert.strictEqual(state.gates.length, 0, "crossing one gate should remove the pair");
   assert(state.lastGateChoice && state.lastGateChoice.gateId === "rate_plus", "chosen gate should be recorded for feedback");
+}
+
+async function checkGatePairExpiryAndSupply(page) {
+  const expired = await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    const state = window.__test.getState();
+    const gates = window.__test.spawnGatePair(["damage_plus", "repair"]);
+    const pairId = gates[0].pairId;
+    window.__test.setState({
+      enemies: [],
+      projectiles: [],
+      supplyDrops: [],
+      weaponPowerups: [],
+      companionCooldown: 999,
+      vehicle: { x: state.vehicle.x, followX: state.vehicle.x, weaponCooldown: 999 },
+      gates: window.__test.getState().gates.map((gate) => Object.assign({}, gate, { y: window.DSConfig.LOGIC.height + 90 }))
+    });
+    window.__test.step(16);
+    return { state: window.__test.getState(), pairId };
+  });
+  assert.strictEqual(expired.state.gateChoice, null, "missed gate pair should clear gateChoice");
+  assert.strictEqual(expired.state.gatePairs[expired.pairId].status, "expired", "missed gate pair should be marked expired");
+
+  const supply = await page.evaluate(() => {
+    const state = window.__test.getState();
+    window.__test.setState({
+      supplyDrops: [
+        { id: "after_expired_gate_supply", x: state.vehicle.x, y: state.vehicle.y - 3, vx: 0, vy: 0, radius: 12, age: 0, ttl: 30, picked: false }
+      ],
+      vehicle: { weaponCooldown: 999 }
+    });
+    window.__test.step(80);
+    return window.__test.getState();
+  });
+  assert(supply.supplyChoice && supply.supplyChoice.dropId === "after_expired_gate_supply", "supply should open after expired gate pair clears");
+
+  const nextPair = await page.evaluate(() => {
+    window.__test.chooseSupplyReward("repair");
+    window.__test.setState({ gates: [], gateChoice: null });
+    const gates = window.__test.spawnGatePair(["rate_plus", "barrier"]);
+    return { state: window.__test.getState(), pairId: gates[0].pairId };
+  });
+  assert(nextPair.state.gateChoice && nextPair.state.gateChoice.pairId === nextPair.pairId, "next gate pair should open a fresh choice after expiry");
+  assert.deepStrictEqual(nextPair.state.gateChoice.gateIds, ["rate_plus", "barrier"], "fresh gate choice should list the new pair options");
 }
 
 async function checkBlueprintAchievementsAndUnlock(page) {
@@ -3011,12 +3301,14 @@ async function runScenario(browser, baseUrl, viewport, full) {
   await checkOpeningHordeGateAndFps(page);
   await checkAimAssistToggle(page);
   await checkAdaptivePerformance(page);
+  await checkR77AttackImpactTiming(page);
   await checkFxIntegration(page);
   await checkR71JuiceFx(page);
   await dragAim(page);
   await killEnemiesAndEarnPreviewParts(page);
   await shootGate(page);
   await tapGateChoice(page);
+  await checkGatePairExpiryAndSupply(page);
   await spawnBoss(page);
 
   if (full) {
@@ -3351,7 +3643,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r76")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r77")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -3369,7 +3661,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r76")), "R76 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r77")), "R77 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

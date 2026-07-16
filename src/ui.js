@@ -4,6 +4,7 @@
   const config = root.DSConfig;
   const rules = root.DSRules;
   const game = root.AshesGame;
+  const audio = root.DSAudio || null;
 
   if (!config || !rules || !game) {
     throw new Error("Ashes UI requires config, rules and game.");
@@ -27,6 +28,7 @@
   let joystickVector = { x: 0, y: 0 };
   let canvasTapStart = null;
   let primaryPointerCoarseQuery = null;
+  let drawerReturnContext = null;
 
   const els = {};
   const shelter = {
@@ -72,6 +74,18 @@
 
   function setStatus(text) {
     els.garageStatus.textContent = text || "";
+  }
+
+  function sfxVolumeScalar(settings) {
+    const level = settings && settings.sfxVolume;
+    if (level === "low") return 0.45;
+    if (level === "high") return 1;
+    return 0.72;
+  }
+
+  function playUiSound() {
+    if (!audio || !meta.settings || meta.settings.sound === false) return;
+    audio.play("ui", { volume: sfxVolumeScalar(meta.settings) });
   }
 
   function applyFontSize() {
@@ -228,9 +242,17 @@
     collectActionRects();
   }
 
-  function openMetaDrawer(kind, trigger) {
+  function openMetaDrawer(kind, trigger, options) {
+    const opts = options || {};
     setBaseMenu(false);
     if (trigger && typeof trigger.focus === "function") lastDrawerTrigger = trigger;
+    drawerReturnContext = opts.returnToRun
+      ? {
+          returnToRun: true,
+          resumeOnClose: opts.resumeOnClose === true,
+          focusTarget: trigger || null
+        }
+      : null;
     shelter.drawerKind = kind || "garage";
     setSectionVisibility(shelter.drawerKind);
     els.metaDrawer.hidden = false;
@@ -246,6 +268,17 @@
     }
     els.metaDrawer.hidden = true;
     shelter.drawerKind = "";
+    const returnContext = drawerReturnContext;
+    drawerReturnContext = null;
+    if (returnContext && returnContext.returnToRun) {
+      if (returnContext.resumeOnClose) {
+        game.resume();
+        showPlaying();
+      } else {
+        showPlaying();
+        showPause();
+      }
+    }
     const focusTarget = lastDrawerTrigger && lastDrawerTrigger.getClientRects().length > 0
       ? lastDrawerTrigger
       : els.baseToggleBtn;
@@ -254,9 +287,11 @@
 
   function openShortcutPanel(kind, trigger, focusSelector) {
     const state = game.getState();
-    if (state && state.mode === "playing" && !state.paused) game.pause();
+    const fromRun = state && !state.over && (state.mode === "playing" || state.mode === "paused");
+    const resumeOnClose = !!(state && state.mode === "playing" && !state.paused);
+    if (resumeOnClose) game.pause();
     showGarage();
-    openMetaDrawer(kind, trigger);
+    openMetaDrawer(kind, trigger, fromRun ? { returnToRun: true, resumeOnClose } : null);
     if (focusSelector) {
       root.requestAnimationFrame(() => {
         const target = root.document.querySelector(focusSelector);
@@ -1175,6 +1210,7 @@
     els.screenShakeToggle.checked = meta.settings.screenShake !== false;
     if (els.reducedFlashToggle) els.reducedFlashToggle.checked = meta.settings.reducedFlash === true;
     if (els.soundToggle) els.soundToggle.checked = meta.settings.sound !== false;
+    if (els.sfxVolumeSelect) els.sfxVolumeSelect.value = meta.settings.sfxVolume || "medium";
     if (els.showRunTrailerToggle) els.showRunTrailerToggle.checked = meta.settings.showRunTrailer !== false;
     if (els.showCompanionToggle) els.showCompanionToggle.checked = meta.settings.showCompanion !== false;
     if (els.fxLevelSelect) els.fxLevelSelect.value = meta.settings.fxLevel || "full";
@@ -1778,6 +1814,7 @@
     renderSettings();
     applyFontSize();
     setStatus("設定已更新。");
+    playUiSound();
   }
 
   function exportSave() {
@@ -1949,6 +1986,7 @@
     els.screenShakeToggle.addEventListener("change", () => updateSetting("screenShake", els.screenShakeToggle.checked));
     if (els.reducedFlashToggle) els.reducedFlashToggle.addEventListener("change", () => updateSetting("reducedFlash", els.reducedFlashToggle.checked));
     els.soundToggle.addEventListener("change", () => updateSetting("sound", els.soundToggle.checked));
+    if (els.sfxVolumeSelect) els.sfxVolumeSelect.addEventListener("change", () => updateSetting("sfxVolume", els.sfxVolumeSelect.value));
     els.showRunTrailerToggle.addEventListener("change", () => updateSetting("showRunTrailer", els.showRunTrailerToggle.checked));
     if (els.showCompanionToggle) els.showCompanionToggle.addEventListener("change", () => updateSetting("showCompanion", els.showCompanionToggle.checked));
     els.fxLevelSelect.addEventListener("change", () => updateSetting("fxLevel", els.fxLevelSelect.value));
@@ -2210,6 +2248,7 @@
       "reducedFlashToggle",
       "screenShakeToggle",
       "soundToggle",
+      "sfxVolumeSelect",
       "showRunTrailerToggle",
       "showCompanionToggle",
       "fxLevelSelect",

@@ -55,8 +55,11 @@
     companionFallbackDrawn: false,
     companionImageStatus: "none",
     companionPose: null,
+    companionAttackPhase: "idle",
     enemyImageStatus: {},
-    enemyActionImageStatus: {}
+    enemyActionImageStatus: {},
+    enemyAttackPhaseDrawn: false,
+    enemyAttackPhase: ""
   };
   const environmentImages = {};
   const vehicleImages = {};
@@ -141,9 +144,18 @@
     return !(meta.settings && meta.settings.sound === false);
   }
 
+  function sfxVolumeScalar() {
+    const level = meta.settings && meta.settings.sfxVolume;
+    if (level === "low") return 0.45;
+    if (level === "high") return 1;
+    return 0.72;
+  }
+
   function playSound(name, variant) {
     if (!audio || !soundEnabled()) return;
-    audio.play(name, variant ? { variant } : undefined);
+    const options = { volume: sfxVolumeScalar() };
+    if (variant) options.variant = variant;
+    audio.play(name, options);
   }
 
   function fxPoolQuality() {
@@ -891,11 +903,11 @@
   }
 
   function effectiveMaxEnemies() {
-    return qualityProfile().maxEnemies || config.PERFORMANCE.maxEnemies;
+    return config.PERFORMANCE.maxEnemies;
   }
 
   function enemyAnimScale() {
-    return qualityProfile().enemyAnimScale || 1;
+    return 1;
   }
 
   function publicEntity(entity) {
@@ -908,6 +920,47 @@
       ) copy[key] = rules.deepClone(entity[key]);
     });
     return copy;
+  }
+
+  function ensureGatePair(pairId) {
+    if (!state.gatePairs || typeof state.gatePairs !== "object" || Array.isArray(state.gatePairs)) state.gatePairs = {};
+    if (!state.gatePairs[pairId]) {
+      state.gatePairs[pairId] = {
+        id: pairId,
+        status: "active",
+        openedAt: state.time,
+        resolvedAt: null,
+        expiredAt: null,
+        selectedGateId: ""
+      };
+    }
+    return state.gatePairs[pairId];
+  }
+
+  function liveGatesForPair(pairId) {
+    if (!pairId || !state || !Array.isArray(state.gates)) return [];
+    return state.gates.filter((gate) => gate.pairId === pairId && !gate.broken && gate.y < H + 70);
+  }
+
+  function expireGatePair(pairId) {
+    if (!pairId || !state) return false;
+    const pair = ensureGatePair(pairId);
+    if (pair.status === "resolved") return false;
+    pair.status = "expired";
+    pair.expiredAt = state.time;
+    if (state.gateChoice && state.gateChoice.pairId === pairId) state.gateChoice = null;
+    return true;
+  }
+
+  function clearExpiredGateChoice() {
+    if (!state || !state.gateChoice) return false;
+    if (liveGatesForPair(state.gateChoice.pairId).length > 0) return false;
+    return expireGatePair(state.gateChoice.pairId);
+  }
+
+  function hasBlockingGateChoice() {
+    clearExpiredGateChoice();
+    return !!(state && state.gateChoice && liveGatesForPair(state.gateChoice.pairId).length > 0);
   }
 
   function getState() {
@@ -942,6 +995,7 @@
       fxTimeScale: state.fxTimeScale || 1,
       fxVisualTime: visualStateTime(),
       gateChoice: state.gateChoice ? rules.deepClone(state.gateChoice) : null,
+      gatePairs: rules.deepClone(state.gatePairs || {}),
       supplyChoice: state.supplyChoice ? rules.deepClone(state.supplyChoice) : null,
       enemies: state.enemies.map(publicEntity),
       hazards: state.hazards.map(publicEntity),
@@ -1266,7 +1320,8 @@
   }
 
   function openSupplyChoice(drop) {
-    if (!drop || drop.picked || state.supplyChoice || state.gateChoice) return;
+    if (!drop || drop.picked || state.supplyChoice) return;
+    if (hasBlockingGateChoice()) return;
     drop.picked = true;
     state.supplyChoice = {
       dropId: drop.id,
@@ -1381,6 +1436,7 @@
       companionUpdatedAt: 0,
       companionCooldown: 0,
       companionFiringUntil: 0,
+      companionAttackState: null,
       runMods: rules.defaultRunMods(),
       enemies: [],
       hazards: [],
@@ -1389,6 +1445,7 @@
       weaponPowerups: [],
       supplyBuffs: [],
       gateChoice: null,
+      gatePairs: {},
       supplyChoice: null,
       projectiles: [],
       gates: [],
@@ -1546,6 +1603,8 @@
         : enemyConfig.behavior && enemyConfig.behavior.type === "ranged"
           ? enemyConfig.behavior.cooldown * (0.45 + state.rng() * 0.55)
           : 0,
+      attackState: null,
+      attackPhase: "idle",
       shieldHp: Number.isFinite(opts.shieldHp)
         ? opts.shieldHp
         : enemyConfig.behavior && enemyConfig.behavior.type === "shield"
@@ -1622,28 +1681,38 @@
       hp: Number.isFinite(opts.hp) ? opts.hp : Math.round(gateConfig.coreHp * Math.pow(config.WAVE.gateHpGrowth, state.wave - 1)),
       maxHp: Number.isFinite(opts.hp) ? opts.hp : Math.round(gateConfig.coreHp * Math.pow(config.WAVE.gateHpGrowth, state.wave - 1)),
       radius: Number.isFinite(opts.radius) ? opts.radius : 29,
+      coreRadius: Number.isFinite(opts.coreRadius) ? opts.coreRadius : 14,
       touchRadius: Number.isFinite(opts.touchRadius) ? opts.touchRadius : 31,
       scale: Number.isFinite(opts.scale) ? opts.scale : 1.75,
+      hitFlash: 0,
       broken: false
     };
+    ensureGatePair(pairId);
     state.gates.push(gate);
     if (!opts.silent) emitState();
     return publicEntity(gate);
   }
 
   function spawnGatePair(options) {
+    clearExpiredGateChoice();
     const pairId = nextId("gatepair");
     const ids = options && options.length ? options : ["damage_plus", "repair"];
     const gateHalf = 32 * 1.75 * 0.5;
     const left = spawnGate(ids[0], { pairId, x: config.LOGIC.roadLeft + gateHalf + 1, y: -42, silent: true });
     const right = spawnGate(ids[1], { pairId, x: config.LOGIC.roadRight - gateHalf - 1, y: -42, silent: true });
+    const pair = ensureGatePair(pairId);
+    pair.status = "active";
+    pair.gateIds = [left.id, right.id];
+    pair.gateTypes = [left.gateId, right.gateId];
     openGateChoice(pairId, [left, right]);
     emitState();
     return [left, right];
   }
 
   function openGateChoice(pairId, gates) {
-    if (!state || state.over || state.gateChoice) return;
+    if (!state || state.over) return;
+    clearExpiredGateChoice();
+    if (state.gateChoice) return;
     const options = (gates || [])
       .map((gate) => state.gates.find((item) => item.id === gate.id || item.gateId === gate.gateId))
       .filter(Boolean)
@@ -1652,7 +1721,9 @@
         gateId: gate.gateId,
         label: gate.label,
         x: gate.x,
-        y: gate.y
+        y: gate.y,
+        hp: gate.hp,
+        maxHp: gate.maxHp
       }));
     if (!options.length) return;
     state.gateChoice = {
@@ -1704,10 +1775,21 @@
   }
 
   function resolveGateChoice(gate) {
+    return resolveGateChoiceWithOptions(gate);
+  }
+
+  function resolveGateChoiceWithOptions(gate, options) {
     if (!gate || gate.broken) return;
+    const opts = options || {};
+    const pair = ensureGatePair(gate.pairId);
+    pair.status = "resolved";
+    pair.resolvedAt = state.time;
+    pair.selectedGateId = gate.gateId;
+    pair.resolvedBy = opts.source || "crossing";
     gate.broken = true;
     if (state.gateChoice && state.gateChoice.pairId === gate.pairId) state.gateChoice = null;
     state.mode = "playing";
+    if (opts.source === "projectile") playSound("gateBreak");
     grantGate(gate.gateId, { silent: true });
     addEffect({
       id: nextId("effect"),
@@ -2169,6 +2251,143 @@
     enemy.pendingPhase = null;
   }
 
+  function attackTiming(kind, behavior) {
+    const source = behavior || {};
+    if (kind === "ranged") {
+      return {
+        anticipation: Math.max(0.08, rules.finiteNumber(source.windup, 0.28, { min: 0.08, max: 1.2 })),
+        active: 0.06,
+        recovery: Math.max(0.12, rules.finiteNumber(source.recovery, 0.22, { min: 0.08, max: 0.8 }))
+      };
+    }
+    if (kind === "bossPhase") {
+      return { anticipation: 0.95, active: 0.08, recovery: 0.48 };
+    }
+    if (kind === "bossContact") {
+      return { anticipation: 0.28, active: 0.1, recovery: 0.52 };
+    }
+    return { anticipation: 0.13, active: 0.06, recovery: 0.22 };
+  }
+
+  function setEnemyAttackState(enemy, spec) {
+    const timing = attackTiming(spec.kind, spec.behavior);
+    enemy.attackState = {
+      kind: spec.kind,
+      action: spec.action || "",
+      phase: "anticipation",
+      startedAt: state.time,
+      impactAt: state.time + timing.anticipation,
+      activeUntil: state.time + timing.anticipation + timing.active,
+      recoverUntil: state.time + timing.anticipation + timing.active + timing.recovery,
+      fired: false
+    };
+    enemy.attackPhase = "anticipation";
+    enemy.anim = "attack";
+    return enemy.attackState;
+  }
+
+  function startRangedAttack(enemy, shot, behavior) {
+    enemy.attackCooldown = Math.max(0.1, shot.cooldown || (behavior && behavior.cooldown) || 2.2);
+    setEnemyAttackState(enemy, { kind: "ranged", behavior });
+  }
+
+  function startContactAttack(enemy) {
+    if (!enemy || enemy.dead || enemy.attackState) return;
+    const kind = enemy.boss ? "bossContact" : "contact";
+    setEnemyAttackState(enemy, { kind });
+  }
+
+  function buildEnemyImpactProjectile(enemy) {
+    const probe = Object.assign({}, enemy, { attackCooldown: 0 });
+    const shot = rules.resolveEnemyRangedAttack({ enemy: probe, vehicle: state.vehicle, dt: 0, config });
+    return shot && shot.fire ? shot.projectile : null;
+  }
+
+  function addContactDeathReaction(enemy) {
+    if (!enemy || enemy.dead) return;
+    const enemyConfig = config.ENEMIES[enemy.enemyId] || {};
+    enemy.dead = true;
+    enemy.hitFlash = Math.max(enemy.hitFlash || 0, 0.16);
+    addScorch(enemy.x, enemy.y + enemy.radius * 0.35, enemy.radius);
+    const deathAction = enemyConfig && enemyConfig.spriteActions ? enemyConfig.spriteActions.death : null;
+    const actionDuration = deathAction ? deathAction.frames / Math.max(1, deathAction.fps || 6) : 0;
+    addEffect({
+      id: nextId("effect"),
+      kind: "enemy_corpse",
+      enemyId: enemy.enemyId,
+      x: enemy.x,
+      y: enemy.y,
+      radius: enemy.radius,
+      visualWidth: enemyVisualWidth(enemy, enemyConfig),
+      boss: false,
+      tint: enemy.tint || "",
+      filter: enemy.filter || "",
+      flipX: (enemy.vx || 0) < -0.5,
+      scale: enemy.scale,
+      actionDuration,
+      ttl: Math.max(config.PERFORMANCE.corpseFadeSeconds, actionDuration + 0.16),
+      age: 0,
+      alpha: 0.82,
+      baseAlpha: 0.82
+    });
+    addEffect({
+      id: nextId("effect"),
+      sprite: "effect_hit",
+      anim: "burst",
+      x: enemy.x,
+      y: enemy.y,
+      scale: 1.1,
+      ttl: 0.28,
+      age: 0,
+      alpha: 0.85
+    });
+    playSound("hit");
+  }
+
+  function applyContactImpact(enemy) {
+    const reach = (enemy.radius || 0) + (state.vehicle.radius || 0);
+    if (distance(enemy, state.vehicle) > reach) return;
+    const enemyConfig = config.ENEMIES[enemy.enemyId] || {};
+    const sourceType = enemy.boss ? "boss" : enemyConfig.deathBurst ? "burst" : "enemy";
+    damageVehicle(enemy.contactDamage, { type: sourceType, enemyId: enemy.enemyId });
+    if (enemy.boss) {
+      enemy.hitCooldown = 1.15;
+    } else {
+      addContactDeathReaction(enemy);
+    }
+  }
+
+  function updateEnemyAttackState(enemy) {
+    const attack = enemy.attackState;
+    if (!attack) {
+      enemy.attackPhase = "idle";
+      return;
+    }
+    if (!attack.fired && state.time >= attack.impactAt) {
+      attack.fired = true;
+      attack.phase = "active";
+      enemy.attackPhase = "active";
+      if (attack.kind === "ranged") {
+        const projectile = buildEnemyImpactProjectile(enemy);
+        if (projectile) spawnEnemyProjectile(enemy, projectile);
+      } else if (attack.kind === "bossPhase") {
+        executeBossPhase(enemy, attack.action);
+      } else if (attack.kind === "contact" || attack.kind === "bossContact") {
+        applyContactImpact(enemy);
+      }
+    } else if (attack.fired && state.time >= attack.activeUntil) {
+      attack.phase = "recovery";
+      enemy.attackPhase = "recovery";
+    } else {
+      enemy.attackPhase = attack.phase;
+    }
+    if (state.time >= attack.recoverUntil || enemy.dead) {
+      enemy.attackState = null;
+      enemy.attackPhase = "idle";
+      if (!enemy.dead && !enemy.rageUntil) enemy.anim = "walk";
+    }
+  }
+
   function updateEnemies(dt) {
     const vehicle = state.vehicle;
     state.enemies.forEach((enemy) => {
@@ -2176,7 +2395,12 @@
       updateEnemyBurn(enemy);
       if (enemy.dead) return;
       enemy.hitCooldown = Math.max(0, enemy.hitCooldown - dt);
+      enemy.attackCooldown = Math.max(0, (enemy.attackCooldown || 0) - dt);
       enemy.hitFlash = Math.max(0, (enemy.hitFlash || 0) - dt);
+      if (enemy.rageUntil && state.time >= enemy.rageUntil) {
+        enemy.rageUntil = 0;
+        if (!enemy.attackState) enemy.anim = "walk";
+      }
       if (enemy.knockbackX || enemy.knockbackY) {
         const keep = Math.max(0, 1 - dt * 10);
         enemy.knockbackX *= keep;
@@ -2224,36 +2448,36 @@
         vehicle.slowMul = Math.min(vehicle.slowMul || 1, behavior.slowMul || 0.7);
       }
 
-      if (behaviorType === "ranged") {
-        const shot = rules.resolveEnemyRangedAttack({ enemy, vehicle, dt, config });
-        enemy.attackCooldown = shot.cooldown;
+      updateEnemyAttackState(enemy);
+      if (enemy.dead) return;
+
+      if (behaviorType === "ranged" && !enemy.attackState && enemy.attackCooldown <= 0) {
+        const shot = rules.resolveEnemyRangedAttack({ enemy, vehicle, dt: 0, config });
         if (shot.fire && shot.projectile) {
-          spawnEnemyProjectile(enemy, shot.projectile);
-          enemy.anim = "attack";
+          startRangedAttack(enemy, shot, behavior);
         }
       }
 
       if (enemy.boss) {
         const enemyConfig = config.ENEMIES[enemy.enemyId];
         if (!enemy.phaseTriggered) enemy.phaseTriggered = {};
-        if (enemy.pendingPhase && state.time >= enemy.pendingPhase.executeAt) {
-          executeBossPhase(enemy, enemy.pendingPhase.action);
-        }
         if (enemy.telegraphUntil && state.time > enemy.telegraphUntil) {
           enemy.telegraphText = "";
           enemy.telegraphUntil = 0;
         }
         enemyConfig.phases.forEach((phase) => {
-          if (enemy.hp <= enemy.maxHp * phase.hpPct && !enemy.phaseTriggered[phase.action] && !enemy.pendingPhase) {
+          if (enemy.hp <= enemy.maxHp * phase.hpPct && !enemy.phaseTriggered[phase.action] && !enemy.pendingPhase && !enemy.attackState) {
             enemy.phaseTriggered[phase.action] = true;
             enemy.anim = "attack";
+            const timing = attackTiming("bossPhase");
             enemy.pendingPhase = {
               action: phase.action,
               label: bossPhaseLabel(phase.action),
-              executeAt: state.time + 0.95
+              executeAt: state.time + timing.anticipation
             };
+            setEnemyAttackState(enemy, { kind: "bossPhase", action: phase.action });
             enemy.telegraphText = bossPhaseLabel(phase.action);
-            enemy.telegraphUntil = state.time + 1.15;
+            enemy.telegraphUntil = state.time + timing.anticipation + timing.active + timing.recovery;
             pushEventBanner("Boss 前搖", `${enemyConfig.name}：${enemy.telegraphText}`, { kind: "boss", ttl: 1.4 });
             playSound("bossWarn");
           }
@@ -2261,27 +2485,7 @@
       }
 
       if (distance(enemy, vehicle) <= enemy.radius + vehicle.radius) {
-        if (enemy.boss) {
-          if (enemy.hitCooldown <= 0) {
-            damageVehicle(enemy.contactDamage, { type: "boss", enemyId: enemy.enemyId });
-            enemy.hitCooldown = 1.15;
-          }
-        } else {
-          const enemyConfig = config.ENEMIES[enemy.enemyId] || {};
-          damageVehicle(enemy.contactDamage, { type: enemyConfig.deathBurst ? "burst" : "enemy", enemyId: enemy.enemyId });
-          enemy.dead = true;
-          addEffect({
-            id: nextId("effect"),
-            sprite: "effect_hit",
-            anim: "burst",
-            x: enemy.x,
-            y: enemy.y,
-            scale: 1.1,
-            ttl: 0.22,
-            age: 0,
-            alpha: 0.8
-          });
-        }
+        if (!enemy.attackState && enemy.hitCooldown <= 0) startContactAttack(enemy);
       }
     });
     state.enemies = state.enemies.filter((enemy) => !enemy.dead && enemy.y < H + 52);
@@ -2569,6 +2773,72 @@
     projectile.rotation = next;
   }
 
+  function gateCoreHit(projectile, gate) {
+    if (!projectile || !gate || gate.broken) return false;
+    const pair = state.gatePairs && state.gatePairs[gate.pairId];
+    if (pair && pair.status !== "active") return false;
+    const coreRadius = Math.max(4, Number.isFinite(gate.coreRadius) ? gate.coreRadius : 14);
+    return distance(projectile, gate) <= coreRadius + Math.max(1, projectile.radius || 0);
+  }
+
+  function updateGateChoiceHp(gate) {
+    if (!state.gateChoice || state.gateChoice.pairId !== gate.pairId) return;
+    state.gateChoice.options = state.gateChoice.options.map((option) => {
+      if (option.id !== gate.id && option.gateId !== gate.gateId) return option;
+      return Object.assign({}, option, { hp: gate.hp, maxHp: gate.maxHp });
+    });
+  }
+
+  function damageGateCore(projectile, gate) {
+    const damage = Math.max(0, Number(projectile.damage) || 0);
+    if (damage <= 0) return false;
+    gate.hp = Math.max(0, (Number.isFinite(gate.hp) ? gate.hp : gate.maxHp || 1) - damage);
+    gate.hitFlash = 0.16;
+    updateGateChoiceHp(gate);
+    addFloatingText(Math.max(1, Math.round(damage)).toString(), gate.x + 4, gate.y - 31, {
+      color: "#ffd76a",
+      size: 7,
+      ttl: 0.36,
+      vy: -10,
+      damageNumber: true,
+      amount: damage
+    });
+    if (FXC && fxEnabled()) {
+      fxHitOpts.x = projectile.x;
+      fxHitOpts.y = projectile.y;
+      fxHitOpts.angle = (projectile.rotation || -Math.PI * 0.5) + Math.PI;
+      fxHitOpts.vehicleId = projectile.vehicleId;
+      fxHitOpts.color = "#ffd76a";
+      fx.spawnHitSpark(fxState, FXC, fxHitOpts, fxRng);
+    }
+    addEffect({
+      id: nextId("effect"),
+      sprite: gate.hp <= 0 ? "effect_shield" : "effect_hit",
+      anim: gate.hp <= 0 ? "pulse" : "burst",
+      x: gate.x,
+      y: gate.y,
+      scale: gate.hp <= 0 ? 1.15 : 0.85,
+      ttl: gate.hp <= 0 ? 0.42 : 0.18,
+      age: 0,
+      alpha: 0.85
+    });
+    projectile.life = -1;
+    if (gate.hp <= 0) {
+      resolveGateChoiceWithOptions(gate, { source: "projectile" });
+    } else {
+      playSound("hit");
+    }
+    return true;
+  }
+
+  function tryHitGateCore(projectile) {
+    for (let i = 0; i < state.gates.length; i += 1) {
+      const gate = state.gates[i];
+      if (gateCoreHit(projectile, gate)) return damageGateCore(projectile, gate);
+    }
+    return false;
+  }
+
   function updateProjectiles(dt) {
     state.projectiles.forEach((projectile) => {
       updateHomingProjectile(projectile, dt);
@@ -2606,6 +2876,8 @@
           return;
         }
       }
+
+      if (tryHitGateCore(projectile)) return;
 
       for (let i = 0; i < state.enemies.length; i += 1) {
         const enemy = state.enemies[i];
@@ -2717,6 +2989,7 @@
     state.gates.forEach((gate) => {
       const previousY = gate.y;
       gate.y += config.WAVE.gateSpeed * dt;
+      gate.hitFlash = Math.max(0, (gate.hitFlash || 0) - dt);
       if (previousY < state.vehicle.y && gate.y >= state.vehicle.y) {
         const candidates = crossingPairs.get(gate.pairId) || [];
         candidates.push(gate);
@@ -2731,7 +3004,12 @@
       const reach = (selected.touchRadius || selected.radius || 0) + (state.vehicle.radius || 0);
       if (Math.abs(selected.x - state.vehicle.x) <= reach) resolveGateChoice(selected);
     });
+    const pairIdsBeforeFilter = new Set(state.gates.map((gate) => gate.pairId));
     state.gates = state.gates.filter((gate) => gate.y < H + 70 && !gate.broken);
+    pairIdsBeforeFilter.forEach((pairId) => {
+      if (liveGatesForPair(pairId).length === 0) expireGatePair(pairId);
+    });
+    clearExpiredGateChoice();
     state.effects.forEach((effect) => {
       effect.age += dt;
       if (effect.kind === "text") effect.y += (effect.vy || 0) * dt;
@@ -2866,20 +3144,31 @@
     return pose;
   }
 
-  function updateCompanion(dt) {
-    if (!companionEnabled()) return;
-    const spec = config.TRAILER_GUNNER || {};
-    const weapon = spec.weapon || {};
-    const pose = updateCompanionPose(dt);
-    state.companionCooldown = Math.max(0, (state.companionCooldown || 0) - dt);
-    if (state.companionCooldown > 0 || state.projectiles.length >= config.PERFORMANCE.maxProjectiles) return;
-    const target = rules.selectGunnerTarget({
+  function companionAttackTiming() {
+    const timing = (config.TRAILER_GUNNER && config.TRAILER_GUNNER.attack) || {};
+    return {
+      anticipation: Math.max(0.04, rules.finiteNumber(timing.anticipation, 0.12, { min: 0.04, max: 0.6 })),
+      active: Math.max(0.03, rules.finiteNumber(timing.active, 0.04, { min: 0.02, max: 0.3 })),
+      recovery: Math.max(0.06, rules.finiteNumber(timing.recovery, 0.16, { min: 0.04, max: 0.6 }))
+    };
+  }
+
+  function findCompanionTarget(targetId, pose, spec) {
+    if (targetId) {
+      const existing = state.enemies.find((enemy) => enemy.id === targetId && !enemy.dead);
+      if (existing) return existing;
+    }
+    return rules.selectGunnerTarget({
       gunner: pose,
       enemies: state.enemies,
       range: spec.targetRange,
       config
     });
-    if (!target) return;
+  }
+
+  function spawnCompanionProjectile(pose, target, spec) {
+    if (!target || state.projectiles.length >= config.PERFORMANCE.maxProjectiles) return false;
+    const weapon = (spec && spec.weapon) || {};
     const muzzleY = pose.y + (spec.muzzleOffsetY || -12);
     const spread = (weapon.spread || 0) * (state.rng() - 0.5);
     const direction = normalize(target.x - pose.x, target.y - muzzleY);
@@ -2907,7 +3196,59 @@
       scale: 0.78,
       color: weapon.color || "#ffd27f"
     });
-    state.companionFiringUntil = state.time + (spec.firingFrameSeconds || 0.14);
+    return true;
+  }
+
+  function updateCompanionAttackState(pose, spec) {
+    const attack = state.companionAttackState;
+    if (!attack) return false;
+    if (!attack.fired && state.time >= attack.impactAt) {
+      const target = findCompanionTarget(attack.targetId, pose, spec);
+      if (spawnCompanionProjectile(pose, target, spec)) {
+        state.companionFiringUntil = attack.activeUntil;
+        playSound("shoot", state.vehicleId);
+      }
+      attack.fired = true;
+      attack.phase = "active";
+    } else if (attack.fired && state.time >= attack.activeUntil) {
+      attack.phase = "recovery";
+    }
+    if (state.time >= attack.recoverUntil) {
+      state.companionAttackState = null;
+      return false;
+    }
+    return true;
+  }
+
+  function startCompanionAttack(target, spec) {
+    const timing = companionAttackTiming();
+    state.companionAttackState = {
+      phase: "anticipation",
+      startedAt: state.time,
+      impactAt: state.time + timing.anticipation,
+      activeUntil: state.time + timing.anticipation + timing.active,
+      recoverUntil: state.time + timing.anticipation + timing.active + timing.recovery,
+      targetId: target && target.id ? target.id : "",
+      fired: false
+    };
+  }
+
+  function updateCompanion(dt) {
+    if (!companionEnabled()) return;
+    const spec = config.TRAILER_GUNNER || {};
+    const weapon = spec.weapon || {};
+    const pose = updateCompanionPose(dt);
+    if (updateCompanionAttackState(pose, spec)) return;
+    state.companionCooldown = Math.max(0, (state.companionCooldown || 0) - dt);
+    if (state.companionCooldown > 0 || state.projectiles.length >= config.PERFORMANCE.maxProjectiles) return;
+    const target = rules.selectGunnerTarget({
+      gunner: pose,
+      enemies: state.enemies,
+      range: spec.targetRange,
+      config
+    });
+    if (!target) return;
+    startCompanionAttack(target, spec);
     state.companionCooldown += weapon.fireInterval || 0.9;
   }
 
@@ -3192,10 +3533,25 @@
     ctx.lineWidth = 1;
     ctx.fillRect(gate.x - 25, gate.y - 33, 50, 30);
     ctx.strokeRect(gate.x - 25, gate.y - 33, 50, 30);
+    if (gate.hitFlash > 0) {
+      ctx.globalAlpha *= Math.min(1, gate.hitFlash / 0.16);
+      ctx.strokeStyle = "#fff1b8";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(gate.x - 27, gate.y - 35, 54, 34);
+    }
     ctx.restore();
     drawWorldText(gateConfig.shortLabel, gate.x, gate.y - 24, { size: 10, color: "#f4ead8" });
     drawWorldText(valueText, gate.x, gate.y - 11, { size: 12, color: gate.gateId === "repair" ? "#87d27d" : gate.gateId === "barrier" ? "#5ed4cb" : "#f0b64a" });
-    drawWorldText("選擇後套用", gate.x, gate.y + 24, { size: 5, color: "#f4ead8", alpha: 0.72 });
+    const maxHp = Math.max(1, Number.isFinite(gate.maxHp) ? gate.maxHp : 1);
+    const hpPct = Math.max(0, Math.min(1, (Number.isFinite(gate.hp) ? gate.hp : maxHp) / maxHp));
+    ctx.save();
+    ctx.globalAlpha *= 0.9;
+    ctx.fillStyle = "rgba(5, 7, 9, 0.82)";
+    ctx.fillRect(gate.x - 18, gate.y + 15, 36, 4);
+    ctx.fillStyle = hpPct > 0.4 ? "#ffd76a" : "#ff6a5a";
+    ctx.fillRect(gate.x - 18, gate.y + 15, Math.round(36 * hpPct), 4);
+    ctx.restore();
+    drawWorldText("射爆核心套用", gate.x, gate.y + 27, { size: 5, color: "#f4ead8", alpha: 0.72 });
     renderDebug.gateLabelsDrawn += 1;
   }
 
@@ -4123,6 +4479,14 @@
     return Math.min(frames - 1, Math.floor(Math.max(0, elapsedSeconds) * (animation.fps || 6)));
   }
 
+  function enemyAttackFrame(enemy, animation) {
+    const frames = Math.max(1, animation.frames || 1);
+    const phase = enemy.attackPhase || (enemy.attackState && enemy.attackState.phase) || "anticipation";
+    if (phase === "active") return Math.min(frames - 1, Math.max(1, Math.floor(frames * 0.55)));
+    if (phase === "recovery") return Math.min(frames - 1, Math.max(1, frames - 1));
+    return Math.min(frames - 1, Math.max(0, Math.floor(frames * 0.25)));
+  }
+
   function drawEnemyEntity(enemy, timeMs, alpha, anim) {
     const enemyConfig = config.ENEMIES[enemy.enemyId] || null;
     const animation = enemyConfig && enemyConfig.spriteAnimation ? enemyConfig.spriteAnimation : null;
@@ -4140,6 +4504,7 @@
       : null;
     const hurtRecord = hurtAnimation && record && record.actions ? record.actions.hurt : null;
     const useHurtAtlas = !!hurtRecord && enemyActionImageStatus(enemy.enemyId, "hurt") === "loaded";
+    const attackActive = !hurtActive && enemy.attackState && enemy.attackPhase && enemy.attackPhase !== "idle";
 
     if (renderDebug.enemyImageStatus) renderDebug.enemyImageStatus[enemy.enemyId] = status;
     if (hurtActive && renderDebug.enemyActionImageStatus) {
@@ -4157,6 +4522,8 @@
       const hurtElapsed = Math.max(0, (enemy.hitFlashMax || 0.2) - (enemy.hitFlash || 0));
       const frameState = useHurtAtlas
         ? { frame: enemyActionFrame(hurtElapsed, activeAnimation), tier: "hurt" }
+        : attackActive && activeAnimation
+          ? { frame: enemyAttackFrame(enemy, activeAnimation), tier: `attack-${enemy.attackPhase}` }
         : activeAnimation
           ? enemyAnimationFrame(enemy, activeAnimation)
           : { frame: 0, tier: "static" };
@@ -4201,6 +4568,10 @@
         renderDebug.enemyAnimationFrames[enemy.enemyId] = frameState.frame;
         renderDebug.enemyAnimationTier = frameState.tier;
         if (useHurtAtlas) renderDebug.enemyHurtPoseDrawn += 1;
+        if (attackActive) {
+          renderDebug.enemyAttackPhaseDrawn = true;
+          renderDebug.enemyAttackPhase = enemy.attackPhase;
+        }
         if (activeAnimation.armored) renderDebug.enemyArmoredDrawn += 1;
         if (faceLeft) renderDebug.enemyFacingLeftDrawn += 1;
       }
@@ -4870,7 +5241,9 @@
       record && record.image && frameWidth > 0
         ? width * (record.image.naturalHeight / frameWidth)
         : width * 1.33;
-    const frame = frameCount > 1 && state.companionFiringUntil > state.time ? 1 : 0;
+    const companionAttack = state.companionAttackState || null;
+    const companionAttackPhase = companionAttack ? companionAttack.phase : "idle";
+    const frame = frameCount > 1 && (companionAttackPhase === "active" || state.companionFiringUntil > state.time) ? 1 : 0;
     renderDebug.companionImageStatus = status;
     renderDebug.companionPose = {
       x: Math.round(pose.x * 10) / 10,
@@ -4878,6 +5251,7 @@
       rotation: Math.round(pose.rotation * 1000) / 1000
     };
     renderDebug.companionFrame = frame;
+    renderDebug.companionAttackPhase = companionAttackPhase;
 
     if (record && status === "loaded") {
       ctx.save();
@@ -5338,6 +5712,7 @@
       companionImageStatus: "none",
       companionPose: null,
       companionFrame: 0,
+      companionAttackPhase: "idle",
       backgroundRasterDrawn: false,
       backgroundFallbackDrawn: false,
       backgroundImageStatus: "none",
@@ -5355,6 +5730,8 @@
       enemyFacingLeftDrawn: 0,
       enemyAnimationFrames: {},
       enemyAnimationTier: "none",
+      enemyAttackPhaseDrawn: false,
+      enemyAttackPhase: "",
       enemyTintCacheCount: Object.values(enemyImages).filter((record) => !!record.tintCanvas).length,
       fxActive: fxState ? fxState.activeCount : 0,
       fxMaxParticles: fxState ? fxState.maxParticles : 0,

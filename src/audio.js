@@ -24,7 +24,7 @@ const DEFAULT_RNG_SEED = 20260707;
 const OSC_WAVES = ["sine", "triangle", "square", "sawtooth"];
 const NOISE_FILTERS = ["lowpass", "highpass", "bandpass"];
 
-const EVENT_NAMES = ["shoot", "hit", "kill", "bossWarn", "bossKill", "pickup", "hurt", "gateChoice", "waveStart"];
+const EVENT_NAMES = ["shoot", "hit", "kill", "bossWarn", "bossKill", "pickup", "hurt", "gateChoice", "gateBreak", "alarm", "ui", "waveStart"];
 
 function finiteOr(value, fallback) {
   return Number.isFinite(value) ? value : fallback;
@@ -165,6 +165,34 @@ const RECIPES = {
     layers: [
       { kind: "osc", wave: "triangle", freqStart: 392, freqEnd: 392, freqCurve: "lin", delay: 0, duration: 0.1, attack: 0.004, decay: 0.04, sustain: 0.4, release: 0.04, gain: 0.55, detuneJitter: 0 },
       { kind: "osc", wave: "triangle", freqStart: 523.25, freqEnd: 523.25, freqCurve: "lin", delay: 0.1, duration: 0.14, attack: 0.004, decay: 0.05, sustain: 0.45, release: 0.06, gain: 0.6, detuneJitter: 0 }
+    ]
+  },
+  // 破門：金屬核心裂開，低頻撞擊加短促亮音。
+  gateBreak: {
+    duration: 0.46,
+    volume: 0.36,
+    layers: [
+      { kind: "noise", filterType: "bandpass", filterFreq: 980, filterQ: 1, delay: 0, duration: 0.16, attack: 0.002, decay: 0.07, sustain: 0.2, release: 0.06, gain: 0.6, detuneJitter: 0 },
+      { kind: "osc", wave: "triangle", freqStart: 220, freqEnd: 82, freqCurve: "exp", delay: 0, duration: 0.28, attack: 0.002, decay: 0.12, sustain: 0.22, release: 0.08, gain: 0.72, detuneJitter: 4 },
+      { kind: "osc", wave: "sine", freqStart: 659.25, freqEnd: 523.25, freqCurve: "lin", delay: 0.1, duration: 0.16, attack: 0.004, decay: 0.05, sustain: 0.35, release: 0.05, gain: 0.34, detuneJitter: 0 }
+    ]
+  },
+  // 警報：短促雙脈衝，不覆蓋 Boss 長警告。
+  alarm: {
+    duration: 0.5,
+    volume: 0.3,
+    layers: [
+      { kind: "osc", wave: "sine", freqStart: 740, freqEnd: 740, freqCurve: "lin", delay: 0, duration: 0.14, attack: 0.006, decay: 0.04, sustain: 0.58, release: 0.04, gain: 0.45, detuneJitter: 0 },
+      { kind: "osc", wave: "sine", freqStart: 740, freqEnd: 740, freqCurve: "lin", delay: 0.22, duration: 0.14, attack: 0.006, decay: 0.04, sustain: 0.58, release: 0.04, gain: 0.45, detuneJitter: 0 },
+      { kind: "noise", filterType: "highpass", filterFreq: 1200, filterQ: 0.8, delay: 0, duration: 0.42, attack: 0.004, decay: 0.12, sustain: 0.12, release: 0.08, gain: 0.18, detuneJitter: 0 }
+    ]
+  },
+  // UI：低調確認 tick。
+  ui: {
+    duration: 0.12,
+    volume: 0.18,
+    layers: [
+      { kind: "osc", wave: "triangle", freqStart: 660, freqEnd: 520, freqCurve: "lin", delay: 0, duration: 0.09, attack: 0.002, decay: 0.03, sustain: 0.22, release: 0.03, gain: 0.45, detuneJitter: 0 }
     ]
   },
   // 波次開始：短小軍鼓感 tick（雙擊噪聲）。
@@ -354,7 +382,7 @@ function playEvent(engine, name, options, root) {
     return 0;
   }
   const t0 = finiteOr(ctx.currentTime, 0) + 0.001;
-  const volume = clamp01(finiteOr(recipe.volume, 0.3));
+  const volume = clamp01(finiteOr(recipe.volume, 0.3) * clamp01(finiteOr(opts.volume, 1)));
   let created = 0;
   for (let i = 0; i < recipe.layers.length; i += 1) {
     created += buildLayer(engine, recipe.layers[i], t0, volume);

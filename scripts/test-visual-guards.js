@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const assert = require("assert");
 const fs = require("fs");
@@ -14,7 +14,7 @@ const uiSource = read("src/ui.js");
 const htmlSource = read("index.html");
 const credits = read("CREDITS.md");
 
-assert.strictEqual(version.APP_VERSION, "R76", "visual release guard must target R76");
+assert.strictEqual(version.APP_VERSION, "R77", "visual release guard must target R77");
 
 const textureEntries = Object.entries(config.FX.textures || {});
 assert.strictEqual(textureEntries.length, 4, "R71 must preserve smoke/fire/debris/flash texture layers");

@@ -267,6 +267,7 @@ async function checkDesktopViewport(browser, baseUrl, viewport) {
       "#screenShakeToggle",
       "#reducedFlashToggle",
       "#soundToggle",
+      "#sfxVolumeSelect",
       "#showRunTrailerToggle",
       "#showCompanionToggle",
       "#fxLevelSelect",
@@ -309,6 +310,31 @@ async function checkDesktopViewport(browser, baseUrl, viewport) {
     });
     await page.waitForFunction(() => window.__test.getState().mode === "playing", null, { timeout: READY_TIMEOUT_MS });
     await assertDesktopTouchControlsAbsent(page, `${label} in-run`);
+    const runBeforeRail = await page.evaluate(() => {
+      const state = window.__test.getState();
+      return { seed: state.seed, wave: state.wave, time: state.time };
+    });
+    await page.click("#railSettingsBtn");
+    await page.waitForSelector('#metaDrawer:not([hidden]) [data-meta-section="operations"]:not([hidden])');
+    const drawerRunState = await page.evaluate(() => window.__test.getState());
+    assert.strictEqual(drawerRunState.mode, "paused", `${label} rail drawer should pause the existing run`);
+    await page.click("#closeMetaDrawer");
+    await page.waitForFunction(() => document.getElementById("metaDrawer").hidden === true && window.__test.getState().mode === "playing");
+    const runAfterRail = await page.evaluate(() => {
+      const state = window.__test.getState();
+      return {
+        seed: state.seed,
+        wave: state.wave,
+        paused: state.paused,
+        garageHidden: document.getElementById("garagePanel").hidden,
+        pauseHidden: document.getElementById("pausePanel").hidden
+      };
+    });
+    assert.strictEqual(runAfterRail.seed, runBeforeRail.seed, `${label} closing rail drawer should keep the same run seed`);
+    assert.strictEqual(runAfterRail.wave, runBeforeRail.wave, `${label} closing rail drawer should keep the same run wave`);
+    assert.strictEqual(runAfterRail.paused, false, `${label} closing rail drawer should resume the original run`);
+    assert.strictEqual(runAfterRail.garageHidden, true, `${label} closing rail drawer should leave garage hidden`);
+    assert.strictEqual(runAfterRail.pauseHidden, true, `${label} closing rail drawer should leave pause panel hidden`);
     const vehicleCenter = await page.evaluate(() => {
       const state = window.__test.getState();
       const rect = document.getElementById("gameCanvas").getBoundingClientRect();
