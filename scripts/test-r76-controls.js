@@ -63,6 +63,19 @@ function startServer() {
   });
 }
 
+function settleWithin(promise, timeoutMs = 10000) {
+  return Promise.race([
+    promise,
+    new Promise((resolve) => setTimeout(resolve, timeoutMs))
+  ]);
+}
+
+async function closeHarness(browser, server) {
+  await settleWithin(browser.close().catch(() => {}));
+  if (typeof server.closeAllConnections === "function") server.closeAllConnections();
+  await settleWithin(new Promise((resolve) => server.close(resolve)));
+}
+
 async function waitForGarageReady(page) {
   await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady(), null, { timeout: READY_TIMEOUT_MS });
   await page.waitForSelector("#garagePanel:not([hidden])", { timeout: READY_TIMEOUT_MS });
@@ -335,15 +348,24 @@ async function checkDesktopViewport(browser, baseUrl, viewport) {
     assert.strictEqual(runAfterRail.paused, false, `${label} closing rail drawer should resume the original run`);
     assert.strictEqual(runAfterRail.garageHidden, true, `${label} closing rail drawer should leave garage hidden`);
     assert.strictEqual(runAfterRail.pauseHidden, true, `${label} closing rail drawer should leave pause panel hidden`);
-    const vehicleCenter = await page.evaluate(() => {
+    await page.evaluate(() => {
       const state = window.__test.getState();
-      const rect = document.getElementById("gameCanvas").getBoundingClientRect();
-      return {
-        x: rect.left + (state.vehicle.x / window.DSConfig.LOGIC.width) * rect.width,
-        y: rect.top + (state.vehicle.y / window.DSConfig.LOGIC.height) * rect.height
-      };
+      const canvas = document.getElementById("gameCanvas");
+      const rect = canvas.getBoundingClientRect();
+      const clientX = rect.left + (state.vehicle.x / window.DSConfig.LOGIC.width) * rect.width;
+      const clientY = rect.top + (state.vehicle.y / window.DSConfig.LOGIC.height) * rect.height;
+      const fire = (type) => canvas.dispatchEvent(new PointerEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        pointerId: 91,
+        pointerType: "mouse",
+        isPrimary: true,
+        clientX,
+        clientY
+      }));
+      fire("pointerdown");
+      fire("pointerup");
     });
-    await page.mouse.click(vehicleCenter.x, vehicleCenter.y);
     await page.waitForSelector("#quickUpgradeWheel:not([hidden])");
     await assertControlsAccessible(page, accessSpecs(["#quickUpgradeWheel"]), `${label} quick wheel frame`, { noOverlap: false });
     await assertControlsAccessible(
@@ -394,7 +416,11 @@ async function checkMobileViewport(browser, baseUrl) {
 
 (async () => {
   const { server, url } = await startServer();
-  const browser = await chromium.launch({ args: ["--disable-gpu", "--disable-accelerated-2d-canvas"] });
+  const browserChannel = process.env.PLAYWRIGHT_CHANNEL || undefined;
+  const browser = await chromium.launch({
+    channel: browserChannel,
+    args: browserChannel ? [] : ["--disable-gpu", "--disable-accelerated-2d-canvas"]
+  });
   try {
     for (const viewport of DESKTOP_VIEWPORTS) {
       await checkDesktopViewport(browser, url, viewport);
@@ -402,10 +428,12 @@ async function checkMobileViewport(browser, baseUrl) {
     await checkMobileViewport(browser, url);
     console.log("R76 controls tests PASS");
   } finally {
-    await browser.close().catch(() => {});
-    await new Promise((resolve) => server.close(resolve));
+    await closeHarness(browser, server);
   }
-})().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+})().then(
+  () => process.exit(0),
+  (error) => {
+    console.error(error);
+    process.exit(1);
+  }
+);

@@ -12,7 +12,16 @@
 4. 去背、裁切、縮放、調色與 atlas 打包方式。
 5. 可重建母圖的 gitignored 保存位置，以及對應的製作／量測報告。
 
-R71、R72、R73、R78 已依此格式標註。更早的專案自製圖像只保有 repo 歷史中的「AI 生成／圖生圖」紀錄，精確工具與完整 prompt 未全部保存；下方如實列出檔案範圍，不補寫無法驗證的資訊。
+R71、R72、R73、R78、R79 已依此格式標註。更早的專案自製圖像只保有 repo 歷史中的「AI 生成／圖生圖」紀錄，精確工具與完整 prompt 未全部保存；下方如實列出檔案範圍，不補寫無法驗證的資訊。
+
+## R79 image-generated title atmosphere
+
+- 工具：OpenAI built-in image generation（`image_gen`）；工具未回傳可驗證的模型識別，因此不補寫模型名稱。
+- Slug：`ashes-r79-start`；正式 manifest 為 `assets/ui/start-art-manifest.json`。
+- 遊戲檔案：`assets/ui/start-atmosphere-r79.png`，2048×1152、24-bit RGB PNG，作為桌機寬螢幕兩側的 painterly 灰燼遠景；既有直式 `assets/ui/start.png` 保持主體 key art。
+- 參考與 prompt 摘要：以 `assets/ui/start.png` 只作畫風、低彩暖灰燼色盤與世界觀參考；生成寬幅廢墟道路、煙塵、遠景剪影與稀疏餘燼，中央 32% 刻意低細節壓暗；禁止文字、UI、logo、新主車、前景角色與浮水印。
+- 後製與 alpha：原始產出 1672×941，以 high-quality bicubic 確定性縮放為 2048×1152；全幅背景刻意使用無 alpha 的 RGB，alpha gate 驗證無 `tRNS` 或半透明像素風險。
+- 母圖：OpenAI built-in 產出保存在使用者 Codex generated-images 儲存區；最終 prompt、SHA-256、量測與視覺證據見 `docs/CODEX_RESPONSE_ashes_R79.md` 與 `docs/evidence/R79_start/`。
 
 ## R78 image-generated attack atlases
 

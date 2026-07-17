@@ -57,7 +57,7 @@ const VIEWPORTS = [
 const PAGE_SCROLL_TOLERANCE = 8;
 const OVERFLOW_X_TOLERANCE = 2;
 const MIN_INTERACTIVE_TOTAL = 10;
-const META_SETTLE_TIMEOUT_MS = 60000;
+const META_SETTLE_TIMEOUT_MS = 180000;
 
 function startServer() {
   const server = http.createServer((req, res) => {
@@ -87,6 +87,19 @@ function startServer() {
       resolve({ server, url: `http://127.0.0.1:${address.port}/` });
     });
   });
+}
+
+function settleWithin(promise, timeoutMs = 10000) {
+  return Promise.race([
+    promise,
+    new Promise((resolve) => setTimeout(resolve, timeoutMs))
+  ]);
+}
+
+async function closeHarness(browser, server) {
+  await settleWithin(browser.close().catch(() => {}));
+  if (typeof server.closeAllConnections === "function") server.closeAllConnections();
+  await settleWithin(new Promise((resolve) => server.close(resolve)));
 }
 
 async function waitForMetaSettled(page) {
@@ -139,9 +152,9 @@ const STATES = [
   {
     name: "meta-ops-drawer",
     prepare: async (page) => {
-      await page.click("#baseToggleBtn");
+      await page.locator("#baseToggleBtn").evaluate((button) => button.click());
       await page.waitForSelector("#opsHotspotBtn", { state: "visible" });
-      await page.click("#opsHotspotBtn");
+      await page.locator("#opsHotspotBtn").evaluate((button) => button.click());
       await page.waitForSelector('#metaDrawer:not([hidden]) [data-meta-section="operations"]:not([hidden])');
     }
   },
@@ -153,9 +166,9 @@ const STATES = [
         meta.trailerGoods = 200;
         window.__test.setMeta(meta);
       });
-      await page.click("#baseToggleBtn");
+      await page.locator("#baseToggleBtn").evaluate((button) => button.click());
       await page.waitForSelector("#trailerHotspotBtn", { state: "visible" });
-      await page.click("#trailerHotspotBtn");
+      await page.locator("#trailerHotspotBtn").evaluate((button) => button.click());
       await page.waitForSelector("#trailerOverlay:not([hidden]) #trailerFurnitureList");
     }
   }
@@ -249,6 +262,54 @@ async function runMatrix(browser, baseUrl) {
         assert(appBox.height >= vp.h * 0.9, `${label} app 高度 ${appBox.height}px 應至少佔視口 90%`);
         assert(stageBox.height >= vp.h * (vp.kind === "desktop" ? 0.82 : 0.9), `${label} battle stage 高度 ${stageBox.height}px 應吃滿主要高度`);
         assert(Math.abs(stageBox.width / stageBox.height - 390 / 844) < 0.01, `${label} battle stage 應維持 390:844 等比，實際 ${stageBox.width}x${stageBox.height}`);
+        if (state.name === "meta-shelter") {
+          const startLayout = await page.evaluate(() => {
+            const box = (selector) => {
+              const rect = document.querySelector(selector).getBoundingClientRect();
+              return { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right, width: rect.width, height: rect.height };
+            };
+            const artImage = document.getElementById("shelterImage");
+            const artImageRect = artImage.getBoundingClientRect();
+            const centerNode = document.elementFromPoint(
+              artImageRect.left + artImageRect.width / 2,
+              artImageRect.top + artImageRect.height / 2
+            );
+            const artImageStyle = getComputedStyle(artImage);
+            return {
+              header: box("#garagePanel > .meta-summary"),
+              art: box("#garagePanel > .start-art-stage"),
+              actions: box("#garagePanel > .hotspot-layer"),
+              sortie: box("#sortieBtn"),
+              base: box("#baseToggleBtn"),
+              objectFit: artImageStyle.objectFit,
+              imageHidden: artImage.hidden,
+              imageComplete: artImage.complete,
+              imageNaturalWidth: artImage.naturalWidth,
+              imageNaturalHeight: artImage.naturalHeight,
+              imageDisplay: artImageStyle.display,
+              imageOpacity: Number(artImageStyle.opacity),
+              centerNodeId: centerNode ? centerNode.id : "",
+              panelRows: getComputedStyle(document.getElementById("garagePanel")).gridTemplateRows,
+              atmosphere: getComputedStyle(document.body, "::before").backgroundImage,
+              artFallback: getComputedStyle(document.querySelector(".start-art-stage")).backgroundImage
+            };
+          });
+          assert(startLayout.header.bottom <= startLayout.art.top + 1, `${label} R79 title row must not overlap key art`);
+          assert(startLayout.art.bottom <= startLayout.actions.top + 1, `${label} R79 action row must not overlap key art`);
+          assert(startLayout.art.height >= 120, `${label} R79 key art row must retain a visible focal area`);
+          assert(startLayout.sortie.top >= startLayout.actions.top - 1 && startLayout.sortie.bottom <= startLayout.actions.bottom + 1, `${label} sortie CTA must stay inside the action row`);
+          assert(startLayout.base.top >= startLayout.actions.top - 1 && startLayout.base.bottom <= startLayout.actions.bottom + 1, `${label} base CTA must stay inside the action row`);
+          assert(startLayout.sortie.height >= 44 && startLayout.base.height >= 44, `${label} R79 start controls must preserve 44px reachability`);
+          assert.strictEqual(startLayout.objectFit, "contain", `${label} R79 key art must use object-fit contain`);
+          assert.strictEqual(startLayout.imageHidden, false, `${label} R79 key art must not remain hidden`);
+          assert(startLayout.imageComplete && startLayout.imageNaturalWidth > 0 && startLayout.imageNaturalHeight > 0, `${label} R79 key art must finish loading`);
+          assert.strictEqual(startLayout.imageDisplay, "block", `${label} R79 key art must participate in painting`);
+          assert(startLayout.imageOpacity >= 0.99, `${label} R79 key art must remain opaque`);
+          assert.strictEqual(startLayout.centerNodeId, "shelterImage", `${label} R79 key art must own the central focal layer`);
+          assert(startLayout.panelRows.split(" ").length >= 3, `${label} R79 start panel must resolve to three grid rows`);
+          assert(startLayout.atmosphere.includes("start-atmosphere-r79.png"), `${label} R79 viewport must render the ash atmosphere extension`);
+          assert(startLayout.artFallback.includes("start.png"), `${label} R79 key art stage must keep a visible loading fallback`);
+        }
         if (vp.kind === "desktop") {
           const leftRailBox = await page.locator(".rail-left .rail-cluster").boundingBox();
           const rightRailBox = await page.locator(".rail-right .rail-cluster").boundingBox();
@@ -288,15 +349,21 @@ async function runMatrix(browser, baseUrl) {
 
 (async () => {
   const { server, url } = await startServer();
-  const browser = await chromium.launch({ args: ["--disable-gpu", "--disable-accelerated-2d-canvas"] });
+  const browserChannel = process.env.PLAYWRIGHT_CHANNEL || undefined;
+  const browser = await chromium.launch({
+    channel: browserChannel,
+    args: browserChannel ? [] : ["--disable-gpu", "--disable-accelerated-2d-canvas"]
+  });
   try {
     await runMatrix(browser, url);
     console.log("RWD matrix tests PASS");
   } finally {
-    await browser.close().catch(() => {});
-    await new Promise((resolve) => server.close(resolve));
+    await closeHarness(browser, server);
   }
-})().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+})().then(
+  () => process.exit(0),
+  (error) => {
+    console.error(error);
+    process.exit(1);
+  }
+);

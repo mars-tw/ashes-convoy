@@ -13,8 +13,8 @@
     <meta name="theme-color" content="#111317" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="manifest.webmanifest?v=R78" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R78" />
+    <link rel="manifest" href="manifest.webmanifest?v=R79" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R79" />
     <link rel="canonical" href="https://mars-tw.github.io/ashes-convoy/" />
     <title>灰燼護航</title>
     <style>
@@ -69,16 +69,25 @@
 
       body::before {
         background:
-          linear-gradient(90deg, rgba(4, 6, 9, 0.18), rgba(4, 6, 9, 0.72) 34%, rgba(4, 6, 9, 0.72) 66%, rgba(4, 6, 9, 0.18)),
-          url("assets/env/land.png") center / cover no-repeat;
-        filter: blur(12px) saturate(0.72) brightness(0.48);
-        transform: scale(1.06);
+          linear-gradient(90deg, rgba(3, 5, 7, 0.42), rgba(3, 5, 7, 0.06) 28%, rgba(3, 5, 7, 0.06) 72%, rgba(3, 5, 7, 0.42)),
+          url("assets/ui/start-atmosphere-r79.png") center / cover no-repeat;
+        filter: saturate(0.78) brightness(0.68);
+        transform: scale(1.025);
       }
 
       body::after {
         background:
-          radial-gradient(ellipse at center, rgba(240, 182, 74, 0.08), rgba(2, 3, 5, 0.82) 68%),
-          repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 7px);
+          radial-gradient(circle at 13% 28%, rgba(226, 123, 44, 0.42) 0 1px, transparent 2px),
+          radial-gradient(circle at 78% 67%, rgba(240, 174, 73, 0.34) 0 1px, transparent 2px),
+          radial-gradient(circle at 91% 18%, rgba(191, 94, 35, 0.3) 0 1px, transparent 2px),
+          radial-gradient(ellipse at center, rgba(240, 182, 74, 0.035), rgba(2, 3, 5, 0.74) 76%);
+        background-size: 170px 210px, 230px 280px, 310px 260px, 100% 100%;
+        animation: ash-atmosphere-drift 18s linear infinite;
+      }
+
+      @keyframes ash-atmosphere-drift {
+        from { background-position: 0 0, 0 0, 0 0, center; }
+        to { background-position: 22px -64px, -18px -92px, 12px -76px, center; }
       }
 
       button {
@@ -158,8 +167,8 @@
           justify-content: center;
           align-items: center;
           background:
-            linear-gradient(90deg, rgba(10, 13, 16, 0.86), rgba(10, 13, 16, 0.34) 22%, rgba(10, 13, 16, 0.34) 78%, rgba(10, 13, 16, 0.86)),
-            rgba(12, 15, 18, 0.7);
+            linear-gradient(90deg, rgba(7, 9, 11, 0.58), rgba(7, 9, 11, 0.02) 22%, rgba(7, 9, 11, 0.02) 78%, rgba(7, 9, 11, 0.58)),
+            url("assets/ui/start-atmosphere-r79.png") center / cover no-repeat;
         }
 
         .battle-stage {
@@ -167,21 +176,35 @@
           height: var(--stage-h);
           justify-self: center;
           align-self: center;
-          border: 1px solid rgba(244, 234, 216, 0.16);
+          border: 1px solid rgba(223, 171, 93, 0.28);
           box-shadow:
-            0 0 0 6px rgba(54, 43, 30, 0.5),
-            0 0 0 8px rgba(191, 139, 58, 0.18),
+            0 0 0 5px rgba(31, 25, 19, 0.72),
+            0 0 0 7px rgba(191, 112, 43, 0.18),
             0 28px 80px rgba(0, 0, 0, 0.72);
         }
 
         .desktop-rail {
+          position: relative;
           display: grid;
           align-self: stretch;
           align-content: center;
           min-width: 0;
-          padding: 10px 0;
-          border-block: 1px solid rgba(244, 234, 216, 0.1);
+          padding: 54px 0 10px;
         }
+
+        .desktop-rail::before {
+          position: absolute;
+          top: calc(50% - 176px);
+          color: rgba(220, 182, 128, 0.46);
+          font-family: "Arial Narrow", "Roboto Condensed", sans-serif;
+          font-size: 9px;
+          font-weight: 800;
+          letter-spacing: 0.22em;
+          writing-mode: vertical-rl;
+        }
+
+        .rail-left::before { content: "BASE // 04"; right: 22px; }
+        .rail-right::before { content: "OPS // 79"; left: 22px; }
 
         .rail-left {
           justify-items: end;
@@ -192,21 +215,55 @@
         }
 
         .rail-cluster {
+          position: relative;
           display: grid;
-          gap: 10px;
+          gap: 12px;
           width: 58px;
         }
 
+        .rail-cluster::before {
+          content: "";
+          position: absolute;
+          top: -18px;
+          bottom: -18px;
+          left: 50%;
+          width: 1px;
+          background: linear-gradient(transparent, rgba(211, 145, 66, 0.62) 18%, rgba(211, 145, 66, 0.2) 82%, transparent);
+          box-shadow: 0 0 18px rgba(211, 112, 42, 0.24);
+        }
+
         .rail-btn {
+          position: relative;
           width: 58px;
           min-width: 58px;
           min-height: 58px;
           padding: 0;
           display: grid;
           place-items: center;
-          border-radius: 8px;
-          background: rgba(20, 24, 28, 0.82);
-          box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+          border-color: rgba(217, 165, 93, 0.32);
+          border-radius: 3px;
+          background:
+            linear-gradient(145deg, rgba(75, 55, 38, 0.72), rgba(15, 18, 20, 0.94) 52%),
+            #111417;
+          box-shadow:
+            inset 0 1px 0 rgba(255, 222, 165, 0.12),
+            inset 0 -7px 16px rgba(0, 0, 0, 0.35),
+            0 12px 30px rgba(0, 0, 0, 0.34);
+          transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+        }
+
+        .rail-btn::after {
+          content: "";
+          position: absolute;
+          inset: 4px;
+          border: 1px solid rgba(243, 211, 158, 0.08);
+          pointer-events: none;
+        }
+
+        .rail-btn:hover {
+          transform: translateY(-2px);
+          border-color: rgba(241, 180, 82, 0.72);
+          box-shadow: inset 0 1px 0 rgba(255, 222, 165, 0.2), 0 0 22px rgba(190, 102, 34, 0.2), 0 14px 32px rgba(0, 0, 0, 0.4);
         }
 
         .rail-btn span {
@@ -217,9 +274,12 @@
         }
 
         .rail-icon {
-          color: var(--accent);
+          position: relative;
+          z-index: 1;
+          color: #e3a844;
           font-size: 20px;
           line-height: 1;
+          text-shadow: 0 0 12px rgba(227, 114, 46, 0.36);
         }
 
       }
@@ -355,6 +415,10 @@
       }
 
       @media (prefers-reduced-motion: reduce) {
+        body::after {
+          animation: none;
+        }
+
         .hud-number-pop {
           animation: none;
         }
@@ -1512,12 +1576,15 @@
         inset: 0;
         max-height: none;
         padding: 0;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
         overflow: hidden;
         border: 0;
         border-radius: 0;
-        background: #07090d;
+        background: #080a0b;
         box-shadow: none;
         touch-action: none;
+        isolation: isolate;
       }
 
       .meta-panel.is-illustration::after,
@@ -1526,9 +1593,43 @@
         position: absolute;
         inset: 0;
         background:
-          linear-gradient(180deg, rgba(0, 0, 0, 0.54), rgba(0, 0, 0, 0.06) 24%, rgba(0, 0, 0, 0.42) 100%),
-          radial-gradient(circle at 50% 44%, rgba(255, 218, 150, 0.08), rgba(0, 0, 0, 0) 52%);
+          linear-gradient(90deg, rgba(4, 6, 7, 0.42), transparent 18% 82%, rgba(4, 6, 7, 0.42)),
+          radial-gradient(circle at 50% 44%, rgba(255, 180, 92, 0.055), transparent 52%);
         pointer-events: none;
+        z-index: 4;
+      }
+
+      .start-art-stage {
+        position: relative;
+        z-index: 1;
+        min-height: 0;
+        overflow: hidden;
+        background:
+          linear-gradient(90deg, rgba(8, 10, 11, 0.62), rgba(8, 10, 11, 0.12) 35% 65%, rgba(8, 10, 11, 0.62)),
+          url("assets/ui/start.png") center / contain no-repeat,
+          url("assets/ui/start-atmosphere-r79.png") center / cover no-repeat;
+        box-shadow: inset 0 18px 34px rgba(0, 0, 0, 0.58), inset 0 -18px 34px rgba(0, 0, 0, 0.62);
+      }
+
+      .start-art-stage::before,
+      .start-art-stage::after {
+        content: "";
+        position: absolute;
+        z-index: 3;
+        left: 0;
+        right: 0;
+        height: 58px;
+        pointer-events: none;
+      }
+
+      .start-art-stage::before {
+        top: 0;
+        background: linear-gradient(#090b0c, transparent);
+      }
+
+      .start-art-stage::after {
+        bottom: 0;
+        background: linear-gradient(transparent, #090b0c);
       }
 
       .shelter-image,
@@ -1538,15 +1639,18 @@
         width: 100%;
         height: 100%;
         display: block;
+        object-fit: contain;
+        object-position: center;
       }
 
       .shelter-image {
-        object-fit: cover;
-        object-position: center center;
-        background: #07090d;
+        z-index: 2;
+        background: transparent;
+        filter: drop-shadow(0 0 18px rgba(0, 0, 0, 0.86));
       }
 
       .shelter-canvas {
+        z-index: 2;
         image-rendering: pixelated;
       }
 
@@ -1563,55 +1667,158 @@
 
       .is-illustration .meta-summary,
       .is-shelter .meta-summary {
-        position: absolute;
-        top: max(12px, env(safe-area-inset-top));
-        left: max(12px, env(safe-area-inset-left));
-        right: max(12px, env(safe-area-inset-right));
-        padding: 10px 12px;
-        border: 1px solid rgba(244, 234, 216, 0.18);
-        border-radius: 8px;
-        background: rgba(7, 9, 13, 0.72);
-        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.26);
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.72);
+        position: relative;
+        top: auto;
+        left: auto;
+        right: auto;
+        z-index: 5;
+        gap: 7px;
+        margin: 0;
+        padding: max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 10px max(14px, env(safe-area-inset-left));
+        border: 0;
+        border-bottom: 1px solid rgba(220, 162, 84, 0.24);
+        border-radius: 0;
+        background:
+          linear-gradient(180deg, #0a0c0e 0%, rgba(10, 12, 14, 0.97) 72%, rgba(10, 12, 14, 0.84) 100%);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38);
+        text-shadow: none;
         pointer-events: none;
       }
 
-      .is-illustration .meta-summary h1,
-      .is-shelter .meta-summary h1 {
-        font-size: 30px;
-        line-height: 1.02;
+      .start-brand-line {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .start-brand {
+        position: relative;
+        display: grid;
+        gap: 1px;
+        padding-left: 11px;
+      }
+
+      .start-brand::before {
+        content: "";
+        position: absolute;
+        top: 3px;
+        bottom: 3px;
+        left: 0;
+        width: 3px;
+        background: linear-gradient(#f0b64a, #a64d25 72%, transparent);
+        box-shadow: 0 0 12px rgba(226, 100, 37, 0.44);
+      }
+
+      .start-kicker {
+        margin: 0;
+        color: #c79153;
+        font-family: "Arial Narrow", "Roboto Condensed", sans-serif;
+        font-size: 8px;
+        font-weight: 900;
+        letter-spacing: 0.28em;
+        line-height: 1;
+      }
+
+      .start-logo {
+        margin: 0;
+        font-family: "Noto Serif TC", "Microsoft JhengHei UI", "PMingLiU", serif;
+        font-size: clamp(27px, 8.4cqw, 36px);
+        font-weight: 1000;
+        letter-spacing: 0.09em;
+        line-height: 1;
+        background:
+          linear-gradient(180deg, #fff0c5 0%, #d7ab62 40%, #7d4027 70%, #e4823a 100%);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 2px 0 #3b1c13) drop-shadow(0 0 8px rgba(225, 97, 35, 0.28));
+      }
+
+      .start-release-mark {
+        flex: none;
+        padding: 3px 5px;
+        border: 1px solid rgba(217, 159, 83, 0.3);
+        color: rgba(221, 189, 141, 0.68);
+        font-family: "Arial Narrow", sans-serif;
+        font-size: 8px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        line-height: 1;
+      }
+
+      .start-ledger {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 4px;
+      }
+
+      .start-stat-chip {
+        min-width: 0;
+        min-height: 22px;
+        padding: 3px 5px;
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: 3px;
+        border: 1px solid rgba(220, 188, 143, 0.14);
+        border-radius: 999px;
+        background: rgba(255, 229, 184, 0.035);
+        color: #887a69;
+        font-family: "Microsoft JhengHei UI", sans-serif;
+        font-size: 8px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+
+      .start-stat-chip b {
+        color: #e3cda9;
+        font-family: "Arial Narrow", "Roboto Condensed", sans-serif;
+        font-size: 11px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .start-stat-chip em {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-style: normal;
       }
 
       .is-illustration .meta-summary .status,
       .is-shelter .meta-summary .status {
-        min-height: 18px;
-        margin-top: 4px;
+        min-height: 0;
+        margin: 0;
+        color: #8fd9d4;
+        font-size: 10px;
+      }
+
+      .is-illustration .meta-summary .status:empty,
+      .is-shelter .meta-summary .status:empty {
+        display: none;
       }
 
       .hotspot-layer {
-        position: absolute;
-        left: max(10px, env(safe-area-inset-left));
-        right: max(10px, env(safe-area-inset-right));
-        bottom: max(10px, env(safe-area-inset-bottom));
-        z-index: 3;
+        position: relative;
+        left: auto;
+        right: auto;
+        bottom: auto;
+        z-index: 6;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 1fr) minmax(84px, 0.38fr);
         gap: 8px;
-        padding: 10px;
-        border: 1px solid rgba(244, 234, 216, 0.18);
-        border-radius: 8px;
-        background: rgba(7, 9, 13, 0.68);
-        box-shadow: 0 16px 34px rgba(0, 0, 0, 0.34);
+        padding: 10px max(12px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+        border: 0;
+        border-top: 1px solid rgba(220, 162, 84, 0.24);
+        border-radius: 0;
+        background:
+          linear-gradient(180deg, rgba(13, 15, 16, 0.86), #090b0c 28%, #07090a 100%);
+        box-shadow: 0 -14px 32px rgba(0, 0, 0, 0.44);
         pointer-events: auto;
-        max-height: min(34%, calc(100dvh - 24px));
-        overflow-y: auto;
-        overscroll-behavior: contain;
-      }
-
-      @media (min-width: 860px) and (pointer: fine) {
-        .hotspot-layer {
-          max-height: min(56%, calc(100svh - 24px));
-        }
+        max-height: none;
+        overflow: visible;
       }
 
       .hotspot-btn {
@@ -1619,9 +1826,10 @@
         min-width: 0;
         min-height: 44px;
         padding: 8px 10px;
-        border-color: rgba(244, 234, 216, 0.34);
-        background: rgba(9, 12, 16, 0.72);
-        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+        border-color: rgba(213, 174, 119, 0.28);
+        border-radius: 3px;
+        background: linear-gradient(160deg, rgba(53, 45, 36, 0.76), rgba(14, 17, 18, 0.94) 58%);
+        box-shadow: inset 0 1px 0 rgba(255, 235, 203, 0.08), 0 8px 18px rgba(0, 0, 0, 0.28);
         color: var(--text);
         pointer-events: auto;
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.72);
@@ -1656,28 +1864,126 @@
       }
 
       .hotspot-primary {
-        grid-column: 1 / -1;
-        min-height: 64px;
-        background: rgba(213, 147, 47, 0.88);
-        border-color: rgba(243, 207, 112, 0.92);
-        color: #17110a;
-        font-size: 22px;
-        text-shadow: none;
+        grid-column: 1;
+        min-height: 62px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px 8px 16px;
+        overflow: hidden;
+        background:
+          linear-gradient(180deg, rgba(255, 218, 139, 0.32), transparent 34%),
+          linear-gradient(115deg, #c7832c, #9e4b25 58%, #6f2e1f);
+        border-color: rgba(247, 204, 111, 0.88);
+        color: #fff0cb;
+        text-align: left;
+        text-shadow: 0 2px 1px rgba(66, 25, 12, 0.72);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 241, 194, 0.52),
+          inset 0 -7px 12px rgba(82, 24, 14, 0.35),
+          0 8px 24px rgba(180, 73, 25, 0.24),
+          0 10px 22px rgba(0, 0, 0, 0.38);
+        transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+      }
+
+      .hotspot-primary::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(100deg, transparent 12%, rgba(30, 11, 8, 0.18) 13% 14%, transparent 15% 72%, rgba(255, 236, 188, 0.12) 73% 74%, transparent 75%),
+          repeating-linear-gradient(176deg, transparent 0 8px, rgba(37, 13, 8, 0.1) 9px 10px);
+        pointer-events: none;
+      }
+
+      .hotspot-primary:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.08) saturate(1.05);
+        box-shadow: inset 0 1px 0 rgba(255, 241, 194, 0.62), inset 0 -7px 12px rgba(82, 24, 14, 0.3), 0 0 24px rgba(224, 111, 42, 0.28), 0 12px 26px rgba(0, 0, 0, 0.42);
+      }
+
+      .hotspot-primary:active {
+        transform: translateY(1px);
+      }
+
+      .cta-copy,
+      .base-copy {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        gap: 1px;
+      }
+
+      .cta-copy strong {
+        font-size: 20px;
+        letter-spacing: 0.16em;
+        line-height: 1;
+      }
+
+      .cta-copy small,
+      .base-copy small {
+        color: rgba(255, 234, 196, 0.7);
+        font-size: 8px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+      }
+
+      .cta-arrow {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border: 1px solid rgba(255, 232, 180, 0.42);
+        color: #ffe3a6;
+        font-size: 23px;
+        line-height: 1;
       }
 
       .hotspot-base-toggle {
-        grid-column: 1 / -1;
-        min-height: 50px;
-        border-color: rgba(94, 212, 203, 0.58);
-        background: rgba(12, 28, 31, 0.82);
-        color: #bdeee9;
+        grid-column: 2;
+        min-height: 62px;
+        display: grid;
+        place-items: center;
+        border-color: rgba(139, 184, 178, 0.42);
+        background:
+          linear-gradient(155deg, rgba(61, 83, 79, 0.44), rgba(12, 22, 23, 0.94) 62%),
+          #0d1718;
+        color: #bde2dc;
+        transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease;
+      }
+
+      .hotspot-base-toggle:hover,
+      .hotspot-base-toggle[aria-expanded="true"] {
+        transform: translateY(-2px);
+        border-color: rgba(117, 218, 204, 0.74);
+        background-color: #152d2d;
+      }
+
+      .base-copy strong {
+        font-size: 14px;
+        letter-spacing: 0.12em;
+      }
+
+      .base-copy small {
+        color: rgba(164, 216, 208, 0.64);
       }
 
       .base-actions {
-        grid-column: 1 / -1;
+        position: absolute;
+        left: max(12px, env(safe-area-inset-left));
+        right: max(12px, env(safe-area-inset-right));
+        bottom: calc(100% + 8px);
+        z-index: 8;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
+        padding: 10px;
+        border: 1px solid rgba(222, 175, 109, 0.34);
+        background: rgba(10, 13, 14, 0.96);
+        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.62);
       }
 
       .base-actions[hidden] {
@@ -1695,8 +2001,8 @@
         position: absolute;
         left: max(10px, env(safe-area-inset-left));
         right: max(10px, env(safe-area-inset-right));
-        bottom: calc(max(10px, env(safe-area-inset-bottom)) + 176px);
-        max-height: min(50%, 480px, calc(100dvh - 220px));
+        bottom: calc(max(8px, env(safe-area-inset-bottom)) + 88px);
+        max-height: min(60%, 520px, calc(100dvh - 188px));
         padding: 12px;
         overflow: auto;
         overscroll-behavior: contain;
@@ -1751,7 +2057,8 @@
       }
 
       .is-fallback .shelter-image,
-      .is-fallback .shelter-canvas {
+      .is-fallback .shelter-canvas,
+      .is-fallback .start-art-stage {
         display: none;
       }
 
@@ -1807,18 +2114,37 @@
           gap: 12px;
         }
 
-        .hotspot-layer {
-          left: 18px;
-          right: 18px;
-          bottom: 18px;
-        }
-
         .is-illustration .meta-drawer,
         .is-shelter .meta-drawer {
           left: 18px;
           right: 18px;
-          bottom: 194px;
+          bottom: 102px;
           padding: 16px;
+        }
+      }
+
+      @container (max-width: 330px) {
+        .is-illustration .meta-summary,
+        .is-shelter .meta-summary {
+          padding-inline: max(9px, env(safe-area-inset-left));
+        }
+
+        .start-logo {
+          font-size: 27px;
+        }
+
+        .start-stat-chip {
+          padding-inline: 3px;
+        }
+
+        .hotspot-layer {
+          grid-template-columns: minmax(0, 1fr) 84px;
+          padding-inline: max(8px, env(safe-area-inset-left));
+        }
+
+        .cta-copy small,
+        .base-copy small {
+          display: none;
         }
       }
     </style>
@@ -1919,7 +2245,7 @@
             <span id="trailerBonusText">HP +0% · 傷害 +0% · 射速 +0% · 承傷 -0%</span>
           </div>
           <section class="story-log-section" id="storyLogSection" aria-label="無線電日誌" hidden>
-            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R78" alt="熹" decoding="async" draggable="false" />
+            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R79" alt="熹" decoding="async" draggable="false" />
             <div class="story-log-list" id="storyLogList"></div>
           </section>
           <div class="trailer-room-body">
@@ -1930,18 +2256,36 @@
       </div>
 
       <section class="panel meta-panel is-fallback" id="garagePanel">
-        <img id="shelterImage" class="shelter-image" alt="" decoding="async" draggable="false" hidden />
-        <canvas id="shelterCanvas" class="shelter-canvas" width="390" height="844" aria-label="避難所基地場景" hidden></canvas>
-
         <div class="meta-summary panel-head">
-          <h1>灰燼護航</h1>
-          <p class="subtle" id="garageMeta">廢土零件 0</p>
+          <div class="start-brand-line">
+            <div class="start-brand">
+              <p class="start-kicker">ASHES CONVOY</p>
+              <h1 class="start-logo">灰燼護航</h1>
+            </div>
+            <span class="start-release-mark" aria-hidden="true">R79</span>
+          </div>
+          <div class="start-ledger" id="garageMeta" role="list" aria-label="護航統計">
+            <span class="start-stat-chip" role="listitem"><em>零件</em><b id="startPartsValue">0</b></span>
+            <span class="start-stat-chip" role="listitem"><em>物資</em><b id="startGoodsValue">0</b></span>
+            <span class="start-stat-chip" role="listitem"><em>最遠</em><b id="startWaveValue">0</b></span>
+            <span class="start-stat-chip" role="listitem"><em>擊殺</em><b id="startKillsValue">0</b></span>
+          </div>
           <div class="status" id="garageStatus" role="status" aria-live="polite" aria-atomic="true"></div>
         </div>
 
+        <div class="start-art-stage">
+          <img id="shelterImage" class="shelter-image" alt="" decoding="async" draggable="false" hidden />
+          <canvas id="shelterCanvas" class="shelter-canvas" width="390" height="844" aria-label="避難所基地場景" hidden></canvas>
+        </div>
+
         <div class="hotspot-layer" id="hotspotLayer" aria-label="避難所互動" hidden>
-          <button class="hotspot-btn hotspot-primary" id="sortieBtn" type="button" aria-label="開始出勤">出勤</button>
-          <button class="hotspot-btn hotspot-base-toggle" id="baseToggleBtn" type="button" aria-expanded="false" aria-controls="baseActions">基地</button>
+          <button class="hotspot-btn hotspot-primary" id="sortieBtn" type="button" aria-label="開始出勤">
+            <span class="cta-copy"><strong>出勤</strong><small>IGNITE THE CONVOY</small></span>
+            <span class="cta-arrow" aria-hidden="true">›</span>
+          </button>
+          <button class="hotspot-btn hotspot-base-toggle" id="baseToggleBtn" type="button" aria-expanded="false" aria-controls="baseActions">
+            <span class="base-copy"><strong>基地</strong><small>整備</small></span>
+          </button>
           <div class="base-actions" id="baseActions" hidden>
             <button class="hotspot-btn" id="upgradeHotspotBtn" type="button" aria-label="開啟升級工坊">升級</button>
             <button class="hotspot-btn" id="vehicleHotspotBtn" type="button" aria-label="開啟載具棚">載具</button>
@@ -2134,7 +2478,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R78";
+        var key = "ashes_convoy_html_boot_reload_R79";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -2151,15 +2495,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R78"></script>
-    <script src="src/sprites.js?v=R78"></script>
-    <script src="src/sprite-renderer.js?v=R78"></script>
-    <script src="src/shelter-scene.js?v=R78"></script>
-    <script src="src/config.js?v=R78"></script>
-    <script src="src/rules.js?v=R78"></script>
-    <script src="src/fx.js?v=R78"></script>
-    <script src="src/audio.js?v=R78"></script>
-    <script src="src/game.js?v=R78"></script>
-    <script src="src/ui.js?v=R78"></script>
+    <script src="src/version.js?v=R79"></script>
+    <script src="src/sprites.js?v=R79"></script>
+    <script src="src/sprite-renderer.js?v=R79"></script>
+    <script src="src/shelter-scene.js?v=R79"></script>
+    <script src="src/config.js?v=R79"></script>
+    <script src="src/rules.js?v=R79"></script>
+    <script src="src/fx.js?v=R79"></script>
+    <script src="src/audio.js?v=R79"></script>
+    <script src="src/game.js?v=R79"></script>
+    <script src="src/ui.js?v=R79"></script>
   </body>
 </html>

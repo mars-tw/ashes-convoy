@@ -1408,7 +1408,14 @@
 
   function renderGarage() {
     applyFontSize();
-    els.garageMeta.textContent = `廢土零件 ${meta.parts} · 拾荒物資 ${meta.trailerGoods || 0} · 最遠第 ${meta.bestWave} 波 · 擊殺 ${meta.totalKills}`;
+    if (els.startPartsValue && els.startGoodsValue && els.startWaveValue && els.startKillsValue) {
+      els.startPartsValue.textContent = String(meta.parts);
+      els.startGoodsValue.textContent = String(meta.trailerGoods || 0);
+      els.startWaveValue.textContent = String(meta.bestWave);
+      els.startKillsValue.textContent = String(meta.totalKills);
+    } else {
+      els.garageMeta.textContent = `廢土零件 ${meta.parts} · 拾荒物資 ${meta.trailerGoods || 0} · 最遠第 ${meta.bestWave} 波 · 擊殺 ${meta.totalKills}`;
+    }
     updateStartImageUi();
     renderVehicles();
     renderUpgrades();
@@ -2237,6 +2244,10 @@
       "metaDrawerTitle",
       "closeMetaDrawer",
       "garageMeta",
+      "startPartsValue",
+      "startGoodsValue",
+      "startWaveValue",
+      "startKillsValue",
       "vehicleList",
       "upgradeList",
       "eventCodexList",

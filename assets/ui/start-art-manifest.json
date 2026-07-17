@@ -1,0 +1,21 @@
+{
+  "release": "R79",
+  "slug": "ashes-r79-start",
+  "use_case_slug": "stylized-concept",
+  "generator": "OpenAI built-in image generation (imagegen)",
+  "model_visibility": "The built-in tool does not expose a model identifier.",
+  "reference": "assets/ui/start.png",
+  "artifacts": [
+    {
+      "path": "assets/ui/start-atmosphere-r79.png",
+      "role": "desktop viewport atmosphere extension",
+      "source_dimensions": "1672x941",
+      "runtime_dimensions": "2048x1152",
+      "pixel_format": "24-bit RGB PNG",
+      "alpha_policy": "intentionally opaque fullscreen background; no alpha channel and no tRNS chunk",
+      "sha256": "9754d2a8a6ce563e6a07e969e8643132722e4b3fcb72053c4794e3bc8cab022a"
+    }
+  ],
+  "prompt_summary": "Wide painterly ash-wasteland companion to the existing portrait key art, with a dark low-detail central 32 percent, distant ruined road silhouettes and restrained embers in both side thirds; no text, UI, logo, central vehicle, foreground character or watermark.",
+  "postprocess": "Deterministic high-quality bicubic resample from 1672x941 to 2048x1152; no crop, compositing or color replacement."
+}

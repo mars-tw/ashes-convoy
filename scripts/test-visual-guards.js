@@ -14,7 +14,7 @@ const uiSource = read("src/ui.js");
 const htmlSource = read("index.html");
 const credits = read("CREDITS.md");
 
-assert.strictEqual(version.APP_VERSION, "R78", "visual release guard must target R78");
+assert.strictEqual(version.APP_VERSION, "R79", "visual release guard must target R79");
 
 const textureEntries = Object.entries(config.FX.textures || {});
 assert.strictEqual(textureEntries.length, 4, "R71 must preserve smoke/fire/debris/flash texture layers");
