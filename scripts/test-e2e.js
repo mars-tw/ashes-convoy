@@ -322,12 +322,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R79") && swText.includes("src/ui.js?v=R79") && swText.includes("src/game.js?v=R79") && swText.includes("src/rules.js?v=R79"),
+      swCachesJs: swText.includes("src/version.js?v=R80") && swText.includes("src/ui.js?v=R80") && swText.includes("src/game.js?v=R80") && swText.includes("src/rules.js?v=R80"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R79"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R79"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R79"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R80"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R80"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R80"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -336,7 +336,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R79", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R80", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -485,6 +485,9 @@ async function checkTrailerRoomSystem(page) {
   assert.strictEqual(initial.state.items.filter((item) => item.owned).length, 0, "new save should not own trailer furniture");
   assert.strictEqual(initial.metrics.itemsDrawn, 0, "starter room should draw no purchased furniture");
   assert.strictEqual(initial.metrics.renderMode, "raster", "trailer room should render from raster assets");
+  assert.strictEqual(initial.metrics.quality, "medium", "auto mode should use the real medium R80 room raster");
+  assert.strictEqual(initial.metrics.baseSource, "assets/shelter/trailer/base_escape_pod-medium.png?v=757c8db7", "R80 room must load the content-hashed medium raster");
+  assert.deepStrictEqual([initial.metrics.baseNaturalWidth, initial.metrics.baseNaturalHeight], [650, 750], "R80 medium room dimensions should be reported");
   await page.click("#storyLogBtn");
   await page.waitForSelector('#storyLogSection:not([hidden]) [data-story-beat="b01"] .story-line');
   const storyLog = await page.evaluate(() => {
@@ -547,9 +550,9 @@ async function checkTrailerRoomSystem(page) {
   assert(bought.maxHp > bought.baseHp, "trailer furniture HP bonus should affect vehicle stats");
   assert(bought.bonusText.includes("HP +0.6%"), `trailer bonus text should show the shelf effect: ${bought.bonusText}`);
   assert(bought.metrics && bought.metrics.itemsDrawn >= 1 && bought.metrics.assetsReady, "furnished room should draw purchased raster furniture");
-  assert.strictEqual(bought.metrics.characterCount, 1, "R71 trailer room should contain exactly one Xi");
-  assert.strictEqual(bought.metrics.characterEmbedded, true, "R71 Xi should be embedded in the sharp room master instead of layered twice");
-  assert(Math.abs(bought.metrics.contentRect.w / bought.metrics.contentRect.h - 780 / 900) < 0.001, "R71 room must render at the source aspect ratio without stretching");
+  assert.strictEqual(bought.metrics.characterCount, 1, "R80 trailer room should contain exactly one Xi");
+  assert.strictEqual(bought.metrics.characterEmbedded, true, "R80 Xi should be embedded in the governed room master instead of layered twice");
+  assert(Math.abs(bought.metrics.contentRect.w / bought.metrics.contentRect.h - 780 / 900) < 0.001, "R80 room must render at the source aspect ratio without stretching");
   await page.keyboard.press("Escape");
   await page.waitForFunction(() => document.getElementById("trailerOverlay").hidden === true);
   await page.evaluate(() => {
@@ -743,7 +746,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R79"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R80"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -2860,7 +2863,7 @@ async function checkR71SandstormComfort(page) {
 }
 
 async function checkR71EnemyRosterBehaviors(page) {
-  await page.evaluate(() => {
+  const authoredStepState = await page.evaluate(() => {
     window.__test.clearStorage();
     window.__test.startRun("land_rig");
     const state = window.__test.getState();
@@ -2893,6 +2896,8 @@ async function checkR71EnemyRosterBehaviors(page) {
     // R77/R78 ranged attacks resolve only on their authored impact beat. Give
     // both the 0.22s screamer and 0.35s spitter windups time to reach impact.
     for (let i = 0; i < 5; i += 1) window.__test.step(100);
+    const voidWraith = window.__test.getState().enemies.find((enemy) => enemy.enemyId === "void_wraith");
+    return { voidPhase: !!(voidWraith && voidWraith.phaseActive) };
   });
   await page.waitForFunction(() => {
     const state = window.__test.getState();
@@ -2911,7 +2916,6 @@ async function checkR71EnemyRosterBehaviors(page) {
       spitterCooldown: byId.spore_spitter && byId.spore_spitter.attackCooldown,
       screamerCooldown: byId.ash_screamer && byId.ash_screamer.attackCooldown,
       bruteSlow: state.vehicle.slowUntil > state.time && state.vehicle.slowMul < 1,
-      voidPhase: byId.void_wraith && byId.void_wraith.phaseActive === true,
       tetherSlowMul: byId.chain_tether && byId.chain_tether.behavior && byId.chain_tether.behavior.slowMul,
       mirrorShieldHp: byId.mirror_husk && byId.mirror_husk.shieldHp,
       emberBehavior: byId.ember_tick && byId.ember_tick.behavior && byId.ember_tick.behavior.type,
@@ -2931,7 +2935,7 @@ async function checkR71EnemyRosterBehaviors(page) {
   assert(result.spitterCooldown > 0, "spore spitter should reset attack cooldown after firing");
   assert(result.screamerCooldown > 0, "ash screamer should reset attack cooldown after firing");
   assert.strictEqual(result.bruteSlow, true, "tar brute should apply movement slow aura near the vehicle");
-  assert.strictEqual(result.voidPhase, true, "void wraith should enter phase state");
+  assert.strictEqual(authoredStepState.voidPhase, true, "void wraith should enter phase state during its authored phase window");
   assert(result.tetherSlowMul >= 0.78, "chain tether should use the guarded slow multiplier");
   assert(result.mirrorShieldHp >= 40, "mirror husk should spawn with a strong front shield");
   assert.strictEqual(result.emberBehavior, "swarm", "ember tick should reuse swarm behavior");
@@ -3767,7 +3771,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r79")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r80")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -3785,7 +3789,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r79")), "R79 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r80")), "R80 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

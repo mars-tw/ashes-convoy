@@ -7,6 +7,7 @@ const path = require("path");
 const rootDir = path.resolve(__dirname, "..");
 const version = require("../src/version.js");
 const config = require("../src/config.js");
+const { TRAILER_ROOM_ASSETS } = require("../src/shelter-scene.js");
 
 function readText(relativePath) {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
@@ -83,7 +84,11 @@ Object.values(config.ENEMIES).forEach((enemy) => {
 });
 Object.values((config.FX && config.FX.textures) || {}).forEach((resource) => expectedCached.add(resource));
 ["assets/shelter/bunker.png", "assets/shelter/greenhouse.png", "assets/shelter/snow.png", "assets/shelter/workshop.png"].forEach((resource) => expectedCached.add(resource));
-listFiles("assets/shelter/trailer", ".png").forEach((resource) => expectedCached.add(resource));
+listFiles("assets/shelter/trailer", ".png")
+  .filter((resource) => !resource.includes("base_escape_pod"))
+  .forEach((resource) => expectedCached.add(resource));
+Object.values(TRAILER_ROOM_ASSETS.baseQuality).forEach((resource) => expectedCached.add(resource));
+expectedCached.add("assets/shelter/trailer/room-art-manifest.json");
 expectedCached.add("assets/story/xi.png");
 ["assets/icons/icon-192.png", "assets/icons/icon-512.png"].forEach((resource) => expectedCached.add(resource));
 
@@ -95,8 +100,8 @@ expectedCached.forEach((resource) => {
   assert(fileExists(resource), `service worker cache entry does not exist: ${resource}`);
 });
 
-assert.strictEqual(version.APP_VERSION, "R79");
-assert.strictEqual(version.CACHE_VERSION, `ashes-convoy-${version.APP_VERSION.toLowerCase()}-v2`);
+assert.strictEqual(version.APP_VERSION, "R80");
+assert.strictEqual(version.CACHE_VERSION, `ashes-convoy-${version.APP_VERSION.toLowerCase()}-v1`);
 assert.strictEqual(config.APP_VERSION, version.APP_VERSION, "config APP_VERSION should use src/version.js");
 assert.strictEqual(config.CACHE_VERSION, version.CACHE_VERSION, "config CACHE_VERSION should use src/version.js");
 assert(swText.includes('importScripts("src/version.js")'), "service worker should import the shared version source");
@@ -117,7 +122,7 @@ assert(uiText.includes("controllerchange"), "page should listen for service work
 assert(uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"), "page should gate service worker auto reload to 15 seconds");
 assert(uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"), "page should guard service worker auto reload by session");
 assert(uiText.includes("root.location.reload()"), "page should auto reload after a fresh service worker takes control");
-assert(indexHtml.includes("ashes_convoy_html_boot_reload_R79"), "HTML boot guard should cover pre-JS service worker skew");
+assert(indexHtml.includes("ashes_convoy_html_boot_reload_R80"), "HTML boot guard should cover pre-JS service worker skew");
 
 const userVisibleFiles = ["index.html", ...listFiles("src", ".js")];
 const mojibakePatterns = [

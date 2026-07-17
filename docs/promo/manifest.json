@@ -1,0 +1,69 @@
+{
+  "release": "R80",
+  "slug": "ashes-r80-four-environment-promo",
+  "model_slug": "gpt-image-2",
+  "use_case_slug": "ads-marketing",
+  "runtime": false,
+  "tool_route": "OpenAI built-in imagegen; no API key",
+  "c2pa": {
+    "summary": "all five R80 masters passed caBX c2pa.actions.v2 with softwareAgent gpt-image 2.0",
+    "validation": "docs/evidence/R80/c2pa-validation.json"
+  },
+  "postprocess": {
+    "pipeline": "scripts/build-wave2-art.py r80",
+    "steps": "center crop to 16:9, convert RGB, Pillow LANCZOS to 2048x1152, optimized PNG compress_level=9",
+    "evidence": "docs/evidence/R80/postprocess.json"
+  },
+  "artifacts": [
+    {
+      "environment": "land",
+      "master": "docs/evidence/R80/masters/promo-land-r80-master.png",
+      "master_sha256": "f7485c51da02ea3699ab88dc632bad40cf482d1163e0360898c48dd279cc5864",
+      "path": "docs/promo/ashes-convoy-land-r80.png",
+      "sha256": "264e5415916f37041cd69bbd1558104dc2a5a8051bcdd5ea4944f6b92c00f04c",
+      "dimensions": "2048x1152",
+      "references": {
+        "vehicle": "assets/vehicles/land.png#5c8ab8cd85151074da285ff7cc53d8a74fa8c226a8a34f7f5aae308e5c97c135",
+        "environment": "assets/env/land.png#ec19c034c5c4841dbb1717881773d0fdfca07fdd8043594da5b8a41ca6d1a85f"
+      }
+    },
+    {
+      "environment": "air",
+      "master": "docs/evidence/R80/masters/promo-air-r80-master.png",
+      "master_sha256": "d7257c7555a2cea74df3bc3a9dde969e67608bc27b542119a5ca2ac5e4b9c515",
+      "path": "docs/promo/ashes-convoy-air-r80.png",
+      "sha256": "839594bff86838d5860b017c03c520850f1458802bea3196df1f903e5f4304ba",
+      "dimensions": "2048x1152",
+      "references": {
+        "vehicle": "assets/vehicles/air.png#582fbd2ab632785f10c9adc4a6c06618146871a8b209871ea5274785ec04cd0b",
+        "environment": "assets/env/air.png#6ebf5eb1f1a6af0a4abccc31ecd3625a6ff094178a46bcdd638f0fa11d1aa2a2"
+      }
+    },
+    {
+      "environment": "sea",
+      "master": "docs/evidence/R80/masters/promo-sea-r80-master.png",
+      "master_sha256": "f79859390fa41d2037673e2aa1f79cfed4a4a0851e544232373218601e4a615a",
+      "path": "docs/promo/ashes-convoy-sea-r80.png",
+      "sha256": "9ea536a05120f1e0bbdc8385c7650d605bfed554e37c083788c15698297102de",
+      "dimensions": "2048x1152",
+      "references": {
+        "vehicle": "assets/vehicles/sea.png#71133c613e7aefdbec37ed4080e85c3cf00219f1d1e7d6e171cedb38797b68c3",
+        "environment": "assets/env/sea.png#e5e0f86a6325f72758c571f8271b05f58f2b94daa578a04b33d6a047c4a3df64"
+      }
+    },
+    {
+      "environment": "space",
+      "master": "docs/evidence/R80/masters/promo-space-r80-master.png",
+      "master_sha256": "1d356ef40969b191b77a6c2647e935ae9159730048f6afda583edf800c11260e",
+      "path": "docs/promo/ashes-convoy-space-r80.png",
+      "sha256": "8a67c657d4e8528a30bd19954ec77b2415764ded971720a55cd5435c1cca9a62",
+      "dimensions": "2048x1152",
+      "references": {
+        "vehicle": "assets/vehicles/space.png#702ebb5a8590d0cad761486aec6ff1be275cd9b6abb8764b10d8218f2818c3c1",
+        "environment": "assets/env/space.png#feeb2a73e568eeb2b34285098a101c173578a00ebd54f64af1a103b80ad3abc5"
+      }
+    }
+  ],
+  "shared_style_reference": "assets/ui/start-atmosphere-r79.png#31cbd67f48bfe23e246b138b2cb4d5f3bd5399c5d12c90cb39d2fbbea26c9f9c",
+  "runtime_exclusion": "These images must not be referenced by index.html, src/, sw.js, or manifest.webmanifest."
+}

@@ -1,0 +1,119 @@
+[
+  {
+    "viewport": {
+      "label": "desktop-1366x700",
+      "width": 1366,
+      "height": 700
+    },
+    "appVersion": "R79",
+    "metrics": {
+      "contentRect": {
+        "x": 38.56666666666666,
+        "y": 0,
+        "w": 221.86666666666667,
+        "h": 256,
+        "scale": 0.28444444444444444
+      },
+      "scale": 0.28444444444444444,
+      "starterState": true,
+      "equipped": [],
+      "itemsDrawn": 0,
+      "assetsReady": true,
+      "baseReady": true,
+      "characterCount": 1,
+      "characterEmbedded": true,
+      "renderMode": "raster"
+    },
+    "overlayHidden": false,
+    "overlayRect": {
+      "x": 522.265625,
+      "y": 1,
+      "width": 321.453125,
+      "height": 698
+    },
+    "canvas": {
+      "cssWidth": 299.453125,
+      "cssHeight": 255.625,
+      "width": 299,
+      "height": 256
+    }
+  },
+  {
+    "viewport": {
+      "label": "tablet-820x1180",
+      "width": 820,
+      "height": 1180
+    },
+    "appVersion": "R79",
+    "metrics": {
+      "contentRect": {
+        "x": 30.96666666666664,
+        "y": 0,
+        "w": 461.0666666666667,
+        "h": 532,
+        "scale": 0.5911111111111111
+      },
+      "scale": 0.5911111111111111,
+      "starterState": true,
+      "equipped": [],
+      "itemsDrawn": 0,
+      "assetsReady": true,
+      "baseReady": true,
+      "characterCount": 1,
+      "characterEmbedded": true,
+      "renderMode": "raster"
+    },
+    "overlayHidden": false,
+    "overlayRect": {
+      "x": 137.375,
+      "y": 0,
+      "width": 545.25,
+      "height": 1180
+    },
+    "canvas": {
+      "cssWidth": 523.25,
+      "cssHeight": 531.59375,
+      "width": 523,
+      "height": 532
+    }
+  },
+  {
+    "viewport": {
+      "label": "phone-390x844",
+      "width": 390,
+      "height": 844
+    },
+    "appVersion": "R79",
+    "metrics": {
+      "contentRect": {
+        "x": 49.23333333333332,
+        "y": 0,
+        "w": 269.53333333333336,
+        "h": 311,
+        "scale": 0.34555555555555556
+      },
+      "scale": 0.34555555555555556,
+      "starterState": true,
+      "equipped": [],
+      "itemsDrawn": 0,
+      "assetsReady": true,
+      "baseReady": true,
+      "characterCount": 1,
+      "characterEmbedded": true,
+      "renderMode": "raster"
+    },
+    "overlayHidden": false,
+    "overlayRect": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    },
+    "canvas": {
+      "cssWidth": 368,
+      "cssHeight": 311.109375,
+      "width": 368,
+      "height": 311
+    }
+  }
+]

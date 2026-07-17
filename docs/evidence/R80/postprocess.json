@@ -1,0 +1,135 @@
+{
+  "pipeline": "scripts/build-wave2-art.py",
+  "target": "r80",
+  "result": {
+    "room": {
+      "master": "docs/evidence/R80/masters/trailer-room-r80-master.png",
+      "masterSha256": "4f95a1734a7d55c91de2f82f36fd28da9cdf6c9df43a1dca12b1bbcbcab912d5",
+      "outputs": [
+        {
+          "path": "assets/shelter/trailer/base_escape_pod.png",
+          "dimensions": "780x900",
+          "sha256": "ad41b8f759c43403c36fd32143025a74d9c34f580a98e337e5acd34178ab99f9",
+          "bytes": 1183150,
+          "decodedBytes": 2808000,
+          "cropBox": [
+            0,
+            0,
+            1167,
+            1347
+          ],
+          "resample": "Pillow LANCZOS",
+          "mode": "RGB"
+        },
+        {
+          "path": "assets/shelter/trailer/base_escape_pod-medium.png",
+          "dimensions": "650x750",
+          "sha256": "757c8db740d0c3f63bebf4b858dd735c97075299bd660edc3f25a2fe6c693270",
+          "bytes": 825873,
+          "decodedBytes": 1950000,
+          "cropBox": [
+            0,
+            0,
+            1167,
+            1347
+          ],
+          "resample": "Pillow LANCZOS",
+          "mode": "RGB"
+        },
+        {
+          "path": "assets/shelter/trailer/base_escape_pod-low.png",
+          "dimensions": "520x600",
+          "sha256": "027c13ed3c61ca94e08db66e36829c35c1626f849a49ce3580d6904cfdccbb93",
+          "bytes": 524952,
+          "decodedBytes": 1248000,
+          "cropBox": [
+            0,
+            0,
+            1167,
+            1347
+          ],
+          "resample": "Pillow LANCZOS",
+          "mode": "RGB"
+        }
+      ]
+    },
+    "promos": {
+      "land": {
+        "master": "docs/evidence/R80/masters/promo-land-r80-master.png",
+        "masterSha256": "f7485c51da02ea3699ab88dc632bad40cf482d1163e0360898c48dd279cc5864",
+        "output": {
+          "path": "docs/promo/ashes-convoy-land-r80.png",
+          "dimensions": "2048x1152",
+          "sha256": "264e5415916f37041cd69bbd1558104dc2a5a8051bcdd5ea4944f6b92c00f04c",
+          "bytes": 3440063,
+          "decodedBytes": 9437184,
+          "cropBox": [
+            0,
+            0,
+            1672,
+            940
+          ],
+          "resample": "Pillow LANCZOS",
+          "mode": "RGB"
+        }
+      },
+      "air": {
+        "master": "docs/evidence/R80/masters/promo-air-r80-master.png",
+        "masterSha256": "d7257c7555a2cea74df3bc3a9dde969e67608bc27b542119a5ca2ac5e4b9c515",
+        "output": {
+          "path": "docs/promo/ashes-convoy-air-r80.png",
+          "dimensions": "2048x1152",
+          "sha256": "839594bff86838d5860b017c03c520850f1458802bea3196df1f903e5f4304ba",
+          "bytes": 3125174,
+          "decodedBytes": 9437184,
+          "cropBox": [
+            0,
+            0,
+            1672,
+            940
+          ],
+          "resample": "Pillow LANCZOS",
+          "mode": "RGB"
+        }
+      },
+      "sea": {
+        "master": "docs/evidence/R80/masters/promo-sea-r80-master.png",
+        "masterSha256": "f79859390fa41d2037673e2aa1f79cfed4a4a0851e544232373218601e4a615a",
+        "output": {
+          "path": "docs/promo/ashes-convoy-sea-r80.png",
+          "dimensions": "2048x1152",
+          "sha256": "9ea536a05120f1e0bbdc8385c7650d605bfed554e37c083788c15698297102de",
+          "bytes": 3346448,
+          "decodedBytes": 9437184,
+          "cropBox": [
+            0,
+            0,
+            1672,
+            940
+          ],
+          "resample": "Pillow LANCZOS",
+          "mode": "RGB"
+        }
+      },
+      "space": {
+        "master": "docs/evidence/R80/masters/promo-space-r80-master.png",
+        "masterSha256": "1d356ef40969b191b77a6c2647e935ae9159730048f6afda583edf800c11260e",
+        "output": {
+          "path": "docs/promo/ashes-convoy-space-r80.png",
+          "dimensions": "2048x1152",
+          "sha256": "8a67c657d4e8528a30bd19954ec77b2415764ded971720a55cd5435c1cca9a62",
+          "bytes": 3346950,
+          "decodedBytes": 9437184,
+          "cropBox": [
+            0,
+            0,
+            1672,
+            940
+          ],
+          "resample": "Pillow LANCZOS",
+          "mode": "RGB"
+        }
+      }
+    }
+  }
+}

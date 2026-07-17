@@ -87,12 +87,40 @@ def build_start() -> dict[str, object]:
     }
 
 
+def build_r80() -> dict[str, object]:
+    evidence = ROOT / "docs/evidence/R80"
+    master_dir = evidence / "masters"
+    room_master = master_dir / "trailer-room-r80-master.png"
+    room_outputs = [
+        derive(room_master, ROOT / "assets/shelter/trailer/base_escape_pod.png", (780, 900)),
+        derive(room_master, ROOT / "assets/shelter/trailer/base_escape_pod-medium.png", (650, 750)),
+        derive(room_master, ROOT / "assets/shelter/trailer/base_escape_pod-low.png", (520, 600)),
+    ]
+    promos = {}
+    for environment in ("land", "air", "sea", "space"):
+        master = master_dir / f"promo-{environment}-r80-master.png"
+        output = ROOT / f"docs/promo/ashes-convoy-{environment}-r80.png"
+        promos[environment] = {
+            "master": master.relative_to(ROOT).as_posix(),
+            "masterSha256": sha256(master),
+            "output": derive(master, output, (2048, 1152)),
+        }
+    return {
+        "room": {
+            "master": room_master.relative_to(ROOT).as_posix(),
+            "masterSha256": sha256(room_master),
+            "outputs": room_outputs,
+        },
+        "promos": promos,
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("target", choices=["start"])
+    parser.add_argument("target", choices=["start", "r80"])
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
-    result = build_start()
+    result = build_start() if args.target == "start" else build_r80()
     report = {"pipeline": "scripts/build-wave2-art.py", "target": args.target, "result": result}
     rendered = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
     if args.output:

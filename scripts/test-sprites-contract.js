@@ -242,6 +242,8 @@ check(frameCount === expectedFrameCount, `frame count must be ${expectedFrameCou
 
 [
   { path: "assets/shelter/trailer/base_escape_pod.png", width: 780, height: 900 },
+  { path: "assets/shelter/trailer/base_escape_pod-medium.png", width: 650, height: 750 },
+  { path: "assets/shelter/trailer/base_escape_pod-low.png", width: 520, height: 600 },
   { path: "assets/shelter/trailer/supply_shelf.png", width: 260, height: 210, alphaBinary: true },
   { path: "assets/shelter/trailer/solar_radio.png", width: 180, height: 140, alphaBinary: true },
   { path: "assets/shelter/trailer/patched_lights.png", width: 300, height: 110, alphaBinary: true },
@@ -258,7 +260,8 @@ check(frameCount === expectedFrameCount, `frame count must be ${expectedFrameCou
   { path: "assets/vehicles/xi_gunner.png", width: 512, height: 384, alphaBinary: false }
 ].forEach(checkPngContract);
 
-check(TRAILER_ROOM_ASSETS.base === "assets/shelter/trailer/base_escape_pod.png", "R71 trailer room must use the redesigned full-scene raster");
+check(TRAILER_ROOM_ASSETS.base === "assets/shelter/trailer/base_escape_pod.png?v=ad41b8f7", "R80 trailer room must use the content-hashed high raster");
+check(Object.keys(TRAILER_ROOM_ASSETS.baseQuality).join(",") === "high,medium,low", "R80 trailer room must expose high/medium/low base art");
 check(!Object.prototype.hasOwnProperty.call(TRAILER_ROOM_ASSETS, "character"), "R71 room must not layer a second Xi portrait over the embedded single character");
 check(!Object.prototype.hasOwnProperty.call(TRAILER_ROOM_ASSETS, "characterAnchor"), "R71 room must not retain the duplicate-character anchor");
 

@@ -34,7 +34,7 @@ function readPngChunks(buffer) {
   return chunks;
 }
 
-assert.strictEqual(version.APP_VERSION, "R79", "start-screen release guard must target R79");
+assert.strictEqual(version.APP_VERSION, "R80", "R79.1 start-screen asset must remain governed in the R80 release");
 assert.strictEqual(config.START_SCREEN.slug, "ashes-r79-start", "runtime config must record the R79 start-screen slug");
 assert.strictEqual(config.START_SCREEN.atmosphere, artifact.runtime_url, "runtime atmosphere must match the content-hashed asset manifest URL");
 assert.strictEqual(config.START_SCREEN.manifest, "assets/ui/start-art-manifest.json", "runtime config must expose the asset manifest");

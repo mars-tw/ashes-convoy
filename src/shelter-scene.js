@@ -369,7 +369,12 @@ function drawTrailerRoomShell(ctx, r, s, timeMs) {
 }
 
 const TRAILER_ROOM_ASSETS = {
-  base: "assets/shelter/trailer/base_escape_pod.png",
+  base: "assets/shelter/trailer/base_escape_pod.png?v=ad41b8f7",
+  baseQuality: {
+    high: "assets/shelter/trailer/base_escape_pod.png?v=ad41b8f7",
+    medium: "assets/shelter/trailer/base_escape_pod-medium.png?v=757c8db7",
+    low: "assets/shelter/trailer/base_escape_pod-low.png?v=027c13ed"
+  },
   furniture: {
     supply_shelf: "assets/shelter/trailer/supply_shelf.png",
     solar_radio: "assets/shelter/trailer/solar_radio.png",
@@ -418,6 +423,11 @@ function getTrailerImage(src) {
   image.src = src;
   trailerImageCache.set(src, image);
   return image;
+}
+
+function trailerRoomQuality(value) {
+  if (value === "low" || value === "high") return value;
+  return "medium";
 }
 
 function fitContain(srcW, srcH, dstW, dstH) {
@@ -556,7 +566,9 @@ function drawTrailerRoom(ctx, opts = {}) {
   const room = state.room && typeof state.room === "object" ? state.room : {};
   const slots = room.slots && typeof room.slots === "object" ? room.slots : {};
   const equipped = Object.keys(slots).map((slotId) => slots[slotId]).filter(Boolean);
-  const baseImage = getTrailerImage(TRAILER_ROOM_ASSETS.base);
+  const quality = trailerRoomQuality(opts.quality);
+  const baseSource = TRAILER_ROOM_ASSETS.baseQuality[quality];
+  const baseImage = getTrailerImage(baseSource);
   const baseReady = isImageReady(baseImage);
   let assetsReady = baseReady;
   let contentRect = { x: 0, y: 0, w: width, h: height };
@@ -568,6 +580,8 @@ function drawTrailerRoom(ctx, opts = {}) {
   ctx.fillRect(0, 0, width, height);
   if (baseReady) {
     contentRect = fitContain(baseImage.naturalWidth, baseImage.naturalHeight, width, height);
+    contentRect.naturalScale = contentRect.scale;
+    contentRect.scale = contentRect.w / 780;
     ctx.drawImage(baseImage, contentRect.x, contentRect.y, contentRect.w, contentRect.h);
     Object.keys(slots).forEach((slotId) => {
       const furnitureId = slots[slotId];
@@ -601,7 +615,11 @@ function drawTrailerRoom(ctx, opts = {}) {
     baseReady,
     characterCount: baseReady ? 1 : 0,
     characterEmbedded: true,
-    renderMode: "raster"
+    renderMode: "raster",
+    quality,
+    baseSource,
+    baseNaturalWidth: baseReady ? baseImage.naturalWidth : 0,
+    baseNaturalHeight: baseReady ? baseImage.naturalHeight : 0
   };
 }
 

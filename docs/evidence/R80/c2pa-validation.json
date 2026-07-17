@@ -1,0 +1,76 @@
+{
+  "validator": "scripts/verify-c2pa.py",
+  "results": [
+    {
+      "path": "docs/evidence/R80/masters/trailer-room-r80-master.png",
+      "sha256": "4f95a1734a7d55c91de2f82f36fd28da9cdf6c9df43a1dca12b1bbcbcab912d5",
+      "bytes": 2576184,
+      "c2paChunk": "caBX",
+      "c2paChunkCount": 1,
+      "actionsAssertionPresent": true,
+      "softwareAgent": {
+        "name": "gpt-image",
+        "version": "2.0"
+      },
+      "softwareAgentSummary": "gpt-image 2.0",
+      "pass": true
+    },
+    {
+      "path": "docs/evidence/R80/masters/promo-land-r80-master.png",
+      "sha256": "f7485c51da02ea3699ab88dc632bad40cf482d1163e0360898c48dd279cc5864",
+      "bytes": 2538463,
+      "c2paChunk": "caBX",
+      "c2paChunkCount": 1,
+      "actionsAssertionPresent": true,
+      "softwareAgent": {
+        "name": "gpt-image",
+        "version": "2.0"
+      },
+      "softwareAgentSummary": "gpt-image 2.0",
+      "pass": true
+    },
+    {
+      "path": "docs/evidence/R80/masters/promo-air-r80-master.png",
+      "sha256": "d7257c7555a2cea74df3bc3a9dde969e67608bc27b542119a5ca2ac5e4b9c515",
+      "bytes": 2338025,
+      "c2paChunk": "caBX",
+      "c2paChunkCount": 1,
+      "actionsAssertionPresent": true,
+      "softwareAgent": {
+        "name": "gpt-image",
+        "version": "2.0"
+      },
+      "softwareAgentSummary": "gpt-image 2.0",
+      "pass": true
+    },
+    {
+      "path": "docs/evidence/R80/masters/promo-sea-r80-master.png",
+      "sha256": "f79859390fa41d2037673e2aa1f79cfed4a4a0851e544232373218601e4a615a",
+      "bytes": 2482619,
+      "c2paChunk": "caBX",
+      "c2paChunkCount": 1,
+      "actionsAssertionPresent": true,
+      "softwareAgent": {
+        "name": "gpt-image",
+        "version": "2.0"
+      },
+      "softwareAgentSummary": "gpt-image 2.0",
+      "pass": true
+    },
+    {
+      "path": "docs/evidence/R80/masters/promo-space-r80-master.png",
+      "sha256": "1d356ef40969b191b77a6c2647e935ae9159730048f6afda583edf800c11260e",
+      "bytes": 2509492,
+      "c2paChunk": "caBX",
+      "c2paChunkCount": 1,
+      "actionsAssertionPresent": true,
+      "softwareAgent": {
+        "name": "gpt-image",
+        "version": "2.0"
+      },
+      "softwareAgentSummary": "gpt-image 2.0",
+      "pass": true
+    }
+  ],
+  "pass": true
+}

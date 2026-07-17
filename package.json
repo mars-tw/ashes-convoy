@@ -4,11 +4,12 @@
   "description": "灰燼護航：vanilla HTML/CSS/JS + Canvas 的像素風末日喪屍護航射擊網頁遊戲。",
   "type": "commonjs",
   "scripts": {
-    "test": "node scripts/test-config.js && node scripts/test-automation-guards.js && node scripts/test-visual-guards.js && node scripts/test-r79-start-screen.js && node scripts/test-animation-assets.js && node scripts/test-rules.js && node scripts/test-supply-choice.js && node scripts/test-economy.js && node scripts/test-storage.js && node scripts/test-sprites-contract.js && node scripts/test-fx.js && node scripts/test-audio.js",
+    "test": "node scripts/test-config.js && node scripts/test-automation-guards.js && node scripts/test-visual-guards.js && node scripts/test-r79-start-screen.js && node scripts/test-r80-art.js && node scripts/test-animation-assets.js && node scripts/test-rules.js && node scripts/test-supply-choice.js && node scripts/test-economy.js && node scripts/test-storage.js && node scripts/test-sprites-contract.js && node scripts/test-fx.js && node scripts/test-audio.js",
     "test:e2e": "node scripts/test-e2e.js && node scripts/wait-for-browser-memory.js && node scripts/test-r76-controls.js",
     "test:rwd": "node scripts/test-rwd-matrix.js",
     "test:perf": "node scripts/test-r78-performance.js",
     "evidence:r79": "node scripts/capture-r79-start.js && python scripts/audit-r79-art.py",
+    "evidence:r80": "node scripts/capture-r80-room.js after && python scripts/audit-r80-art.py",
     "start": "python -m http.server 8000"
   },
   "keywords": [

@@ -1,0 +1,62 @@
+{
+  "release": "R80",
+  "slug": "ashes-r80-trailer-room",
+  "model_slug": "gpt-image-2",
+  "use_case_slug": "stylized-concept",
+  "tool_route": "OpenAI built-in imagegen; no API key",
+  "master": {
+    "path": "docs/evidence/R80/masters/trailer-room-r80-master.png",
+    "sha256": "4f95a1734a7d55c91de2f82f36fd28da9cdf6c9df43a1dca12b1bbcbcab912d5",
+    "bytes": 2576184,
+    "c2pa": {
+      "chunk": "caBX",
+      "actions_assertion": "c2pa.actions.v2",
+      "softwareAgent": "gpt-image 2.0",
+      "validation": "docs/evidence/R80/c2pa-validation.json"
+    }
+  },
+  "references": [
+    {
+      "path": "assets/shelter/trailer/base_escape_pod.png@fe13c69",
+      "sha256": "d020b33756fa4a6df1b1b4750056df5d09c4f37e6a1dc58dac33640b0def4340",
+      "purpose": "canonical Xi identity and room layout"
+    },
+    {
+      "path": "assets/ui/start.png",
+      "sha256": "d725486d457a190500295cd745e541b08699a521e1addd13c781eb17d16f309e",
+      "purpose": "warm ash and cool steel style reference"
+    }
+  ],
+  "postprocess": {
+    "pipeline": "scripts/build-wave2-art.py r80",
+    "evidence": "docs/evidence/R80/postprocess.json",
+    "steps": "center crop to 13:15, convert RGB, Pillow LANCZOS, optimized PNG compress_level=9"
+  },
+  "artifacts": [
+    {
+      "quality": "high",
+      "path": "assets/shelter/trailer/base_escape_pod.png",
+      "runtime_url": "assets/shelter/trailer/base_escape_pod.png?v=ad41b8f7",
+      "dimensions": "780x900",
+      "master_sha256": "4f95a1734a7d55c91de2f82f36fd28da9cdf6c9df43a1dca12b1bbcbcab912d5",
+      "runtime_sha256": "ad41b8f759c43403c36fd32143025a74d9c34f580a98e337e5acd34178ab99f9"
+    },
+    {
+      "quality": "medium",
+      "path": "assets/shelter/trailer/base_escape_pod-medium.png",
+      "runtime_url": "assets/shelter/trailer/base_escape_pod-medium.png?v=757c8db7",
+      "dimensions": "650x750",
+      "master_sha256": "4f95a1734a7d55c91de2f82f36fd28da9cdf6c9df43a1dca12b1bbcbcab912d5",
+      "runtime_sha256": "757c8db740d0c3f63bebf4b858dd735c97075299bd660edc3f25a2fe6c693270"
+    },
+    {
+      "quality": "low",
+      "path": "assets/shelter/trailer/base_escape_pod-low.png",
+      "runtime_url": "assets/shelter/trailer/base_escape_pod-low.png?v=027c13ed",
+      "dimensions": "520x600",
+      "master_sha256": "4f95a1734a7d55c91de2f82f36fd28da9cdf6c9df43a1dca12b1bbcbcab912d5",
+      "runtime_sha256": "027c13ed3c61ca94e08db66e36829c35c1626f849a49ce3580d6904cfdccbb93"
+    }
+  ],
+  "rollback": "git revert the R80 commit to restore the R79.1 room and cache"
+}

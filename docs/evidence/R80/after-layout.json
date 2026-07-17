@@ -1,0 +1,155 @@
+[
+  {
+    "viewport": {
+      "label": "desktop-1366x700",
+      "width": 1366,
+      "height": 700
+    },
+    "appVersion": "R80",
+    "metrics": {
+      "contentRect": {
+        "x": 38.56666666666666,
+        "y": 0,
+        "w": 221.86666666666667,
+        "h": 256,
+        "scale": 0.28444444444444444,
+        "naturalScale": 0.28444444444444444
+      },
+      "scale": 0.28444444444444444,
+      "starterState": true,
+      "equipped": [],
+      "itemsDrawn": 0,
+      "assetsReady": true,
+      "baseReady": true,
+      "characterCount": 1,
+      "characterEmbedded": true,
+      "renderMode": "raster",
+      "quality": "high",
+      "baseSource": "assets/shelter/trailer/base_escape_pod.png?v=ad41b8f7",
+      "baseNaturalWidth": 780,
+      "baseNaturalHeight": 900
+    },
+    "overlayHidden": false,
+    "overlayRect": {
+      "x": 522.265625,
+      "y": 1,
+      "width": 321.453125,
+      "height": 698
+    },
+    "canvas": {
+      "cssWidth": 299.453125,
+      "cssHeight": 255.625,
+      "width": 299,
+      "height": 256
+    },
+    "contrastStyles": {
+      "panelBackground": "rgba(14, 17, 21, 0.96)",
+      "overlayBackground": "rgba(5, 7, 10, 0.94)",
+      "pageBackground": "rgb(17, 19, 23)",
+      "primaryColor": "rgb(244, 234, 216)",
+      "mutedColor": "rgb(184, 176, 163)"
+    }
+  },
+  {
+    "viewport": {
+      "label": "tablet-820x1180",
+      "width": 820,
+      "height": 1180
+    },
+    "appVersion": "R80",
+    "metrics": {
+      "contentRect": {
+        "x": 30.96666666666664,
+        "y": 0,
+        "w": 461.0666666666667,
+        "h": 532,
+        "scale": 0.5911111111111111,
+        "naturalScale": 0.7093333333333334
+      },
+      "scale": 0.5911111111111111,
+      "starterState": true,
+      "equipped": [],
+      "itemsDrawn": 0,
+      "assetsReady": true,
+      "baseReady": true,
+      "characterCount": 1,
+      "characterEmbedded": true,
+      "renderMode": "raster",
+      "quality": "medium",
+      "baseSource": "assets/shelter/trailer/base_escape_pod-medium.png?v=757c8db7",
+      "baseNaturalWidth": 650,
+      "baseNaturalHeight": 750
+    },
+    "overlayHidden": false,
+    "overlayRect": {
+      "x": 137.375,
+      "y": 0,
+      "width": 545.25,
+      "height": 1180
+    },
+    "canvas": {
+      "cssWidth": 523.25,
+      "cssHeight": 531.59375,
+      "width": 523,
+      "height": 532
+    },
+    "contrastStyles": {
+      "panelBackground": "rgba(14, 17, 21, 0.96)",
+      "overlayBackground": "rgba(5, 7, 10, 0.94)",
+      "pageBackground": "rgb(17, 19, 23)",
+      "primaryColor": "rgb(244, 234, 216)",
+      "mutedColor": "rgb(184, 176, 163)"
+    }
+  },
+  {
+    "viewport": {
+      "label": "phone-390x844",
+      "width": 390,
+      "height": 844
+    },
+    "appVersion": "R80",
+    "metrics": {
+      "contentRect": {
+        "x": 49.23333333333335,
+        "y": 0,
+        "w": 269.5333333333333,
+        "h": 311,
+        "scale": 0.3455555555555555,
+        "naturalScale": 0.5183333333333333
+      },
+      "scale": 0.3455555555555555,
+      "starterState": true,
+      "equipped": [],
+      "itemsDrawn": 0,
+      "assetsReady": true,
+      "baseReady": true,
+      "characterCount": 1,
+      "characterEmbedded": true,
+      "renderMode": "raster",
+      "quality": "low",
+      "baseSource": "assets/shelter/trailer/base_escape_pod-low.png?v=027c13ed",
+      "baseNaturalWidth": 520,
+      "baseNaturalHeight": 600
+    },
+    "overlayHidden": false,
+    "overlayRect": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    },
+    "canvas": {
+      "cssWidth": 368,
+      "cssHeight": 311.109375,
+      "width": 368,
+      "height": 311
+    },
+    "contrastStyles": {
+      "panelBackground": "rgba(14, 17, 21, 0.96)",
+      "overlayBackground": "rgba(5, 7, 10, 0.94)",
+      "pageBackground": "rgb(17, 19, 23)",
+      "primaryColor": "rgb(244, 234, 216)",
+      "mutedColor": "rgb(184, 176, 163)"
+    }
+  }
+]

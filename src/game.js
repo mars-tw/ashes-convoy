@@ -5947,6 +5947,20 @@
     }
   }
 
+  function rasterAssetsReady() {
+    const loaded = (record) => !!(
+      record && record.status === "loaded" && record.image && record.image.complete &&
+      record.image.naturalWidth > 0 && record.image.naturalHeight > 0
+    );
+    const enemyRecords = Object.values(enemyImages);
+    const enemiesReady = enemyRecords.length === Object.keys(config.ENEMIES).length && enemyRecords.every((record) =>
+      loaded(record) && Object.values(record.actions || {}).every(loaded)
+    );
+    return enemiesReady && Object.values(vehicleImages).every(loaded) &&
+      Object.values(environmentImages).every(loaded) && Object.values(runTrailerImages).every(loaded) &&
+      Object.values(companionImages).every(loaded) && Object.values(fxTextureImages).every(loaded);
+  }
+
   function exposeTestApi() {
     root.__test = Object.assign({}, root.__test || {}, {
       getState,
@@ -5969,7 +5983,8 @@
       getRenderDebug: () => rules.deepClone(renderDebug),
       samplePerformanceFrames,
       config,
-      spritesReady
+      spritesReady,
+      rasterAssetsReady
     });
   }
 

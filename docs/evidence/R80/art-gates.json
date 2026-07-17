@@ -1,0 +1,152 @@
+{
+  "release": "R80",
+  "alphaGate": {
+    "expected": "opaque RGB",
+    "pass": true
+  },
+  "qualityConsistency": {
+    "metrics": {
+      "low": {
+        "rmsVsHigh": 0.5685,
+        "realAsset": true
+      },
+      "medium": {
+        "rmsVsHigh": 0.7672,
+        "realAsset": true
+      },
+      "high": {
+        "rmsVsHigh": 0.0,
+        "realAsset": true
+      }
+    },
+    "rmsMax": 1.0,
+    "pass": true
+  },
+  "characterBrightnessSaturationGate": {
+    "region": "x18-56%, y45-84%",
+    "metrics": {
+      "high": {
+        "brightness": 27.0106,
+        "saturation": 28.0868,
+        "edgeMean": 21.295
+      },
+      "medium": {
+        "brightness": 26.9983,
+        "saturation": 28.0465,
+        "edgeMean": 22.1738
+      },
+      "low": {
+        "brightness": 26.9646,
+        "saturation": 28.0071,
+        "edgeMean": 21.8467
+      }
+    },
+    "pass": true
+  },
+  "playabilityNoise": {
+    "region": "central aisle x34-66%, y47-93%",
+    "edgeMeanMax": 20,
+    "metrics": {
+      "high": {
+        "brightness": 26.0212,
+        "saturation": 25.2428,
+        "edgeMean": 18.9841
+      },
+      "medium": {
+        "brightness": 26.038,
+        "saturation": 25.2593,
+        "edgeMean": 19.6024
+      },
+      "low": {
+        "brightness": 26.049,
+        "saturation": 25.2689,
+        "edgeMean": 19.3781
+      }
+    },
+    "pass": true
+  },
+  "safeCrop": {
+    "records": [
+      {
+        "viewport": {
+          "label": "desktop-1366x700",
+          "width": 1366,
+          "height": 700
+        },
+        "quality": "high",
+        "fits": true,
+        "contentRect": {
+          "x": 38.56666666666666,
+          "y": 0,
+          "w": 221.86666666666667,
+          "h": 256,
+          "scale": 0.28444444444444444,
+          "naturalScale": 0.28444444444444444
+        }
+      },
+      {
+        "viewport": {
+          "label": "tablet-820x1180",
+          "width": 820,
+          "height": 1180
+        },
+        "quality": "medium",
+        "fits": true,
+        "contentRect": {
+          "x": 30.96666666666664,
+          "y": 0,
+          "w": 461.0666666666667,
+          "h": 532,
+          "scale": 0.5911111111111111,
+          "naturalScale": 0.7093333333333334
+        }
+      },
+      {
+        "viewport": {
+          "label": "phone-390x844",
+          "width": 390,
+          "height": 844
+        },
+        "quality": "low",
+        "fits": true,
+        "contentRect": {
+          "x": 49.23333333333335,
+          "y": 0,
+          "w": 269.5333333333333,
+          "h": 311,
+          "scale": 0.3455555555555555,
+          "naturalScale": 0.5183333333333333
+        }
+      }
+    ],
+    "pass": true
+  },
+  "textContrast": {
+    "sampledComputedStyles": {
+      "panelBackground": "rgba(14, 17, 21, 0.96)",
+      "overlayBackground": "rgba(5, 7, 10, 0.94)",
+      "pageBackground": "rgb(17, 19, 23)",
+      "primaryColor": "rgb(244, 234, 216)",
+      "mutedColor": "rgb(184, 176, 163)"
+    },
+    "compositedPanelRgb": [
+      14,
+      17,
+      21
+    ],
+    "ratios": {
+      "primary": 15.867,
+      "muted": 8.811
+    },
+    "minimumRequired": 4.5,
+    "pass": true
+  },
+  "decodedMemory": {
+    "desktopMiB": 11.975,
+    "mobileMiB": 3.737,
+    "desktopLimitMiB": 64,
+    "mobileLimitMiB": 32,
+    "promosExcludedFromRuntime": true,
+    "pass": true
+  }
+}

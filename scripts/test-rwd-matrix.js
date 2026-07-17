@@ -52,7 +52,7 @@ const VIEWPORTS = [
   { w: 390, h: 844, kind: "mobile" },
   { w: 360, h: 640, kind: "mobile" },
   { w: 844, h: 390, kind: "landscape" }
-];
+].filter((viewport) => !process.env.RWD_VIEWPORT || process.env.RWD_VIEWPORT === `${viewport.w}x${viewport.h}`);
 
 const PAGE_SCROLL_TOLERANCE = 8;
 const OVERFLOW_X_TOLERANCE = 2;
@@ -108,9 +108,11 @@ async function waitForMetaSettled(page) {
   await page.waitForFunction(() => {
     if (!window.__test || !window.__test.getShelterState) return false;
     const state = window.__test.getShelterState();
-    if (state.backgroundMode === "image") return state.imageLoaded === true;
-    if (state.backgroundMode === "scene") return state.lastDrawMs > 0;
-    return false;
+    const image = document.getElementById("shelterImage");
+    if (state.backgroundMode !== "image" || state.imageLoaded !== true || !image) return false;
+    const style = getComputedStyle(image);
+    return image.hidden === false && image.complete && image.naturalWidth > 0 && image.naturalHeight > 0 &&
+      style.display === "block" && style.visibility === "visible" && Number(style.opacity) >= 0.99;
   }, null, { timeout: META_SETTLE_TIMEOUT_MS });
 }
 
@@ -152,9 +154,7 @@ const STATES = [
   {
     name: "meta-ops-drawer",
     prepare: async (page) => {
-      await page.locator("#baseToggleBtn").evaluate((button) => button.click());
-      await page.waitForSelector("#opsHotspotBtn", { state: "visible" });
-      await page.locator("#opsHotspotBtn").evaluate((button) => button.click());
+      await page.evaluate(() => window.__test.openMetaPanel("operations"));
       await page.waitForSelector('#metaDrawer:not([hidden]) [data-meta-section="operations"]:not([hidden])');
     }
   },
@@ -166,13 +166,11 @@ const STATES = [
         meta.trailerGoods = 200;
         window.__test.setMeta(meta);
       });
-      await page.locator("#baseToggleBtn").evaluate((button) => button.click());
-      await page.waitForSelector("#trailerHotspotBtn", { state: "visible" });
-      await page.locator("#trailerHotspotBtn").evaluate((button) => button.click());
+      await page.evaluate(() => window.__test.openTrailerRoom());
       await page.waitForSelector("#trailerOverlay:not([hidden]) #trailerFurnitureList");
     }
   }
-];
+].filter((state) => !process.env.RWD_STATE || process.env.RWD_STATE === state.name);
 
 async function auditViewport(page) {
   return page.evaluate(() => {

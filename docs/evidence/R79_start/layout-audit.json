@@ -52,8 +52,8 @@
       },
       "atmosphere": "url(\"assets/ui/start-atmosphere-r79-medium.png?v=115410f5\")",
       "marks": {
-        "ashes-start-focus-visible": 6138.699999809265,
-        "ashes-start-interactive": 6410
+        "ashes-start-focus-visible": 272.7999997138977,
+        "ashes-start-interactive": 263.2999997138977
       },
       "centerNodeId": "shelterImage",
       "baseActionsHidden": true,
@@ -162,8 +162,8 @@
       },
       "atmosphere": "url(\"assets/ui/start-atmosphere-r79-low.png?v=b58b835b\")",
       "marks": {
-        "ashes-start-focus-visible": 31.40000009536743,
-        "ashes-start-interactive": 472.09999990463257
+        "ashes-start-focus-visible": 243.09999990463257,
+        "ashes-start-interactive": 987.2000002861023
       },
       "centerNodeId": "shelterImage",
       "baseActionsHidden": true,
@@ -221,8 +221,8 @@
       },
       "atmosphere": "url(\"assets/ui/start-atmosphere-r79-low.png?v=b58b835b\")",
       "marks": {
-        "ashes-start-focus-visible": 35.69999980926514,
-        "ashes-start-interactive": 508.69999980926514
+        "ashes-start-focus-visible": 258.7000002861023,
+        "ashes-start-interactive": 468.5
       },
       "centerNodeId": "shelterImage",
       "baseActionsHidden": true,

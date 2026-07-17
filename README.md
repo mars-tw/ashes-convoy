@@ -1,7 +1,7 @@
 ﻿# 灰燼護航 Ashes Convoy
 
 [![CI & Deploy Pages](https://github.com/mars-tw/ashes-convoy/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mars-tw/ashes-convoy/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/badge/release-R79-f0b64a)](src/version.js)
+[![Release](https://img.shields.io/badge/release-R80-f0b64a)](src/version.js)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5ed4cb)](LICENSE)
 
 《灰燼護航》是一款手機直式優先的 Canvas 2D 末世護送射擊遊戲。駕駛裝甲載具拖著倖存者車廂穿越屍潮，在每一波中清敵、打破增益門、收集補給，並把零件、藍圖與戰績帶回基地。
@@ -12,6 +12,7 @@
 
 ## 最新特色
 
+- **R80 拖車房間與宣傳素材**：拖車管理抽屜改用 C2PA 可驗證的暖灰燼／冷鋼內裝，並提供同源 low、medium、high runtime；四環境宣傳圖保存在 `docs/promo/`，不進入遊戲載入路徑。
 - **R79 起始畫面重設計**：標題、完整 key art、操作列改為互不覆蓋的三段式構圖；新增鏽蝕 logo 字、統計籌碼、磨損 CTA、桌機灰燼遠景與新版 rails，手機保留完整直式主圖焦點。
 - **R78 正式攻擊圖集**：九組 raster 敵人視覺、Boss 與熹補齊 anticipation／impact／recovery 四幀攻擊圖集；傷害只在 impact 幀結算，並以逐幀 alpha 差異及 E2E 時序守門。
 - **R71–R72 素材重製**：重製首屏、封面、熹的砲手姿勢、主要敵人與 Boss，並統一暖灰燼 painterly-pixel 視覺；R72 的瀝青巨屍、盾殼屍與蜱群使用四個獨立移動姿勢的圖集，環境也加入遠／中／近景深層。
@@ -102,4 +103,4 @@ npm run test:rwd
 - [素材來源與致謝](CREDITS.md)
 - [MIT License](LICENSE)
 
-目前遊戲版本為 **R79**，權威版本值在 [`src/version.js`](src/version.js)。專案程式碼採 MIT License；第三方素材與開發工具的來源、授權及 `image_gen` 產出標註方式請見 [CREDITS.md](CREDITS.md)。
+目前遊戲版本為 **R80**，權威版本值在 [`src/version.js`](src/version.js)。專案程式碼採 MIT License；第三方素材與開發工具的來源、授權及 `image_gen` 產出標註方式請見 [CREDITS.md](CREDITS.md)。

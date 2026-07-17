@@ -1,0 +1,8 @@
+{
+  "desktopMiB": 11.975,
+  "mobileMiB": 3.737,
+  "desktopLimitMiB": 64,
+  "mobileLimitMiB": 32,
+  "promosExcludedFromRuntime": true,
+  "pass": true
+}

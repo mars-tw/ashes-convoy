@@ -1078,7 +1078,8 @@
       height,
       pixelRatio: dpr,
       timeMs: root.performance && root.performance.now ? root.performance.now() : 0,
-      roomState: state
+      roomState: state,
+      quality: meta.settings && meta.settings.performanceMode ? meta.settings.performanceMode : "auto"
     });
     if (trailerRoomMetrics && trailerRoomMetrics.assetsReady === false && !trailerRedrawTimer) {
       trailerRedrawTimer = root.setTimeout(() => {

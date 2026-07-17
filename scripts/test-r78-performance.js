@@ -5,6 +5,7 @@ const fs = require("fs");
 const http = require("http");
 const path = require("path");
 const { chromium } = require("playwright");
+const version = require("../src/version.js");
 
 const rootDir = path.resolve(__dirname, "..");
 const budgetMs = 18;
@@ -146,10 +147,19 @@ async function measureRun(page) {
         const page = await context.newPage();
         await page.goto(url, { waitUntil: "domcontentloaded" });
         await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
+        await page.waitForFunction(
+          () => window.__test.rasterAssetsReady && window.__test.rasterAssetsReady(),
+          null,
+          { timeout: 120000 }
+        );
         const runs = [];
         for (let run = 1; run <= 3; run += 1) {
           await prepareRun(page, scenario.settings.performanceMode, scenario.settings.fxLevel);
-          await page.waitForFunction(() => window.__test.getRenderDebug().companionAttackAtlasStatus === "loaded");
+          await page.waitForFunction(
+            () => window.__test.getRenderDebug().companionAttackAtlasStatus === "loaded",
+            null,
+            { timeout: 120000 }
+          );
           const measured = await measureRun(page);
           const p95Ms = rounded(percentile(measured.samples, 0.95));
           runs.push({
@@ -185,17 +195,17 @@ async function measureRun(page) {
   }
   const report = {
     createdAt: new Date().toISOString(),
-    release: "R78",
+    release: version.APP_VERSION,
     budgetMs,
     method: "Playwright Chromium synchronous window.__test.step(16) simulation+draw wall time; 60 warmup steps; 220 measured steps; 54 seeded raster enemies; browser launched with --disable-gpu --disable-accelerated-2d-canvas",
     results,
     pass: results.every((result) => result.pass)
   };
-  const output = path.join(rootDir, "docs", "evidence", "R78", "perf-p95.json");
+  const output = path.join(rootDir, "docs", "evidence", version.APP_VERSION, "perf-p95.json");
   fs.mkdirSync(path.dirname(output), { recursive: true });
   fs.writeFileSync(output, `${JSON.stringify(report, null, 2)}\n`);
-  assert(report.pass, `R78 performance gate failed: ${JSON.stringify(results)}`);
-  console.log(`R78 performance PASS (${results.map((result) => `${result.scenario}/${result.viewport.label} ${result.medianP95Ms}ms`).join(", ")})`);
+  assert(report.pass, `${version.APP_VERSION} performance gate failed: ${JSON.stringify(results)}`);
+  console.log(`${version.APP_VERSION} performance PASS (${results.map((result) => `${result.scenario}/${result.viewport.label} ${result.medianP95Ms}ms`).join(", ")})`);
 })().catch((error) => {
   console.error(error);
   process.exitCode = 1;

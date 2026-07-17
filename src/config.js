@@ -4,7 +4,7 @@ const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 3;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R79", CACHE_VERSION: "ashes-convoy-r79-v2" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R80", CACHE_VERSION: "ashes-convoy-r80-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -2677,7 +2677,7 @@ const MILESTONES = {
 
 const START_SCREEN = {
   slug: "ashes-r79-start",
-  image: "assets/ui/start.png?v=R79",
+  image: "assets/ui/start.png?v=R80",
   atmosphere: "assets/ui/start-atmosphere-r79.png?v=31cbd67f",
   atmosphereQuality: {
     high: "assets/ui/start-atmosphere-r79.png?v=31cbd67f",
