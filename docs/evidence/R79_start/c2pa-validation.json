@@ -1,0 +1,20 @@
+{
+  "validator": "scripts/verify-c2pa.py",
+  "results": [
+    {
+      "path": "docs/evidence/R79_start/masters/start-atmosphere-r79-master.png",
+      "sha256": "9c22011fe2ca7f0d096dfa520b66718f66d14306155120bc5602d3143bbdb28c",
+      "bytes": 1957363,
+      "c2paChunk": "caBX",
+      "c2paChunkCount": 1,
+      "actionsAssertionPresent": true,
+      "softwareAgent": {
+        "name": "gpt-image",
+        "version": "2.0"
+      },
+      "softwareAgentSummary": "gpt-image 2.0",
+      "pass": true
+    }
+  ],
+  "pass": true
+}

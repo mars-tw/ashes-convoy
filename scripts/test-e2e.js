@@ -3453,7 +3453,7 @@ async function runImageFallbackScenario(browser, baseUrl) {
     if (message.type() === "error" && !isIgnorableConsoleError(message.text())) errors.push(message.text());
   });
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.route("**/assets/ui/start.png", (route) => {
+  await page.route("**/assets/ui/start.png*", (route) => {
     route.fulfill({ status: 404, contentType: "text/plain", body: "missing test image" });
   });
 

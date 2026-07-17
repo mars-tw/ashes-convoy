@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "viewport": "1366x700",
+    "network": "Fast 3G (150ms RTT, 1.6Mbps down, 750Kbps up)",
+    "cpuThrottle": "4x",
+    "browserChannel": "chrome",
+    "concurrencyNote": "Local machine measurement; any concurrent load makes timing advisory. Clean-machine audit remains authoritative."
+  },
+  "runs": [
+    {
+      "run": 1,
+      "focusVisibleMs": 13999.2,
+      "interactiveMs": 14028.2,
+      "focusTimedOut": false,
+      "interactiveTimedOut": false,
+      "wallMs": 14046,
+      "domContentLoadedMs": 8637.5,
+      "loadEventMs": 0,
+      "appFocusMarkMs": null,
+      "appInteractiveMarkMs": null
+    }
+  ],
+  "summary": {
+    "focusVisibleP95Ms": 13999.2,
+    "interactiveP95Ms": 14028.2,
+    "focusWithin3000Ms": false
+  }
+}

@@ -14,14 +14,15 @@
 
 R71、R72、R73、R78、R79 已依此格式標註。更早的專案自製圖像只保有 repo 歷史中的「AI 生成／圖生圖」紀錄，精確工具與完整 prompt 未全部保存；下方如實列出檔案範圍，不補寫無法驗證的資訊。
 
-## R79 image-generated title atmosphere
+## R79.1 image-generated title atmosphere
 
-- 工具：OpenAI built-in image generation（`image_gen`）；工具未回傳可驗證的模型識別，因此不補寫模型名稱。
-- Slug：`ashes-r79-start`；正式 manifest 為 `assets/ui/start-art-manifest.json`。
-- 遊戲檔案：`assets/ui/start-atmosphere-r79.png`，2048×1152、24-bit RGB PNG，作為桌機寬螢幕兩側的 painterly 灰燼遠景；既有直式 `assets/ui/start.png` 保持主體 key art。
-- 參考與 prompt 摘要：以 `assets/ui/start.png` 只作畫風、低彩暖灰燼色盤與世界觀參考；生成寬幅廢墟道路、煙塵、遠景剪影與稀疏餘燼，中央 32% 刻意低細節壓暗；禁止文字、UI、logo、新主車、前景角色與浮水印。
-- 後製與 alpha：原始產出 1672×941，以 high-quality bicubic 確定性縮放為 2048×1152；全幅背景刻意使用無 alpha 的 RGB，alpha gate 驗證無 `tRNS` 或半透明像素風險。
-- 母圖：OpenAI built-in 產出保存在使用者 Codex generated-images 儲存區；最終 prompt、SHA-256、量測與視覺證據見 `docs/CODEX_RESPONSE_ashes_R79.md` 與 `docs/evidence/R79_start/`。
+- 工具：OpenAI built-in image generation（`imagegen`）；master 的 C2PA `caBX`／`c2pa.actions.v2` 由 `scripts/verify-c2pa.py` 驗出 `softwareAgent = gpt-image 2.0`，證據為 `docs/evidence/R79_start/c2pa-validation.json`。未使用 CLI、API 或 `OPENAI_API_KEY`。
+- Slug：作品 `ashes-r79-start`；模型 `gpt-image-2`；正式 manifest 為 `assets/ui/start-art-manifest.json`。
+- Master：`docs/evidence/R79_start/masters/start-atmosphere-r79-master.png`，1752×898，SHA-256 `9c22011fe2ca7f0d096dfa520b66718f66d14306155120bc5602d3143bbdb28c`。
+- 遊戲檔案：high `assets/ui/start-atmosphere-r79.png`（2048×1152）、medium `start-atmosphere-r79-medium.png`（1536×864）、low `start-atmosphere-r79-low.png`（1024×576）；三者皆為同一 master 的 RGB 確定性衍生，runtime URL 帶各自 SHA-256 前八碼。
+- 首焦衍生：`assets/ui/start-focus-low.png`（192×405、50,898 bytes）由既有 `start.png` 以 LANCZOS、MEDIANCUT 64 色、無 dithering 確定性產出，作為 Fast 3G 的同畫風 CSS 首焦；正式 820×1728 圖載入後接管。
+- 參考與 prompt 摘要：`assets/ui/start.png`（SHA-256 `d725486d457a190500295cd745e541b08699a521e1addd13c781eb17d16f309e`）只作畫風、低彩暖灰燼色盤與世界觀參考；兩側遠景廢墟公路與節制餘燼，中央 32% 低細節壓暗；禁止文字、UI、中央車輛、任何車輛、前景角色與浮水印。
+- 後製：master 由 1752×898 中央裁為 `[78,0,1674,898]`，再以 Pillow LANCZOS 單次重採樣；PNG `optimize=true`、`compress_level=9`，無合成、重畫或換色。完整步驟與雙層 SHA-256 見 manifest 與 `docs/evidence/R79_start/postprocess.json`。
 
 ## R78 image-generated attack atlases
 

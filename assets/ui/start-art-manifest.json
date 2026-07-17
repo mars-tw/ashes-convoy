@@ -1,21 +1,82 @@
 {
-  "release": "R79",
+  "release": "R79.1",
   "slug": "ashes-r79-start",
+  "model_slug": "gpt-image-2",
   "use_case_slug": "stylized-concept",
   "generator": "OpenAI built-in image generation (imagegen)",
-  "model_visibility": "The built-in tool does not expose a model identifier.",
-  "reference": "assets/ui/start.png",
+  "master": {
+    "path": "docs/evidence/R79_start/masters/start-atmosphere-r79-master.png",
+    "dimensions": "1752x898",
+    "sha256": "9c22011fe2ca7f0d096dfa520b66718f66d14306155120bc5602d3143bbdb28c",
+    "c2pa": {
+      "validator": "scripts/verify-c2pa.py",
+      "evidence": "docs/evidence/R79_start/c2pa-validation.json",
+      "chunk": "caBX",
+      "actions_assertion": "c2pa.actions.v2",
+      "softwareAgent": "gpt-image 2.0",
+      "pass": true
+    }
+  },
+  "reference": {
+    "path": "assets/ui/start.png",
+    "role": "style, palette, texture and world reference only",
+    "sha256": "d725486d457a190500295cd745e541b08699a521e1addd13c781eb17d16f309e"
+  },
   "artifacts": [
     {
       "path": "assets/ui/start-atmosphere-r79.png",
+      "runtime_url": "assets/ui/start-atmosphere-r79.png?v=31cbd67f",
+      "quality": "high",
       "role": "desktop viewport atmosphere extension",
-      "source_dimensions": "1672x941",
       "runtime_dimensions": "2048x1152",
       "pixel_format": "24-bit RGB PNG",
-      "alpha_policy": "intentionally opaque fullscreen background; no alpha channel and no tRNS chunk",
-      "sha256": "9754d2a8a6ce563e6a07e969e8643132722e4b3fcb72053c4794e3bc8cab022a"
+      "master_sha256": "9c22011fe2ca7f0d096dfa520b66718f66d14306155120bc5602d3143bbdb28c",
+      "runtime_sha256": "31cbd67f48bfe23e246b138b2cb4d5f3bd5399c5d12c90cb39d2fbbea26c9f9c",
+      "decoded_bytes": 9437184
+    },
+    {
+      "path": "assets/ui/start-atmosphere-r79-medium.png",
+      "runtime_url": "assets/ui/start-atmosphere-r79-medium.png?v=115410f5",
+      "quality": "medium",
+      "role": "standard desktop viewport atmosphere extension",
+      "runtime_dimensions": "1536x864",
+      "pixel_format": "24-bit RGB PNG",
+      "master_sha256": "9c22011fe2ca7f0d096dfa520b66718f66d14306155120bc5602d3143bbdb28c",
+      "runtime_sha256": "115410f57f2387aaad844245c8ebcda6c60b2e52b069ffb1f82f5cbe1fc0f0fe",
+      "decoded_bytes": 5308416
+    },
+    {
+      "path": "assets/ui/start-atmosphere-r79-low.png",
+      "runtime_url": "assets/ui/start-atmosphere-r79-low.png?v=b58b835b",
+      "quality": "low",
+      "role": "mobile and constrained-width viewport atmosphere extension",
+      "runtime_dimensions": "1024x576",
+      "pixel_format": "24-bit RGB PNG",
+      "master_sha256": "9c22011fe2ca7f0d096dfa520b66718f66d14306155120bc5602d3143bbdb28c",
+      "runtime_sha256": "b58b835bc8f5f4d35cadfd9b1116774b8bde876ed4f1bdd251152d07952cdbe9",
+      "decoded_bytes": 2359296
     }
   ],
-  "prompt_summary": "Wide painterly ash-wasteland companion to the existing portrait key art, with a dark low-detail central 32 percent, distant ruined road silhouettes and restrained embers in both side thirds; no text, UI, logo, central vehicle, foreground character or watermark.",
-  "postprocess": "Deterministic high-quality bicubic resample from 1672x941 to 2048x1152; no crop, compositing or color replacement."
+  "alpha_policy": "intentionally opaque fullscreen background; no alpha channel and no tRNS chunk",
+  "startup_focus_derivative": {
+    "path": "assets/ui/start-focus-low.png",
+    "runtime_url": "assets/ui/start-focus-low.png?v=6a1e8997",
+    "dimensions": "192x405",
+    "source": "assets/ui/start.png",
+    "source_sha256": "d725486d457a190500295cd745e541b08699a521e1addd13c781eb17d16f309e",
+    "runtime_sha256": "6a1e8997a7ce80c0629976bd1f5716822f2200f7c745845269ae63b3c9494a8e",
+    "decoded_bytes": 311040,
+    "pipeline": "RGB -> Pillow LANCZOS 192x405 -> MEDIANCUT 64 colors, dither NONE -> optimized PNG"
+  },
+  "prompt": "docs/evidence/R79_start/prompt.md",
+  "style_board": "docs/evidence/R79_start/style-board.md",
+  "postprocess": {
+    "evidence": "docs/evidence/R79_start/postprocess.json",
+    "steps": [
+      "center crop master from 1752x898 to 1596x898 using box [78,0,1674,898]",
+      "convert to RGB",
+      "single deterministic Pillow LANCZOS resample to each runtime size",
+      "PNG optimize=true, compress_level=9; no compositing, repainting or color replacement"
+    ]
+  }
 }

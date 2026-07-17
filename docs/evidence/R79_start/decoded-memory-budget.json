@@ -1,0 +1,44 @@
+{
+  "scope": "R79.1 new atmosphere; only one quality is decoded at a time",
+  "desktopLimitMiB": 64,
+  "mobileLimitMiB": 32,
+  "assets": {
+    "high": {
+      "path": "assets/ui/start-atmosphere-r79.png",
+      "dimensions": [
+        2048,
+        1152
+      ],
+      "calculation": "2048x1152x4",
+      "decodedBytes": 9437184,
+      "decodedMiB": 9.0
+    },
+    "medium": {
+      "path": "assets/ui/start-atmosphere-r79-medium.png",
+      "dimensions": [
+        1536,
+        864
+      ],
+      "calculation": "1536x864x4",
+      "decodedBytes": 5308416,
+      "decodedMiB": 5.062
+    },
+    "low": {
+      "path": "assets/ui/start-atmosphere-r79-low.png",
+      "dimensions": [
+        1024,
+        576
+      ],
+      "calculation": "1024x576x4",
+      "decodedBytes": 2359296,
+      "decodedMiB": 2.25
+    }
+  },
+  "startupFocus": {
+    "path": "assets/ui/start-focus-low.png",
+    "decodedMiB": 0.297
+  },
+  "desktopSelectedMiB": 9.297,
+  "mobileSelectedMiB": 2.547,
+  "pass": true
+}

@@ -1,0 +1,52 @@
+{
+  "profile": {
+    "viewport": "1366x700",
+    "network": "Fast 3G (150ms RTT, 1.6Mbps down, 750Kbps up)",
+    "cpuThrottle": "4x",
+    "browserChannel": "chrome",
+    "concurrencyNote": "Local machine measurement; any concurrent load makes timing advisory. Clean-machine audit remains authoritative."
+  },
+  "runs": [
+    {
+      "run": 1,
+      "focusVisibleMs": 1186.9,
+      "interactiveMs": 4870.1,
+      "focusTimedOut": false,
+      "interactiveTimedOut": false,
+      "wallMs": 4969,
+      "domContentLoadedMs": 4886.60000038147,
+      "loadEventMs": 0,
+      "appFocusMarkMs": 1186.9000000953674,
+      "appInteractiveMarkMs": 4870.10000038147
+    },
+    {
+      "run": 2,
+      "focusVisibleMs": 1145.9,
+      "interactiveMs": 4634.6,
+      "focusTimedOut": false,
+      "interactiveTimedOut": false,
+      "wallMs": 4727,
+      "domContentLoadedMs": 4658.39999961853,
+      "loadEventMs": 0,
+      "appFocusMarkMs": 1145.8999996185303,
+      "appInteractiveMarkMs": 4634.599999904633
+    },
+    {
+      "run": 3,
+      "focusVisibleMs": 1100,
+      "interactiveMs": 5010.9,
+      "focusTimedOut": false,
+      "interactiveTimedOut": false,
+      "wallMs": 5101,
+      "domContentLoadedMs": 5036.89999961853,
+      "loadEventMs": 0,
+      "appFocusMarkMs": 1100,
+      "appInteractiveMarkMs": 5010.89999961853
+    }
+  ],
+  "summary": {
+    "focusVisibleP95Ms": 1186.9,
+    "interactiveP95Ms": 5010.9,
+    "focusWithin3000Ms": true
+  }
+}

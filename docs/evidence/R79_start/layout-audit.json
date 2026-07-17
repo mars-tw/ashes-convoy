@@ -1,0 +1,233 @@
+{
+  "pass": true,
+  "audits": [
+    {
+      "filename": "after-desktop-1366x700.png",
+      "header": {
+        "x": 522.265625,
+        "y": 1,
+        "width": 321.453125,
+        "height": 89.390625,
+        "top": 1,
+        "right": 843.71875,
+        "bottom": 90.390625,
+        "left": 522.265625
+      },
+      "art": {
+        "x": 522.265625,
+        "y": 90.390625,
+        "width": 321.453125,
+        "height": 525.609375,
+        "top": 90.390625,
+        "right": 843.71875,
+        "bottom": 616,
+        "left": 522.265625
+      },
+      "actions": {
+        "x": 522.265625,
+        "y": 616,
+        "width": 321.453125,
+        "height": 83,
+        "top": 616,
+        "right": 843.71875,
+        "bottom": 699,
+        "left": 522.265625
+      },
+      "imageHidden": false,
+      "imageComplete": true,
+      "naturalWidth": 820,
+      "naturalHeight": 1728,
+      "imageDisplay": "block",
+      "imageOpacity": 1,
+      "objectFit": "contain",
+      "focusBox": {
+        "x": 558.2816297743055,
+        "y": 90.390625,
+        "width": 249.42111545138889,
+        "height": 525.609375
+      },
+      "viewport": {
+        "width": 1366,
+        "height": 700
+      },
+      "atmosphere": "url(\"assets/ui/start-atmosphere-r79-medium.png?v=115410f5\")",
+      "marks": {
+        "ashes-start-focus-visible": 6138.699999809265,
+        "ashes-start-interactive": 6410
+      },
+      "centerNodeId": "shelterImage",
+      "baseActionsHidden": true,
+      "drawerHidden": true,
+      "contrast": [
+        {
+          "text": "升級",
+          "box": {
+            "x": 468.984375,
+            "y": 347.75,
+            "width": 22,
+            "height": 11
+          },
+          "foreground": "rgb(184, 176, 163)"
+        },
+        {
+          "text": "載具",
+          "box": {
+            "x": 468.984375,
+            "y": 417.75,
+            "width": 22,
+            "height": 11
+          },
+          "foreground": "rgb(184, 176, 163)"
+        },
+        {
+          "text": "任務",
+          "box": {
+            "x": 875,
+            "y": 312.75,
+            "width": 22,
+            "height": 11
+          },
+          "foreground": "rgb(184, 176, 163)"
+        },
+        {
+          "text": "成就",
+          "box": {
+            "x": 875,
+            "y": 382.75,
+            "width": 22,
+            "height": 11
+          },
+          "foreground": "rgb(184, 176, 163)"
+        },
+        {
+          "text": "設定",
+          "box": {
+            "x": 875,
+            "y": 452.75,
+            "width": 22,
+            "height": 11
+          },
+          "foreground": "rgb(184, 176, 163)"
+        }
+      ]
+    },
+    {
+      "filename": "after-tablet-820x1180.png",
+      "header": {
+        "x": 137.375,
+        "y": 0,
+        "width": 545.25,
+        "height": 89.390625,
+        "top": 0,
+        "right": 682.625,
+        "bottom": 89.390625,
+        "left": 137.375
+      },
+      "art": {
+        "x": 137.375,
+        "y": 89.390625,
+        "width": 545.25,
+        "height": 1007.609375,
+        "top": 89.390625,
+        "right": 682.625,
+        "bottom": 1097,
+        "left": 137.375
+      },
+      "actions": {
+        "x": 137.375,
+        "y": 1097,
+        "width": 545.25,
+        "height": 83,
+        "top": 1097,
+        "right": 682.625,
+        "bottom": 1180,
+        "left": 137.375
+      },
+      "imageHidden": false,
+      "imageComplete": true,
+      "naturalWidth": 820,
+      "naturalHeight": 1728,
+      "imageDisplay": "block",
+      "imageOpacity": 1,
+      "objectFit": "contain",
+      "focusBox": {
+        "x": 170.92601634837962,
+        "y": 89.390625,
+        "width": 478.14796730324076,
+        "height": 1007.609375
+      },
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "atmosphere": "url(\"assets/ui/start-atmosphere-r79-low.png?v=b58b835b\")",
+      "marks": {
+        "ashes-start-focus-visible": 31.40000009536743,
+        "ashes-start-interactive": 472.09999990463257
+      },
+      "centerNodeId": "shelterImage",
+      "baseActionsHidden": true,
+      "drawerHidden": true,
+      "contrast": []
+    },
+    {
+      "filename": "after-phone-390x844.png",
+      "header": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 89.390625,
+        "top": 0,
+        "right": 390,
+        "bottom": 89.390625,
+        "left": 0
+      },
+      "art": {
+        "x": 0,
+        "y": 89.390625,
+        "width": 390,
+        "height": 671.609375,
+        "top": 89.390625,
+        "right": 390,
+        "bottom": 761,
+        "left": 0
+      },
+      "actions": {
+        "x": 0,
+        "y": 761,
+        "width": 390,
+        "height": 83,
+        "top": 761,
+        "right": 390,
+        "bottom": 844,
+        "left": 0
+      },
+      "imageHidden": false,
+      "imageComplete": true,
+      "naturalWidth": 820,
+      "naturalHeight": 1728,
+      "imageDisplay": "block",
+      "imageOpacity": 1,
+      "objectFit": "contain",
+      "focusBox": {
+        "x": 35.64823857060185,
+        "y": 89.390625,
+        "width": 318.7035228587963,
+        "height": 671.609375
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "atmosphere": "url(\"assets/ui/start-atmosphere-r79-low.png?v=b58b835b\")",
+      "marks": {
+        "ashes-start-focus-visible": 35.69999980926514,
+        "ashes-start-interactive": 508.69999980926514
+      },
+      "centerNodeId": "shelterImage",
+      "baseActionsHidden": true,
+      "drawerHidden": true,
+      "contrast": []
+    }
+  ]
+}

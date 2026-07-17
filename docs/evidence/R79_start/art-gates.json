@@ -1,0 +1,191 @@
+{
+  "pass": true,
+  "decodedMemory": {
+    "scope": "R79.1 new atmosphere; only one quality is decoded at a time",
+    "desktopLimitMiB": 64,
+    "mobileLimitMiB": 32,
+    "assets": {
+      "high": {
+        "path": "assets/ui/start-atmosphere-r79.png",
+        "dimensions": [
+          2048,
+          1152
+        ],
+        "calculation": "2048x1152x4",
+        "decodedBytes": 9437184,
+        "decodedMiB": 9.0
+      },
+      "medium": {
+        "path": "assets/ui/start-atmosphere-r79-medium.png",
+        "dimensions": [
+          1536,
+          864
+        ],
+        "calculation": "1536x864x4",
+        "decodedBytes": 5308416,
+        "decodedMiB": 5.062
+      },
+      "low": {
+        "path": "assets/ui/start-atmosphere-r79-low.png",
+        "dimensions": [
+          1024,
+          576
+        ],
+        "calculation": "1024x576x4",
+        "decodedBytes": 2359296,
+        "decodedMiB": 2.25
+      }
+    },
+    "startupFocus": {
+      "path": "assets/ui/start-focus-low.png",
+      "decodedMiB": 0.297
+    },
+    "desktopSelectedMiB": 9.297,
+    "mobileSelectedMiB": 2.547,
+    "pass": true
+  },
+  "central32Detail": {
+    "center": {
+      "meanLuma": 28.2081,
+      "lumaStdDev": 4.0698,
+      "edgeMean": 1.8165
+    },
+    "sides": {
+      "meanLuma": 47.3034,
+      "lumaStdDev": 23.9307,
+      "edgeMean": 6.6499
+    },
+    "thresholds": {
+      "lumaStdDevRatioMax": 0.45,
+      "edgeMeanRatioMax": 0.45,
+      "meanLumaRatioMax": 0.8
+    },
+    "pass": true
+  },
+  "qualityConsistency": {
+    "metrics": {
+      "low": {
+        "rmsVsHigh": 0.506,
+        "realAsset": true
+      },
+      "medium": {
+        "rmsVsHigh": 0.4532,
+        "realAsset": true
+      },
+      "high": {
+        "rmsVsHigh": 0.0,
+        "realAsset": true
+      }
+    },
+    "rmsMax": 1.0,
+    "pass": true
+  },
+  "safeCrop": {
+    "viewports": [
+      {
+        "width": 1366,
+        "height": 700
+      },
+      {
+        "width": 820,
+        "height": 1180
+      },
+      {
+        "width": 390,
+        "height": 844
+      }
+    ],
+    "pass": true
+  },
+  "textContrast": {
+    "minimum": 8.894,
+    "required": 4.5,
+    "samples": [
+      {
+        "text": "升級",
+        "foreground": [
+          184,
+          176,
+          163
+        ],
+        "sampledBackgroundMedian": [
+          11,
+          13,
+          15
+        ],
+        "contrast": 9.064,
+        "pass": true
+      },
+      {
+        "text": "載具",
+        "foreground": [
+          184,
+          176,
+          163
+        ],
+        "sampledBackgroundMedian": [
+          11,
+          13,
+          15
+        ],
+        "contrast": 9.064,
+        "pass": true
+      },
+      {
+        "text": "任務",
+        "foreground": [
+          184,
+          176,
+          163
+        ],
+        "sampledBackgroundMedian": [
+          13,
+          16,
+          17
+        ],
+        "contrast": 8.894,
+        "pass": true
+      },
+      {
+        "text": "成就",
+        "foreground": [
+          184,
+          176,
+          163
+        ],
+        "sampledBackgroundMedian": [
+          13,
+          16,
+          17
+        ],
+        "contrast": 8.894,
+        "pass": true
+      },
+      {
+        "text": "設定",
+        "foreground": [
+          184,
+          176,
+          163
+        ],
+        "sampledBackgroundMedian": [
+          13,
+          16,
+          17
+        ],
+        "contrast": 8.894,
+        "pass": true
+      }
+    ],
+    "pass": true
+  },
+  "alphaGate": {
+    "applies": true,
+    "expected": "opaque RGB with no alpha",
+    "pass": true
+  },
+  "characterBrightnessSaturationGate": {
+    "applies": false,
+    "reason": "R79.1 contains no character asset"
+  }
+}

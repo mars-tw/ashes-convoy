@@ -1,0 +1,65 @@
+{
+  "pipeline": "scripts/build-wave2-art.py",
+  "target": "start",
+  "result": {
+    "master": "docs/evidence/R79_start/masters/start-atmosphere-r79-master.png",
+    "masterSha256": "9c22011fe2ca7f0d096dfa520b66718f66d14306155120bc5602d3143bbdb28c",
+    "outputs": [
+      {
+        "path": "assets/ui/start-atmosphere-r79.png",
+        "dimensions": "2048x1152",
+        "sha256": "31cbd67f48bfe23e246b138b2cb4d5f3bd5399c5d12c90cb39d2fbbea26c9f9c",
+        "bytes": 2442953,
+        "decodedBytes": 9437184,
+        "cropBox": [
+          78,
+          0,
+          1674,
+          898
+        ],
+        "resample": "Pillow LANCZOS",
+        "mode": "RGB"
+      },
+      {
+        "path": "assets/ui/start-atmosphere-r79-medium.png",
+        "dimensions": "1536x864",
+        "sha256": "115410f57f2387aaad844245c8ebcda6c60b2e52b069ffb1f82f5cbe1fc0f0fe",
+        "bytes": 1567728,
+        "decodedBytes": 5308416,
+        "cropBox": [
+          78,
+          0,
+          1674,
+          898
+        ],
+        "resample": "Pillow LANCZOS",
+        "mode": "RGB"
+      },
+      {
+        "path": "assets/ui/start-atmosphere-r79-low.png",
+        "dimensions": "1024x576",
+        "sha256": "b58b835bc8f5f4d35cadfd9b1116774b8bde876ed4f1bdd251152d07952cdbe9",
+        "bytes": 738692,
+        "decodedBytes": 2359296,
+        "cropBox": [
+          78,
+          0,
+          1674,
+          898
+        ],
+        "resample": "Pillow LANCZOS",
+        "mode": "RGB"
+      }
+    ],
+    "startupFocus": {
+      "path": "assets/ui/start-focus-low.png",
+      "dimensions": "192x405",
+      "sha256": "6a1e8997a7ce80c0629976bd1f5716822f2200f7c745845269ae63b3c9494a8e",
+      "bytes": 50898,
+      "decodedBytes": 311040,
+      "source": "assets/ui/start.png",
+      "sourceSha256": "d725486d457a190500295cd745e541b08699a521e1addd13c781eb17d16f309e",
+      "steps": "RGB -> Pillow LANCZOS 192x405 -> MEDIANCUT 64 colors, dither NONE -> optimized PNG"
+    }
+  }
+}

@@ -110,7 +110,7 @@ async function waitForMetaSettled(page) {
     const state = window.__test.getShelterState();
     if (state.backgroundMode === "image") return state.imageLoaded === true;
     if (state.backgroundMode === "scene") return state.lastDrawMs > 0;
-    return state.backgroundMode === "none";
+    return false;
   }, null, { timeout: META_SETTLE_TIMEOUT_MS });
 }
 
@@ -307,8 +307,8 @@ async function runMatrix(browser, baseUrl) {
           assert(startLayout.imageOpacity >= 0.99, `${label} R79 key art must remain opaque`);
           assert.strictEqual(startLayout.centerNodeId, "shelterImage", `${label} R79 key art must own the central focal layer`);
           assert(startLayout.panelRows.split(" ").length >= 3, `${label} R79 start panel must resolve to three grid rows`);
-          assert(startLayout.atmosphere.includes("start-atmosphere-r79.png"), `${label} R79 viewport must render the ash atmosphere extension`);
-          assert(startLayout.artFallback.includes("start.png"), `${label} R79 key art stage must keep a visible loading fallback`);
+          assert(startLayout.atmosphere.includes("start-atmosphere-r79"), `${label} R79 viewport must resolve a real ash atmosphere quality asset`);
+          assert(startLayout.artFallback.includes("start-focus-low.png"), `${label} R79 key art stage must keep a real low-bandwidth loading fallback`);
         }
         if (vp.kind === "desktop") {
           const leftRailBox = await page.locator(".rail-left .rail-cluster").boundingBox();

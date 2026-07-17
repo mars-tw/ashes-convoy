@@ -11,6 +11,39 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://mars-tw.github.io/ashes-convoy/assets/cover.png" />
     <meta name="theme-color" content="#111317" />
+    <link rel="preload" as="image" href="assets/ui/start-focus-low.png?v=6a1e8997" fetchpriority="high" />
+    <script>
+      (function markDecodedStartFocus() {
+        const image = new Image();
+        image.fetchPriority = "high";
+        image.decoding = "async";
+        image.onload = function () {
+          const markAfterPaint = function () {
+            if (!document.querySelector(".start-art-stage")) {
+              requestAnimationFrame(markAfterPaint);
+              return;
+            }
+            requestAnimationFrame(function () {
+              if (!performance.getEntriesByName("ashes-start-focus-visible").length) {
+                performance.mark("ashes-start-focus-visible");
+              }
+            });
+          };
+          markAfterPaint();
+        };
+        image.src = "assets/ui/start-focus-low.png?v=6a1e8997";
+        addEventListener("ashes-start-interactive", function loadStartAtmosphere() {
+          const atmosphere = new Image();
+          atmosphere.decoding = "async";
+          atmosphere.onload = function () { document.documentElement.classList.add("is-atmosphere-ready"); };
+          atmosphere.src = matchMedia("(max-width: 859px)").matches
+            ? "assets/ui/start-atmosphere-r79-low.png?v=b58b835b"
+            : matchMedia("(max-width: 1599px)").matches
+              ? "assets/ui/start-atmosphere-r79-medium.png?v=115410f5"
+              : "assets/ui/start-atmosphere-r79.png?v=31cbd67f";
+        }, { once: true });
+      })();
+    </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="manifest" href="manifest.webmanifest?v=R79" />
@@ -30,6 +63,15 @@
         --accent-2: #5ed4cb;
         --danger: #e15f4f;
         --ok: #87d27d;
+        --start-atmosphere-image: url("assets/ui/start-atmosphere-r79.png?v=31cbd67f");
+      }
+
+      @media (max-width: 1599px) {
+        :root { --start-atmosphere-image: url("assets/ui/start-atmosphere-r79-medium.png?v=115410f5"); }
+      }
+
+      @media (max-width: 859px) {
+        :root { --start-atmosphere-image: url("assets/ui/start-atmosphere-r79-low.png?v=b58b835b"); }
       }
 
       * {
@@ -68,11 +110,15 @@
       }
 
       body::before {
-        background:
-          linear-gradient(90deg, rgba(3, 5, 7, 0.42), rgba(3, 5, 7, 0.06) 28%, rgba(3, 5, 7, 0.06) 72%, rgba(3, 5, 7, 0.42)),
-          url("assets/ui/start-atmosphere-r79.png") center / cover no-repeat;
+        background: linear-gradient(90deg, #090a0b, #17120f 28%, #17120f 72%, #090a0b);
         filter: saturate(0.78) brightness(0.68);
         transform: scale(1.025);
+      }
+
+      html.is-atmosphere-ready body::before {
+        background:
+          linear-gradient(90deg, rgba(3, 5, 7, 0.42), rgba(3, 5, 7, 0.06) 28%, rgba(3, 5, 7, 0.06) 72%, rgba(3, 5, 7, 0.42)),
+          var(--start-atmosphere-image) center / cover no-repeat;
       }
 
       body::after {
@@ -166,9 +212,13 @@
           gap: var(--desktop-gap);
           justify-content: center;
           align-items: center;
+          background: linear-gradient(90deg, rgba(7, 9, 11, 0.58), rgba(7, 9, 11, 0.02) 22%, rgba(7, 9, 11, 0.02) 78%, rgba(7, 9, 11, 0.58));
+        }
+
+        html.is-atmosphere-ready .app {
           background:
             linear-gradient(90deg, rgba(7, 9, 11, 0.58), rgba(7, 9, 11, 0.02) 22%, rgba(7, 9, 11, 0.02) 78%, rgba(7, 9, 11, 0.58)),
-            url("assets/ui/start-atmosphere-r79.png") center / cover no-repeat;
+            var(--start-atmosphere-image) center / cover no-repeat;
         }
 
         .battle-stage {
@@ -1606,8 +1656,8 @@
         overflow: hidden;
         background:
           linear-gradient(90deg, rgba(8, 10, 11, 0.62), rgba(8, 10, 11, 0.12) 35% 65%, rgba(8, 10, 11, 0.62)),
-          url("assets/ui/start.png") center / contain no-repeat,
-          url("assets/ui/start-atmosphere-r79.png") center / cover no-repeat;
+          url("assets/ui/start-focus-low.png?v=6a1e8997") center / contain no-repeat,
+          #090a0b;
         box-shadow: inset 0 18px 34px rgba(0, 0, 0, 0.58), inset 0 -18px 34px rgba(0, 0, 0, 0.62);
       }
 

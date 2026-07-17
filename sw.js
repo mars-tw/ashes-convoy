@@ -22,8 +22,11 @@ const APP_SHELL_PATHS = [
   "src/ui.js?v=R79"
 ];
 const ASSET_PATHS = [
-  "assets/ui/start.png",
-  "assets/ui/start-atmosphere-r79.png",
+  "assets/ui/start.png?v=R79",
+  "assets/ui/start-focus-low.png?v=6a1e8997",
+  "assets/ui/start-atmosphere-r79.png?v=31cbd67f",
+  "assets/ui/start-atmosphere-r79-medium.png?v=115410f5",
+  "assets/ui/start-atmosphere-r79-low.png?v=b58b835b",
   "assets/ui/start-art-manifest.json",
   "assets/env/land.png",
   "assets/env/air.png",

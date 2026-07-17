@@ -53,6 +53,16 @@
     },
     config.START_SCREEN || {}
   );
+  const performanceMarks = new Set();
+
+  function markPerformanceOnce(name) {
+    if (
+      performanceMarks.has(name) || !root.performance || typeof root.performance.mark !== "function" ||
+      (typeof root.performance.getEntriesByName === "function" && root.performance.getEntriesByName(name).length)
+    ) return;
+    performanceMarks.add(name);
+    root.performance.mark(name);
+  }
 
   function nowIso() {
     return new Date().toISOString();
@@ -499,6 +509,7 @@
     stopShelterLoop();
     applyMetaBackgroundMode("image");
     collectActionRects();
+    root.requestAnimationFrame(() => markPerformanceOnce("ashes-start-focus-visible"));
   }
 
   function showNoBackgroundFallback(message) {
@@ -2317,6 +2328,8 @@
     });
     exposeTestApi();
     showGarage();
+    markPerformanceOnce("ashes-start-interactive");
+    root.dispatchEvent(new root.CustomEvent("ashes-start-interactive"));
     registerServiceWorker();
   }
 

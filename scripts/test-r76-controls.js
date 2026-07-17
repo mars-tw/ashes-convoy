@@ -84,7 +84,7 @@ async function waitForGarageReady(page) {
     const state = window.__test.getShelterState();
     if (state.backgroundMode === "image") return state.imageLoaded === true;
     if (state.backgroundMode === "scene") return state.lastDrawMs > 0;
-    return state.backgroundMode === "none";
+    return false;
   }, null, { timeout: READY_TIMEOUT_MS });
 }
 

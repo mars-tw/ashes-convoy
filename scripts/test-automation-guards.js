@@ -57,7 +57,11 @@ const cached = new Set([...appShell, ...assets]);
 const indexResources = indexLocalResources(indexHtml);
 indexResources.forEach((resource) => {
   const url = new URL(resource, "https://example.test/");
-  assert.strictEqual(url.searchParams.get("v"), version.APP_VERSION, `${resource} should use ?v=${version.APP_VERSION}`);
+  const token = url.searchParams.get("v");
+  assert(
+    token === version.APP_VERSION || /^[0-9a-f]{8}$/.test(token || ""),
+    `${resource} should use ?v=${version.APP_VERSION} or a content-hash prefix`
+  );
 });
 
 const expectedCached = new Set(["./", "index.html", "offline.html"]);
@@ -92,7 +96,7 @@ expectedCached.forEach((resource) => {
 });
 
 assert.strictEqual(version.APP_VERSION, "R79");
-assert.strictEqual(version.CACHE_VERSION, `ashes-convoy-${version.APP_VERSION.toLowerCase()}-v1`);
+assert.strictEqual(version.CACHE_VERSION, `ashes-convoy-${version.APP_VERSION.toLowerCase()}-v2`);
 assert.strictEqual(config.APP_VERSION, version.APP_VERSION, "config APP_VERSION should use src/version.js");
 assert.strictEqual(config.CACHE_VERSION, version.CACHE_VERSION, "config CACHE_VERSION should use src/version.js");
 assert(swText.includes('importScripts("src/version.js")'), "service worker should import the shared version source");
