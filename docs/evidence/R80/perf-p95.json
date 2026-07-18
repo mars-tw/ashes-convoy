@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-07-17T11:28:12.654Z",
+  "createdAt": "2026-07-17T12:44:50.094Z",
   "release": "R80",
   "budgetMs": 18,
   "method": "Playwright Chromium synchronous window.__test.step(16) simulation+draw wall time; 60 warmup steps; 220 measured steps; 54 seeded raster enemies; browser launched with --disable-gpu --disable-accelerated-2d-canvas",
@@ -21,11 +21,11 @@
         {
           "run": 1,
           "sampleCount": 220,
-          "p50Ms": 92.2,
-          "p95Ms": 114.4,
-          "maxMs": 124.9,
+          "p50Ms": 3.8,
+          "p95Ms": 9.8,
+          "maxMs": 14.9,
           "enemies": 54,
-          "quality": "high",
+          "quality": "low",
           "attackAtlasSeen": true,
           "enemyRasterDrawn": 54,
           "enemyFallbackDrawn": 0
@@ -33,9 +33,9 @@
         {
           "run": 2,
           "sampleCount": 220,
-          "p50Ms": 6.1,
-          "p95Ms": 9.2,
-          "maxMs": 18.2,
+          "p50Ms": 5.7,
+          "p95Ms": 8.1,
+          "maxMs": 16.2,
           "enemies": 54,
           "quality": "low",
           "attackAtlasSeen": true,
@@ -45,9 +45,9 @@
         {
           "run": 3,
           "sampleCount": 220,
-          "p50Ms": 5.3,
-          "p95Ms": 7.5,
-          "maxMs": 10.6,
+          "p50Ms": 5.6,
+          "p95Ms": 8.4,
+          "maxMs": 12.7,
           "enemies": 54,
           "quality": "low",
           "attackAtlasSeen": true,
@@ -55,7 +55,7 @@
           "enemyFallbackDrawn": 0
         }
       ],
-      "medianP95Ms": 9.2,
+      "medianP95Ms": 8.4,
       "pass": true
     },
     {
@@ -75,9 +75,9 @@
         {
           "run": 1,
           "sampleCount": 220,
-          "p50Ms": 2.9,
-          "p95Ms": 8.4,
-          "maxMs": 11.7,
+          "p50Ms": 2.7,
+          "p95Ms": 4.7,
+          "maxMs": 6.5,
           "enemies": 54,
           "quality": "low",
           "attackAtlasSeen": true,
@@ -87,9 +87,9 @@
         {
           "run": 2,
           "sampleCount": 220,
-          "p50Ms": 6.9,
-          "p95Ms": 9.9,
-          "maxMs": 20.5,
+          "p50Ms": 6.2,
+          "p95Ms": 9.5,
+          "maxMs": 11.5,
           "enemies": 54,
           "quality": "low",
           "attackAtlasSeen": true,
@@ -99,9 +99,9 @@
         {
           "run": 3,
           "sampleCount": 220,
-          "p50Ms": 7.9,
-          "p95Ms": 12,
-          "maxMs": 24.3,
+          "p50Ms": 5.6,
+          "p95Ms": 8,
+          "maxMs": 17.1,
           "enemies": 54,
           "quality": "low",
           "attackAtlasSeen": true,
@@ -109,7 +109,7 @@
           "enemyFallbackDrawn": 0
         }
       ],
-      "medianP95Ms": 9.9,
+      "medianP95Ms": 8,
       "pass": true
     },
     {
@@ -129,9 +129,9 @@
         {
           "run": 1,
           "sampleCount": 220,
-          "p50Ms": 14.6,
-          "p95Ms": 23.4,
-          "maxMs": 918.4,
+          "p50Ms": 2.7,
+          "p95Ms": 4.3,
+          "maxMs": 5,
           "enemies": 54,
           "quality": "low",
           "attackAtlasSeen": true,
@@ -141,9 +141,9 @@
         {
           "run": 2,
           "sampleCount": 220,
-          "p50Ms": 8.1,
-          "p95Ms": 17.6,
-          "maxMs": 76.3,
+          "p50Ms": 3.8,
+          "p95Ms": 6.9,
+          "maxMs": 8.5,
           "enemies": 54,
           "quality": "low",
           "attackAtlasSeen": true,
@@ -153,9 +153,9 @@
         {
           "run": 3,
           "sampleCount": 220,
-          "p50Ms": 7.4,
-          "p95Ms": 12.3,
-          "maxMs": 36.6,
+          "p50Ms": 5.4,
+          "p95Ms": 7.5,
+          "maxMs": 11.8,
           "enemies": 54,
           "quality": "low",
           "attackAtlasSeen": true,
@@ -163,7 +163,7 @@
           "enemyFallbackDrawn": 0
         }
       ],
-      "medianP95Ms": 17.6,
+      "medianP95Ms": 6.9,
       "pass": true
     },
     {
@@ -183,9 +183,9 @@
         {
           "run": 1,
           "sampleCount": 220,
-          "p50Ms": 12.5,
-          "p95Ms": 25.4,
-          "maxMs": 36.8,
+          "p50Ms": 2.6,
+          "p95Ms": 3.9,
+          "maxMs": 5.7,
           "enemies": 54,
           "quality": "low",
           "attackAtlasSeen": true,
@@ -195,9 +195,9 @@
         {
           "run": 2,
           "sampleCount": 220,
-          "p50Ms": 7.8,
-          "p95Ms": 15.9,
-          "maxMs": 26.9,
+          "p50Ms": 2.9,
+          "p95Ms": 4.7,
+          "maxMs": 5.8,
           "enemies": 54,
           "quality": "low",
           "attackAtlasSeen": true,
@@ -207,9 +207,9 @@
         {
           "run": 3,
           "sampleCount": 220,
-          "p50Ms": 7.9,
-          "p95Ms": 11.7,
-          "maxMs": 45.5,
+          "p50Ms": 5.4,
+          "p95Ms": 8.3,
+          "maxMs": 12.7,
           "enemies": 54,
           "quality": "low",
           "attackAtlasSeen": true,
@@ -217,7 +217,7 @@
           "enemyFallbackDrawn": 0
         }
       ],
-      "medianP95Ms": 15.9,
+      "medianP95Ms": 4.7,
       "pass": true
     }
   ],
