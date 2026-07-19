@@ -836,13 +836,39 @@
     if (state.runBarksSeen[barkId]) return false;
     const bark = config.RUN_BARKS[barkId];
     if (!bark || !Array.isArray(bark.lines) || !bark.lines.length) return false;
+    // R82（辯論裁決 B-02）：家具羈絆句以 meta 家具槽位過濾——未裝備的 requires 句不得被選中；
+    // 已裝備者由 rules.selectRunBarkLines 依波數決定性附加一句
+    const lines = rules.selectRunBarkLines({ bark, meta, wave: state.wave });
+    if (!lines.length) return false;
     state.runBarksSeen[barkId] = true;
     if (!state.stats.runBarks || typeof state.stats.runBarks !== "object") state.stats.runBarks = {};
     state.stats.runBarks[barkId] = 1;
-    const title = speakerName(bark.lines[0].speaker);
-    const body = bark.lines.map((line) => `${speakerName(line.speaker)}：「${line.text}」`).join(" ");
-    state.messages.push({ text: body, time: state.time, ttl: bark.ttl || 1.8 });
-    pushEventBanner(title, body, { kind: "story", ttl: bark.ttl || 1.8 });
+    const hasBondLine = lines.some((line) => line && line.requires);
+    const ttl = (bark.ttl || 1.8) + (hasBondLine ? 0.5 : 0);
+    const title = speakerName(lines[0].speaker);
+    const body = lines.map((line) => `${speakerName(line.speaker)}：「${line.text}」`).join(" ");
+    state.messages.push({ text: body, time: state.time, ttl });
+    pushEventBanner(title, body, { kind: "story", ttl });
+    return true;
+  }
+
+  // R82（辯論裁決 B-01）：里程碑波結算的站點廣播／路牌，走既有 runBark banner 管線，
+  // 受 showRunBarks 設定管（不受 reducedFlash 影響）；同 seed／波數決定性選句
+  function pushRouteBroadcast(completedWave) {
+    if (!state || !runBarksEnabled() || !config.ROUTE_BROADCASTS) return false;
+    const line = rules.selectRouteBroadcast({
+      environment: currentEnvironment(),
+      wave: completedWave,
+      seed: state.seed,
+      config
+    });
+    if (!line || !line.text) return false;
+    const title = line.kind === "sign" ? "路牌" : "站點廣播";
+    const ttl = Number.isFinite(config.ROUTE_BROADCASTS.ttl) ? config.ROUTE_BROADCASTS.ttl : 2.2;
+    if (!state.stats.routeBroadcasts || typeof state.stats.routeBroadcasts !== "object") state.stats.routeBroadcasts = {};
+    state.stats.routeBroadcasts[`${line.kind === "sign" ? "sign" : "station"}_w${completedWave}`] = 1;
+    state.messages.push({ text: `${title}：${line.text}`, time: state.time, ttl });
+    pushEventBanner(title, line.text, { kind: "story", ttl });
     return true;
   }
 
@@ -1490,6 +1516,7 @@
         recentDamageEvents: [],
         variantKills: {},
         runBarks: {},
+        routeBroadcasts: {},
         deathContext: null,
         partsPreview: config.ECONOMY.minRunParts
       },
@@ -3079,6 +3106,9 @@
       state.spawnIndex = 0;
       state.gateIndex = 0;
       state.wavePlan = makeWavePlan(state.wave);
+      // R82（辯論裁決 B-01）：波結算 intermission 播站點廣播／路牌；
+      // 先播廣播、後啟用環境事件，讓帶目標的事件橫幅保有蓋台優先權
+      pushRouteBroadcast(completedWave);
       activateWaveEnvironmentEvent();
       state.waveBannerKind = state.wavePlan && state.wavePlan.boss ? "boss" : "wave";
       state.waveBannerStart = state.time;

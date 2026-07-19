@@ -975,13 +975,28 @@ const WEAPON_POWERUPS = {
   cycleModes: ["spread", "fracture", "laser", "ember", "homing"]
 };
 
+// R82（辯論裁決 B-02）：line 物件可選填 requires: { furniture: "<id>" }，
+// 僅在該家具已裝備於逃生艙槽位時才可能被選中（rules.selectRunBarkLines 過濾＋決定性附加一句）。
 const RUN_BARKS = {
   sortie_start: {
     id: "sortie_start",
     ttl: 1.8,
     lines: [
       { speaker: "driver", text: "繫好。今天也把火帶回來。" },
-      { speaker: "xi", text: "我把後門鎖好了。" }
+      { speaker: "xi", text: "我把後門鎖好了。" },
+      { speaker: "xi", text: "層架我數過了，罐頭夠吃到下一站。", requires: { furniture: "supply_shelf" } },
+      { speaker: "driver", text: "收音機今早有雜訊，像有人在唱歌，跟著它走。", requires: { furniture: "solar_radio" } },
+      { speaker: "xi", text: "我出門前留了一顆串燈亮著，給回來的我們。", requires: { furniture: "patched_lights" } },
+      { speaker: "xi", text: "番茄又紅了一顆，回來就摘。", requires: { furniture: "hydro_planter" } },
+      { speaker: "xi", text: "水壺裝的是昨晚濾好的水，乾淨得像還沒末日。", requires: { furniture: "water_filter" } },
+      { speaker: "driver", text: "昨晚在工坊把彈匣都壓滿了，放心打。", requires: { furniture: "folding_workbench" } },
+      { speaker: "driver", text: "路線照釘板上畫的走，別即興。", requires: { furniture: "blueprint_board" } },
+      { speaker: "driver", text: "急救箱補滿了，但今天別用到它。", requires: { furniture: "field_medkit" } },
+      { speaker: "xi", text: "菌菇昨晚又發光了，像替我們留的小夜燈。", requires: { furniture: "mycelium_rack" } },
+      { speaker: "driver", text: "重裝台壓好的彈，每一發都有名字。", requires: { furniture: "reload_bench" } },
+      { speaker: "xi", text: "我畫裡的車尾有一串火，今天也要一樣。", requires: { furniture: "crayon_drawing" } },
+      { speaker: "xi", text: "望遠鏡昨晚看到一顆沒熄的星，朝那個方向開。", requires: { furniture: "star_telescope" } },
+      { speaker: "driver", text: "相片放在儀表板上了，開穩點，別晃到他們。", requires: { furniture: "photo_frame" } }
     ]
   },
   first_supply: {
@@ -1010,14 +1025,31 @@ const RUN_BARKS = {
     id: "boss_down",
     ttl: 1.8,
     lines: [
-      { speaker: "driver", text: "數到十。還在，就好。" }
+      { speaker: "driver", text: "數到十。還在，就好。" },
+      { speaker: "xi", text: "回去我把這場勝仗，錄進收音機裡。", requires: { furniture: "solar_radio" } },
+      { speaker: "driver", text: "打完了。今晚配菜架上的生菜。", requires: { furniture: "hydro_planter" } },
+      { speaker: "driver", text: "這發打得準，工作桌上校過的瞄具沒白調。", requires: { furniture: "folding_workbench" } },
+      { speaker: "xi", text: "回去我要在釘板上，把這隻畫一個叉。", requires: { furniture: "blueprint_board" } },
+      { speaker: "driver", text: "電池箱穩住了火力，這波沒斷電。", requires: { furniture: "battery_bank" } },
+      { speaker: "xi", text: "今晚加菜，烤菌菇，慶祝。", requires: { furniture: "mycelium_rack" } },
+      { speaker: "driver", text: "省下的彈殼撿回去，重裝台等著。", requires: { furniture: "reload_bench" } },
+      { speaker: "xi", text: "車皮又多了一道疤，回去我幫你焊得漂亮一點。", requires: { furniture: "welding_kit" } },
+      { speaker: "driver", text: "今晚讓熹用望遠鏡挑下一條路。", requires: { furniture: "star_telescope" } }
     ]
   },
   critical_hull: {
     id: "critical_hull",
     ttl: 1.8,
     lines: [
-      { speaker: "xi", text: "壁爐？你聲音……又在抖。" }
+      { speaker: "xi", text: "壁爐？你聲音……又在抖。" },
+      { speaker: "driver", text: "想想層架上那排罐頭，還沒開完，不准倒。", requires: { furniture: "supply_shelf" } },
+      { speaker: "xi", text: "串燈還亮著……車也要撐著。", requires: { furniture: "patched_lights" } },
+      { speaker: "driver", text: "濾水罐一滴一滴都撐得下去，我們也是。", requires: { furniture: "water_filter" } },
+      { speaker: "xi", text: "電池箱還有電……燈沒滅，我們就沒輸。", requires: { furniture: "battery_bank" } },
+      { speaker: "xi", text: "急救箱在我腳邊，你敢流血我就敢縫。", requires: { furniture: "field_medkit" } },
+      { speaker: "driver", text: "破口撐到停車，焊槍五分鐘就能封住它。", requires: { furniture: "welding_kit" } },
+      { speaker: "driver", text: "牆上那張畫，車是開回家的，別讓它變謊話。", requires: { furniture: "crayon_drawing" } },
+      { speaker: "xi", text: "相框裡兩個影子都在等車回去……所以要回去。", requires: { furniture: "photo_frame" } }
     ]
   },
   deep_route: {
@@ -1026,6 +1058,88 @@ const RUN_BARKS = {
     lines: [
       { speaker: "narration", text: "路上的地名，已經沒人記得。" }
     ]
+  }
+};
+
+// R82（辯論裁決 B-01）：站點廣播＋路牌。四環境 × 里程碑波 {3,7,12,18} 各 2 句池（共 32 句）。
+// kind: "station"＝站點自動廣播、"sign"＝路牌短句；波結算 intermission 走 runBark banner 管線播出，
+// 以 (wave + seed hash) % pool.length 決定性選句（rules.selectRouteBroadcast）。
+const ROUTE_BROADCASTS = {
+  ttl: 2.2,
+  milestoneWaves: [3, 7, 12, 18],
+  byEnvironment: {
+    land: {
+      3: [
+        { kind: "station", text: "灰喉一號站自動廣播：燃料尚存三成，活著的請直走，別回頭。" },
+        { kind: "sign", text: "舊路牌：市界 2 公里——「歡迎光臨」四個字只剩「臨」。" }
+      ],
+      7: [
+        { kind: "station", text: "補給站廣播重複播放：本站無人，罐頭在櫃檯下，拿了就走。" },
+        { kind: "sign", text: "路牌：灰喉走廊中段——鳴笛者，自負後果。" }
+      ],
+      12: [
+        { kind: "station", text: "十二號中繼站廣播：閘門故障，改走河堤便道，燈滅前通過。" },
+        { kind: "sign", text: "手寫路牌：「前方沒有加油站，只有想加你的東西。」" }
+      ],
+      18: [
+        { kind: "station", text: "終點前廣播：訊號僅剩一格，聽見的人，替我們把火帶出去。" },
+        { kind: "sign", text: "路牌只剩半塊：「……還有 ○ 公里」——數字被抓痕蓋掉了。" }
+      ]
+    },
+    air: {
+      3: [
+        { kind: "station", text: "塔台自動廣播：跑道封閉，雲上航道開放，保持低鳴飛行。" },
+        { kind: "sign", text: "浮空信標：斷錨航道入口——風大，抓緊你的人。" }
+      ],
+      7: [
+        { kind: "station", text: "七號浮站廣播：氫氣塔尚可停靠十分鐘，超時者不留位。" },
+        { kind: "sign", text: "航路牌：亂流區——別信雲，雲後面有牙。" }
+      ],
+      12: [
+        { kind: "station", text: "高空中繼廣播：下方城市的燈光不是求救訊號，請勿降落。" },
+        { kind: "sign", text: "信標殘句：「高度不夠的，風會替你決定。」" }
+      ],
+      18: [
+        { kind: "station", text: "最後的塔台廣播：天空還醒著的，報一聲呼號，讓我們知道不只剩風。" },
+        { kind: "sign", text: "航牌：「前方無航圖」——有人補了一句：「那就自己畫。」" }
+      ]
+    },
+    sea: {
+      3: [
+        { kind: "station", text: "港務自動廣播：三號浮橋尚能通行，吃水深的先過。" },
+        { kind: "sign", text: "航標：沉錨帶外緣——錨鏈下有東西在數你的槳。" }
+      ],
+      7: [
+        { kind: "station", text: "燈塔廣播迴圈：燈還亮著，是因為還有人回來。" },
+        { kind: "sign", text: "浮牌：「霧進來就閉嘴」——底下畫了一排牙齒。" }
+      ],
+      12: [
+        { kind: "station", text: "十二號浮站廣播：淡水配給減半，願意分的人，鳴笛兩短。" },
+        { kind: "sign", text: "船骸上的漆字：「別撈，那不是人。」" }
+      ],
+      18: [
+        { kind: "station", text: "深海中繼廣播：海圖到此為止，前面的浪，替我們看一眼。" },
+        { kind: "sign", text: "半沉航標：「彼岸」兩字朝下，插在礁上。" }
+      ]
+    },
+    space: {
+      3: [
+        { kind: "station", text: "軌道站自動廣播：對接口尚有電力，關掉外燈再靠近。" },
+        { kind: "sign", text: "導航浮標：星渣雨航段——碎片不讓路，你讓。" }
+      ],
+      7: [
+        { kind: "station", text: "七號軌道站廣播：氧氣可分裝，以物易物，不收承諾。" },
+        { kind: "sign", text: "艙外噴漆：「別聽殘響，它會叫你的名字。」" }
+      ],
+      12: [
+        { kind: "station", text: "中繼衛星廣播：地面訊號中斷第 400 天，仍在倒數，仍在等。" },
+        { kind: "sign", text: "浮標殘訊：「前方無光」——有人接了半句：「帶自己的。」" }
+      ],
+      18: [
+        { kind: "station", text: "最遠的站廣播：這裡是航線盡頭，回去的人，替星星留一盞燈。" },
+        { kind: "sign", text: "最後的信標：「地球←」箭頭鏽得快看不見了。" }
+      ]
+    }
   }
 };
 
@@ -2808,6 +2922,7 @@ const DSConfig = {
   WEAPONS,
   WEAPON_POWERUPS,
   RUN_BARKS,
+  ROUTE_BROADCASTS,
   ENEMIES,
   ENEMY_VARIANTS,
   ENVIRONMENT_EVENTS,

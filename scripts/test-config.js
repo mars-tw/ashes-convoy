@@ -297,12 +297,46 @@ Object.values(config.ENEMY_VARIANTS).forEach((variant) => {
 ["sortie_start", "first_supply", "first_gate", "boss_radio", "boss_down", "critical_hull", "deep_route"].forEach((id) => {
   const bark = config.RUN_BARKS[id];
   assert(bark && bark.id === id, `${id} run bark should exist`);
-  assert(Array.isArray(bark.lines) && bark.lines.length >= 1 && bark.lines.length <= 2, `${id} should stay short`);
+  const baseLines = bark.lines.filter((line) => !line.requires);
+  assert(Array.isArray(bark.lines) && baseLines.length >= 1 && baseLines.length <= 2, `${id} base copy should stay short`);
   bark.lines.forEach((line) => {
     assert(["xi", "driver", "narration"].includes(line.speaker), `${id} has invalid speaker ${line.speaker}`);
     assert(line.text && line.text.length > 0, `${id} line should not be blank`);
   });
 });
+// R82（辯論裁決 B-02）：家具羈絆句——每件家具 2 句、掛在既定事件、requires 指向真實家具
+const furnitureBondCounts = {};
+Object.values(config.RUN_BARKS).forEach((bark) => {
+  bark.lines.forEach((line) => {
+    if (!line.requires) return;
+    assert(["sortie_start", "boss_down", "critical_hull"].includes(bark.id), `furniture bond lines must ride sortie_start/boss_down/critical_hull, got ${bark.id}`);
+    assert(["xi", "driver"].includes(line.speaker), `${bark.id} furniture bond line should be voiced by xi or driver`);
+    assert(config.TRAILER_ROOM.furniture[line.requires.furniture], `${bark.id} requires unknown furniture ${line.requires.furniture}`);
+    furnitureBondCounts[line.requires.furniture] = (furnitureBondCounts[line.requires.furniture] || 0) + 1;
+  });
+});
+Object.keys(config.TRAILER_ROOM.furniture).forEach((furnitureId) => {
+  assert.strictEqual(furnitureBondCounts[furnitureId], 2, `${furnitureId} should own exactly two bond lines`);
+});
+// R82（辯論裁決 B-01）：站點廣播＋路牌——四環境 × 里程碑波 {3,7,12,18} 各 2 句（共 32 句、兩種口味）
+assert.deepStrictEqual(config.ROUTE_BROADCASTS.milestoneWaves, [3, 7, 12, 18], "route broadcasts should target the fixed milestone waves");
+assert.deepStrictEqual(Object.keys(config.ROUTE_BROADCASTS.byEnvironment).sort(), ["air", "land", "sea", "space"]);
+assertFinitePositive(config.ROUTE_BROADCASTS.ttl, "ROUTE_BROADCASTS.ttl");
+let routeBroadcastLineCount = 0;
+Object.keys(config.ENVIRONMENT_BACKGROUNDS).forEach((environment) => {
+  const table = config.ROUTE_BROADCASTS.byEnvironment[environment];
+  assert(table, `${environment} should define route broadcasts`);
+  config.ROUTE_BROADCASTS.milestoneWaves.forEach((wave) => {
+    const pool = table[wave];
+    assert(Array.isArray(pool) && pool.length === 2, `${environment} wave ${wave} should pool two broadcast lines`);
+    assert.deepStrictEqual(pool.map((line) => line.kind).sort(), ["sign", "station"], `${environment} wave ${wave} should mix station and sign flavors`);
+    pool.forEach((line) => {
+      assert(line.text && line.text.replace(/\s+/g, "").length > 0, `${environment} wave ${wave} broadcast should not be blank`);
+      routeBroadcastLineCount += 1;
+    });
+  });
+});
+assert.strictEqual(routeBroadcastLineCount, 32, "R82 route broadcasts should ship exactly 32 lines");
 assert.strictEqual(config.VEHICLES.sky_barge.passive.id, "slipstream");
 assert.strictEqual(config.VEHICLES.sea_ark.passive.id, "broadside_echo");
 

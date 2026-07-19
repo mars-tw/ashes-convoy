@@ -884,4 +884,78 @@ const gunnerTarget = rules.selectGunnerTarget({
 });
 assert.strictEqual(gunnerTarget.id, "near", "gunner should select the nearest live target within range");
 
+// R82（辯論裁決 B-01）：站點廣播／路牌——每環境 4 個里程碑句池非空且選句決定性
+["land", "air", "sea", "space"].forEach((environment) => {
+  config.ROUTE_BROADCASTS.milestoneWaves.forEach((wave) => {
+    const pool = config.ROUTE_BROADCASTS.byEnvironment[environment][wave];
+    assert(Array.isArray(pool) && pool.length > 0, `${environment} wave ${wave} broadcast pool should not be empty`);
+    const first = rules.selectRouteBroadcast({ environment, wave, seed: "route-seed", config });
+    const second = rules.selectRouteBroadcast({ environment, wave, seed: "route-seed", config });
+    assert(first && first.text, `${environment} wave ${wave} should select a broadcast line`);
+    assert.strictEqual(first, second, `${environment} wave ${wave} selection must be deterministic for the same seed`);
+    assert(pool.includes(first), `${environment} wave ${wave} selection should come from its own pool`);
+  });
+});
+assert.strictEqual(
+  rules.selectRouteBroadcast({ environment: "land", wave: 4, seed: "route-seed", config }),
+  null,
+  "non-milestone waves should stay silent"
+);
+assert.strictEqual(
+  rules.selectRouteBroadcast({ environment: "lava", wave: 3, seed: "route-seed", config }),
+  null,
+  "unknown environments should stay silent"
+);
+const broadcastFlavors = new Set();
+for (let i = 0; i < 16; i += 1) {
+  broadcastFlavors.add(rules.selectRouteBroadcast({ environment: "land", wave: 3, seed: `route-${i}`, config }).kind);
+}
+assert.deepStrictEqual([...broadcastFlavors].sort(), ["sign", "station"], "different seeds should rotate both broadcast flavors");
+
+// R82（辯論裁決 B-02）：家具羈絆句——未裝備不得入選、裝備後可被選中、選句決定性
+const bondEventIds = ["sortie_start", "boss_down", "critical_hull"];
+const bareMeta = rules.migrateMeta(null, { config });
+bondEventIds.forEach((barkId) => {
+  const bark = config.RUN_BARKS[barkId];
+  for (let wave = 1; wave <= 30; wave += 1) {
+    const lines = rules.selectRunBarkLines({ bark, meta: bareMeta, wave });
+    assert(lines.length >= 1, `${barkId} should keep its base lines without furniture`);
+    lines.forEach((line) => assert(!line.requires, `${barkId} must never select bond lines while unequipped (wave ${wave})`));
+  }
+});
+const bondMeta = rules.migrateMeta(null, { config });
+bondMeta.trailerRoom.owned.supply_shelf = true;
+bondMeta.trailerRoom.slots.wall_left = "supply_shelf";
+bondEventIds.forEach((barkId) => {
+  const bark = config.RUN_BARKS[barkId];
+  const ownsBond = bark.lines.some((line) => line.requires && line.requires.furniture === "supply_shelf");
+  let bondSeen = false;
+  for (let wave = 1; wave <= 30; wave += 1) {
+    const lines = rules.selectRunBarkLines({ bark, meta: bondMeta, wave });
+    lines.forEach((line) => {
+      if (!line.requires) return;
+      assert.strictEqual(line.requires.furniture, "supply_shelf", `${barkId} must only select bond lines of equipped furniture`);
+      bondSeen = true;
+    });
+  }
+  assert.strictEqual(bondSeen, ownsBond, `${barkId} equipped bond line should ${ownsBond ? "" : "not "}be selectable`);
+});
+assert.deepStrictEqual(
+  rules.selectRunBarkLines({ bark: config.RUN_BARKS.sortie_start, meta: bondMeta, wave: 5 }),
+  rules.selectRunBarkLines({ bark: config.RUN_BARKS.sortie_start, meta: bondMeta, wave: 5 }),
+  "bond line selection must be deterministic for the same wave"
+);
+const twinBondMeta = rules.migrateMeta(null, { config });
+twinBondMeta.trailerRoom.owned.supply_shelf = true;
+twinBondMeta.trailerRoom.slots.wall_left = "supply_shelf";
+twinBondMeta.trailerRoom.owned.photo_frame = true;
+twinBondMeta.trailerRoom.slots.bedside = "photo_frame";
+const twinBondPicks = new Set();
+for (let wave = 1; wave <= 30; wave += 1) {
+  rules.selectRunBarkLines({ bark: config.RUN_BARKS.critical_hull, meta: twinBondMeta, wave }).forEach((line) => {
+    if (line.requires) twinBondPicks.add(line.requires.furniture);
+  });
+}
+assert.deepStrictEqual([...twinBondPicks].sort(), ["photo_frame", "supply_shelf"], "multiple equipped furniture should rotate bond lines across waves");
+
 console.log("Rules tests PASS");

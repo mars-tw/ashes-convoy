@@ -253,6 +253,56 @@ function sanitizeTrailerRoom(input, config) {
   return output;
 }
 
+// R82（辯論裁決 B-01）：站點廣播／路牌決定性選句。
+// 同 seed／同波必得同句（(wave + seed hash) % pool.length，仿既有 (wave+count)%len 慣例）；非里程碑波回傳 null。
+function hashBroadcastSeed(seed) {
+  const text = String(seed == null ? "ashes-convoy" : seed);
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i += 1) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function selectRouteBroadcast(options) {
+  const opts = options || {};
+  const cfg = getConfig(opts.config);
+  const table = (cfg.ROUTE_BROADCASTS && cfg.ROUTE_BROADCASTS.byEnvironment) || {};
+  const wave = finiteNumber(opts.wave, 0, { min: 0, integer: true });
+  const pools = table[opts.environment];
+  const pool = pools && pools[wave];
+  if (!Array.isArray(pool) || !pool.length) return null;
+  const index = (wave + hashBroadcastSeed(opts.seed)) % pool.length;
+  return pool[index];
+}
+
+// R82（辯論裁決 B-02）：家具羈絆句過濾。requires: { furniture } 的句子僅在該家具
+// 已裝備於逃生艙槽位（meta.trailerRoom.slots）時可入選；入選者以 (wave + lines.length) % pool.length
+// 決定性附加一句，未裝備的 requires 句不可能被選中。
+function isFurnitureEquipped(meta, furnitureId) {
+  if (typeof furnitureId !== "string" || !furnitureId) return false;
+  const slots =
+    meta && meta.trailerRoom && meta.trailerRoom.slots && typeof meta.trailerRoom.slots === "object"
+      ? meta.trailerRoom.slots
+      : {};
+  return Object.keys(slots).some((slotId) => slots[slotId] === furnitureId);
+}
+
+function selectRunBarkLines(options) {
+  const opts = options || {};
+  const bark = opts.bark && typeof opts.bark === "object" ? opts.bark : {};
+  const lines = Array.isArray(bark.lines) ? bark.lines : [];
+  const base = lines.filter((line) => line && line.text && !line.requires);
+  const bonusPool = lines.filter(
+    (line) => line && line.text && line.requires && isFurnitureEquipped(opts.meta, line.requires.furniture)
+  );
+  if (!bonusPool.length) return base;
+  const wave = finiteNumber(opts.wave, 0, { min: 0, integer: true });
+  const index = (wave + lines.length) % bonusPool.length;
+  return base.concat([bonusPool[index]]);
+}
+
 function storyBeatIds(config) {
   const cfg = getConfig(config);
   return new Set(((cfg.STORY && cfg.STORY.beats) || []).map((beat) => beat.id));
@@ -2616,6 +2666,9 @@ const DSRules = {
   resolveTrailerFollowPose,
   resolveGunnerPose,
   sanitizeTrailerRoom,
+  selectRouteBroadcast,
+  isFurnitureEquipped,
+  selectRunBarkLines,
   sanitizeStory,
   storyUnlockValue,
   getStoryProgress,
