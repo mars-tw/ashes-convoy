@@ -824,7 +824,9 @@
   function runBarksEnabled() {
     if (!config.RUN_BARKS) return false;
     if (meta.settings && meta.settings.showCompanion === false) return false;
-    if (meta.settings && meta.settings.reducedFlash === true) return false;
+    // R81（辯論裁決 B-03a／AUDIT F-08）：減少閃光是視覺保護，不再連坐沒收戰鬥字幕；
+    // 字幕由獨立設定 showRunBarks 控制（預設開）
+    if (meta.settings && meta.settings.showRunBarks === false) return false;
     return true;
   }
 
@@ -4696,23 +4698,29 @@
   }
 
   // 補給箱重繪：像素木箱＋鐵帶＋補給圖示＋浮動＋光暈脈動（取代舊青色線框）。
+  // R81（辯論裁決 A-01 Phase1）：敵彈依 kind 分色——高威脅一眼可辨（資料鉤子 spawn 時已寫入 kind）
+  const ENEMY_SHOT_TINTS = {
+    acid: { trail: "rgba(95, 228, 120, 0.22)", core: "#5fe478", edge: "#142319", spark: "#d8ff7a" },
+    scream: { trail: "rgba(186, 130, 255, 0.24)", core: "#b07af0", edge: "#241335", spark: "#ecd6ff" },
+  };
   function drawEnemyProjectile(shot) {
+    const tint = ENEMY_SHOT_TINTS[shot.kind] || ENEMY_SHOT_TINTS.acid;
     ctx.save();
     ctx.translate(shot.x, shot.y);
     ctx.rotate(Math.atan2(shot.vy || 1, shot.vx || 0));
     ctx.globalAlpha *= 0.96;
-    ctx.fillStyle = "rgba(95, 228, 120, 0.22)";
+    ctx.fillStyle = tint.trail;
     ctx.beginPath();
     ctx.ellipse(-shot.radius * 1.1, 0, shot.radius * 1.6, shot.radius * 0.55, 0, 0, TAU);
     ctx.fill();
-    ctx.fillStyle = "#5fe478";
-    ctx.strokeStyle = "#142319";
+    ctx.fillStyle = tint.core;
+    ctx.strokeStyle = tint.edge;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.ellipse(0, 0, shot.radius, shot.radius * 0.72, 0, 0, TAU);
     ctx.fill();
     ctx.stroke();
-    ctx.fillStyle = "#d8ff7a";
+    ctx.fillStyle = tint.spark;
     ctx.fillRect(-1, -1, 2, 2);
     ctx.restore();
   }

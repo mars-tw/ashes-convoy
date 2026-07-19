@@ -357,7 +357,8 @@
       button.dataset.quickUpgrade = track;
       button.disabled = cost == null || meta.parts < cost;
       button.setAttribute("aria-label", `${upgrade.label} Lv.${levels[track]} ${cost == null ? "已滿" : `消耗 ${cost} 零件`}`);
-      button.innerHTML = `<b>${shortUpgradeLabel(upgrade.label)}</b><small>${cost == null ? "滿" : cost}</small>`;
+      const timing = (track === "hull" || track === "armor") ? "下次出勤" : "本局生效";
+      button.innerHTML = `<b>${shortUpgradeLabel(upgrade.label)}</b><small>${cost == null ? "滿" : cost}</small><i class="upg-timing">${timing}</i>`;
       button.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -368,12 +369,20 @@
     });
   }
 
+  let quickWheelPausedRun = false;
   function hideQuickUpgradeWheel() {
     if (els.quickUpgradeWheel) els.quickUpgradeWheel.hidden = true;
+    if (quickWheelPausedRun) { quickWheelPausedRun = false; game.resume(); }
   }
 
   function showQuickUpgradeWheel(clientX, clientY) {
     if (!els.quickUpgradeWheel || !els.battleStage) return;
+    // R81（辯論裁決 C-03）：開輪盤即暫停（同 rail 抽屜 pause 慣例：遊玩中才暫停、關閉恢復）
+    {
+      const st = game.getState();
+      quickWheelPausedRun = !!(st && st.mode === "playing" && !st.paused);
+      if (quickWheelPausedRun) game.pause();
+    }
     renderQuickUpgradeWheel();
     const rect = els.battleStage.getBoundingClientRect();
     els.quickUpgradeWheel.style.left = "8px";
@@ -1225,6 +1234,7 @@
     if (els.sfxVolumeSelect) els.sfxVolumeSelect.value = meta.settings.sfxVolume || "medium";
     if (els.showRunTrailerToggle) els.showRunTrailerToggle.checked = meta.settings.showRunTrailer !== false;
     if (els.showCompanionToggle) els.showCompanionToggle.checked = meta.settings.showCompanion !== false;
+    if (els.showRunBarksToggle) els.showRunBarksToggle.checked = meta.settings.showRunBarks !== false;
     if (els.fxLevelSelect) els.fxLevelSelect.value = meta.settings.fxLevel || "full";
     els.damageTextDensitySelect.value = meta.settings.damageTextDensity || "all";
     els.performanceModeSelect.value = meta.settings.performanceMode || "auto";
@@ -1523,8 +1533,11 @@
     function focusAt(index) {
       buttons[(index + buttons.length) % buttons.length].focus();
     }
-    if (/^[1-4]$/.test(event.key)) {
-      const button = buttons[Number(event.key) - 1];
+    // R81（辯論裁決 C-01）：UI 標到 5.，快捷補齊 1-5 並支援數字鍵盤
+    const keyNum = /^[1-5]$/.test(event.key) ? Number(event.key)
+      : (/^Numpad[1-5]$/.test(event.code) ? Number(event.code.slice(-1)) : 0);
+    if (keyNum) {
+      const button = buttons[keyNum - 1];
       if (button) button.click();
     } else if (event.key === "ArrowRight" || event.key === "ArrowDown") {
       focusAt(activeIndex + 1);
@@ -1924,6 +1937,13 @@
   }
 
   function clearStorage() {
+    // R81（辯論裁決 C-02）：清檔前寫入單一 backup key（覆寫式，不膨脹 storage），供一次性復原
+    if (root.localStorage) {
+      try {
+        const current = root.localStorage.getItem(config.STORAGE_KEY);
+        if (current) root.localStorage.setItem(config.STORAGE_KEY + ":backup", current);
+      } catch (err) { /* 容量滿等異常不阻斷清檔 */ }
+    }
     if (root.localStorage) root.localStorage.removeItem(config.STORAGE_KEY);
     meta = migrateUiMeta(null);
     lastSettlement = null;
@@ -1979,7 +1999,30 @@
       openTrailerRoom(els.trailerHotspotBtn);
     });
     els.opsHotspotBtn.addEventListener("click", () => openMetaDrawer("operations", els.opsHotspotBtn));
-    els.resetOverlayBtn.addEventListener("click", clearStorage);
+    // R81（辯論裁決 C-02）：清檔改二段確認——首按變紅改字，5 秒未再按自動還原
+    function guardedClear(btn) {
+      if (!btn) return clearStorage();
+      if (btn.dataset.confirmClear !== "1") {
+        btn.dataset.confirmClear = "1";
+        btn.dataset.origText = btn.textContent;
+        btn.textContent = "再按一次確認清除";
+        btn.classList.add("danger-armed");
+        setTimeout(() => {
+          if (btn.dataset.confirmClear === "1") {
+            delete btn.dataset.confirmClear;
+            btn.textContent = btn.dataset.origText || btn.textContent;
+            btn.classList.remove("danger-armed");
+          }
+        }, 5000);
+        return;
+      }
+      delete btn.dataset.confirmClear;
+      btn.classList.remove("danger-armed");
+      btn.textContent = btn.dataset.origText || btn.textContent;
+      clearStorage();
+      setStatus("存檔已清除（本次可於重新整理前以 :backup 復原）");
+    }
+    els.resetOverlayBtn.addEventListener("click", () => guardedClear(els.resetOverlayBtn));
     els.closeMetaDrawer.addEventListener("click", closeMetaDrawer);
     if (els.storyLogBtn) els.storyLogBtn.addEventListener("click", toggleStoryLog);
     els.closeTrailerRoomBtn.addEventListener("click", closeTrailerRoom);
@@ -2000,7 +2043,7 @@
       els.runAnalysisToggleBtn.textContent = els.runAnalysisPanel.hidden ? "本局分析" : "收合分析";
       els.runAnalysisToggleBtn.setAttribute("aria-label", els.runAnalysisPanel.hidden ? "展開本局分析" : "收合本局分析");
     });
-    els.resetBtn.addEventListener("click", clearStorage);
+    els.resetBtn.addEventListener("click", () => guardedClear(els.resetBtn));
     els.aimAssistLevelSelect.addEventListener("change", () => updateSetting("aimAssistLevel", els.aimAssistLevelSelect.value));
     els.screenShakeToggle.addEventListener("change", () => updateSetting("screenShake", els.screenShakeToggle.checked));
     if (els.reducedFlashToggle) els.reducedFlashToggle.addEventListener("change", () => updateSetting("reducedFlash", els.reducedFlashToggle.checked));
@@ -2008,6 +2051,7 @@
     if (els.sfxVolumeSelect) els.sfxVolumeSelect.addEventListener("change", () => updateSetting("sfxVolume", els.sfxVolumeSelect.value));
     els.showRunTrailerToggle.addEventListener("change", () => updateSetting("showRunTrailer", els.showRunTrailerToggle.checked));
     if (els.showCompanionToggle) els.showCompanionToggle.addEventListener("change", () => updateSetting("showCompanion", els.showCompanionToggle.checked));
+    if (els.showRunBarksToggle) els.showRunBarksToggle.addEventListener("change", () => updateSetting("showRunBarks", els.showRunBarksToggle.checked));
     els.fxLevelSelect.addEventListener("change", () => updateSetting("fxLevel", els.fxLevelSelect.value));
     els.damageTextDensitySelect.addEventListener("change", () => updateSetting("damageTextDensity", els.damageTextDensitySelect.value));
     els.performanceModeSelect.addEventListener("change", () => updateSetting("performanceMode", els.performanceModeSelect.value));
@@ -2274,6 +2318,7 @@
       "sfxVolumeSelect",
       "showRunTrailerToggle",
       "showCompanionToggle",
+      "showRunBarksToggle",
       "fxLevelSelect",
       "damageTextDensitySelect",
       "performanceModeSelect",

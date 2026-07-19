@@ -570,11 +570,20 @@ async function checkClearStorageButton(page) {
   });
   await waitForMetaBackground(page);
   await expandBaseMenu(page);
+  // R81：清檔改二段確認——單擊必須不清檔（防誤觸），再擊才清；並驗證清檔前寫入 :backup
+  await page.click("#resetOverlayBtn");
+  await page.waitForFunction(() => document.getElementById("resetOverlayBtn").dataset.confirmClear === "1");
+  const stillIntact = await page.evaluate(() => window.__test.getMeta().parts === 77);
+  if (!stillIntact) throw new Error("R81 二段確認失效：單擊即清檔");
   await page.click("#resetOverlayBtn");
   await page.waitForFunction(() => {
     const meta = window.__test.getMeta();
     return meta.parts === 0 && meta.selectedVehicle === "land_rig";
   });
+  const backupOk = await page.evaluate(() => {
+    try { const raw = localStorage.getItem(Object.keys(localStorage).find((k) => k.endsWith(":backup")) || ""); return !!raw && raw.includes("77"); } catch (e) { return false; }
+  });
+  if (!backupOk) throw new Error("R81 清檔備份未寫入 :backup");
 }
 
 async function checkShelterMeta(page) {
