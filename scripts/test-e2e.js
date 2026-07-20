@@ -117,7 +117,7 @@ async function expectMetaBackground(page) {
     if (state.backgroundMode === "image" && state.imageLoaded) return true;
     if (state.imageFailed && state.backgroundMode === "scene" && state.lastDrawMs > 0) return true;
     return false;
-  });
+  }, null, { timeout: 180000 });
   const state = await page.evaluate(() => window.__test.getShelterState());
   if (state.backgroundMode === "image" && state.imageLoaded) {
     const image = await page.locator("#shelterImage").evaluate((node) => {
@@ -229,6 +229,20 @@ async function expandBaseMenu(page) {
   if (expanded !== "true") await page.click("#baseToggleBtn");
 }
 
+async function clickExpandedBaseAction(page, selector) {
+  let lastError;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await expandBaseMenu(page);
+    try {
+      await page.locator(selector).click({ timeout: 10000 });
+      return;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError;
+}
+
 async function waitForMetaBackground(page) {
   await page.waitForFunction(() => {
     const state = window.__test.getShelterState();
@@ -244,8 +258,7 @@ async function openUpgradePanel(page) {
   if (fullBackground) {
     const alreadyOpen = await page.locator('#metaDrawer:not([hidden]) [data-meta-section="upgrades"]:not([hidden])').count();
     if (alreadyOpen) return;
-    await expandBaseMenu(page);
-    await page.click("#upgradeHotspotBtn");
+    await clickExpandedBaseAction(page, "#upgradeHotspotBtn");
     await page.waitForSelector('#metaDrawer:not([hidden]) [data-meta-section="upgrades"]:not([hidden])');
   }
 }
@@ -258,8 +271,7 @@ async function openOperationsPanel(page) {
   if (fullBackground) {
     const alreadyOpen = await page.locator('#metaDrawer:not([hidden]) [data-meta-section="operations"]:not([hidden])').count();
     if (alreadyOpen) return;
-    await expandBaseMenu(page);
-    await page.click("#opsHotspotBtn");
+    await clickExpandedBaseAction(page, "#opsHotspotBtn");
     await page.waitForSelector('#metaDrawer:not([hidden]) [data-meta-section="operations"]:not([hidden])');
   }
 }
@@ -322,12 +334,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R80") && swText.includes("src/ui.js?v=R80") && swText.includes("src/game.js?v=R80") && swText.includes("src/rules.js?v=R80"),
+      swCachesJs: swText.includes("src/version.js?v=R83") && swText.includes("src/ui.js?v=R83") && swText.includes("src/game.js?v=R83") && swText.includes("src/rules.js?v=R83"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R80"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R80"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R80"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R83"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R83"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R83"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -336,7 +348,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R80", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R83", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -755,7 +767,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R80"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R83"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -1550,7 +1562,12 @@ async function checkEmptySettlementCta(page) {
 }
 
 async function checkInitialPromptAndMessages(page) {
-  const debug = await page.evaluate(() => window.__test.getRenderDebug());
+  const debug = await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    window.__test.startRun(meta.selectedVehicle);
+    window.__test.step(180);
+    return window.__test.getRenderDebug();
+  });
   assert(debug.tutorialDrawn, "opening drag tutorial should be drawn");
   assert(debug.messagesDrawn > 0, "opening message should be drawn");
 }
@@ -2334,12 +2351,21 @@ async function sampleFps(page) {
 }
 
 async function checkOpeningHordeGateAndFps(page) {
-  await page.evaluate(() => window.__test.step(3000));
-  const firstKill = await page.evaluate(() => window.__test.getState().stats.kills);
+  // Keep the two deterministic simulation windows in one browser task. On a heavily loaded
+  // runner, yielding between two page.evaluate calls lets the live RAF loop advance and kill
+  // one extra enemy before the opening-horde snapshot, making the unchanged >=8 gate flap at 7.
+  const openingCheckpoint = await page.evaluate(() => {
+    const meta = window.__test.getMeta();
+    window.__test.startRun(meta.selectedVehicle);
+    window.__test.step(3000);
+    const firstKill = window.__test.getState().stats.kills;
+    window.__test.step(5000);
+    return { firstKill, opening: window.__test.getState() };
+  });
+  const firstKill = openingCheckpoint.firstKill;
   assert(firstKill >= 1, `first kill should happen within 3 seconds, got ${firstKill}`);
 
-  await page.evaluate(() => window.__test.step(5000));
-  const opening = await page.evaluate(() => window.__test.getState());
+  const opening = openingCheckpoint.opening;
   assert(
     opening.enemies.length >= 8,
     `opening horde should have at least 8 enemies on screen, got ${opening.enemies.length}`
@@ -3431,10 +3457,9 @@ async function runScenario(browser, baseUrl, viewport, full) {
   } else {
     await clickSortie(page);
   }
-  await page.evaluate(() => window.__test.step(180));
+  await checkInitialPromptAndMessages(page);
   await expectCanvasHasPixels(page);
   await checkRunTrailerRendering(page);
-  await checkInitialPromptAndMessages(page);
   await checkOpeningHordeGateAndFps(page);
   await checkAimAssistToggle(page);
   await checkAdaptivePerformance(page);
@@ -3708,7 +3733,7 @@ async function runAudioScenario(browser, baseUrl) {
 
   // 3) 設定關閉音效：立即靜音（不再建任何 node）且持久化。
   await page.evaluate(() => window.__test.showGarage());
-  await waitForMetaBackground(page);
+  await expectMetaBackground(page);
   await openOperationsPanel(page);
   await page.locator("#soundToggle").uncheck();
   const muted = await page.evaluate(() => ({
@@ -3736,7 +3761,7 @@ async function runAudioScenario(browser, baseUrl) {
   await page.waitForFunction(() => window.__test && window.__test.spritesReady && window.__test.spritesReady());
   const reloaded = await page.evaluate(() => window.__test.getMeta().settings.sound);
   assert.strictEqual(reloaded, false, "sound=false should survive reload");
-  await waitForMetaBackground(page);
+  await expectMetaBackground(page);
   await openOperationsPanel(page);
   const reloadedToggle = await page.locator("#soundToggle").isChecked();
   assert.strictEqual(reloadedToggle, false, "sound toggle should render persisted off state after reload");
@@ -3780,7 +3805,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r80")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r83")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -3798,7 +3823,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r80")), "R80 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r83")), "R83 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

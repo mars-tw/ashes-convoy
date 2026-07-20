@@ -46,8 +46,8 @@
     </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="manifest.webmanifest?v=R80" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R80" />
+    <link rel="manifest" href="manifest.webmanifest?v=R83" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R83" />
     <link rel="canonical" href="https://mars-tw.github.io/ashes-convoy/" />
     <title>灰燼護航</title>
     <style>
@@ -188,7 +188,10 @@
         display: none;
       }
 
-      @media (min-width: 860px) and (pointer: fine) {
+      /* R83 P0-B：雙欄 rail 佈局原僅 min-width:860+pointer:fine（桌機）啟用，
+         手機橫向 844×390 落在直欄鎖比例分支被擠成 180×390 直柱。
+         放寬：coarse-pointer 橫向（寬 ≥640）同樣啟用雙欄，把左右黑邊還給捷徑 rail。 */
+      @media (min-width: 860px) and (pointer: fine), (min-width: 640px) and (orientation: landscape) and (pointer: coarse) {
         body {
           place-items: stretch;
         }
@@ -364,13 +367,14 @@
         align-items: center;
       }
 
+      /* R83 ART-1：HUD 卡片與 hotspot/rail 按鈕共用同一 bevel 語言（1px 頂部內光＋沉影） */
       .stat,
       .boss,
       .mods {
         border: 1px solid var(--line);
         border-radius: 8px;
         background: rgba(10, 13, 16, 0.74);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+        box-shadow: inset 0 1px 0 rgba(255, 235, 203, 0.07), 0 6px 16px rgba(0, 0, 0, 0.22);
       }
 
       .stat {
@@ -424,6 +428,7 @@
         border: 1px solid var(--line);
         border-radius: 8px;
         background: rgba(10, 13, 16, 0.74);
+        box-shadow: inset 0 1px 0 rgba(255, 235, 203, 0.07), 0 6px 16px rgba(0, 0, 0, 0.22);
         display: grid;
         place-items: center;
         font-size: 12px;
@@ -642,9 +647,10 @@
         margin-bottom: 7px;
       }
 
+      /* R83 ART-1：戰內 overlay 標題統一 14px 語言（對齊 event-banner strong） */
       .supply-choice-head strong {
         color: var(--accent-2);
-        font-size: 16px;
+        font-size: 14px;
       }
 
       .supply-choice-head span {
@@ -978,7 +984,11 @@
         border-color: rgba(94, 212, 203, 0.5);
       }
 
+      /* R83 44px 批次：日誌展開列命中高補到 44px（保留 details 展開三角標記） */
       .story-summary {
+        min-height: 44px;
+        padding-block: 13px;
+        box-sizing: border-box;
         font-size: 12px;
         font-weight: 900;
         cursor: pointer;
@@ -1489,6 +1499,14 @@
         border-color: rgba(225, 95, 79, 0.62);
       }
 
+      /* R83：兩段式確認（清檔／跑局中重開）武裝態的視覺回饋，紅框＋亮字一眼可辨 */
+      .danger-armed {
+        border-color: rgba(225, 95, 79, 0.92);
+        background: #6b241f;
+        color: #ffd9d1;
+        box-shadow: 0 0 0 1px rgba(225, 95, 79, 0.4), 0 0 14px rgba(225, 95, 79, 0.28);
+      }
+
       .settlement-list {
         grid-template-columns: 1fr 1fr;
       }
@@ -1635,6 +1653,14 @@
         box-shadow: none;
         touch-action: none;
         isolation: isolate;
+      }
+
+      /* R83 P0-A：上方 display:grid 與 .panel[hidden] 同權重且後出，會蓋掉 hidden——
+         戰局中被隱藏的車庫面板因此持續攔截戰場點擊（快速升級輪盤點不開、跑局中誤觸出擊）。
+         顯式壓回 display:none，讓 hidden 永遠贏。 */
+      .meta-panel.is-illustration[hidden],
+      .meta-panel.is-shelter[hidden] {
+        display: none;
       }
 
       .meta-panel.is-illustration::after,
@@ -2197,6 +2223,93 @@
           display: none;
         }
       }
+
+      /* ============================================================
+         R83 P0-B：coarse-pointer 橫向（寬 ≥640）可玩佈局覆寫。
+         戰場維持 390:844 等比（雙欄 rail 佈局供捷徑），但大型面板／覆疊
+         改 position:fixed 逃出 180px 直柱、用滿橫幅：
+         - battle-stage 解除 container-type（layout containment 會把
+           fixed 後代圈在 180px 柱內）
+         - 起始畫面（車庫面板）滿版；拖車房間左圖右欄雙欄；
+           基地抽屜／暫停／結算／補給箱全寬置中
+         置於樣式表末端以確保蓋過 @media (max-height:500px) 同權重規則。
+         ============================================================ */
+      @media (min-width: 640px) and (orientation: landscape) and (pointer: coarse) {
+        .battle-stage {
+          container-type: normal;
+        }
+
+        .meta-panel.is-illustration,
+        .meta-panel.is-shelter {
+          position: fixed;
+          inset: 0;
+          width: auto;
+          max-height: none;
+          transform: none;
+          z-index: 30;
+        }
+
+        .meta-panel.is-illustration[hidden],
+        .meta-panel.is-shelter[hidden] {
+          display: none;
+        }
+
+        .panel {
+          position: fixed;
+          inset: auto auto max(12px, env(safe-area-inset-bottom)) 50%;
+          transform: translateX(-50%);
+          width: min(92vw, 640px);
+          max-height: calc(100dvh - 24px);
+          z-index: 30;
+        }
+
+        .pause-panel {
+          inset: 50% auto auto 50%;
+          transform: translate(-50%, -50%);
+        }
+
+        .is-illustration .meta-drawer,
+        .is-shelter .meta-drawer {
+          position: fixed;
+          left: max(12px, env(safe-area-inset-left));
+          right: max(12px, env(safe-area-inset-right));
+          bottom: calc(max(8px, env(safe-area-inset-bottom)) + 96px);
+          max-height: calc(100dvh - 128px);
+          z-index: 35;
+        }
+
+        .trailer-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 40;
+          grid-template-columns: minmax(240px, 36%) minmax(0, 1fr);
+          grid-template-rows: minmax(0, 1fr);
+          gap: 10px;
+          padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+        }
+
+        /* 無線電日誌：橫向必可達——保留可視高度、清單內捲 */
+        .story-log-section {
+          max-height: min(150px, 44dvh);
+        }
+
+        .supply-choice-overlay {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          right: auto;
+          bottom: auto;
+          width: min(92vw, 620px);
+          transform: translate(-50%, -50%);
+          z-index: 25;
+        }
+
+        .touch-controls.is-visible {
+          position: fixed;
+          inset: auto max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+          z-index: 20;
+        }
+      }
     </style>
   </head>
   <body>
@@ -2295,7 +2408,7 @@
             <span id="trailerBonusText">HP +0% · 傷害 +0% · 射速 +0% · 承傷 -0%</span>
           </div>
           <section class="story-log-section" id="storyLogSection" aria-label="無線電日誌" hidden>
-            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R80" alt="熹" decoding="async" draggable="false" />
+            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R83" alt="熹" decoding="async" draggable="false" />
             <div class="story-log-list" id="storyLogList"></div>
           </section>
           <div class="trailer-room-body">
@@ -2312,7 +2425,7 @@
               <p class="start-kicker">ASHES CONVOY</p>
               <h1 class="start-logo">灰燼護航</h1>
             </div>
-            <span class="start-release-mark" aria-hidden="true">R80</span>
+            <span class="start-release-mark" aria-hidden="true">R83</span>
           </div>
           <div class="start-ledger" id="garageMeta" role="list" aria-label="護航統計">
             <span class="start-stat-chip" role="listitem"><em>零件</em><b id="startPartsValue">0</b></span>
@@ -2532,7 +2645,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R80";
+        var key = "ashes_convoy_html_boot_reload_R83";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -2549,15 +2662,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R80"></script>
-    <script src="src/sprites.js?v=R80"></script>
-    <script src="src/sprite-renderer.js?v=R80"></script>
-    <script src="src/shelter-scene.js?v=R80"></script>
-    <script src="src/config.js?v=R80"></script>
-    <script src="src/rules.js?v=R80"></script>
-    <script src="src/fx.js?v=R80"></script>
-    <script src="src/audio.js?v=R80"></script>
-    <script src="src/game.js?v=R80"></script>
-    <script src="src/ui.js?v=R80"></script>
+    <script src="src/version.js?v=R83"></script>
+    <script src="src/sprites.js?v=R83"></script>
+    <script src="src/sprite-renderer.js?v=R83"></script>
+    <script src="src/shelter-scene.js?v=R83"></script>
+    <script src="src/config.js?v=R83"></script>
+    <script src="src/rules.js?v=R83"></script>
+    <script src="src/fx.js?v=R83"></script>
+    <script src="src/audio.js?v=R83"></script>
+    <script src="src/game.js?v=R83"></script>
+    <script src="src/ui.js?v=R83"></script>
   </body>
 </html>

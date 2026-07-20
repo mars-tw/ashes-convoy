@@ -804,15 +804,29 @@
   }
 
   function pushEventBanner(title, body, options) {
-    if (!state) return;
+    if (!state) return false;
     const opts = options || {};
+    // R83 收尾：危險訊息不得被較晚補播的低優先 bark 蓋掉。這也讓高負載時
+    // 延後到 Boss 生成後才觸發的 sortie_start 不會取代 Boss 警報。
+    const priorities = { info: 10, gate: 20, supply: 20, story: 30, event: 60, boss: 80 };
+    const kind = opts.kind || "info";
+    const priority = Number.isFinite(opts.priority) ? opts.priority : (priorities[kind] || priorities.info);
+    const active = state.eventBanner;
+    if (active && state.time - active.time <= active.ttl) {
+      const activePriority = Number.isFinite(active.priority)
+        ? active.priority
+        : (priorities[active.kind] || priorities.info);
+      if (activePriority > priority) return false;
+    }
     state.eventBanner = {
       title,
       body: body || "",
-      kind: opts.kind || "info",
+      kind,
+      priority,
       time: state.time,
       ttl: Number.isFinite(opts.ttl) ? opts.ttl : 1.8
     };
+    return true;
   }
 
   function speakerName(speaker) {
@@ -848,7 +862,12 @@
     const title = speakerName(lines[0].speaker);
     const body = lines.map((line) => `${speakerName(line.speaker)}：「${line.text}」`).join(" ");
     state.messages.push({ text: body, time: state.time, ttl });
-    pushEventBanner(title, body, { kind: "story", ttl });
+    const priority = barkId === "boss_radio" || barkId === "boss_down"
+      ? 90
+      : barkId === "critical_hull"
+        ? 70
+        : undefined;
+    pushEventBanner(title, body, { kind: "story", ttl, priority });
     return true;
   }
 
@@ -3494,7 +3513,11 @@
     canvas.addEventListener("pointerdown", (event) => {
       if (!state || state.over || state.paused) return;
       const point = pointFromEvent(event);
-      canvas.setPointerCapture(event.pointerId);
+      // R83（掃描 P2）：合成事件的無效 pointerId 會讓 setPointerCapture 丟例外並
+      // 觸發全域異常橫幅——包 try/catch，capture 失敗不影響拖曳瞄準。
+      try {
+        canvas.setPointerCapture(event.pointerId);
+      } catch (error) { /* 合成/失效 pointer 忽略 capture 失敗 */ }
       state.input.dragging = true;
       state.input.lastPointer = event.pointerId;
       setAimFromPoint(point, event.pointerType);
@@ -4733,12 +4756,38 @@
     acid: { trail: "rgba(95, 228, 120, 0.22)", core: "#5fe478", edge: "#142319", spark: "#d8ff7a" },
     scream: { trail: "rgba(186, 130, 255, 0.24)", core: "#b07af0", edge: "#241335", spark: "#ecd6ff" },
   };
+  // R83（A-01 Phase 2）：敵彈形狀語言——顏色＋形狀雙通道（色弱可辨）。
+  // acid＝液滴拖尾（Phase 1 既有形）；scream＝同心「音環」脈動形（無拖尾、雙環擴張）。
   function drawEnemyProjectile(shot) {
     const tint = ENEMY_SHOT_TINTS[shot.kind] || ENEMY_SHOT_TINTS.acid;
     ctx.save();
     ctx.translate(shot.x, shot.y);
-    ctx.rotate(Math.atan2(shot.vy || 1, shot.vx || 0));
     ctx.globalAlpha *= 0.96;
+    if (shot.kind === "scream") {
+      const pulse = 0.5 + 0.5 * Math.sin(stateTime() * TAU * 2.4 + (shot.x + shot.y) * 0.09);
+      ctx.strokeStyle = tint.trail;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(0, 0, shot.radius * (1.55 + pulse * 0.45), 0, TAU);
+      ctx.stroke();
+      ctx.strokeStyle = tint.core;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(0, 0, shot.radius * (1.05 + pulse * 0.2), 0, TAU);
+      ctx.stroke();
+      ctx.fillStyle = tint.core;
+      ctx.strokeStyle = tint.edge;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(0, 0, shot.radius * 0.52, 0, TAU);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = tint.spark;
+      ctx.fillRect(-1, -1, 2, 2);
+      ctx.restore();
+      return;
+    }
+    ctx.rotate(Math.atan2(shot.vy || 1, shot.vx || 0));
     ctx.fillStyle = tint.trail;
     ctx.beginPath();
     ctx.ellipse(-shot.radius * 1.1, 0, shot.radius * 1.6, shot.radius * 0.55, 0, 0, TAU);

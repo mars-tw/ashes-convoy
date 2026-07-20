@@ -24,8 +24,8 @@ const c2pa = readJson("docs/evidence/R80/c2pa-validation.json");
 const sw = readText("sw.js");
 const ui = readText("src/ui.js");
 
-assert.strictEqual(version.APP_VERSION, "R80");
-assert.strictEqual(version.CACHE_VERSION, "ashes-convoy-r80-v1");
+assert.strictEqual(version.APP_VERSION, "R83");
+assert.strictEqual(version.CACHE_VERSION, "ashes-convoy-r83-v1");
 assert.strictEqual(room.release, "R80");
 assert.strictEqual(room.model_slug, "gpt-image-2");
 assert.strictEqual(room.master.c2pa.softwareAgent, "gpt-image 2.0");

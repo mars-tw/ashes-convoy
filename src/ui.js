@@ -298,7 +298,12 @@
   function openShortcutPanel(kind, trigger, focusSelector) {
     const state = game.getState();
     const fromRun = state && !state.over && (state.mode === "playing" || state.mode === "paused");
-    const resumeOnClose = !!(state && state.mode === "playing" && !state.paused);
+    // 由一個 rail drawer 直接切到另一個時，戰局已被前一個 drawer 暫停；沿用原本
+    // 的 resume 意圖，避免新 drawer 關閉後把戰局留在 paused。
+    const resumeOnClose = !!(
+      (drawerReturnContext && drawerReturnContext.resumeOnClose) ||
+      (state && state.mode === "playing" && !state.paused)
+    );
     if (resumeOnClose) game.pause();
     showGarage();
     openMetaDrawer(kind, trigger, fromRun ? { returnToRun: true, resumeOnClose } : null);
@@ -464,12 +469,21 @@
     if (!showTouchControls && (joystickPointerId != null || joystickVector.x || joystickVector.y)) {
       resetJoystick();
     }
-    if (!playing) {
+    // R83 P0-A：R81 讓輪盤「開啟即暫停」，但這裡原以 !playing 立刻收輪盤——
+    // 輪盤一開→暫停→下一幀被自己收掉，真實點擊永遠開不了。
+    // 改為僅在戰局不再進行（結束/回車庫）時收；暫停中（含輪盤自己觸發的暫停）保留。
+    const runActive = !!(state && !state.over && (state.mode === "playing" || state.mode === "paused"));
+    if (!runActive) {
       hideQuickUpgradeWheel();
     }
   }
 
   function applyMetaBackgroundMode(mode) {
+    // 背景圖片可能在使用者已透過 rail 打開 drawer 後才完成 onload；此時只更新
+    // 背景模式，不得把較新的使用者操作收掉。預設 garage drawer 仍照舊由模式切換。
+    const preserveExplicitDrawer = !!(
+      els.metaDrawer && !els.metaDrawer.hidden && shelter.drawerKind && shelter.drawerKind !== "garage"
+    );
     shelter.backgroundMode = mode;
     shelter.sceneReady = mode === "scene";
     els.garagePanel.classList.toggle("is-illustration", mode === "image");
@@ -479,6 +493,7 @@
     els.shelterCanvas.hidden = mode !== "scene";
     els.hotspotLayer.hidden = false;
     setBaseMenu(false);
+    if (preserveExplicitDrawer) return;
     if (hasFullMetaBackground()) {
       closeMetaDrawer();
     } else {
@@ -1491,6 +1506,12 @@
       : Object.keys((config.SUPPLY_DROPS && config.SUPPLY_DROPS.rewards) || {});
     const key = `${choice.dropId}:${rewardIds.join(",")}`;
     if (lastSupplyChoiceKey !== key) {
+      // R83（C-01 延伸）：依輸入模式顯示提示——鍵盤裝置讓 R81 的 1-5 快捷被看見
+      if (els.supplyChoiceHint) {
+        els.supplyChoiceHint.textContent = primaryPointerIsCoarse()
+          ? "點一下領取；戰鬥不中斷"
+          : "按 1-5 快選或點擊領取；戰鬥不中斷";
+      }
       els.supplyChoiceList.textContent = "";
       rewardIds.forEach((rewardId, index) => {
         const reward = config.SUPPLY_DROPS.rewards[rewardId];
@@ -1665,6 +1686,9 @@
     els.garagePanel.hidden = false;
     els.pausePanel.hidden = true;
     els.settlementPanel.hidden = true;
+    // 每次真正進車庫先建立乾淨基線；其後背景 onload 會保留新開啟的明確 drawer。
+    drawerReturnContext = null;
+    closeMetaDrawer();
     renderHud(null);
     renderGarage();
     startMetaBackground();
@@ -1972,7 +1996,8 @@
     } else if (state.mode === "paused") {
       renderHud(state);
       renderPerformanceDiagnostics(state);
-      showPause();
+      // R83：輪盤觸發的暫停（R81 C-03）不彈暫停面板——輪盤本身就是前景 UI
+      if (!quickWheelPausedRun) showPause();
     }
   }
 
@@ -1987,9 +2012,40 @@
     if (storyUnlocks > 0) setStatus(`已接收 ${storyUnlocks} 則新無線電通訊`);
   }
 
+  // R83 P0-A′：跑局中誤觸「出擊」不得直接重開一局——比照 R81 guardedClear 兩段式，
+  // 僅在戰局進行中（playing/paused 且未 over）要求再按一次確認；非跑局維持單擊直發。
+  // 測試 API __test.startRun 直呼 startSelectedRun，不經此守門。
+  function guardedSortie(btn) {
+    const state = game.getState();
+    const inRun = !!(state && !state.over && (state.mode === "playing" || state.mode === "paused"));
+    if (!inRun || !btn) {
+      startSelectedRun();
+      return;
+    }
+    const labelNode = btn.querySelector("strong") || btn;
+    if (btn.dataset.confirmSortie !== "1") {
+      btn.dataset.confirmSortie = "1";
+      btn.dataset.origSortieText = labelNode.textContent;
+      labelNode.textContent = "再按一次重開本局";
+      btn.classList.add("danger-armed");
+      setTimeout(() => {
+        if (btn.dataset.confirmSortie === "1") {
+          delete btn.dataset.confirmSortie;
+          labelNode.textContent = btn.dataset.origSortieText || labelNode.textContent;
+          btn.classList.remove("danger-armed");
+        }
+      }, 5000);
+      return;
+    }
+    delete btn.dataset.confirmSortie;
+    labelNode.textContent = btn.dataset.origSortieText || labelNode.textContent;
+    btn.classList.remove("danger-armed");
+    startSelectedRun();
+  }
+
   function bindEvents() {
-    els.startBtn.addEventListener("click", startSelectedRun);
-    els.sortieBtn.addEventListener("click", startSelectedRun);
+    els.startBtn.addEventListener("click", () => guardedSortie(els.startBtn));
+    els.sortieBtn.addEventListener("click", () => guardedSortie(els.sortieBtn));
     els.baseToggleBtn.addEventListener("click", () => setBaseMenu(els.baseActions.hidden));
     els.upgradeHotspotBtn.addEventListener("click", () => openMetaDrawer("upgrades", els.upgradeHotspotBtn));
     els.vehicleHotspotBtn.addEventListener("click", () => openMetaDrawer("vehicle", els.vehicleHotspotBtn));
@@ -2080,7 +2136,11 @@
     if (els.virtualJoystick) {
       els.virtualJoystick.addEventListener("pointerdown", (event) => {
         joystickPointerId = event.pointerId;
-        els.virtualJoystick.setPointerCapture(event.pointerId);
+        // R83（掃描 P2）：合成事件無有效 pointerId 時 setPointerCapture 會丟例外，
+        // 觸發全域異常橫幅——包 try/catch，capture 失敗不影響搖桿基本操作。
+        try {
+          els.virtualJoystick.setPointerCapture(event.pointerId);
+        } catch (error) { /* 合成/失效 pointer 忽略 capture 失敗 */ }
         updateJoystick(event);
         event.preventDefault();
       });
