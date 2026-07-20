@@ -60,6 +60,35 @@ async function waitReady(page) {
   }, null, { polling: 120, timeout: 180000 });
 }
 
+async function checkHiddenSafetyNet(page, label) {
+  const result = await page.evaluate(() => {
+    const leaking = Array.from(document.querySelectorAll("[hidden]"))
+      .filter((node) => getComputedStyle(node).display !== "none" || node.getClientRects().length !== 0)
+      .map((node) => node.id || node.className || node.tagName);
+    const style = document.createElement("style");
+    style.textContent = ".r831-hidden-probe{display:grid;position:fixed;inset:0;z-index:99999}";
+    const probe = document.createElement("div");
+    probe.className = "r831-hidden-probe";
+    probe.hidden = true;
+    document.head.appendChild(style);
+    document.body.appendChild(probe);
+    const hiddenDisplay = getComputedStyle(probe).display;
+    const hiddenRects = probe.getClientRects().length;
+    probe.hidden = false;
+    const visibleDisplay = getComputedStyle(probe).display;
+    const visibleRects = probe.getClientRects().length;
+    probe.remove();
+    style.remove();
+    return { leaking, hiddenDisplay, hiddenRects, visibleDisplay, visibleRects };
+  });
+  assert.deepStrictEqual(result.leaking, [], `${label} 所有帶 hidden 的節點都必須 display:none 且不佔命中區`);
+  assert.strictEqual(result.hiddenDisplay, "none", `${label} 後出 display:grid 不得蓋過全域 hidden 安全網`);
+  assert.strictEqual(result.hiddenRects, 0, `${label} hidden 疊層不得產生 client rect`);
+  assert.strictEqual(result.visibleDisplay, "grid", `${label} 移除 hidden 後正常 display 規則必須恢復`);
+  assert(result.visibleRects > 0, `${label} 移除 hidden 後疊層必須正常佔位`);
+  console.log(`PASS ${label} 全域 hidden 安全網與正常顯示切換`);
+}
+
 async function vehicleClientPoint(page) {
   return page.evaluate(() => {
     const state = window.__test.getState();
@@ -108,10 +137,18 @@ async function checkWheelRealClick(page, label) {
   assert(wheelBox && wheelBox.x >= -1 && wheelBox.y >= -1 &&
     wheelBox.x + wheelBox.width <= viewport.width + 1 && wheelBox.y + wheelBox.height <= viewport.height + 1,
     `${label} 快速升級輪盤應完整在視口內`);
-  // 關閉鈕真實點擊可關
-  const closeBox = await page.locator("#quickUpgradeCloseBtn").boundingBox();
-  await page.mouse.click(closeBox.x + closeBox.width / 2, closeBox.y + closeBox.height / 2);
-  await page.waitForFunction(() => document.getElementById("quickUpgradeWheel").hidden === true, null, { polling: 120, timeout: 5000 });
+  // 關閉鈕真實點擊可關；與開啟端相同，資源緊繃時重讀一次座標避免 layout shift。
+  let wheelClosed = false;
+  for (let attempt = 0; attempt < 2 && !wheelClosed; attempt += 1) {
+    const closeBox = await page.locator("#quickUpgradeCloseBtn").boundingBox();
+    await page.mouse.click(closeBox.x + closeBox.width / 2, closeBox.y + closeBox.height / 2);
+    wheelClosed = await page.waitForFunction(
+      () => document.getElementById("quickUpgradeWheel").hidden === true,
+      null,
+      { polling: 120, timeout: 8000 }
+    ).then(() => true, () => false);
+  }
+  assert(wheelClosed, `${label} 快速升級輪盤關閉鈕應以真實點擊關閉`);
   console.log(`PASS ${label} 快速升級輪盤真實點擊可開可關`);
 }
 
@@ -142,7 +179,9 @@ async function checkSortieGuard(page, label) {
   assert.strictEqual(armed.confirm, "1", `${label} 跑局中首按出擊應進入待確認態`);
   assert(armed.text.includes("再按一次"), `${label} 待確認文案應提示再按一次（實際 ${armed.text}）`);
   assert(armed.time >= beforeState.time - 0.001, `${label} 首按不得重開一局（time 不可倒退）`);
-  await sortieButton.click();
+  // 首按已由 locator 走真實 pointer；二按同步送入同一事件迴圈，避免低資源機器的
+  // locator actionability 排隊超過 5 秒而把「立即二按」誤變成逾時案例。
+  await page.evaluate(() => document.getElementById("sortieBtn").click());
   await page.waitForTimeout(200);
   const after = await page.evaluate(() => {
     const state = window.__test.getState();
@@ -163,6 +202,90 @@ async function checkSortieGuard(page, label) {
   await sortieButton2.click();
   await page.waitForFunction(() => window.__test.getState().mode === "playing", null, { polling: 120, timeout: 8000 });
   console.log(`PASS ${label} 跑局中出擊兩段式確認、非跑局單擊直發`);
+}
+
+async function checkSortieGuardBoundaries(browser, baseUrl) {
+  const context = await browser.newContext({ viewport: { width: 1366, height: 768 }, serviceWorkers: "block" });
+  const page = await context.newPage();
+  const errors = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.clock.install({ time: new Date("2026-07-20T00:00:00Z") });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded", timeout: 180000 });
+  await waitReady(page);
+  await page.clock.pauseAt(new Date("2026-07-20T01:00:00Z"));
+  const sortieButton = page.locator("#sortieBtn");
+  const clickElement = (id) => page.evaluate((targetId) => document.getElementById(targetId).click(), id);
+
+  // 邊界案例用受控瀏覽器時鐘與同步 DOM click，排除排程抖動；前述 P0 案仍使用真實 pointer click。
+  // 4.9 秒內二按：仍在同一確認窗，必須原子重開。
+  const before49 = await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    window.__test.step(6000);
+    window.__test.showGarage();
+    return window.__test.getState().time;
+  });
+  await clickElement("sortieBtn");
+  await page.clock.fastForward(4900);
+  assert.strictEqual(await sortieButton.getAttribute("data-confirm-sortie"), "1", "4.9s 時確認窗仍應 armed");
+  await clickElement("sortieBtn");
+  const after49 = await page.evaluate(() => ({
+    time: window.__test.getState().time,
+    mode: window.__test.getState().mode,
+    confirm: document.getElementById("sortieBtn").dataset.confirmSortie || ""
+  }));
+  assert(after49.mode === "playing" && after49.time < before49, `4.9s 內二按應重開（before=${before49}, after=${after49.time}）`);
+  assert.strictEqual(after49.confirm, "", "二按重開後確認旗標必須清除");
+
+  // 5.0 秒到期：timeout 先 disarm；下一按只能建立新確認窗，不得直接重開。
+  const before50 = await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    window.__test.step(6000);
+    window.__test.showGarage();
+    return window.__test.getState().time;
+  });
+  await clickElement("sortieBtn");
+  await page.clock.fastForward(5000);
+  assert.strictEqual(await sortieButton.getAttribute("data-confirm-sortie"), null, "5.0s 到期應自動 disarm");
+  await clickElement("sortieBtn");
+  const after50 = await page.evaluate(() => ({
+    time: window.__test.getState().time,
+    mode: window.__test.getState().mode,
+    confirm: document.getElementById("sortieBtn").dataset.confirmSortie || ""
+  }));
+  assert.strictEqual(after50.confirm, "1", "5.0s 後再按應重新 arm");
+  assert(after50.mode === "playing" && after50.time >= before50, `5.0s 後首按不得重開（before=${before50}, after=${after50.time}）`);
+
+  // 戰局 rail 抽屜：首按 armed 後關閉回局，再開時不得沿用舊確認旗標。
+  await page.evaluate(() => {
+    window.__test.startRun("land_rig");
+    window.__test.step(6000);
+  });
+  await clickElement("railOpsBtn");
+  assert.strictEqual(await page.locator('#metaDrawer:not([hidden]) [data-meta-section="operations"]:not([hidden])').count(), 1, "rail 應開啟任務抽屜");
+  await clickElement("sortieBtn");
+  assert.strictEqual(await sortieButton.getAttribute("data-confirm-sortie"), "1", "關抽屜前出擊鈕應為 armed");
+  await clickElement("closeMetaDrawer");
+  assert.strictEqual(await page.locator("#garagePanel:not([hidden])").count(), 0, "關抽屜後應返回戰局");
+  assert.strictEqual(await sortieButton.getAttribute("data-confirm-sortie"), null, "關抽屜回局時必須清除確認旗標");
+  await clickElement("railOpsBtn");
+  assert.strictEqual(await page.locator('#metaDrawer:not([hidden]) [data-meta-section="operations"]:not([hidden])').count(), 1, "rail 重開時應顯示任務抽屜");
+  const reopened = await page.evaluate(() => ({
+    confirm: document.getElementById("sortieBtn").dataset.confirmSortie || "",
+    text: document.getElementById("sortieBtn").textContent,
+    time: window.__test.getState().time
+  }));
+  assert.strictEqual(reopened.confirm, "", "重開抽屜不得殘留確認旗標");
+  assert(!reopened.text.includes("再按一次"), `重開抽屜應還原出擊文案（實際 ${reopened.text}）`);
+  await clickElement("sortieBtn");
+  const rearmed = await page.evaluate(() => ({
+    confirm: document.getElementById("sortieBtn").dataset.confirmSortie || "",
+    time: window.__test.getState().time
+  }));
+  assert.strictEqual(rearmed.confirm, "1", "重開抽屜後首按只能重新 arm");
+  assert(rearmed.time >= reopened.time, "重開抽屜後首按不得直接重開");
+  assert.deepStrictEqual(errors, [], "出擊確認邊界案例不得有 page error");
+  console.log("PASS R83.1 出擊確認 4.9s／5.0s／抽屜關閉重開邊界");
+  await context.close();
 }
 
 async function checkLandscapeReachability(page, label) {
@@ -265,12 +388,14 @@ async function checkFinePointerSupplyHint(browser, baseUrl) {
       page.on("pageerror", (error) => errors.push(error.message));
       await page.goto(url, { waitUntil: "domcontentloaded", timeout: 180000 });
       await waitReady(page);
+      await checkHiddenSafetyNet(page, vp.tag);
       await checkWheelRealClick(page, vp.tag);
       await checkSortieGuard(page, vp.tag);
       if (vp.w > vp.h) await checkLandscapeReachability(page, vp.tag);
       assert.deepStrictEqual(errors, [], `${vp.tag} 不得有 page error`);
       await context.close();
     }
+    await checkSortieGuardBoundaries(browser, url);
     await checkFinePointerSupplyHint(browser, url);
     console.log("R83 P0 guard PASS");
   } finally {

@@ -8,6 +8,15 @@ const { chromium } = require("playwright");
 
 const rootDir = path.resolve(__dirname, "..");
 
+function applyRunnerTimeout(page) {
+  const timeout = Number(process.env.E2E_ACTION_TIMEOUT_MS);
+  if (Number.isFinite(timeout) && timeout > 0) {
+    page.setDefaultTimeout(timeout);
+    page.setDefaultNavigationTimeout(timeout);
+  }
+  return page;
+}
+
 const MIME = {
   ".html": "text/html; charset=utf-8",
   ".webmanifest": "application/manifest+json; charset=utf-8",
@@ -334,12 +343,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R83") && swText.includes("src/ui.js?v=R83") && swText.includes("src/game.js?v=R83") && swText.includes("src/rules.js?v=R83"),
+      swCachesJs: swText.includes("src/version.js?v=R83.1") && swText.includes("src/ui.js?v=R83.1") && swText.includes("src/game.js?v=R83.1") && swText.includes("src/rules.js?v=R83.1"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R83"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R83"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R83"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R83.1"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R83.1"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R83.1"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -348,7 +357,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R83", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R83.1", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -767,7 +776,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R83"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R83.1"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -3308,26 +3317,34 @@ async function checkVehicleSpecificUpgradePurchase(page) {
 }
 
 async function spawnBoss(page) {
-  await page.evaluate(() => {
+  // Boss 警報是短暫 UI；生成後的 state/HUD/banner 必須在同一 browser task 取樣，
+  // 避免高負載 runner 在跨 evaluate 排隊期間讓 live RAF 先把警報倒數耗盡。
+  const checkpoint = await page.evaluate(() => {
     window.__test.setState({ enemies: [], projectiles: [], gates: [] });
     window.__test.pushWave(5);
     window.__test.step(1600);
+    const state = window.__test.getState();
+    return {
+      state,
+      bossHud: {
+        visible: document.getElementById("bossHud").classList.contains("is-visible"),
+        name: document.getElementById("bossName").textContent,
+        hp: document.getElementById("bossHpText").textContent
+      },
+      banner: {
+        hidden: document.getElementById("eventBanner").hidden,
+        text: document.getElementById("eventBanner").innerText
+      }
+    };
   });
-  const state = await page.evaluate(() => window.__test.getState());
+  const state = checkpoint.state;
   assert.strictEqual(state.wave, 5);
   assert(state.enemies.some((enemy) => enemy.enemyId === "boss_hive_titan" && enemy.boss), "wave 5 should spawn boss");
-  const bossHud = await page.locator("#bossHud").evaluate((node) => ({
-    visible: node.classList.contains("is-visible"),
-    name: document.getElementById("bossName").textContent,
-    hp: document.getElementById("bossHpText").textContent
-  }));
+  const bossHud = checkpoint.bossHud;
   assert(bossHud.visible, "boss HUD should be visible when the boss enters");
   assert(bossHud.name.includes("母巢巨屍"), `boss HP bar should name the boss, got ${bossHud.name}`);
   assert(bossHud.hp.includes("%"), "boss HP bar should show remaining percent");
-  const banner = await page.locator("#eventBanner").evaluate((node) => ({
-    hidden: node.hidden,
-    text: node.innerText
-  }));
+  const banner = checkpoint.banner;
   assert(
     !banner.hidden && (banner.text.includes("Boss 來襲") || banner.text.includes("大地雷")),
     `boss alert or boss_radio bark should be visible, got ${banner.text}`
@@ -3409,7 +3426,7 @@ async function deathSettlementUpgradeAndReload(page) {
 }
 
 async function runScenario(browser, baseUrl, viewport, full) {
-  const page = await browser.newPage({ viewport });
+  const page = applyRunnerTimeout(await browser.newPage({ viewport }));
   const errors = [];
   page.on("console", (message) => {
     if (message.type() === "error" && !isIgnorableConsoleError(message.text())) errors.push(message.text());
@@ -3485,7 +3502,7 @@ async function runScenario(browser, baseUrl, viewport, full) {
 }
 
 async function runImageFallbackScenario(browser, baseUrl) {
-  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const page = applyRunnerTimeout(await browser.newPage({ viewport: { width: 390, height: 844 } }));
   const errors = [];
   page.on("console", (message) => {
     if (message.type() === "error" && !isIgnorableConsoleError(message.text())) errors.push(message.text());
@@ -3511,7 +3528,7 @@ async function runImageFallbackScenario(browser, baseUrl) {
 }
 
 async function runVehicleImageFallbackScenario(browser, baseUrl) {
-  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const page = applyRunnerTimeout(await browser.newPage({ viewport: { width: 390, height: 844 } }));
   const errors = [];
   page.on("console", (message) => {
     if (message.type() === "error" && !isIgnorableConsoleError(message.text())) errors.push(message.text());
@@ -3539,7 +3556,7 @@ async function runVehicleImageFallbackScenario(browser, baseUrl) {
 }
 
 async function runZombieImageFallbackScenario(browser, baseUrl) {
-  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const page = applyRunnerTimeout(await browser.newPage({ viewport: { width: 390, height: 844 } }));
   const errors = [];
   page.on("console", (message) => {
     if (message.type() === "error" && !isIgnorableConsoleError(message.text())) errors.push(message.text());
@@ -3561,8 +3578,14 @@ async function runZombieImageFallbackScenario(browser, baseUrl) {
     window.__test.step(220);
   });
   await expectCanvasHasPixels(page);
-  await page.waitForFunction(() => window.__test.getRenderDebug().enemyImageStatus.shambler === "failed");
-  const debug = await page.evaluate(() => window.__test.getRenderDebug());
+  const debugHandle = await page.waitForFunction(() => {
+    const snapshot = window.__test.getRenderDebug();
+    return snapshot.enemyImageStatus.shambler === "failed" && snapshot.enemyFallbackDrawn >= 3 && snapshot.enemyShadowDrawn >= 3
+      ? snapshot
+      : null;
+  });
+  const debug = await debugHandle.jsonValue();
+  await debugHandle.dispose();
   assert.strictEqual(debug.enemyRasterDrawn, 0, "missing zombie images should not report raster draw");
   assert(debug.enemyFallbackDrawn >= 3, "missing zombie images should draw code sprite fallback");
   assert(debug.enemyShadowDrawn >= 3, "fallback zombies should still draw animated shadows");
@@ -3573,7 +3596,7 @@ async function runZombieImageFallbackScenario(browser, baseUrl) {
 }
 
 async function runEnvironmentBackgroundFallbackScenario(browser, baseUrl) {
-  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const page = applyRunnerTimeout(await browser.newPage({ viewport: { width: 390, height: 844 } }));
   const errors = [];
   page.on("console", (message) => {
     if (message.type() === "error" && !isIgnorableConsoleError(message.text())) errors.push(message.text());
@@ -3632,7 +3655,7 @@ async function shootOnceForAudio(page) {
 }
 
 async function runAudioScenario(browser, baseUrl) {
-  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const page = applyRunnerTimeout(await browser.newPage({ viewport: { width: 390, height: 844 } }));
   const errors = [];
   page.on("console", (message) => {
     if (message.type() === "error" && !isIgnorableConsoleError(message.text())) errors.push(message.text());
@@ -3788,7 +3811,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     viewport: { width: 390, height: 844 },
     serviceWorkers: "allow"
   });
-  const page = await context.newPage();
+  const page = applyRunnerTimeout(await context.newPage());
   const errors = [];
   page.on("console", (message) => {
     if (message.type() === "error" && !isIgnorableConsoleError(message.text())) errors.push(message.text());
@@ -3805,7 +3828,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r83")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r83.1")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -3823,7 +3846,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r83")), "R83 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r83.1")), "R83.1 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

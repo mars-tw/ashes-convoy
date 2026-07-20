@@ -1,6 +1,6 @@
 {
   "name": "ashes-convoy",
-  "version": "0.83.0",
+  "version": "0.83.1",
   "description": "灰燼護航：vanilla HTML/CSS/JS + Canvas 的像素風末日喪屍護航射擊網頁遊戲。",
   "type": "commonjs",
   "scripts": {

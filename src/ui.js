@@ -29,6 +29,8 @@
   let canvasTapStart = null;
   let primaryPointerCoarseQuery = null;
   let drawerReturnContext = null;
+  const SORTIE_CONFIRM_WINDOW_MS = 5000;
+  const sortieConfirmTimers = new WeakMap();
 
   const els = {};
   const shelter = {
@@ -272,6 +274,7 @@
   }
 
   function closeMetaDrawer() {
+    resetSortieConfirmations();
     if (!hasFullMetaBackground()) {
       openMetaDrawer("garage");
       return;
@@ -1682,6 +1685,7 @@
   }
 
   function showGarage() {
+    resetSortieConfirmations();
     latestState = game.getState();
     els.garagePanel.hidden = false;
     els.pausePanel.hidden = true;
@@ -1695,6 +1699,7 @@
   }
 
   function showPlaying() {
+    resetSortieConfirmations();
     stopShelterLoop();
     els.garagePanel.hidden = true;
     els.pausePanel.hidden = true;
@@ -2012,34 +2017,68 @@
     if (storyUnlocks > 0) setStatus(`已接收 ${storyUnlocks} 則新無線電通訊`);
   }
 
-  // R83 P0-A′：跑局中誤觸「出擊」不得直接重開一局——比照 R81 guardedClear 兩段式，
-  // 僅在戰局進行中（playing/paused 且未 over）要求再按一次確認；非跑局維持單擊直發。
+  function sortieLabelNode(btn) {
+    return btn ? (btn.querySelector("strong") || btn) : null;
+  }
+
+  function resetSortieConfirm(btn) {
+    if (!btn) return;
+    const timer = sortieConfirmTimers.get(btn);
+    if (timer !== undefined) root.clearTimeout(timer);
+    sortieConfirmTimers.delete(btn);
+    const labelNode = sortieLabelNode(btn);
+    if (labelNode && btn.dataset.origSortieText) labelNode.textContent = btn.dataset.origSortieText;
+    delete btn.dataset.confirmSortie;
+    delete btn.dataset.confirmSortieUntil;
+    delete btn.dataset.origSortieText;
+    btn.classList.remove("danger-armed");
+  }
+
+  function resetSortieConfirmations() {
+    resetSortieConfirm(els.startBtn);
+    resetSortieConfirm(els.sortieBtn);
+  }
+
+  function expireSortieConfirm(btn, deadline) {
+    if (!btn || btn.dataset.confirmSortie !== "1" || Number(btn.dataset.confirmSortieUntil) !== deadline) return;
+    const remaining = deadline - Date.now();
+    if (remaining > 0) {
+      sortieConfirmTimers.set(btn, root.setTimeout(() => expireSortieConfirm(btn, deadline), remaining));
+      return;
+    }
+    resetSortieConfirm(btn);
+  }
+
+  function armSortieConfirm(btn, now) {
+    resetSortieConfirm(btn);
+    const labelNode = sortieLabelNode(btn);
+    const deadline = now + SORTIE_CONFIRM_WINDOW_MS;
+    btn.dataset.confirmSortie = "1";
+    btn.dataset.confirmSortieUntil = String(deadline);
+    btn.dataset.origSortieText = labelNode.textContent;
+    labelNode.textContent = "再按一次重開本局";
+    btn.classList.add("danger-armed");
+    sortieConfirmTimers.set(btn, root.setTimeout(() => expireSortieConfirm(btn, deadline), SORTIE_CONFIRM_WINDOW_MS));
+  }
+
+  // R83.1：二按判定以絕對 deadline 原子決定；timer 可清除且所有面板離開路徑統一 disarm。
   // 測試 API __test.startRun 直呼 startSelectedRun，不經此守門。
   function guardedSortie(btn) {
     const state = game.getState();
     const inRun = !!(state && !state.over && (state.mode === "playing" || state.mode === "paused"));
     if (!inRun || !btn) {
+      resetSortieConfirmations();
       startSelectedRun();
       return;
     }
-    const labelNode = btn.querySelector("strong") || btn;
-    if (btn.dataset.confirmSortie !== "1") {
-      btn.dataset.confirmSortie = "1";
-      btn.dataset.origSortieText = labelNode.textContent;
-      labelNode.textContent = "再按一次重開本局";
-      btn.classList.add("danger-armed");
-      setTimeout(() => {
-        if (btn.dataset.confirmSortie === "1") {
-          delete btn.dataset.confirmSortie;
-          labelNode.textContent = btn.dataset.origSortieText || labelNode.textContent;
-          btn.classList.remove("danger-armed");
-        }
-      }, 5000);
+    const now = Date.now();
+    const deadline = Number(btn.dataset.confirmSortieUntil);
+    const armed = btn.dataset.confirmSortie === "1" && Number.isFinite(deadline) && now < deadline;
+    if (!armed) {
+      armSortieConfirm(btn, now);
       return;
     }
-    delete btn.dataset.confirmSortie;
-    labelNode.textContent = btn.dataset.origSortieText || labelNode.textContent;
-    btn.classList.remove("danger-armed");
+    resetSortieConfirmations();
     startSelectedRun();
   }
 
