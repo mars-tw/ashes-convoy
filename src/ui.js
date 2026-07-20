@@ -22,6 +22,11 @@
   const SW_AUTO_RELOAD_WINDOW_MS = 15000;
   const SW_AUTO_RELOAD_SESSION_KEY = "ashes_convoy_sw_auto_reload";
   let lastSupplyChoiceKey = "";
+  let supplyChoiceUnlockTimer = 0;
+  const SUPPLY_CHOICE_DEBOUNCE_MS = 320;
+  const activePointerIds = new Set();
+  let supplyChoiceBlockedPointerIds = new Set();
+  let supplyChoiceBlockReleaseClick = false;
   let trailerRoomMetrics = null;
   let trailerRedrawTimer = 0;
   let joystickPointerId = null;
@@ -378,6 +383,28 @@
   }
 
   let quickWheelPausedRun = false;
+
+  function renderQuickUpgradeHint(state) {
+    if (!els.quickUpgradeHint) return;
+    const unseen = !!(meta.tutorial && meta.tutorial.seenQuickUpgrade !== true);
+    const visible = !!(
+      unseen && state && state.mode === "playing" && !state.paused && !state.over &&
+      state.vehicle && !state.supplyChoice
+    );
+    els.quickUpgradeHint.hidden = !visible;
+    if (!visible) return;
+    els.quickUpgradeHint.style.left = `${rules.clamp((state.vehicle.x / config.LOGIC.width) * 100, 18, 82)}%`;
+    els.quickUpgradeHint.style.top = `${rules.clamp((state.vehicle.y / config.LOGIC.height) * 100, 24, 91)}%`;
+  }
+
+  function markQuickUpgradeHintSeen() {
+    if (!meta.tutorial || meta.tutorial.seenQuickUpgrade === true) return;
+    meta.tutorial.seenQuickUpgrade = true;
+    saveMeta();
+    game.setMeta(meta);
+    if (els.quickUpgradeHint) els.quickUpgradeHint.hidden = true;
+  }
+
   function hideQuickUpgradeWheel() {
     if (els.quickUpgradeWheel) els.quickUpgradeWheel.hidden = true;
     if (quickWheelPausedRun) { quickWheelPausedRun = false; game.resume(); }
@@ -391,6 +418,7 @@
       quickWheelPausedRun = !!(st && st.mode === "playing" && !st.paused);
       if (quickWheelPausedRun) game.pause();
     }
+    markQuickUpgradeHintSeen();
     renderQuickUpgradeWheel();
     const rect = els.battleStage.getBoundingClientRect();
     els.quickUpgradeWheel.style.left = "8px";
@@ -1159,13 +1187,18 @@
         node.dataset.trailerFurniture = item.id;
         const text = root.document.createElement("div");
         const title = root.document.createElement("strong");
-        title.textContent = `${item.name} · ${item.style}`;
+        title.textContent = item.name;
+        const style = root.document.createElement("span");
+        style.className = "trailer-furniture-style";
+        style.textContent = ` · ${item.style}`;
+        title.appendChild(style);
         const desc = root.document.createElement("small");
         desc.textContent = `${item.description} ${item.effectText}`;
         text.append(title, desc);
         const button = root.document.createElement("button");
         button.type = "button";
         button.dataset.trailerBuy = item.id;
+        button.setAttribute("aria-label", `${item.name}：${item.effectText}`);
         if (item.owned) {
           button.textContent = item.equipped ? "已擺設" : "擺上";
           button.disabled = item.equipped;
@@ -1367,6 +1400,7 @@
   function sourceLabel(source) {
     if (source === "boss") return "Boss";
     if (source === "enemy") return "小怪";
+    if (source === "projectile") return "敵方彈體";
     if (source === "burst") return "爆裂";
     if (source === "hazard") return "環境";
     return "未知";
@@ -1499,7 +1533,12 @@
     if (!els.supplyChoiceOverlay || !els.supplyChoiceList) return;
     const choice = state && state.supplyChoice;
     if (!choice) {
+      if (supplyChoiceUnlockTimer) root.clearTimeout(supplyChoiceUnlockTimer);
+      supplyChoiceUnlockTimer = 0;
+      supplyChoiceBlockedPointerIds = new Set();
+      supplyChoiceBlockReleaseClick = false;
       els.supplyChoiceOverlay.hidden = true;
+      els.supplyChoiceOverlay.classList.remove("is-input-guarded");
       els.supplyChoiceList.textContent = "";
       lastSupplyChoiceKey = "";
       return;
@@ -1509,11 +1548,15 @@
       : Object.keys((config.SUPPLY_DROPS && config.SUPPLY_DROPS.rewards) || {});
     const key = `${choice.dropId}:${rewardIds.join(",")}`;
     if (lastSupplyChoiceKey !== key) {
+      if (supplyChoiceUnlockTimer) root.clearTimeout(supplyChoiceUnlockTimer);
+      els.supplyChoiceOverlay.classList.add("is-input-guarded");
+      supplyChoiceBlockedPointerIds = new Set(activePointerIds);
+      supplyChoiceBlockReleaseClick = false;
       // R83（C-01 延伸）：依輸入模式顯示提示——鍵盤裝置讓 R81 的 1-5 快捷被看見
       if (els.supplyChoiceHint) {
         els.supplyChoiceHint.textContent = primaryPointerIsCoarse()
-          ? "點一下領取；戰鬥不中斷"
-          : "按 1-5 快選或點擊領取；戰鬥不中斷";
+          ? "鬆開射擊；0.3 秒後可點選，戰鬥不中斷"
+          : "鬆開射擊；0.3 秒後可點選｜鍵盤 1-5 立即快選";
       }
       els.supplyChoiceList.textContent = "";
       rewardIds.forEach((rewardId, index) => {
@@ -1528,6 +1571,7 @@
         const button = root.document.createElement("button");
         button.type = "button";
         button.className = "supply-choice-btn";
+        button.dataset.inputGuarded = "true";
         if (optionState.maxed) button.classList.add("is-maxed");
         button.dataset.rewardId = rewardId;
         button.setAttribute("aria-label", `${reward.label} ${supplyRewardValueText(reward)}`);
@@ -1535,16 +1579,33 @@
         if (optionState.maxed && optionState.overflowText) {
           button.insertAdjacentHTML("beforeend", `<em class="choice-overflow-badge">已滿 → 溢出：${optionState.overflowText}</em>`);
         }
-        button.addEventListener("click", () => {
+        button.addEventListener("click", (event) => {
+          if (supplyChoiceBlockReleaseClick && event.detail > 0) {
+            supplyChoiceBlockReleaseClick = false;
+            return;
+          }
+          // detail > 0 代表真實 pointer click；鍵盤／既有快捷的 detail=0 仍可即時使用。
+          if (button.dataset.inputGuarded === "true" && event.detail > 0) return;
           game.chooseSupplyReward(rewardId);
         });
         els.supplyChoiceList.appendChild(button);
       });
       lastSupplyChoiceKey = key;
-      root.requestAnimationFrame(() => {
+      supplyChoiceUnlockTimer = root.setTimeout(() => {
+        supplyChoiceUnlockTimer = 0;
+        if (lastSupplyChoiceKey !== key || els.supplyChoiceOverlay.hidden) return;
+        els.supplyChoiceOverlay.classList.remove("is-input-guarded");
+        els.supplyChoiceList.querySelectorAll(".supply-choice-btn").forEach((button) => {
+          delete button.dataset.inputGuarded;
+        });
+        if (els.supplyChoiceHint) {
+          els.supplyChoiceHint.textContent = primaryPointerIsCoarse()
+            ? "點一下領取；戰鬥不中斷"
+            : "按 1-5 快選或點擊領取；戰鬥不中斷";
+        }
         const first = els.supplyChoiceList.querySelector(".supply-choice-btn");
-        if (first && typeof first.focus === "function") first.focus();
-      });
+        if (first && typeof first.focus === "function") first.focus({ preventScroll: true });
+      }, SUPPLY_CHOICE_DEBOUNCE_MS);
     }
     els.supplyChoiceOverlay.hidden = false;
   }
@@ -1615,6 +1676,7 @@
       renderGateChoices(null);
       renderEventBanner(null);
       renderSupplyChoice(null);
+      renderQuickUpgradeHint(null);
       return;
     }
     els.hud.classList.add("is-visible");
@@ -1626,6 +1688,7 @@
     els.hudMods.style.visibility = gateHintVisible ? "hidden" : "";
     renderEventBanner(state);
     renderSupplyChoice(state);
+    renderQuickUpgradeHint(state);
     const vehicle = config.VEHICLES[state.vehicleId];
     const hpPct = state.vehicle.maxHp > 0 ? Math.max(0, state.vehicle.hp / state.vehicle.maxHp) : 0;
     const maxShield = Number.isFinite(state.vehicle.maxShield) ? state.vehicle.maxShield : Math.round((state.vehicle.maxHp || 0) * 0.6);
@@ -1711,6 +1774,25 @@
     els.pausePanel.hidden = false;
   }
 
+  function settlementOutcome(run) {
+    const context = run && run.deathContext ? run.deathContext : {};
+    const wave = Math.max(1, Number(context.wave) || Number(run && run.wavesCleared) + 1 || 1);
+    if (context.type === "quit") {
+      return {
+        id: "evacuated",
+        title: "撤離成功",
+        text: `你在第 ${wave} 波主動撤離，車隊與本局戰利品已安全帶回。`
+      };
+    }
+    const enemy = context.enemyId && config.ENEMIES[context.enemyId] ? config.ENEMIES[context.enemyId].name : "";
+    const amount = Number(context.amount) > 0 ? `，最後承受 ${Math.round(context.amount)} 傷害` : "";
+    return {
+      id: "destroyed",
+      title: "護航失敗",
+      text: `死因：${sourceLabel(context.type)}${enemy ? `（${enemy}）` : ""}，第 ${wave} 波載具遭摧毀${amount}。`
+    };
+  }
+
   function renderSettlement(result) {
     const run = result && result.meta ? result.meta.lastRun : meta.lastRun;
     if (!run) return;
@@ -1718,6 +1800,10 @@
     const breakdown = run.partsBreakdown || (reward && reward.partsBreakdown) || rules.rewardPartsBreakdownForRun(run, config);
     const hasProgress = run.wavesCleared > 0 || run.score > 0;
     const isBest = hasProgress && (reward ? reward.isBest : meta.bestWave <= run.wavesCleared || meta.bestScore <= run.score);
+    const outcome = settlementOutcome(run);
+    els.settlementPanel.dataset.outcome = outcome.id;
+    els.settlementTitle.textContent = outcome.title;
+    els.settlementOutcomeText.textContent = outcome.text;
     els.settlementSummary.textContent = `本局獲得 ${run.earnedParts} 廢土零件。${isBest ? "新紀錄！" : ""}`;
     const affordableUpgrade = ["hull", "weapon", "energy", "gate"].some((track) => {
       const cost = rules.getUpgradeCost(meta, meta.selectedVehicle, track, config);
@@ -1841,7 +1927,18 @@
     els.settlementPanel.hidden = false;
     renderSettlement(result);
     renderHud(null);
-    if (els.againBtn && typeof els.againBtn.focus === "function") els.againBtn.focus();
+    els.settlementPanel.scrollTop = 0;
+    root.requestAnimationFrame(() => {
+      els.settlementPanel.scrollTop = 0;
+      if (els.againBtn && typeof els.againBtn.focus === "function") {
+        try {
+          els.againBtn.focus({ preventScroll: true });
+        } catch (error) {
+          els.againBtn.focus();
+          els.settlementPanel.scrollTop = 0;
+        }
+      }
+    });
   }
 
   function claimQuest(instanceId) {
@@ -2001,8 +2098,12 @@
     } else if (state.mode === "paused") {
       renderHud(state);
       renderPerformanceDiagnostics(state);
-      // R83：輪盤觸發的暫停（R81 C-03）不彈暫停面板——輪盤本身就是前景 UI
-      if (!quickWheelPausedRun) showPause();
+      // 輪盤與跑局 rail drawer 都是 paused 狀態的合法前景 UI；不得再疊出暫停面板搶命中。
+      const runDrawerOpen = !!(
+        drawerReturnContext && drawerReturnContext.returnToRun && els.metaDrawer && !els.metaDrawer.hidden
+      );
+      if (!quickWheelPausedRun && !runDrawerOpen) showPause();
+      else els.pausePanel.hidden = true;
     }
   }
 
@@ -2061,7 +2162,7 @@
     sortieConfirmTimers.set(btn, root.setTimeout(() => expireSortieConfirm(btn, deadline), SORTIE_CONFIRM_WINDOW_MS));
   }
 
-  // R83.1：二按判定以絕對 deadline 原子決定；timer 可清除且所有面板離開路徑統一 disarm。
+  // R84：二按判定以絕對 deadline 原子決定；timer 可清除且所有面板離開路徑統一 disarm。
   // 測試 API __test.startRun 直呼 startSelectedRun，不經此守門。
   function guardedSortie(btn) {
     const state = game.getState();
@@ -2083,6 +2184,23 @@
   }
 
   function bindEvents() {
+    root.document.addEventListener("pointerdown", (event) => {
+      activePointerIds.add(event.pointerId);
+    }, true);
+    root.document.addEventListener("pointerup", (event) => {
+      if (supplyChoiceBlockedPointerIds.has(event.pointerId)) {
+        supplyChoiceBlockedPointerIds.delete(event.pointerId);
+        supplyChoiceBlockReleaseClick = true;
+        root.setTimeout(() => {
+          supplyChoiceBlockReleaseClick = false;
+        }, 0);
+      }
+      activePointerIds.delete(event.pointerId);
+    }, true);
+    root.document.addEventListener("pointercancel", (event) => {
+      supplyChoiceBlockedPointerIds.delete(event.pointerId);
+      activePointerIds.delete(event.pointerId);
+    }, true);
     els.startBtn.addEventListener("click", () => guardedSortie(els.startBtn));
     els.sortieBtn.addEventListener("click", () => guardedSortie(els.sortieBtn));
     els.baseToggleBtn.addEventListener("click", () => setBaseMenu(els.baseActions.hidden));
@@ -2368,6 +2486,7 @@
       "quickUpgradeWheel",
       "quickUpgradeList",
       "quickUpgradeCloseBtn",
+      "quickUpgradeHint",
       "pauseBtn",
       "garagePanel",
       "shelterCanvas",
@@ -2442,6 +2561,8 @@
       "resumeBtn",
       "quitBtn",
       "settlementPanel",
+      "settlementTitle",
+      "settlementOutcomeText",
       "settlementSummary",
       "settlementList",
       "settlementBadges",

@@ -2132,6 +2132,14 @@
       },
       overrides || {}
     );
+    if (!run.deathContext && state.vehicle && state.vehicle.hp > 0) {
+      run.deathContext = {
+        type: "quit",
+        enemyId: "",
+        amount: 0,
+        wave: state.wave
+      };
+    }
     const blueprintResult =
       state.blueprintBossesResolved >= (run.bossesDefeated || 0) && state.blueprintPreviewMeta
         ? {

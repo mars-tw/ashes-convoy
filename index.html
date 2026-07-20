@@ -46,8 +46,8 @@
     </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="manifest.webmanifest?v=R83.1" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R83.1" />
+    <link rel="manifest" href="manifest.webmanifest?v=R84" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R84" />
     <link rel="canonical" href="https://mars-tw.github.io/ashes-convoy/" />
     <title>灰燼護航</title>
     <style>
@@ -78,7 +78,7 @@
         box-sizing: border-box;
       }
 
-      /* R83.1：hidden 是所有面板／疊層的最終互動安全閘，後出的 display 規則不得覆蓋。 */
+      /* R84：hidden 是所有面板／疊層的最終互動安全閘，後出的 display 規則不得覆蓋。 */
       [hidden] {
         display: none !important;
       }
@@ -710,6 +710,11 @@
         background: rgba(42, 14, 18, 0.86);
       }
 
+      .supply-choice-overlay.is-input-guarded .supply-choice-btn {
+        cursor: wait;
+        opacity: 0.7;
+      }
+
       .choice-overflow-badge {
         display: block;
         margin-top: 5px;
@@ -808,6 +813,49 @@
         border-radius: 8px;
         background: rgba(9, 12, 16, 0.92);
         box-shadow: 0 18px 38px rgba(0, 0, 0, 0.42);
+      }
+
+      .quick-upgrade-hint {
+        position: absolute;
+        z-index: 9;
+        display: grid;
+        gap: 2px;
+        width: max-content;
+        max-width: min(210px, calc(100% - 24px));
+        padding: 7px 10px;
+        transform: translate(-50%, calc(-100% - 14px));
+        border: 1px solid rgba(240, 182, 74, 0.78);
+        border-radius: 8px;
+        background: rgba(9, 12, 16, 0.9);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.42);
+        color: #fff2bd;
+        font-size: 11px;
+        font-weight: 900;
+        line-height: 1.25;
+        text-align: center;
+        pointer-events: none;
+      }
+
+      .quick-upgrade-hint::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: -9px;
+        width: 0;
+        height: 0;
+        transform: translateX(-50%);
+        border: 8px solid transparent;
+        border-top-color: rgba(240, 182, 74, 0.88);
+        border-bottom: 0;
+      }
+
+      .quick-upgrade-hint small {
+        color: var(--muted);
+        font-size: 9px;
+      }
+
+      .landscape-rotate-hint {
+        display: none;
       }
 
       .quick-upgrade-wheel[hidden] {
@@ -1151,6 +1199,38 @@
         .trailer-furniture {
           min-height: 50px;
           padding: 7px;
+        }
+
+        #trailerFurnitureList {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 6px;
+        }
+
+        .trailer-furniture {
+          grid-template-columns: minmax(0, 1fr) 64px;
+          min-height: 44px;
+          gap: 4px;
+          padding: 5px;
+        }
+
+        .trailer-furniture strong {
+          font-size: 11px;
+          line-height: 1.2;
+        }
+
+        .trailer-furniture-style {
+          display: none;
+        }
+
+        .trailer-furniture small {
+          display: none;
+        }
+
+        .trailer-furniture button {
+          min-width: 64px;
+          min-height: 44px;
+          padding: 0 4px;
+          font-size: 10px;
         }
       }
 
@@ -1514,6 +1594,35 @@
 
       .settlement-list {
         grid-template-columns: 1fr 1fr;
+      }
+
+      #settlementPanel[data-outcome="evacuated"] {
+        border-color: rgba(135, 210, 125, 0.72);
+        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42), inset 4px 0 rgba(135, 210, 125, 0.62);
+      }
+
+      #settlementPanel[data-outcome="destroyed"] {
+        border-color: rgba(225, 95, 79, 0.72);
+        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42), inset 4px 0 rgba(225, 95, 79, 0.62);
+      }
+
+      #settlementPanel[data-outcome="evacuated"] #settlementTitle {
+        color: var(--ok);
+      }
+
+      #settlementPanel[data-outcome="destroyed"] #settlementTitle {
+        color: #ff8a78;
+      }
+
+      .settlement-outcome {
+        margin: 0;
+        padding: 8px 10px;
+        border-left: 3px solid currentColor;
+        background: rgba(255, 255, 255, 0.045);
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.45;
       }
 
       .settlement-item {
@@ -2244,6 +2353,33 @@
           container-type: normal;
         }
 
+        .landscape-rotate-hint {
+          position: fixed;
+          top: max(14px, env(safe-area-inset-top));
+          left: max(12px, env(safe-area-inset-left));
+          z-index: 22;
+          display: grid;
+          gap: 4px;
+          width: min(230px, calc((100vw - var(--stage-w)) / 2 - 24px));
+          min-width: 132px;
+          padding: 10px 12px;
+          border: 1px solid rgba(240, 182, 74, 0.72);
+          border-radius: 8px;
+          background: rgba(9, 12, 16, 0.9);
+          box-shadow: 0 14px 32px rgba(0, 0, 0, 0.48);
+          color: #fff2bd;
+          font-size: 12px;
+          font-weight: 900;
+          line-height: 1.35;
+          pointer-events: none;
+        }
+
+        .landscape-rotate-hint small {
+          color: var(--muted);
+          font-size: 10px;
+          font-weight: 700;
+        }
+
         .meta-panel.is-illustration,
         .meta-panel.is-shelter {
           position: fixed;
@@ -2323,7 +2459,7 @@
         <div class="rail-cluster">
           <button class="rail-btn" id="railUpgradeBtn" type="button" aria-label="開啟升級工坊">
             <i class="rail-icon" aria-hidden="true">▲</i>
-            <span>升級</span>
+            <span>工坊</span>
           </button>
           <button class="rail-btn" id="railVehicleBtn" type="button" aria-label="開啟載具棚">
             <i class="rail-icon" aria-hidden="true">▣</i>
@@ -2334,6 +2470,10 @@
 
       <section class="battle-stage" id="battleStage" aria-label="灰燼護航遊戲畫面">
       <canvas id="gameCanvas" width="390" height="844" aria-label="灰燼護航戰場"></canvas>
+      <div class="landscape-rotate-hint" id="landscapeRotateHint" role="status">
+        <span>↻ 旋轉回直向以獲得最佳體驗</span>
+        <small>橫向仍可操作；完整戰場與觸控配置以直向為準。</small>
+      </div>
 
       <section class="hud" id="hud" aria-live="polite">
         <div class="hud-row">
@@ -2392,6 +2532,10 @@
         <button class="quick-upgrade-close" id="quickUpgradeCloseBtn" type="button" aria-label="關閉快速升級">×</button>
         <div class="quick-upgrade-list" id="quickUpgradeList"></div>
       </div>
+      <div class="quick-upgrade-hint" id="quickUpgradeHint" role="status" hidden>
+        <span>點車體｜快速升級</span>
+        <small>戰局內快升；側欄「工坊」是完整整備</small>
+      </div>
 
       <div class="trailer-overlay" id="trailerOverlay" role="dialog" aria-modal="true" aria-labelledby="trailerRoomTitle" hidden>
         <div class="trailer-room-stage">
@@ -2413,7 +2557,7 @@
             <span id="trailerBonusText">HP +0% · 傷害 +0% · 射速 +0% · 承傷 -0%</span>
           </div>
           <section class="story-log-section" id="storyLogSection" aria-label="無線電日誌" hidden>
-            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R83.1" alt="熹" decoding="async" draggable="false" />
+            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R84" alt="熹" decoding="async" draggable="false" />
             <div class="story-log-list" id="storyLogList"></div>
           </section>
           <div class="trailer-room-body">
@@ -2430,7 +2574,7 @@
               <p class="start-kicker">ASHES CONVOY</p>
               <h1 class="start-logo">灰燼護航</h1>
             </div>
-            <span class="start-release-mark" aria-hidden="true">R83.1</span>
+            <span class="start-release-mark" aria-hidden="true">R84</span>
           </div>
           <div class="start-ledger" id="garageMeta" role="list" aria-label="護航統計">
             <span class="start-stat-chip" role="listitem"><em>零件</em><b id="startPartsValue">0</b></span>
@@ -2609,7 +2753,8 @@
 
       <section class="panel" id="settlementPanel" hidden>
         <div class="panel-head">
-          <h2>護航結算</h2>
+          <h2 id="settlementTitle">護航結算</h2>
+          <p class="settlement-outcome" id="settlementOutcomeText">本局結果待確認。</p>
           <p class="subtle" id="settlementSummary">本局獲得 0 廢土零件。</p>
         </div>
         <div class="settlement-list" id="settlementList"></div>
@@ -2650,7 +2795,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R83.1";
+        var key = "ashes_convoy_html_boot_reload_R84";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -2667,15 +2812,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R83.1"></script>
-    <script src="src/sprites.js?v=R83.1"></script>
-    <script src="src/sprite-renderer.js?v=R83.1"></script>
-    <script src="src/shelter-scene.js?v=R83.1"></script>
-    <script src="src/config.js?v=R83.1"></script>
-    <script src="src/rules.js?v=R83.1"></script>
-    <script src="src/fx.js?v=R83.1"></script>
-    <script src="src/audio.js?v=R83.1"></script>
-    <script src="src/game.js?v=R83.1"></script>
-    <script src="src/ui.js?v=R83.1"></script>
+    <script src="src/version.js?v=R84"></script>
+    <script src="src/sprites.js?v=R84"></script>
+    <script src="src/sprite-renderer.js?v=R84"></script>
+    <script src="src/shelter-scene.js?v=R84"></script>
+    <script src="src/config.js?v=R84"></script>
+    <script src="src/rules.js?v=R84"></script>
+    <script src="src/fx.js?v=R84"></script>
+    <script src="src/audio.js?v=R84"></script>
+    <script src="src/game.js?v=R84"></script>
+    <script src="src/ui.js?v=R84"></script>
   </body>
 </html>

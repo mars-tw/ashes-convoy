@@ -14,7 +14,7 @@ const uiSource = read("src/ui.js");
 const htmlSource = read("index.html");
 const credits = read("CREDITS.md");
 
-assert.strictEqual(version.APP_VERSION, "R83.1", "visual release guard must target R83.1");
+assert.strictEqual(version.APP_VERSION, "R84", "visual release guard must target R84");
 assert(/\[hidden\]\s*\{\s*display:\s*none\s*!important;\s*\}/.test(htmlSource), "global hidden safety net must override later overlay display rules");
 
 const textureEntries = Object.entries(config.FX.textures || {});

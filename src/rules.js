@@ -124,7 +124,7 @@ function sanitizeCountMap(input, options) {
 
 function sanitizeDeathContext(input) {
   const source = input && typeof input === "object" && !Array.isArray(input) ? input : {};
-  const allowed = { boss: true, enemy: true, burst: true, hazard: true, quit: true, unknown: true };
+  const allowed = { boss: true, enemy: true, projectile: true, burst: true, hazard: true, quit: true, unknown: true };
   const type = allowed[source.type] ? source.type : "unknown";
   return {
     type,

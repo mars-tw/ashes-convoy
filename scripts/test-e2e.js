@@ -343,12 +343,12 @@ async function checkPwaFilesAndSkipRegistration(page) {
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R83.1") && swText.includes("src/ui.js?v=R83.1") && swText.includes("src/game.js?v=R83.1") && swText.includes("src/rules.js?v=R83.1"),
+      swCachesJs: swText.includes("src/version.js?v=R84") && swText.includes("src/ui.js?v=R84") && swText.includes("src/game.js?v=R84") && swText.includes("src/rules.js?v=R84"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R83.1"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R83.1"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R83.1"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R84"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R84"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R84"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -357,7 +357,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R83.1", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R84", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "portrait");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -404,6 +404,13 @@ async function assertControlReachable(page, selector, label) {
   assert(viewport, "viewport should be available");
   assert(box.x >= -1 && box.x + box.width <= viewport.width + 1, `${label} should be horizontally within viewport`);
   assert(box.y >= -1 && box.y + box.height <= viewport.height + 1, `${label} should be vertically within viewport after scrolling`);
+}
+
+async function waitForSupplyPointerReady(page, rewardId) {
+  await page.waitForFunction((id) => {
+    const button = document.querySelector(`#supplyChoiceOverlay .supply-choice-btn[data-reward-id="${id}"]`);
+    return button && button.dataset.inputGuarded !== "true";
+  }, rewardId, { timeout: 2000 });
 }
 
 async function checkShortDesktopReachability(page) {
@@ -776,7 +783,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R83.1"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R84"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -1345,6 +1352,7 @@ async function checkR71CombatRefresh(page) {
   await page.waitForSelector('#supplyChoiceOverlay:not([hidden]) .supply-choice-btn[data-reward-id="damage_boost"] .choice-overflow-badge');
   const supplyOverflowText = await page.locator('#supplyChoiceOverlay .supply-choice-btn[data-reward-id="damage_boost"] .choice-overflow-badge').innerText();
   assert(supplyOverflowText.includes("已滿") && supplyOverflowText.includes("+6"), `supply overflow badge should describe goods overflow: ${supplyOverflowText}`);
+  await waitForSupplyPointerReady(page, "damage_boost");
   await page.click('#supplyChoiceOverlay .supply-choice-btn[data-reward-id="damage_boost"]');
   await page.waitForFunction(() => document.getElementById("supplyChoiceOverlay").hidden === true);
   const overflowSupplyState = await page.evaluate(() => window.__test.getState());
@@ -3195,6 +3203,7 @@ async function checkSupplyDropPickupAndSettlement(page) {
     }));
     assert(edgeResult.state.supplyChoice, `edge supply at x=${edgeX} should open the choice overlay before expiring`);
     assert(edgeResult.state.supplyChoice.openedAt < edgeResult.ttl, `edge supply at x=${edgeX} should be reached inside ttl`);
+    await waitForSupplyPointerReady(page, "parts_cache");
     await page.click('#supplyChoiceOverlay .supply-choice-btn[data-reward-id="parts_cache"]');
     await page.waitForFunction(() => document.getElementById("supplyChoiceOverlay").hidden === true);
   }
@@ -3235,6 +3244,7 @@ async function checkSupplyDropPickupAndSettlement(page) {
     assert(choice.box.top >= -1 && choice.box.bottom <= viewport.height + 1, `${choice.rewardId} should be vertically reachable`);
   });
 
+  await waitForSupplyPointerReady(page, "damage_boost");
   await page.click('#supplyChoiceOverlay .supply-choice-btn[data-reward-id="damage_boost"]');
   await page.waitForFunction(() => document.getElementById("supplyChoiceOverlay").hidden === true);
   state = await page.evaluate(() => window.__test.getState());
@@ -3828,7 +3838,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r83.1")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r84")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -3846,7 +3856,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r83.1")), "R83.1 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r84")), "R84 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

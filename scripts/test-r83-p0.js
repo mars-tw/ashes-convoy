@@ -284,7 +284,7 @@ async function checkSortieGuardBoundaries(browser, baseUrl) {
   assert.strictEqual(rearmed.confirm, "1", "重開抽屜後首按只能重新 arm");
   assert(rearmed.time >= reopened.time, "重開抽屜後首按不得直接重開");
   assert.deepStrictEqual(errors, [], "出擊確認邊界案例不得有 page error");
-  console.log("PASS R83.1 出擊確認 4.9s／5.0s／抽屜關閉重開邊界");
+  console.log("PASS R84 出擊確認 4.9s／5.0s／抽屜關閉重開邊界");
   await context.close();
 }
 
