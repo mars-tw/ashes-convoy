@@ -21,6 +21,7 @@
   let displayCtx = null;
   let worldCanvas = null;
   let ctx = null;
+  let displayLandscape = false;
   let callbacks = {};
   let meta = rules.migrateMeta(null, { config });
   let state = null;
@@ -3509,9 +3510,20 @@
 
   function pointFromEvent(event) {
     const rect = canvas.getBoundingClientRect();
+    const screenX = (event.clientX - rect.left) / rect.width;
+    const screenY = (event.clientY - rect.top) / rect.height;
+    if (rect.width > rect.height) {
+      // R85 landscape-native camera: the portrait world is projected 90deg
+      // clockwise without touching physics coordinates. Invert that exact
+      // transform here so aiming/colliders stay in the 195x422 world space.
+      return {
+        x: screenY * W,
+        y: (1 - screenX) * H
+      };
+    }
     return {
-      x: ((event.clientX - rect.left) / rect.width) * W,
-      y: ((event.clientY - rect.top) / rect.height) * H
+      x: screenX * W,
+      y: screenY * H
     };
   }
 
@@ -3571,6 +3583,16 @@
   function drawWorldText(text, x, y, options) {
     const opts = options || {};
     ctx.save();
+    let drawX = x;
+    let drawY = y;
+    if (displayLandscape) {
+      // The world camera rotates clockwise in landscape; counter-rotate
+      // world-space typography so wave, damage and guidance copy stays upright.
+      ctx.translate(x, y);
+      ctx.rotate(-Math.PI / 2);
+      drawX = 0;
+      drawY = 0;
+    }
     ctx.globalAlpha *= opts.alpha == null ? 1 : opts.alpha;
     const fontScale = meta.settings && meta.settings.fontSize === "large" ? 1.15 : meta.settings && meta.settings.fontSize === "small" ? 0.92 : 1;
     ctx.font = `800 ${(opts.size || 8) * fontScale}px system-ui, sans-serif`;
@@ -3579,8 +3601,8 @@
     ctx.lineWidth = opts.strokeWidth || 2;
     ctx.strokeStyle = opts.stroke || "rgba(0,0,0,0.78)";
     ctx.fillStyle = opts.color || "#f4ead8";
-    ctx.strokeText(text, x, y);
-    ctx.fillText(text, x, y);
+    ctx.strokeText(text, drawX, drawY);
+    ctx.fillText(text, drawX, drawY);
     ctx.restore();
   }
 
@@ -5837,6 +5859,8 @@
 
   function draw() {
     if (!ctx || !displayCtx) return;
+    const displayRect = canvas.getBoundingClientRect();
+    displayLandscape = displayRect.width > displayRect.height;
     renderDebug = {
       messagesDrawn: 0,
       gateLabelsDrawn: 0,
@@ -5953,9 +5977,26 @@
       drawBossArrivalVignette();
       drawLowHpPulse();
     }
-    displayCtx.clearRect(0, 0, DISPLAY_W, DISPLAY_H);
+    const targetWidth = displayLandscape ? DISPLAY_H : DISPLAY_W;
+    const targetHeight = displayLandscape ? DISPLAY_W : DISPLAY_H;
+    if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+    }
+    displayCtx.clearRect(0, 0, targetWidth, targetHeight);
     displayCtx.imageSmoothingEnabled = false;
-    displayCtx.drawImage(worldCanvas, 0, 0, W, H, 0, 0, DISPLAY_W, DISPLAY_H);
+    if (displayLandscape) {
+      // Preserve the exact 2x world scale and rotate the camera only. This
+      // fills 844x390 natively while gameplay, collision and spawning remain
+      // in the long-standing 195x422 portrait coordinate system.
+      displayCtx.save();
+      displayCtx.translate(DISPLAY_H, 0);
+      displayCtx.rotate(Math.PI / 2);
+      displayCtx.drawImage(worldCanvas, 0, 0, W, H, 0, 0, DISPLAY_W, DISPLAY_H);
+      displayCtx.restore();
+    } else {
+      displayCtx.drawImage(worldCanvas, 0, 0, W, H, 0, 0, DISPLAY_W, DISPLAY_H);
+    }
   }
 
   function loop(frameMs) {

@@ -1,0 +1,43 @@
+
+> ashes-convoy@0.85.0 test:e2e
+> node scripts/test-e2e.js && node scripts/wait-for-browser-memory.js && node scripts/test-r76-controls.js && node scripts/wait-for-browser-memory.js && node scripts/test-r83-p0.js && node scripts/wait-for-browser-memory.js && node scripts/test-r84-playtest.js && node scripts/wait-for-browser-memory.js && node scripts/test-r85-landscape.js
+
+E2E viewport PASS 390x844
+E2E viewport PASS 820x1180
+E2E viewport PASS 1280x900
+E2E viewport PASS 1366x700
+E2E image fallback PASS
+E2E vehicle image fallback PASS
+E2E zombie image fallback PASS
+E2E environment background fallback PASS
+E2E audio synthesis PASS
+E2E service worker offline PASS
+E2E tests PASS
+BROWSER MEMORY GATE PASS free=7.1GiB attempt=0
+R76 controls PASS desktop 1920x1080
+R76 controls PASS desktop 1440x780
+R76 controls PASS desktop 1366x600
+R76 controls PASS desktop 1280x640
+R76 controls PASS mobile 390x844
+R76 controls tests PASS
+BROWSER MEMORY GATE PASS free=7.09GiB attempt=0
+PASS 390x844 全域 hidden 安全網與正常顯示切換
+PASS 390x844 快速升級輪盤真實點擊可開可關
+PASS 390x844 跑局中出擊兩段式確認、非跑局單擊直發
+PASS 844x390 全域 hidden 安全網與正常顯示切換
+PASS 844x390 快速升級輪盤真實點擊可開可關
+PASS 844x390 跑局中出擊兩段式確認、非跑局單擊直發
+PASS 844x390 無線電日誌／補給可達性
+PASS 出擊確認 4.9s／5.0s／抽屜關閉重開邊界
+PASS fine-pointer 補給提示含 1-5 快捷
+R83 P0 guard PASS
+BROWSER MEMORY GATE PASS free=7.13GiB attempt=0
+PASS R1-META-02 跑局設定可點、可關、關後回 playing
+PASS R1-SUPPLY-03 既有射擊 click 不誤選、短暫後可選
+PASS R1-OUTCOME-04 / R1-SETTLE-05 撤離／陣亡語意與 preventScroll
+PASS R1-WHEEL-07 首玩車體快升 affordance 與工坊語意區隔
+PASS R1-LAND-01 / R1-TRAILER-06 橫向提示退場與家具雙欄壓縮
+R84 PLAYTEST-R1 guard PASS
+BROWSER MEMORY GATE PASS free=7.15GiB attempt=0
+PASS R85 landscape-native 844x390／HUD-event 分區／逆投影／無線電
+R85 R1-LAND-01 guard PASS

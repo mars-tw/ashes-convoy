@@ -329,9 +329,31 @@
     if (!els.gameCanvas) return null;
     const rect = els.gameCanvas.getBoundingClientRect();
     if (!rect.width || !rect.height) return null;
+    const screenX = (event.clientX - rect.left) / rect.width;
+    const screenY = (event.clientY - rect.top) / rect.height;
+    if (rect.width > rect.height) {
+      return {
+        x: screenY * config.LOGIC.width,
+        y: (1 - screenX) * config.LOGIC.height
+      };
+    }
     return {
-      x: ((event.clientX - rect.left) / rect.width) * config.LOGIC.width,
-      y: ((event.clientY - rect.top) / rect.height) * config.LOGIC.height
+      x: screenX * config.LOGIC.width,
+      y: screenY * config.LOGIC.height
+    };
+  }
+
+  function worldCanvasPercent(x, y) {
+    const rect = els.gameCanvas && els.gameCanvas.getBoundingClientRect();
+    if (rect && rect.width > rect.height) {
+      return {
+        left: (1 - y / config.LOGIC.height) * 100,
+        top: (x / config.LOGIC.width) * 100
+      };
+    }
+    return {
+      left: (x / config.LOGIC.width) * 100,
+      top: (y / config.LOGIC.height) * 100
     };
   }
 
@@ -393,8 +415,9 @@
     );
     els.quickUpgradeHint.hidden = !visible;
     if (!visible) return;
-    els.quickUpgradeHint.style.left = `${rules.clamp((state.vehicle.x / config.LOGIC.width) * 100, 18, 82)}%`;
-    els.quickUpgradeHint.style.top = `${rules.clamp((state.vehicle.y / config.LOGIC.height) * 100, 24, 91)}%`;
+    const position = worldCanvasPercent(state.vehicle.x, state.vehicle.y);
+    els.quickUpgradeHint.style.left = `${rules.clamp(position.left, 12, 88)}%`;
+    els.quickUpgradeHint.style.top = `${rules.clamp(position.top, 22, 88)}%`;
   }
 
   function markQuickUpgradeHintSeen() {
@@ -461,7 +484,13 @@
     if (els.virtualJoystickKnob) {
       els.virtualJoystickKnob.style.transform = `translate(calc(-50% + ${Math.round(x * max)}px), calc(-50% + ${Math.round(y * max)}px))`;
     }
-    game.setVirtualAim(joystickVector);
+    const canvasRect = els.gameCanvas && els.gameCanvas.getBoundingClientRect();
+    // Camera rotation means screen-right is world-forward and screen-down is
+    // world-right. Keep the knob under the finger, but rotate its aim vector
+    // back into the unchanged world coordinate system.
+    game.setVirtualAim(canvasRect && canvasRect.width > canvasRect.height
+      ? { x: y, y: -x }
+      : joystickVector);
   }
 
   function activateTouchSkill() {
@@ -1525,7 +1554,10 @@
       const gate = config.GATES[gateId];
       return gate ? `${gate.shortLabel} ${gateValueText(gateId)}` : gateId;
     });
-    els.gateChoiceLayer.textContent = `← ${labels[0] || ""} ｜ ${labels[1] || ""} →`;
+    const canvasRect = els.gameCanvas && els.gameCanvas.getBoundingClientRect();
+    els.gateChoiceLayer.textContent = canvasRect && canvasRect.width > canvasRect.height
+      ? `↑ ${labels[0] || ""} ｜ ${labels[1] || ""} ↓`
+      : `← ${labels[0] || ""} ｜ ${labels[1] || ""} →`;
     els.gateChoiceLayer.hidden = false;
   }
 
@@ -2162,7 +2194,7 @@
     sortieConfirmTimers.set(btn, root.setTimeout(() => expireSortieConfirm(btn, deadline), SORTIE_CONFIRM_WINDOW_MS));
   }
 
-  // R84：二按判定以絕對 deadline 原子決定；timer 可清除且所有面板離開路徑統一 disarm。
+  // R85 沿用：二按判定以絕對 deadline 原子決定；timer 可清除且所有面板離開路徑統一 disarm。
   // 測試 API __test.startRun 直呼 startSelectedRun，不經此守門。
   function guardedSortie(btn) {
     const state = game.getState();

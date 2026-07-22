@@ -1,7 +1,7 @@
 "use strict";
 
 /* R84 PLAYTEST-R1 永久回歸：rail drawer、補給輸入隔離、結算語意／焦點、
- * 快升可發現性、橫向旋轉提示與低高拖車壓縮。 */
+ * 快升可發現性、R85 橫向原生接手後提示退場與低高拖車壓縮。 */
 
 const assert = require("assert");
 const fs = require("fs");
@@ -213,7 +213,7 @@ async function checkQuickUpgradeAffordance(page) {
 
 async function checkLandscapeGuidanceAndTrailer(page) {
   await startFreshRun(page);
-  await page.waitForSelector("#landscapeRotateHint");
+  await page.waitForSelector("#landscapeRotateHint", { state: "attached" });
   const hint = await page.locator("#landscapeRotateHint").evaluate((node) => {
     const rect = node.getBoundingClientRect();
     const style = getComputedStyle(node);
@@ -224,10 +224,7 @@ async function checkLandscapeGuidanceAndTrailer(page) {
       box: { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom }
     };
   });
-  assert.notStrictEqual(hint.display, "none", "844x390 應顯示旋轉提示");
-  assert(hint.text.includes("旋轉回直向") && hint.text.includes("橫向仍可操作"), `旋轉提示需說明最佳體驗與可玩性：${hint.text}`);
-  assert.strictEqual(hint.pointerEvents, "none", "旋轉提示不得攔截戰場操作");
-  assert(hint.box.left >= -1 && hint.box.top >= -1 && hint.box.right <= 845 && hint.box.bottom <= 391, "旋轉提示應完整位於視口內");
+  assert.strictEqual(hint.display, "none", "R85 原生橫向品質達標後不應再要求旋轉回直向");
 
   await page.evaluate(() => {
     window.__test.showGarage();
@@ -254,7 +251,7 @@ async function checkLandscapeGuidanceAndTrailer(page) {
   assert(compact.cardHeight <= 58, `390 高家具卡應壓縮（實際 ${compact.cardHeight}px）`);
   assert(compact.buttonHeight >= 44, "壓縮後家具按鈕仍須保留 44px 命中高度");
   assert.strictEqual(compact.descriptionDisplay, "none", "低高模式應收起次要長描述");
-  console.log("PASS R1-LAND-01 / R1-TRAILER-06 橫向旋轉提示與家具雙欄壓縮");
+  console.log("PASS R1-LAND-01 / R1-TRAILER-06 橫向提示退場與家具雙欄壓縮");
 }
 
 (async () => {

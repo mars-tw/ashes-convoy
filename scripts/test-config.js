@@ -12,17 +12,17 @@ function assertFinitePositive(value, label) {
 
 assert.strictEqual(config.STORAGE_KEY, "ashes_convoy_meta_v1");
 assert.strictEqual(config.META_VERSION, 3);
-assert.strictEqual(config.APP_VERSION, "R84");
-assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r84-v1");
+assert.strictEqual(config.APP_VERSION, "R85");
+assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r85-v1");
 const indexHtml = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-assert(indexHtml.includes("manifest.webmanifest?v=R84"), "index.html should version the web manifest for R84");
-assert(indexHtml.includes("assets/icons/icon-192.png?v=R84"), "index.html should version the app icon for R84");
+assert(indexHtml.includes("manifest.webmanifest?v=R85"), "index.html should version the web manifest for R85");
+assert(indexHtml.includes("assets/icons/icon-192.png?v=R85"), "index.html should version the app icon for R85");
 assert.strictEqual(config.LOGIC.width, 195);
 assert.strictEqual(config.LOGIC.height, 422);
 assert.strictEqual(config.LOGIC.displayWidth, 390);
 assert.strictEqual(config.LOGIC.displayHeight, 844);
 assert.strictEqual(config.LOGIC.renderScale, 2);
-assert.strictEqual(config.START_SCREEN.image, "assets/ui/start.png?v=R84");
+assert.strictEqual(config.START_SCREEN.image, "assets/ui/start.png?v=R85");
 assert.deepStrictEqual(config.ENVIRONMENT_BACKGROUNDS, {
   land: "assets/env/land.png",
   air: "assets/env/air.png",

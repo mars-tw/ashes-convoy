@@ -1,0 +1,35 @@
+
+> ashes-convoy@0.85.0 test:rwd
+> node scripts/test-rwd-matrix.js
+
+RWD PASS meta-shelter 1920x1080 (desktop) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-shelter 1440x780 (desktop) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-shelter 1366x600 (desktop) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-shelter 1280x640 (desktop) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-shelter 1024x768 (desktop) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-shelter 820x1180 (tablet) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-shelter 768x1024 (tablet) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-shelter 390x844 (mobile) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-shelter 360x640 (mobile) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-shelter 844x390 (landscape) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-ops-drawer 1920x1080 (desktop) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-ops-drawer 1440x780 (desktop) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-ops-drawer 1366x600 (desktop) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-ops-drawer 1280x640 (desktop) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-ops-drawer 1024x768 (desktop) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-ops-drawer 820x1180 (tablet) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-ops-drawer 768x1024 (tablet) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-ops-drawer 390x844 (mobile) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-ops-drawer 360x640 (mobile) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-ops-drawer 844x390 (landscape) 元素 64 頁捲 0 橫溢 0
+RWD PASS meta-trailer-room 1920x1080 (desktop) 元素 79 頁捲 0 橫溢 0
+RWD PASS meta-trailer-room 1440x780 (desktop) 元素 79 頁捲 0 橫溢 0
+RWD PASS meta-trailer-room 1366x600 (desktop) 元素 79 頁捲 0 橫溢 0
+RWD PASS meta-trailer-room 1280x640 (desktop) 元素 79 頁捲 0 橫溢 0
+RWD PASS meta-trailer-room 1024x768 (desktop) 元素 79 頁捲 0 橫溢 0
+RWD PASS meta-trailer-room 820x1180 (tablet) 元素 79 頁捲 0 橫溢 0
+RWD PASS meta-trailer-room 768x1024 (tablet) 元素 79 頁捲 0 橫溢 0
+RWD PASS meta-trailer-room 390x844 (mobile) 元素 79 頁捲 0 橫溢 0
+RWD PASS meta-trailer-room 360x640 (mobile) 元素 79 頁捲 0 橫溢 0
+RWD PASS meta-trailer-room 844x390 (landscape) 元素 79 頁捲 0 橫溢 0
+RWD matrix tests PASS

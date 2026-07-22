@@ -1,0 +1,20 @@
+
+> ashes-convoy@0.85.0 test
+> node scripts/test-config.js && node scripts/test-automation-guards.js && node scripts/test-visual-guards.js && node scripts/test-r79-start-screen.js && node scripts/test-r80-art.js && node scripts/test-animation-assets.js && node scripts/test-rules.js && node scripts/test-supply-choice.js && node scripts/test-economy.js && node scripts/test-storage.js && node scripts/test-sprites-contract.js && node scripts/test-fx.js && node scripts/test-audio.js
+
+Config tests PASS
+Automation guard tests PASS
+Visual guard tests PASS
+R79.1 provenance/asset/alpha gate PASS (gpt-image-2, gpt-image 2.0, sha256 31cbd67f48bf)
+R80 art governance PASS (C2PA 5/5, desktop 11.97MiB, mobile 3.74MiB)
+Animation asset guards PASS (45 files, 1386517 bytes)
+Rules tests PASS
+Supply choice tests PASS
+Economy tests PASS
+Storage tests PASS
+Sprite contract PASS
+Sprites checked: 36
+Frames checked: 218
+Stage 3 sprites checked: 10
+FX tests PASS
+Audio tests PASS

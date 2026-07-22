@@ -94,6 +94,12 @@ async function vehicleClientPoint(page) {
     const state = window.__test.getState();
     const logic = window.DSConfig.LOGIC;
     const rect = document.getElementById("gameCanvas").getBoundingClientRect();
+    if (rect.width > rect.height) {
+      return {
+        x: rect.left + (1 - state.vehicle.y / logic.height) * rect.width,
+        y: rect.top + (state.vehicle.x / logic.width) * rect.height
+      };
+    }
     return {
       x: rect.left + (state.vehicle.x / logic.width) * rect.width,
       y: rect.top + (state.vehicle.y / logic.height) * rect.height
@@ -284,7 +290,7 @@ async function checkSortieGuardBoundaries(browser, baseUrl) {
   assert.strictEqual(rearmed.confirm, "1", "重開抽屜後首按只能重新 arm");
   assert(rearmed.time >= reopened.time, "重開抽屜後首按不得直接重開");
   assert.deepStrictEqual(errors, [], "出擊確認邊界案例不得有 page error");
-  console.log("PASS R84 出擊確認 4.9s／5.0s／抽屜關閉重開邊界");
+  console.log("PASS 出擊確認 4.9s／5.0s／抽屜關閉重開邊界");
   await context.close();
 }
 

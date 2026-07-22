@@ -259,7 +259,12 @@ async function runMatrix(browser, baseUrl) {
         assert(stageBox, `${label} battle stage 應可見`);
         assert(appBox.height >= vp.h * 0.9, `${label} app 高度 ${appBox.height}px 應至少佔視口 90%`);
         assert(stageBox.height >= vp.h * (vp.kind === "desktop" ? 0.82 : 0.9), `${label} battle stage 高度 ${stageBox.height}px 應吃滿主要高度`);
-        assert(Math.abs(stageBox.width / stageBox.height - 390 / 844) < 0.01, `${label} battle stage 應維持 390:844 等比，實際 ${stageBox.width}x${stageBox.height}`);
+        if (vp.kind === "landscape") {
+          assert(stageBox.width >= vp.w * 0.95, `${label} R85 battle stage 應吃滿橫向寬度，實際 ${stageBox.width}px`);
+          assert(Math.abs(stageBox.width / stageBox.height - vp.w / vp.h) < 0.03, `${label} R85 battle stage 應採原生橫向比例，實際 ${stageBox.width}x${stageBox.height}`);
+        } else {
+          assert(Math.abs(stageBox.width / stageBox.height - 390 / 844) < 0.01, `${label} battle stage 應維持 390:844 等比，實際 ${stageBox.width}x${stageBox.height}`);
+        }
         if (state.name === "meta-shelter") {
           const startLayout = await page.evaluate(() => {
             const box = (selector) => {

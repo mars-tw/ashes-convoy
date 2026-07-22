@@ -1,0 +1,313 @@
+{
+  "release": "R85",
+  "capturedAt": "2026-07-22T08:45:21.026Z",
+  "results": [
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "stage": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "right": 390,
+        "bottom": 844,
+        "display": "block"
+      },
+      "canvas": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "right": 390,
+        "bottom": 844,
+        "display": "block"
+      },
+      "backingStore": {
+        "width": 390,
+        "height": 844
+      },
+      "hud": {
+        "x": 10,
+        "y": 10,
+        "width": 370,
+        "height": 96,
+        "right": 380,
+        "bottom": 106,
+        "display": "grid"
+      },
+      "eventBanner": {
+        "x": 18,
+        "y": 96,
+        "width": 354,
+        "height": 55,
+        "right": 372,
+        "bottom": 151,
+        "display": "block"
+      },
+      "controls": [
+        {
+          "x": 14,
+          "y": 718,
+          "width": 112,
+          "height": 112,
+          "right": 126,
+          "bottom": 830,
+          "display": "block"
+        },
+        {
+          "x": 202,
+          "y": 778,
+          "width": 52,
+          "height": 52,
+          "right": 254,
+          "bottom": 830,
+          "display": "block"
+        },
+        {
+          "x": 263,
+          "y": 778,
+          "width": 52,
+          "height": 52,
+          "right": 315,
+          "bottom": 830,
+          "display": "block"
+        },
+        {
+          "x": 324,
+          "y": 778,
+          "width": 52,
+          "height": 52,
+          "right": 376,
+          "bottom": 830,
+          "display": "block"
+        }
+      ],
+      "hudEventOverlap": true,
+      "controlInformationOverlaps": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "landscapeRotateHintDisplay": "none",
+      "cssPixelsPerWorldUnit": 4.328,
+      "enemyCount": 3,
+      "projectileCount": 2,
+      "appVersion": "R85",
+      "pageErrors": []
+    },
+    {
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "stage": {
+        "x": 0,
+        "y": 0,
+        "width": 844,
+        "height": 390,
+        "right": 844,
+        "bottom": 390,
+        "display": "block"
+      },
+      "canvas": {
+        "x": 0,
+        "y": 0,
+        "width": 844,
+        "height": 390,
+        "right": 844,
+        "bottom": 390,
+        "display": "block"
+      },
+      "backingStore": {
+        "width": 844,
+        "height": 390
+      },
+      "hud": {
+        "x": 10,
+        "y": 8,
+        "width": 824,
+        "height": 44,
+        "right": 834,
+        "bottom": 52,
+        "display": "grid"
+      },
+      "eventBanner": {
+        "x": 202,
+        "y": 64,
+        "width": 440,
+        "height": 55,
+        "right": 642,
+        "bottom": 119,
+        "display": "block"
+      },
+      "controls": [
+        {
+          "x": 10,
+          "y": 296,
+          "width": 84,
+          "height": 84,
+          "right": 94,
+          "bottom": 380,
+          "display": "block"
+        },
+        {
+          "x": 676,
+          "y": 332,
+          "width": 48,
+          "height": 48,
+          "right": 724,
+          "bottom": 380,
+          "display": "block"
+        },
+        {
+          "x": 731,
+          "y": 332,
+          "width": 48,
+          "height": 48,
+          "right": 779,
+          "bottom": 380,
+          "display": "block"
+        },
+        {
+          "x": 786,
+          "y": 332,
+          "width": 48,
+          "height": 48,
+          "right": 834,
+          "bottom": 380,
+          "display": "block"
+        }
+      ],
+      "hudEventOverlap": false,
+      "controlInformationOverlaps": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "landscapeRotateHintDisplay": "none",
+      "cssPixelsPerWorldUnit": 2,
+      "enemyCount": 3,
+      "projectileCount": 0,
+      "appVersion": "R85",
+      "pageErrors": [],
+      "radioLog": {
+        "section": {
+          "x": 326.1875,
+          "y": 88,
+          "width": 496.8125,
+          "height": 150,
+          "bottom": 238
+        },
+        "button": {
+          "width": 70,
+          "height": 44
+        },
+        "inViewport": true,
+        "scrollHeight": 641,
+        "clientHeight": 136
+      }
+    },
+    {
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "stage": {
+        "x": 505.56,
+        "y": 0,
+        "width": 354.88,
+        "height": 768,
+        "right": 860.44,
+        "bottom": 768,
+        "display": "block"
+      },
+      "canvas": {
+        "x": 506.56,
+        "y": 1,
+        "width": 352.88,
+        "height": 766,
+        "right": 859.44,
+        "bottom": 767,
+        "display": "block"
+      },
+      "backingStore": {
+        "width": 390,
+        "height": 844
+      },
+      "hud": {
+        "x": 516.56,
+        "y": 11,
+        "width": 332.88,
+        "height": 96,
+        "right": 849.44,
+        "bottom": 107,
+        "display": "grid"
+      },
+      "eventBanner": {
+        "x": 524.56,
+        "y": 97,
+        "width": 316.88,
+        "height": 55,
+        "right": 841.44,
+        "bottom": 152,
+        "display": "block"
+      },
+      "controls": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "right": 0,
+          "bottom": 0,
+          "display": "block"
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "right": 0,
+          "bottom": 0,
+          "display": "inline-block"
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "right": 0,
+          "bottom": 0,
+          "display": "inline-block"
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "right": 0,
+          "bottom": 0,
+          "display": "inline-block"
+        }
+      ],
+      "hudEventOverlap": true,
+      "controlInformationOverlaps": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "landscapeRotateHintDisplay": "none",
+      "cssPixelsPerWorldUnit": 3.928,
+      "enemyCount": 3,
+      "projectileCount": 0,
+      "appVersion": "R85",
+      "pageErrors": []
+    }
+  ]
+}

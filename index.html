@@ -46,8 +46,8 @@
     </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="manifest.webmanifest?v=R84" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R84" />
+    <link rel="manifest" href="manifest.webmanifest?v=R85" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R85" />
     <link rel="canonical" href="https://mars-tw.github.io/ashes-convoy/" />
     <title>灰燼護航</title>
     <style>
@@ -78,7 +78,7 @@
         box-sizing: border-box;
       }
 
-      /* R84：hidden 是所有面板／疊層的最終互動安全閘，後出的 display 規則不得覆蓋。 */
+      /* R85：hidden 是所有面板／疊層的最終互動安全閘，後出的 display 規則不得覆蓋。 */
       [hidden] {
         display: none !important;
       }
@@ -2339,45 +2339,78 @@
       }
 
       /* ============================================================
-         R83 P0-B：coarse-pointer 橫向（寬 ≥640）可玩佈局覆寫。
-         戰場維持 390:844 等比（雙欄 rail 佈局供捷徑），但大型面板／覆疊
-         改 position:fixed 逃出 180px 直柱、用滿橫幅：
-         - battle-stage 解除 container-type（layout containment 會把
-           fixed 後代圈在 180px 柱內）
-         - 起始畫面（車庫面板）滿版；拖車房間左圖右欄雙欄；
-           基地抽屜／暫停／結算／補給箱全寬置中
+         R85 R1-LAND-01：coarse-pointer 橫向原生戰場。
+         195x422 物理世界由 Canvas 相機順時針投影為 844x390，CSS 只負責
+         讓 stage 吃滿視口、HUD／事件／觸控各自佔用不重疊的邊緣區域。
+         大型 panel／overlay 延續 R83 fixed 逃離 stage containment 的修法。
          置於樣式表末端以確保蓋過 @media (max-height:500px) 同權重規則。
          ============================================================ */
       @media (min-width: 640px) and (orientation: landscape) and (pointer: coarse) {
+        body {
+          place-items: stretch;
+        }
+
+        .app {
+          --stage-w: 100vw;
+          --stage-h: 100svh;
+          width: 100vw;
+          height: 100vh;
+          height: 100svh;
+          padding: 0;
+          grid-template-columns: minmax(0, 1fr);
+          gap: 0;
+          place-items: stretch;
+        }
+
+        .desktop-rail {
+          display: none;
+        }
+
         .battle-stage {
           container-type: normal;
+          width: 100%;
+          height: 100%;
+          aspect-ratio: auto;
+          border: 0;
+          box-shadow: none;
         }
 
         .landscape-rotate-hint {
-          position: fixed;
-          top: max(14px, env(safe-area-inset-top));
-          left: max(12px, env(safe-area-inset-left));
-          z-index: 22;
-          display: grid;
-          gap: 4px;
-          width: min(230px, calc((100vw - var(--stage-w)) / 2 - 24px));
-          min-width: 132px;
-          padding: 10px 12px;
-          border: 1px solid rgba(240, 182, 74, 0.72);
-          border-radius: 8px;
-          background: rgba(9, 12, 16, 0.9);
-          box-shadow: 0 14px 32px rgba(0, 0, 0, 0.48);
-          color: #fff2bd;
-          font-size: 12px;
-          font-weight: 900;
-          line-height: 1.35;
-          pointer-events: none;
+          display: none;
         }
 
-        .landscape-rotate-hint small {
-          color: var(--muted);
-          font-size: 10px;
-          font-weight: 700;
+        .hud {
+          inset: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) auto max(10px, env(safe-area-inset-left));
+          grid-template-columns: minmax(280px, 1.35fr) minmax(238px, 1fr) minmax(190px, 0.9fr);
+          align-items: start;
+          gap: 8px;
+        }
+
+        .hud-row {
+          gap: 6px;
+        }
+
+        .hud .stat,
+        .hud .pill,
+        .hud button {
+          min-height: 44px;
+        }
+
+        .hud .boss {
+          min-height: 44px;
+        }
+
+        .event-banner {
+          top: max(64px, calc(env(safe-area-inset-top) + 64px));
+          left: 50%;
+          right: auto;
+          width: min(440px, calc(100vw - 240px));
+          min-height: 44px;
+          transform: translateX(-50%);
+        }
+
+        .gate-choice-layer {
+          top: max(64px, calc(env(safe-area-inset-top) + 64px));
         }
 
         .meta-panel.is-illustration,
@@ -2447,8 +2480,34 @@
 
         .touch-controls.is-visible {
           position: fixed;
-          inset: auto max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+          inset: auto max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
           z-index: 20;
+          grid-template-columns: auto auto;
+          justify-content: space-between;
+          align-items: end;
+          gap: 0;
+        }
+
+        .virtual-joystick {
+          width: 84px;
+          height: 84px;
+        }
+
+        .virtual-joystick-stick {
+          width: 36px;
+          height: 36px;
+        }
+
+        .touch-action-pad {
+          gap: 7px;
+        }
+
+        .touch-action-btn {
+          width: 48px;
+          min-width: 48px;
+          height: 48px;
+          min-height: 48px;
+          font-size: 14px;
         }
       }
     </style>
@@ -2557,7 +2616,7 @@
             <span id="trailerBonusText">HP +0% · 傷害 +0% · 射速 +0% · 承傷 -0%</span>
           </div>
           <section class="story-log-section" id="storyLogSection" aria-label="無線電日誌" hidden>
-            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R84" alt="熹" decoding="async" draggable="false" />
+            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R85" alt="熹" decoding="async" draggable="false" />
             <div class="story-log-list" id="storyLogList"></div>
           </section>
           <div class="trailer-room-body">
@@ -2574,7 +2633,7 @@
               <p class="start-kicker">ASHES CONVOY</p>
               <h1 class="start-logo">灰燼護航</h1>
             </div>
-            <span class="start-release-mark" aria-hidden="true">R84</span>
+            <span class="start-release-mark" aria-hidden="true">R85</span>
           </div>
           <div class="start-ledger" id="garageMeta" role="list" aria-label="護航統計">
             <span class="start-stat-chip" role="listitem"><em>零件</em><b id="startPartsValue">0</b></span>
@@ -2795,7 +2854,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R84";
+        var key = "ashes_convoy_html_boot_reload_R85";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -2812,15 +2871,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R84"></script>
-    <script src="src/sprites.js?v=R84"></script>
-    <script src="src/sprite-renderer.js?v=R84"></script>
-    <script src="src/shelter-scene.js?v=R84"></script>
-    <script src="src/config.js?v=R84"></script>
-    <script src="src/rules.js?v=R84"></script>
-    <script src="src/fx.js?v=R84"></script>
-    <script src="src/audio.js?v=R84"></script>
-    <script src="src/game.js?v=R84"></script>
-    <script src="src/ui.js?v=R84"></script>
+    <script src="src/version.js?v=R85"></script>
+    <script src="src/sprites.js?v=R85"></script>
+    <script src="src/sprite-renderer.js?v=R85"></script>
+    <script src="src/shelter-scene.js?v=R85"></script>
+    <script src="src/config.js?v=R85"></script>
+    <script src="src/rules.js?v=R85"></script>
+    <script src="src/fx.js?v=R85"></script>
+    <script src="src/audio.js?v=R85"></script>
+    <script src="src/game.js?v=R85"></script>
+    <script src="src/ui.js?v=R85"></script>
   </body>
 </html>
