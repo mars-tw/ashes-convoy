@@ -46,8 +46,8 @@
     </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="manifest.webmanifest?v=R85" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R85" />
+    <link rel="manifest" href="manifest.webmanifest?v=R85.1" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R85.1" />
     <link rel="canonical" href="https://mars-tw.github.io/ashes-convoy/" />
     <title>灰燼護航</title>
     <style>
@@ -2368,9 +2368,10 @@
 
         .battle-stage {
           container-type: normal;
-          width: 100%;
-          height: 100%;
-          aspect-ratio: auto;
+          width: min(100vw, calc(100svh * 844 / 390));
+          height: min(100svh, calc(100vw * 390 / 844));
+          aspect-ratio: 844 / 390;
+          place-self: center;
           border: 0;
           box-shadow: none;
         }
@@ -2616,7 +2617,7 @@
             <span id="trailerBonusText">HP +0% · 傷害 +0% · 射速 +0% · 承傷 -0%</span>
           </div>
           <section class="story-log-section" id="storyLogSection" aria-label="無線電日誌" hidden>
-            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R85" alt="熹" decoding="async" draggable="false" />
+            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R85.1" alt="熹" decoding="async" draggable="false" />
             <div class="story-log-list" id="storyLogList"></div>
           </section>
           <div class="trailer-room-body">
@@ -2633,7 +2634,7 @@
               <p class="start-kicker">ASHES CONVOY</p>
               <h1 class="start-logo">灰燼護航</h1>
             </div>
-            <span class="start-release-mark" aria-hidden="true">R85</span>
+            <span class="start-release-mark" aria-hidden="true">R85.1</span>
           </div>
           <div class="start-ledger" id="garageMeta" role="list" aria-label="護航統計">
             <span class="start-stat-chip" role="listitem"><em>零件</em><b id="startPartsValue">0</b></span>
@@ -2854,7 +2855,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R85";
+        var key = "ashes_convoy_html_boot_reload_R85.1";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -2871,15 +2872,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R85"></script>
-    <script src="src/sprites.js?v=R85"></script>
-    <script src="src/sprite-renderer.js?v=R85"></script>
-    <script src="src/shelter-scene.js?v=R85"></script>
-    <script src="src/config.js?v=R85"></script>
-    <script src="src/rules.js?v=R85"></script>
-    <script src="src/fx.js?v=R85"></script>
-    <script src="src/audio.js?v=R85"></script>
-    <script src="src/game.js?v=R85"></script>
-    <script src="src/ui.js?v=R85"></script>
+    <script src="src/version.js?v=R85.1"></script>
+    <script src="src/sprites.js?v=R85.1"></script>
+    <script src="src/sprite-renderer.js?v=R85.1"></script>
+    <script src="src/shelter-scene.js?v=R85.1"></script>
+    <script src="src/config.js?v=R85.1"></script>
+    <script src="src/rules.js?v=R85.1"></script>
+    <script src="src/fx.js?v=R85.1"></script>
+    <script src="src/audio.js?v=R85.1"></script>
+    <script src="src/game.js?v=R85.1"></script>
+    <script src="src/ui.js?v=R85.1"></script>
   </body>
 </html>

@@ -5977,8 +5977,10 @@
       drawBossArrivalVignette();
       drawLowHpPulse();
     }
-    const targetWidth = displayLandscape ? DISPLAY_H : DISPLAY_W;
-    const targetHeight = displayLandscape ? DISPLAY_W : DISPLAY_H;
+    // The landscape stage retains the rotated world's aspect ratio. Match
+    // its actual CSS size instead of stretching a fixed phone backing on tablets.
+    const targetWidth = displayLandscape ? Math.max(1, Math.round(displayRect.width)) : DISPLAY_W;
+    const targetHeight = displayLandscape ? Math.max(1, Math.round(displayRect.height)) : DISPLAY_H;
     if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
       canvas.width = targetWidth;
       canvas.height = targetHeight;
@@ -5986,13 +5988,13 @@
     displayCtx.clearRect(0, 0, targetWidth, targetHeight);
     displayCtx.imageSmoothingEnabled = false;
     if (displayLandscape) {
-      // Preserve the exact 2x world scale and rotate the camera only. This
-      // fills 844x390 natively while gameplay, collision and spawning remain
-      // in the long-standing 195x422 portrait coordinate system.
+      // The fitted CSS stage makes this projection uniform on screen; the
+      // backing dimensions are rounded to pixels. Keep the original world and
+      // normalized pointer inverse, including the 844x390 phone's 2x scale.
       displayCtx.save();
-      displayCtx.translate(DISPLAY_H, 0);
+      displayCtx.translate(targetWidth, 0);
       displayCtx.rotate(Math.PI / 2);
-      displayCtx.drawImage(worldCanvas, 0, 0, W, H, 0, 0, DISPLAY_W, DISPLAY_H);
+      displayCtx.drawImage(worldCanvas, 0, 0, W, H, 0, 0, targetHeight, targetWidth);
       displayCtx.restore();
     } else {
       displayCtx.drawImage(worldCanvas, 0, 0, W, H, 0, 0, DISPLAY_W, DISPLAY_H);
