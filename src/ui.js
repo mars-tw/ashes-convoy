@@ -409,13 +409,20 @@
   function renderQuickUpgradeHint(state) {
     if (!els.quickUpgradeHint) return;
     const unseen = !!(meta.tutorial && meta.tutorial.seenQuickUpgrade !== true);
+    // R86：提示只在開局前 6 秒，或口袋零件真的買得起快升時出現，不再整局蓋在車上。
+    const affordable = availableUpgradeTracks().some((track) => {
+      const cost = rules.getUpgradeCost(meta, meta.selectedVehicle, track, config);
+      return cost != null && meta.parts >= cost;
+    });
+    const latched = !!(state && state.latch && Number(state.latch.latched) > 0);
     const visible = !!(
       unseen && state && state.mode === "playing" && !state.paused && !state.over &&
-      state.vehicle && !state.supplyChoice
+      state.vehicle && !state.supplyChoice && !latched && (state.time < 6 || affordable)
     );
     els.quickUpgradeHint.hidden = !visible;
     if (!visible) return;
-    const position = worldCanvasPercent(state.vehicle.x, state.vehicle.y);
+    // 錨點上移 34 世界單位：泡泡尾巴指向車頭，不再遮住車體與拖車。
+    const position = worldCanvasPercent(state.vehicle.x, state.vehicle.y - 34);
     els.quickUpgradeHint.style.left = `${rules.clamp(position.left, 12, 88)}%`;
     els.quickUpgradeHint.style.top = `${rules.clamp(position.top, 22, 88)}%`;
   }
@@ -522,10 +529,21 @@
     return !!(query && query.matches);
   }
 
+  function renderDriftButton(state) {
+    if (!els.touchBoostBtn || !state || !state.latch) return;
+    const cooldown = Math.max(0.1, Number(state.latch.driftCooldown) || 5.5);
+    const remaining = Math.max(0, (Number(state.latch.driftReadyAt) || 0) - (Number(state.time) || 0));
+    const progress = 1 - Math.min(1, remaining / cooldown);
+    els.touchBoostBtn.style.setProperty("--drift-progress", progress.toFixed(3));
+    els.touchBoostBtn.classList.toggle("is-ready", progress >= 1);
+    els.touchBoostBtn.classList.toggle("is-urgent", progress >= 1 && Number(state.latch.latched) > 0);
+  }
+
   function renderTouchControls(state) {
     const playing = !!(state && state.mode === "playing" && !state.paused && !state.over);
     const showTouchControls = playing && primaryPointerIsCoarse();
     if (els.touchControls) els.touchControls.classList.toggle("is-visible", showTouchControls);
+    if (showTouchControls) renderDriftButton(state);
     if (!showTouchControls && (joystickPointerId != null || joystickVector.x || joystickVector.y)) {
       resetJoystick();
     }
@@ -1432,6 +1450,7 @@
     if (source === "projectile") return "敵方彈體";
     if (source === "burst") return "爆裂";
     if (source === "hazard") return "環境";
+    if (source === "latch") return "攀車屍啃咬";
     return "未知";
   }
 
@@ -1848,6 +1867,7 @@
     const rows = [
       ["波次", `第 ${run.wavesCleared} 波`],
       ["擊殺", `${run.kills}`],
+      ["甩飛", `${run.flung || 0}${run.bestFlingChain > 1 ? `（單次 x${run.bestFlingChain}）` : ""}`],
       ["Boss", `${run.bossesDefeated}`],
       ["零件", `${run.earnedParts}`],
       ["行動零件", `+${run.runParts == null ? breakdown.total : run.runParts}`],
@@ -2345,15 +2365,18 @@
       els.virtualJoystick.addEventListener("pointercancel", resetJoystick);
     }
     if (els.touchBoostBtn) {
+      // R86：「甩」＝甩尾衝撞——朝搖桿方向橫甩車身、撞開周圍屍體並甩飛攀車屍；冷卻環由 renderDriftButton 更新。
       els.touchBoostBtn.addEventListener("pointerdown", (event) => {
         els.touchBoostBtn.classList.add("is-active");
-        if (typeof game.setVirtualAim === "function") game.setVirtualAim({ x: joystickVector.x || 0, y: -0.55 });
+        if (typeof game.driftBurst === "function") {
+          const dir = Math.abs(joystickVector.x || 0) > 0.2 ? Math.sign(joystickVector.x) : 0;
+          game.driftBurst(dir);
+        }
         event.preventDefault();
       });
       ["pointerup", "pointercancel", "pointerleave"].forEach((type) => {
         els.touchBoostBtn.addEventListener(type, () => {
           els.touchBoostBtn.classList.remove("is-active");
-          if (joystickPointerId == null && typeof game.releaseVirtualAim === "function") game.releaseVirtualAim();
         });
       });
     }

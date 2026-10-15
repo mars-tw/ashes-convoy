@@ -24,7 +24,7 @@ const DEFAULT_RNG_SEED = 20260707;
 const OSC_WAVES = ["sine", "triangle", "square", "sawtooth"];
 const NOISE_FILTERS = ["lowpass", "highpass", "bandpass"];
 
-const EVENT_NAMES = ["shoot", "hit", "kill", "bossWarn", "bossKill", "pickup", "hurt", "gateChoice", "gateBreak", "alarm", "ui", "waveStart"];
+const EVENT_NAMES = ["shoot", "hit", "kill", "bossWarn", "bossKill", "pickup", "hurt", "gateChoice", "gateBreak", "alarm", "ui", "waveStart", "latch", "fling", "drift"];
 
 function finiteOr(value, fallback) {
   return Number.isFinite(value) ? value : fallback;
@@ -185,6 +185,34 @@ const RECIPES = {
       { kind: "osc", wave: "sine", freqStart: 740, freqEnd: 740, freqCurve: "lin", delay: 0, duration: 0.14, attack: 0.006, decay: 0.04, sustain: 0.58, release: 0.04, gain: 0.45, detuneJitter: 0 },
       { kind: "osc", wave: "sine", freqStart: 740, freqEnd: 740, freqCurve: "lin", delay: 0.22, duration: 0.14, attack: 0.006, decay: 0.04, sustain: 0.58, release: 0.04, gain: 0.45, detuneJitter: 0 },
       { kind: "noise", filterType: "highpass", filterFreq: 1200, filterQ: 0.8, delay: 0, duration: 0.42, attack: 0.004, decay: 0.12, sustain: 0.12, release: 0.08, gain: 0.18, detuneJitter: 0 }
+    ]
+  },
+  // R86 攀車：指甲刮鐵皮（高頻帶通噪聲）＋車殼悶震。
+  latch: {
+    duration: 0.3,
+    volume: 0.3,
+    layers: [
+      { kind: "noise", filterType: "bandpass", filterFreq: 2600, filterQ: 2.2, delay: 0, duration: 0.2, attack: 0.004, decay: 0.08, sustain: 0.3, release: 0.08, gain: 0.5, detuneJitter: 0 },
+      { kind: "osc", wave: "triangle", freqStart: 180, freqEnd: 90, freqCurve: "exp", delay: 0, duration: 0.18, attack: 0.002, decay: 0.08, sustain: 0.2, release: 0.06, gain: 0.55, detuneJitter: 6 }
+    ]
+  },
+  // R86 甩飛：輪胎尖嘯掃頻＋重擊，越多隻越爽的核心回饋。
+  fling: {
+    duration: 0.55,
+    volume: 0.42,
+    layers: [
+      { kind: "osc", wave: "sawtooth", freqStart: 900, freqEnd: 300, freqCurve: "exp", delay: 0, duration: 0.3, attack: 0.004, decay: 0.12, sustain: 0.25, release: 0.1, gain: 0.28, detuneJitter: 12 },
+      { kind: "noise", filterType: "bandpass", filterFreq: 1400, filterQ: 1.4, delay: 0, duration: 0.32, attack: 0.003, decay: 0.12, sustain: 0.3, release: 0.1, gain: 0.5, detuneJitter: 0 },
+      { kind: "osc", wave: "sine", freqStart: 120, freqEnd: 38, freqCurve: "exp", delay: 0.04, duration: 0.42, attack: 0.003, decay: 0.18, sustain: 0.25, release: 0.12, gain: 0.85, detuneJitter: 4 }
+    ]
+  },
+  // R86 甩尾衝撞：低頻引擎轟＋碎石噪聲。
+  drift: {
+    duration: 0.5,
+    volume: 0.36,
+    layers: [
+      { kind: "osc", wave: "sawtooth", freqStart: 70, freqEnd: 140, freqCurve: "lin", delay: 0, duration: 0.32, attack: 0.01, decay: 0.12, sustain: 0.35, release: 0.1, gain: 0.45, detuneJitter: 8 },
+      { kind: "noise", filterType: "lowpass", filterFreq: 900, filterQ: 0.8, delay: 0, duration: 0.42, attack: 0.004, decay: 0.16, sustain: 0.3, release: 0.12, gain: 0.55, detuneJitter: 0 }
     ]
   },
   // UI：低調確認 tick。

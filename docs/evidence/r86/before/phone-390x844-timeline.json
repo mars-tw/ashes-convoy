@@ -1,0 +1,4756 @@
+{
+  "summary": {
+    "viewport": "phone-390x844",
+    "sortieClickToPlayingMs": null,
+    "firstKillAt": null,
+    "final": {
+      "mode": "playing",
+      "time": 62.61,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 61.414000000001394,
+        "best": 24
+      },
+      "over": false,
+      "wall": 61.9
+    },
+    "minHp": 520,
+    "banners": [
+      "壁爐",
+      "增益門逼近",
+      "熹",
+      "灰喉走廊",
+      "增益已選",
+      "彈種切換",
+      "補給箱",
+      "事件收束"
+    ],
+    "errors": [],
+    "startedAfterMs": 63089
+  },
+  "timeline": [
+    {
+      "mode": "playing",
+      "time": 0.78,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": -1000000,
+        "best": 0
+      },
+      "over": false,
+      "wall": 0
+    },
+    {
+      "mode": "playing",
+      "time": 1.13,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": -1000000,
+        "best": 0
+      },
+      "over": false,
+      "wall": 0.3
+    },
+    {
+      "mode": "playing",
+      "time": 1.35,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 1.3499000000000003,
+        "best": 1
+      },
+      "over": false,
+      "wall": 0.6
+    },
+    {
+      "mode": "playing",
+      "time": 1.73,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 1.6664999999999999,
+        "best": 2
+      },
+      "over": false,
+      "wall": 1
+    },
+    {
+      "mode": "playing",
+      "time": 2.12,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 1.6664999999999999,
+        "best": 2
+      },
+      "over": false,
+      "wall": 1.3
+    },
+    {
+      "mode": "playing",
+      "time": 2.35,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 1.6664999999999999,
+        "best": 2
+      },
+      "over": false,
+      "wall": 1.6
+    },
+    {
+      "mode": "playing",
+      "time": 2.6,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 1.6664999999999999,
+        "best": 2
+      },
+      "over": false,
+      "wall": 1.8
+    },
+    {
+      "mode": "playing",
+      "time": 2.82,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 1.6664999999999999,
+        "best": 2
+      },
+      "over": false,
+      "wall": 2
+    },
+    {
+      "mode": "playing",
+      "time": 3.07,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": "壁爐",
+      "combo": {
+        "count": 2,
+        "lastKillAt": 1.6664999999999999,
+        "best": 2
+      },
+      "over": false,
+      "wall": 2.3
+    },
+    {
+      "mode": "playing",
+      "time": 3.28,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": "壁爐",
+      "combo": {
+        "count": 2,
+        "lastKillAt": 1.6664999999999999,
+        "best": 2
+      },
+      "over": false,
+      "wall": 2.5
+    },
+    {
+      "mode": "playing",
+      "time": 3.5,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": "壁爐",
+      "combo": {
+        "count": 2,
+        "lastKillAt": 1.6664999999999999,
+        "best": 2
+      },
+      "over": false,
+      "wall": 2.7
+    },
+    {
+      "mode": "playing",
+      "time": 3.75,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 12,
+      "gates": 0,
+      "supply": false,
+      "banner": "壁爐",
+      "combo": {
+        "count": 3,
+        "lastKillAt": 3.6664999999999974,
+        "best": 3
+      },
+      "over": false,
+      "wall": 3
+    },
+    {
+      "mode": "playing",
+      "time": 3.97,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 13,
+      "gates": 0,
+      "supply": false,
+      "banner": "壁爐",
+      "combo": {
+        "count": 4,
+        "lastKillAt": 3.783099999999998,
+        "best": 4
+      },
+      "over": false,
+      "wall": 3.2
+    },
+    {
+      "mode": "playing",
+      "time": 4.3,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 13,
+      "gates": 0,
+      "supply": false,
+      "banner": "壁爐",
+      "combo": {
+        "count": 5,
+        "lastKillAt": 4.1164999999999985,
+        "best": 5
+      },
+      "over": false,
+      "wall": 3.5
+    },
+    {
+      "mode": "playing",
+      "time": 4.52,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 13,
+      "gates": 0,
+      "supply": false,
+      "banner": "壁爐",
+      "combo": {
+        "count": 5,
+        "lastKillAt": 4.1164999999999985,
+        "best": 5
+      },
+      "over": false,
+      "wall": 3.7
+    },
+    {
+      "mode": "playing",
+      "time": 4.73,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 13,
+      "gates": 0,
+      "supply": false,
+      "banner": "壁爐",
+      "combo": {
+        "count": 5,
+        "lastKillAt": 4.1164999999999985,
+        "best": 5
+      },
+      "over": false,
+      "wall": 4
+    },
+    {
+      "mode": "playing",
+      "time": 4.95,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 13,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 5,
+        "lastKillAt": 4.1164999999999985,
+        "best": 5
+      },
+      "over": false,
+      "wall": 4.2
+    },
+    {
+      "mode": "playing",
+      "time": 5.17,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 13,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 5,
+        "lastKillAt": 4.1164999999999985,
+        "best": 5
+      },
+      "over": false,
+      "wall": 4.4
+    },
+    {
+      "mode": "playing",
+      "time": 5.38,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 13,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 5,
+        "lastKillAt": 4.1164999999999985,
+        "best": 5
+      },
+      "over": false,
+      "wall": 4.6
+    },
+    {
+      "mode": "playing",
+      "time": 5.6,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 12,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 6,
+        "lastKillAt": 5.583000000000013,
+        "best": 6
+      },
+      "over": false,
+      "wall": 4.8
+    },
+    {
+      "mode": "playing",
+      "time": 5.82,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 12,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 6,
+        "lastKillAt": 5.583000000000013,
+        "best": 6
+      },
+      "over": false,
+      "wall": 5
+    },
+    {
+      "mode": "playing",
+      "time": 6.03,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 14,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 7,
+        "lastKillAt": 5.933000000000017,
+        "best": 7
+      },
+      "over": false,
+      "wall": 5.3
+    },
+    {
+      "mode": "playing",
+      "time": 6.25,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 16,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 7,
+        "lastKillAt": 5.933000000000017,
+        "best": 7
+      },
+      "over": false,
+      "wall": 5.5
+    },
+    {
+      "mode": "playing",
+      "time": 6.47,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 17,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 7,
+        "lastKillAt": 5.933000000000017,
+        "best": 7
+      },
+      "over": false,
+      "wall": 5.7
+    },
+    {
+      "mode": "playing",
+      "time": 6.68,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 17,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 7,
+        "lastKillAt": 5.933000000000017,
+        "best": 7
+      },
+      "over": false,
+      "wall": 5.9
+    },
+    {
+      "mode": "playing",
+      "time": 6.9,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 17,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 7,
+        "lastKillAt": 5.933000000000017,
+        "best": 7
+      },
+      "over": false,
+      "wall": 6.1
+    },
+    {
+      "mode": "playing",
+      "time": 7.12,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 17,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 7,
+        "lastKillAt": 5.933000000000017,
+        "best": 7
+      },
+      "over": false,
+      "wall": 6.3
+    },
+    {
+      "mode": "playing",
+      "time": 7.33,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 17,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 7,
+        "lastKillAt": 5.933000000000017,
+        "best": 7
+      },
+      "over": false,
+      "wall": 6.5
+    },
+    {
+      "mode": "playing",
+      "time": 7.55,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 16,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 8,
+        "lastKillAt": 7.549600000000039,
+        "best": 8
+      },
+      "over": false,
+      "wall": 6.8
+    },
+    {
+      "mode": "playing",
+      "time": 7.77,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 16,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 8,
+        "lastKillAt": 7.549600000000039,
+        "best": 8
+      },
+      "over": false,
+      "wall": 7
+    },
+    {
+      "mode": "playing",
+      "time": 7.98,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 15,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 9,
+        "lastKillAt": 7.783000000000042,
+        "best": 9
+      },
+      "over": false,
+      "wall": 7.2
+    },
+    {
+      "mode": "playing",
+      "time": 8.2,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 15,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 9,
+        "lastKillAt": 7.783000000000042,
+        "best": 9
+      },
+      "over": false,
+      "wall": 7.4
+    },
+    {
+      "mode": "playing",
+      "time": 8.43,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 15,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 9,
+        "lastKillAt": 7.783000000000042,
+        "best": 9
+      },
+      "over": false,
+      "wall": 7.6
+    },
+    {
+      "mode": "playing",
+      "time": 8.65,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 15,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 9,
+        "lastKillAt": 7.783000000000042,
+        "best": 9
+      },
+      "over": false,
+      "wall": 7.9
+    },
+    {
+      "mode": "playing",
+      "time": 8.88,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 15,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 9,
+        "lastKillAt": 7.783000000000042,
+        "best": 9
+      },
+      "over": false,
+      "wall": 8.1
+    },
+    {
+      "mode": "playing",
+      "time": 9.2,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 15,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 9,
+        "lastKillAt": 7.783000000000042,
+        "best": 9
+      },
+      "over": false,
+      "wall": 8.4
+    },
+    {
+      "mode": "playing",
+      "time": 9.42,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 14,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 10,
+        "lastKillAt": 9.216200000000025,
+        "best": 10
+      },
+      "over": false,
+      "wall": 8.6
+    },
+    {
+      "mode": "playing",
+      "time": 9.63,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 13,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 11,
+        "lastKillAt": 9.549600000000018,
+        "best": 11
+      },
+      "over": false,
+      "wall": 8.8
+    },
+    {
+      "mode": "playing",
+      "time": 9.85,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 13,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 11,
+        "lastKillAt": 9.549600000000018,
+        "best": 11
+      },
+      "over": false,
+      "wall": 9.1
+    },
+    {
+      "mode": "playing",
+      "time": 10.05,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 12,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 12,
+        "lastKillAt": 9.999500000000012,
+        "best": 12
+      },
+      "over": false,
+      "wall": 9.3
+    },
+    {
+      "mode": "playing",
+      "time": 10.27,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 12,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 12,
+        "lastKillAt": 9.999500000000012,
+        "best": 12
+      },
+      "over": false,
+      "wall": 9.5
+    },
+    {
+      "mode": "playing",
+      "time": 10.5,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 12,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 12,
+        "lastKillAt": 9.999500000000012,
+        "best": 12
+      },
+      "over": false,
+      "wall": 9.7
+    },
+    {
+      "mode": "playing",
+      "time": 10.73,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 12,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 12,
+        "lastKillAt": 9.999500000000012,
+        "best": 12
+      },
+      "over": false,
+      "wall": 10
+    },
+    {
+      "mode": "playing",
+      "time": 10.95,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 12,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 12,
+        "lastKillAt": 9.999500000000012,
+        "best": 12
+      },
+      "over": false,
+      "wall": 10.2
+    },
+    {
+      "mode": "playing",
+      "time": 11.17,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 12,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 12,
+        "lastKillAt": 9.999500000000012,
+        "best": 12
+      },
+      "over": false,
+      "wall": 10.4
+    },
+    {
+      "mode": "playing",
+      "time": 11.38,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 11,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 13,
+        "lastKillAt": 11.199499999999992,
+        "best": 13
+      },
+      "over": false,
+      "wall": 10.6
+    },
+    {
+      "mode": "playing",
+      "time": 11.6,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 10,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 14,
+        "lastKillAt": 11.482899999999987,
+        "best": 14
+      },
+      "over": false,
+      "wall": 10.8
+    },
+    {
+      "mode": "playing",
+      "time": 11.83,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 10,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 14,
+        "lastKillAt": 11.482899999999987,
+        "best": 14
+      },
+      "over": false,
+      "wall": 11.1
+    },
+    {
+      "mode": "playing",
+      "time": 12.07,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 9,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 15,
+        "lastKillAt": 11.982799999999981,
+        "best": 15
+      },
+      "over": false,
+      "wall": 11.3
+    },
+    {
+      "mode": "playing",
+      "time": 12.3,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 9,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 15,
+        "lastKillAt": 11.982799999999981,
+        "best": 15
+      },
+      "over": false,
+      "wall": 11.5
+    },
+    {
+      "mode": "playing",
+      "time": 12.52,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 9,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 15,
+        "lastKillAt": 11.982799999999981,
+        "best": 15
+      },
+      "over": false,
+      "wall": 11.7
+    },
+    {
+      "mode": "playing",
+      "time": 12.75,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 9,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 15,
+        "lastKillAt": 11.982799999999981,
+        "best": 15
+      },
+      "over": false,
+      "wall": 12
+    },
+    {
+      "mode": "playing",
+      "time": 12.97,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 9,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 15,
+        "lastKillAt": 11.982799999999981,
+        "best": 15
+      },
+      "over": false,
+      "wall": 12.2
+    },
+    {
+      "mode": "playing",
+      "time": 13.18,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 9,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 15,
+        "lastKillAt": 11.982799999999981,
+        "best": 15
+      },
+      "over": false,
+      "wall": 12.4
+    },
+    {
+      "mode": "playing",
+      "time": 13.4,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 9,
+      "gates": 2,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 15,
+        "lastKillAt": 11.982799999999981,
+        "best": 15
+      },
+      "over": false,
+      "wall": 12.6
+    },
+    {
+      "mode": "playing",
+      "time": 13.62,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 8,
+      "gates": 2,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 16,
+        "lastKillAt": 13.482699999999955,
+        "best": 16
+      },
+      "over": false,
+      "wall": 12.8
+    },
+    {
+      "mode": "playing",
+      "time": 13.83,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 2,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 17,
+        "lastKillAt": 13.632699999999954,
+        "best": 17
+      },
+      "over": false,
+      "wall": 13
+    },
+    {
+      "mode": "playing",
+      "time": 14.05,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 2,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 18,
+        "lastKillAt": 13.932699999999947,
+        "best": 18
+      },
+      "over": false,
+      "wall": 13.3
+    },
+    {
+      "mode": "playing",
+      "time": 14.27,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 2,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 18,
+        "lastKillAt": 13.932699999999947,
+        "best": 18
+      },
+      "over": false,
+      "wall": 13.5
+    },
+    {
+      "mode": "playing",
+      "time": 14.48,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 2,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 18,
+        "lastKillAt": 13.932699999999947,
+        "best": 18
+      },
+      "over": false,
+      "wall": 13.7
+    },
+    {
+      "mode": "playing",
+      "time": 14.72,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 2,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 18,
+        "lastKillAt": 13.932699999999947,
+        "best": 18
+      },
+      "over": false,
+      "wall": 13.9
+    },
+    {
+      "mode": "playing",
+      "time": 14.93,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 2,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 18,
+        "lastKillAt": 13.932699999999947,
+        "best": 18
+      },
+      "over": false,
+      "wall": 14.1
+    },
+    {
+      "mode": "playing",
+      "time": 15.15,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 2,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 18,
+        "lastKillAt": 13.932699999999947,
+        "best": 18
+      },
+      "over": false,
+      "wall": 14.4
+    },
+    {
+      "mode": "playing",
+      "time": 15.37,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 5,
+      "gates": 2,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 19,
+        "lastKillAt": 15.18269999999992,
+        "best": 19
+      },
+      "over": false,
+      "wall": 14.6
+    },
+    {
+      "mode": "playing",
+      "time": 15.58,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 2,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 20,
+        "lastKillAt": 15.565999999999919,
+        "best": 20
+      },
+      "over": false,
+      "wall": 14.8
+    },
+    {
+      "mode": "playing",
+      "time": 15.82,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 2,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 20,
+        "lastKillAt": 15.565999999999919,
+        "best": 20
+      },
+      "over": false,
+      "wall": 15
+    },
+    {
+      "mode": "playing",
+      "time": 16.5,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 2,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 21,
+        "lastKillAt": 15.949299999999914,
+        "best": 21
+      },
+      "over": false,
+      "wall": 15.7
+    },
+    {
+      "mode": "playing",
+      "time": 16.72,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": true,
+      "banner": "壁爐",
+      "combo": {
+        "count": 21,
+        "lastKillAt": 15.949299999999914,
+        "best": 21
+      },
+      "over": false,
+      "wall": 15.9
+    },
+    {
+      "mode": "playing",
+      "time": 17.53,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": "熹",
+      "combo": {
+        "count": 22,
+        "lastKillAt": 16.749199999999878,
+        "best": 22
+      },
+      "over": false,
+      "wall": 16.7
+    },
+    {
+      "mode": "playing",
+      "time": 17.75,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": "熹",
+      "combo": {
+        "count": 22,
+        "lastKillAt": 16.749199999999878,
+        "best": 22
+      },
+      "over": false,
+      "wall": 17
+    },
+    {
+      "mode": "playing",
+      "time": 17.97,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": "熹",
+      "combo": {
+        "count": 22,
+        "lastKillAt": 16.749199999999878,
+        "best": 22
+      },
+      "over": false,
+      "wall": 17.2
+    },
+    {
+      "mode": "playing",
+      "time": 18.18,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": "熹",
+      "combo": {
+        "count": 22,
+        "lastKillAt": 16.749199999999878,
+        "best": 22
+      },
+      "over": false,
+      "wall": 17.4
+    },
+    {
+      "mode": "playing",
+      "time": 18.38,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": true,
+      "banner": "熹",
+      "combo": {
+        "count": 22,
+        "lastKillAt": 16.749199999999878,
+        "best": 22
+      },
+      "over": false,
+      "wall": 17.6
+    },
+    {
+      "mode": "playing",
+      "time": 19.35,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": "灰喉走廊",
+      "combo": {
+        "count": 24,
+        "lastKillAt": 19.16579999999982,
+        "best": 24
+      },
+      "over": false,
+      "wall": 18.6
+    },
+    {
+      "mode": "playing",
+      "time": 19.62,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": "灰喉走廊",
+      "combo": {
+        "count": 24,
+        "lastKillAt": 19.16579999999982,
+        "best": 24
+      },
+      "over": false,
+      "wall": 18.9
+    },
+    {
+      "mode": "playing",
+      "time": 19.9,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": "灰喉走廊",
+      "combo": {
+        "count": 24,
+        "lastKillAt": 19.16579999999982,
+        "best": 24
+      },
+      "over": false,
+      "wall": 19.1
+    },
+    {
+      "mode": "playing",
+      "time": 20.22,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": "灰喉走廊",
+      "combo": {
+        "count": 24,
+        "lastKillAt": 19.16579999999982,
+        "best": 24
+      },
+      "over": false,
+      "wall": 19.4
+    },
+    {
+      "mode": "playing",
+      "time": 20.48,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": "灰喉走廊",
+      "combo": {
+        "count": 24,
+        "lastKillAt": 19.16579999999982,
+        "best": 24
+      },
+      "over": false,
+      "wall": 19.7
+    },
+    {
+      "mode": "playing",
+      "time": 20.8,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 0,
+      "supply": false,
+      "banner": "灰喉走廊",
+      "combo": {
+        "count": 24,
+        "lastKillAt": 19.16579999999982,
+        "best": 24
+      },
+      "over": false,
+      "wall": 20
+    },
+    {
+      "mode": "playing",
+      "time": 21.18,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 0,
+      "supply": false,
+      "banner": "灰喉走廊",
+      "combo": {
+        "count": 24,
+        "lastKillAt": 19.16579999999982,
+        "best": 24
+      },
+      "over": false,
+      "wall": 20.4
+    },
+    {
+      "mode": "playing",
+      "time": 21.48,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 0,
+      "supply": false,
+      "banner": "灰喉走廊",
+      "combo": {
+        "count": 24,
+        "lastKillAt": 19.16579999999982,
+        "best": 24
+      },
+      "over": false,
+      "wall": 20.7
+    },
+    {
+      "mode": "playing",
+      "time": 21.83,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 24,
+        "lastKillAt": 19.16579999999982,
+        "best": 24
+      },
+      "over": false,
+      "wall": 21.1
+    },
+    {
+      "mode": "playing",
+      "time": 22.1,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 19.16579999999982,
+        "best": 24
+      },
+      "over": false,
+      "wall": 21.4
+    },
+    {
+      "mode": "playing",
+      "time": 22.35,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 19.16579999999982,
+        "best": 24
+      },
+      "over": false,
+      "wall": 21.6
+    },
+    {
+      "mode": "playing",
+      "time": 22.65,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 5,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 22.632199999999752,
+        "best": 24
+      },
+      "over": false,
+      "wall": 21.9
+    },
+    {
+      "mode": "playing",
+      "time": 23,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 5,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 22.632199999999752,
+        "best": 24
+      },
+      "over": false,
+      "wall": 22.3
+    },
+    {
+      "mode": "playing",
+      "time": 23.28,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 23.24889999999975,
+        "best": 24
+      },
+      "over": false,
+      "wall": 22.5
+    },
+    {
+      "mode": "playing",
+      "time": 23.55,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 23.24889999999975,
+        "best": 24
+      },
+      "over": false,
+      "wall": 22.8
+    },
+    {
+      "mode": "playing",
+      "time": 23.85,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 23.24889999999975,
+        "best": 24
+      },
+      "over": false,
+      "wall": 23.1
+    },
+    {
+      "mode": "playing",
+      "time": 24.07,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 23.24889999999975,
+        "best": 24
+      },
+      "over": false,
+      "wall": 23.3
+    },
+    {
+      "mode": "playing",
+      "time": 24.3,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 23.24889999999975,
+        "best": 24
+      },
+      "over": false,
+      "wall": 23.6
+    },
+    {
+      "mode": "playing",
+      "time": 24.53,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 23.24889999999975,
+        "best": 24
+      },
+      "over": false,
+      "wall": 23.8
+    },
+    {
+      "mode": "playing",
+      "time": 24.77,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 23.24889999999975,
+        "best": 24
+      },
+      "over": false,
+      "wall": 24
+    },
+    {
+      "mode": "playing",
+      "time": 24.98,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 23.24889999999975,
+        "best": 24
+      },
+      "over": false,
+      "wall": 24.2
+    },
+    {
+      "mode": "playing",
+      "time": 25.2,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 23.24889999999975,
+        "best": 24
+      },
+      "over": false,
+      "wall": 24.4
+    },
+    {
+      "mode": "playing",
+      "time": 25.42,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 23.24889999999975,
+        "best": 24
+      },
+      "over": false,
+      "wall": 24.7
+    },
+    {
+      "mode": "playing",
+      "time": 25.63,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 23.24889999999975,
+        "best": 24
+      },
+      "over": false,
+      "wall": 24.9
+    },
+    {
+      "mode": "playing",
+      "time": 25.87,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 23.24889999999975,
+        "best": 24
+      },
+      "over": false,
+      "wall": 25.1
+    },
+    {
+      "mode": "playing",
+      "time": 26.08,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 25.93209999999969,
+        "best": 24
+      },
+      "over": false,
+      "wall": 25.3
+    },
+    {
+      "mode": "playing",
+      "time": 26.3,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 25.93209999999969,
+        "best": 24
+      },
+      "over": false,
+      "wall": 25.5
+    },
+    {
+      "mode": "playing",
+      "time": 26.52,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 25.93209999999969,
+        "best": 24
+      },
+      "over": false,
+      "wall": 25.8
+    },
+    {
+      "mode": "playing",
+      "time": 26.73,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 25.93209999999969,
+        "best": 24
+      },
+      "over": false,
+      "wall": 26
+    },
+    {
+      "mode": "playing",
+      "time": 26.95,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 25.93209999999969,
+        "best": 24
+      },
+      "over": false,
+      "wall": 26.2
+    },
+    {
+      "mode": "playing",
+      "time": 27.17,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 25.93209999999969,
+        "best": 24
+      },
+      "over": false,
+      "wall": 26.4
+    },
+    {
+      "mode": "playing",
+      "time": 27.38,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 25.93209999999969,
+        "best": 24
+      },
+      "over": false,
+      "wall": 26.6
+    },
+    {
+      "mode": "playing",
+      "time": 27.6,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 27.565299999999663,
+        "best": 24
+      },
+      "over": false,
+      "wall": 26.8
+    },
+    {
+      "mode": "playing",
+      "time": 27.82,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 27.565299999999663,
+        "best": 24
+      },
+      "over": false,
+      "wall": 27.1
+    },
+    {
+      "mode": "playing",
+      "time": 28.03,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 2,
+        "lastKillAt": 27.565299999999663,
+        "best": 24
+      },
+      "over": false,
+      "wall": 27.3
+    },
+    {
+      "mode": "playing",
+      "time": 28.25,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 2,
+        "lastKillAt": 27.565299999999663,
+        "best": 24
+      },
+      "over": false,
+      "wall": 27.5
+    },
+    {
+      "mode": "playing",
+      "time": 28.47,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 2,
+        "lastKillAt": 27.565299999999663,
+        "best": 24
+      },
+      "over": false,
+      "wall": 27.7
+    },
+    {
+      "mode": "playing",
+      "time": 28.67,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 2,
+        "lastKillAt": 27.565299999999663,
+        "best": 24
+      },
+      "over": false,
+      "wall": 27.9
+    },
+    {
+      "mode": "playing",
+      "time": 28.9,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 1,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 3,
+        "lastKillAt": 28.78199999999965,
+        "best": 24
+      },
+      "over": false,
+      "wall": 28.2
+    },
+    {
+      "mode": "playing",
+      "time": 29.12,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 1,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 3,
+        "lastKillAt": 28.78199999999965,
+        "best": 24
+      },
+      "over": false,
+      "wall": 28.4
+    },
+    {
+      "mode": "playing",
+      "time": 29.32,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 3,
+        "lastKillAt": 28.78199999999965,
+        "best": 24
+      },
+      "over": false,
+      "wall": 28.6
+    },
+    {
+      "mode": "playing",
+      "time": 29.57,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 3,
+        "lastKillAt": 28.78199999999965,
+        "best": 24
+      },
+      "over": false,
+      "wall": 28.8
+    },
+    {
+      "mode": "playing",
+      "time": 29.78,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 3,
+        "lastKillAt": 28.78199999999965,
+        "best": 24
+      },
+      "over": false,
+      "wall": 29
+    },
+    {
+      "mode": "playing",
+      "time": 30,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 3,
+        "lastKillAt": 28.78199999999965,
+        "best": 24
+      },
+      "over": false,
+      "wall": 29.2
+    },
+    {
+      "mode": "playing",
+      "time": 30.22,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 3,
+        "lastKillAt": 28.78199999999965,
+        "best": 24
+      },
+      "over": false,
+      "wall": 29.5
+    },
+    {
+      "mode": "playing",
+      "time": 30.43,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 3,
+        "lastKillAt": 28.78199999999965,
+        "best": 24
+      },
+      "over": false,
+      "wall": 29.7
+    },
+    {
+      "mode": "playing",
+      "time": 30.67,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 2,
+      "supply": false,
+      "banner": "增益門逼近",
+      "combo": {
+        "count": 3,
+        "lastKillAt": 28.78199999999965,
+        "best": 24
+      },
+      "over": false,
+      "wall": 29.9
+    },
+    {
+      "mode": "playing",
+      "time": 30.9,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 2,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 28.78199999999965,
+        "best": 24
+      },
+      "over": false,
+      "wall": 30.2
+    },
+    {
+      "mode": "playing",
+      "time": 31.23,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": "增益已選",
+      "combo": {
+        "count": 6,
+        "lastKillAt": 31.08179999999956,
+        "best": 24
+      },
+      "over": false,
+      "wall": 30.5
+    },
+    {
+      "mode": "playing",
+      "time": 31.45,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": "增益已選",
+      "combo": {
+        "count": 6,
+        "lastKillAt": 31.08179999999956,
+        "best": 24
+      },
+      "over": false,
+      "wall": 30.7
+    },
+    {
+      "mode": "playing",
+      "time": 31.67,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": "增益已選",
+      "combo": {
+        "count": 7,
+        "lastKillAt": 31.66519999999953,
+        "best": 24
+      },
+      "over": false,
+      "wall": 30.9
+    },
+    {
+      "mode": "playing",
+      "time": 31.88,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": "增益已選",
+      "combo": {
+        "count": 7,
+        "lastKillAt": 31.66519999999953,
+        "best": 24
+      },
+      "over": false,
+      "wall": 31.1
+    },
+    {
+      "mode": "playing",
+      "time": 32.1,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": "增益已選",
+      "combo": {
+        "count": 7,
+        "lastKillAt": 31.66519999999953,
+        "best": 24
+      },
+      "over": false,
+      "wall": 31.3
+    },
+    {
+      "mode": "playing",
+      "time": 32.32,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": "增益已選",
+      "combo": {
+        "count": 7,
+        "lastKillAt": 31.66519999999953,
+        "best": 24
+      },
+      "over": false,
+      "wall": 31.6
+    },
+    {
+      "mode": "playing",
+      "time": 32.55,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": "增益已選",
+      "combo": {
+        "count": 7,
+        "lastKillAt": 31.66519999999953,
+        "best": 24
+      },
+      "over": false,
+      "wall": 31.8
+    },
+    {
+      "mode": "playing",
+      "time": 32.77,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 7,
+        "lastKillAt": 31.66519999999953,
+        "best": 24
+      },
+      "over": false,
+      "wall": 32
+    },
+    {
+      "mode": "playing",
+      "time": 33,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 7,
+        "lastKillAt": 31.66519999999953,
+        "best": 24
+      },
+      "over": false,
+      "wall": 32.3
+    },
+    {
+      "mode": "playing",
+      "time": 33.23,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 7,
+        "lastKillAt": 31.66519999999953,
+        "best": 24
+      },
+      "over": false,
+      "wall": 32.5
+    },
+    {
+      "mode": "playing",
+      "time": 33.45,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 7,
+        "lastKillAt": 31.66519999999953,
+        "best": 24
+      },
+      "over": false,
+      "wall": 32.7
+    },
+    {
+      "mode": "playing",
+      "time": 33.67,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 7,
+        "lastKillAt": 31.66519999999953,
+        "best": 24
+      },
+      "over": false,
+      "wall": 32.9
+    },
+    {
+      "mode": "playing",
+      "time": 33.88,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 1,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 8,
+        "lastKillAt": 33.84839999999964,
+        "best": 24
+      },
+      "over": false,
+      "wall": 33.1
+    },
+    {
+      "mode": "playing",
+      "time": 34.1,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 1,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 8,
+        "lastKillAt": 33.84839999999964,
+        "best": 24
+      },
+      "over": false,
+      "wall": 33.3
+    },
+    {
+      "mode": "playing",
+      "time": 34.32,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 1,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 8,
+        "lastKillAt": 33.84839999999964,
+        "best": 24
+      },
+      "over": false,
+      "wall": 33.6
+    },
+    {
+      "mode": "playing",
+      "time": 34.53,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 1,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 8,
+        "lastKillAt": 33.84839999999964,
+        "best": 24
+      },
+      "over": false,
+      "wall": 33.8
+    },
+    {
+      "mode": "playing",
+      "time": 34.75,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 1,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 8,
+        "lastKillAt": 33.84839999999964,
+        "best": 24
+      },
+      "over": false,
+      "wall": 34
+    },
+    {
+      "mode": "playing",
+      "time": 34.97,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 9,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 34.2
+    },
+    {
+      "mode": "playing",
+      "time": 35.18,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 9,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 34.4
+    },
+    {
+      "mode": "playing",
+      "time": 35.4,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 9,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 34.6
+    },
+    {
+      "mode": "playing",
+      "time": 35.65,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 9,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 34.9
+    },
+    {
+      "mode": "playing",
+      "time": 35.88,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 9,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 35.1
+    },
+    {
+      "mode": "playing",
+      "time": 36.1,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 9,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 35.4
+    },
+    {
+      "mode": "playing",
+      "time": 36.33,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 9,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 35.6
+    },
+    {
+      "mode": "playing",
+      "time": 36.58,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 9,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 35.8
+    },
+    {
+      "mode": "playing",
+      "time": 36.83,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 9,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 36.1
+    },
+    {
+      "mode": "playing",
+      "time": 37.06,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 9,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 36.3
+    },
+    {
+      "mode": "playing",
+      "time": 37.28,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 9,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 36.5
+    },
+    {
+      "mode": "playing",
+      "time": 37.5,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 36.7
+    },
+    {
+      "mode": "playing",
+      "time": 37.73,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 37
+    },
+    {
+      "mode": "playing",
+      "time": 37.96,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 37.2
+    },
+    {
+      "mode": "playing",
+      "time": 38.18,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 37.4
+    },
+    {
+      "mode": "playing",
+      "time": 38.4,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 37.6
+    },
+    {
+      "mode": "playing",
+      "time": 38.61,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 37.9
+    },
+    {
+      "mode": "playing",
+      "time": 38.83,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 38.1
+    },
+    {
+      "mode": "playing",
+      "time": 39.05,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 5,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 38.3
+    },
+    {
+      "mode": "playing",
+      "time": 39.26,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 38.5
+    },
+    {
+      "mode": "playing",
+      "time": 39.48,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 38.7
+    },
+    {
+      "mode": "playing",
+      "time": 39.7,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 38.9
+    },
+    {
+      "mode": "playing",
+      "time": 39.93,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 39.2
+    },
+    {
+      "mode": "playing",
+      "time": 40.15,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 39.4
+    },
+    {
+      "mode": "playing",
+      "time": 40.36,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 39.6
+    },
+    {
+      "mode": "playing",
+      "time": 40.56,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 39.8
+    },
+    {
+      "mode": "playing",
+      "time": 40.81,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": "彈種切換",
+      "combo": {
+        "count": 0,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 40.1
+    },
+    {
+      "mode": "playing",
+      "time": 41.03,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": "彈種切換",
+      "combo": {
+        "count": 0,
+        "lastKillAt": 34.78169999999972,
+        "best": 24
+      },
+      "over": false,
+      "wall": 40.3
+    },
+    {
+      "mode": "playing",
+      "time": 41.23,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 0,
+      "supply": false,
+      "banner": "彈種切換",
+      "combo": {
+        "count": 1,
+        "lastKillAt": 41.09810000000013,
+        "best": 24
+      },
+      "over": false,
+      "wall": 40.5
+    },
+    {
+      "mode": "playing",
+      "time": 41.46,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 5,
+      "gates": 0,
+      "supply": false,
+      "banner": "彈種切換",
+      "combo": {
+        "count": 2,
+        "lastKillAt": 41.33140000000015,
+        "best": 24
+      },
+      "over": false,
+      "wall": 40.7
+    },
+    {
+      "mode": "playing",
+      "time": 41.68,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 5,
+      "gates": 0,
+      "supply": false,
+      "banner": "彈種切換",
+      "combo": {
+        "count": 2,
+        "lastKillAt": 41.33140000000015,
+        "best": 24
+      },
+      "over": false,
+      "wall": 40.9
+    },
+    {
+      "mode": "playing",
+      "time": 41.9,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 5,
+      "gates": 0,
+      "supply": false,
+      "banner": "彈種切換",
+      "combo": {
+        "count": 2,
+        "lastKillAt": 41.33140000000015,
+        "best": 24
+      },
+      "over": false,
+      "wall": 41.1
+    },
+    {
+      "mode": "playing",
+      "time": 42.11,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 5,
+      "gates": 0,
+      "supply": false,
+      "banner": "彈種切換",
+      "combo": {
+        "count": 2,
+        "lastKillAt": 41.33140000000015,
+        "best": 24
+      },
+      "over": false,
+      "wall": 41.4
+    },
+    {
+      "mode": "playing",
+      "time": 42.33,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 5,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 41.33140000000015,
+        "best": 24
+      },
+      "over": false,
+      "wall": 41.6
+    },
+    {
+      "mode": "playing",
+      "time": 42.55,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 5,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 41.33140000000015,
+        "best": 24
+      },
+      "over": false,
+      "wall": 41.8
+    },
+    {
+      "mode": "playing",
+      "time": 42.76,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 42.731400000000214,
+        "best": 24
+      },
+      "over": false,
+      "wall": 42
+    },
+    {
+      "mode": "playing",
+      "time": 42.98,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 42.731400000000214,
+        "best": 24
+      },
+      "over": false,
+      "wall": 42.2
+    },
+    {
+      "mode": "playing",
+      "time": 43.2,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 42.731400000000214,
+        "best": 24
+      },
+      "over": false,
+      "wall": 42.4
+    },
+    {
+      "mode": "playing",
+      "time": 43.41,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 42.731400000000214,
+        "best": 24
+      },
+      "over": false,
+      "wall": 42.7
+    },
+    {
+      "mode": "playing",
+      "time": 43.63,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 42.731400000000214,
+        "best": 24
+      },
+      "over": false,
+      "wall": 42.9
+    },
+    {
+      "mode": "playing",
+      "time": 43.85,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 42.731400000000214,
+        "best": 24
+      },
+      "over": false,
+      "wall": 43.1
+    },
+    {
+      "mode": "playing",
+      "time": 44.06,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 42.731400000000214,
+        "best": 24
+      },
+      "over": false,
+      "wall": 43.3
+    },
+    {
+      "mode": "playing",
+      "time": 44.28,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 42.731400000000214,
+        "best": 24
+      },
+      "over": false,
+      "wall": 43.5
+    },
+    {
+      "mode": "playing",
+      "time": 44.5,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 42.731400000000214,
+        "best": 24
+      },
+      "over": false,
+      "wall": 43.7
+    },
+    {
+      "mode": "playing",
+      "time": 44.71,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 42.731400000000214,
+        "best": 24
+      },
+      "over": false,
+      "wall": 44
+    },
+    {
+      "mode": "playing",
+      "time": 44.93,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 42.731400000000214,
+        "best": 24
+      },
+      "over": false,
+      "wall": 44.2
+    },
+    {
+      "mode": "playing",
+      "time": 45.15,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 42.731400000000214,
+        "best": 24
+      },
+      "over": false,
+      "wall": 44.4
+    },
+    {
+      "mode": "playing",
+      "time": 45.36,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 42.731400000000214,
+        "best": 24
+      },
+      "over": false,
+      "wall": 44.6
+    },
+    {
+      "mode": "playing",
+      "time": 45.58,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 42.731400000000214,
+        "best": 24
+      },
+      "over": false,
+      "wall": 44.8
+    },
+    {
+      "mode": "playing",
+      "time": 45.8,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 42.731400000000214,
+        "best": 24
+      },
+      "over": false,
+      "wall": 45
+    },
+    {
+      "mode": "playing",
+      "time": 46.08,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 42.731400000000214,
+        "best": 24
+      },
+      "over": false,
+      "wall": 45.3
+    },
+    {
+      "mode": "playing",
+      "time": 46.3,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 42.731400000000214,
+        "best": 24
+      },
+      "over": false,
+      "wall": 45.6
+    },
+    {
+      "mode": "playing",
+      "time": 46.53,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 42.731400000000214,
+        "best": 24
+      },
+      "over": false,
+      "wall": 45.8
+    },
+    {
+      "mode": "playing",
+      "time": 46.75,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 46.74790000000045,
+        "best": 24
+      },
+      "over": false,
+      "wall": 46
+    },
+    {
+      "mode": "playing",
+      "time": 46.98,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 46.74790000000045,
+        "best": 24
+      },
+      "over": false,
+      "wall": 46.2
+    },
+    {
+      "mode": "playing",
+      "time": 47.2,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 46.74790000000045,
+        "best": 24
+      },
+      "over": false,
+      "wall": 46.5
+    },
+    {
+      "mode": "playing",
+      "time": 47.41,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 47.381200000000476,
+        "best": 24
+      },
+      "over": false,
+      "wall": 46.7
+    },
+    {
+      "mode": "playing",
+      "time": 47.63,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 8,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 47.381200000000476,
+        "best": 24
+      },
+      "over": false,
+      "wall": 46.9
+    },
+    {
+      "mode": "playing",
+      "time": 47.85,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 8,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 47.381200000000476,
+        "best": 24
+      },
+      "over": false,
+      "wall": 47.1
+    },
+    {
+      "mode": "playing",
+      "time": 48.06,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 8,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 47.381200000000476,
+        "best": 24
+      },
+      "over": false,
+      "wall": 47.3
+    },
+    {
+      "mode": "playing",
+      "time": 48.28,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 8,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 47.381200000000476,
+        "best": 24
+      },
+      "over": false,
+      "wall": 47.5
+    },
+    {
+      "mode": "playing",
+      "time": 48.5,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 8,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 47.381200000000476,
+        "best": 24
+      },
+      "over": false,
+      "wall": 47.8
+    },
+    {
+      "mode": "playing",
+      "time": 48.71,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 8,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 47.381200000000476,
+        "best": 24
+      },
+      "over": false,
+      "wall": 48
+    },
+    {
+      "mode": "playing",
+      "time": 48.93,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 48.931200000000594,
+        "best": 24
+      },
+      "over": false,
+      "wall": 48.2
+    },
+    {
+      "mode": "playing",
+      "time": 49.15,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 48.931200000000594,
+        "best": 24
+      },
+      "over": false,
+      "wall": 48.4
+    },
+    {
+      "mode": "playing",
+      "time": 49.36,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 48.931200000000594,
+        "best": 24
+      },
+      "over": false,
+      "wall": 48.6
+    },
+    {
+      "mode": "playing",
+      "time": 49.58,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 48.931200000000594,
+        "best": 24
+      },
+      "over": false,
+      "wall": 48.8
+    },
+    {
+      "mode": "playing",
+      "time": 49.8,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 48.931200000000594,
+        "best": 24
+      },
+      "over": false,
+      "wall": 49.1
+    },
+    {
+      "mode": "playing",
+      "time": 50.01,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 7,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 48.931200000000594,
+        "best": 24
+      },
+      "over": false,
+      "wall": 49.3
+    },
+    {
+      "mode": "playing",
+      "time": 50.23,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 6,
+        "lastKillAt": 50.21440000000069,
+        "best": 24
+      },
+      "over": false,
+      "wall": 49.5
+    },
+    {
+      "mode": "playing",
+      "time": 50.45,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 6,
+        "lastKillAt": 50.21440000000069,
+        "best": 24
+      },
+      "over": false,
+      "wall": 49.7
+    },
+    {
+      "mode": "playing",
+      "time": 50.66,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 6,
+        "lastKillAt": 50.21440000000069,
+        "best": 24
+      },
+      "over": false,
+      "wall": 49.9
+    },
+    {
+      "mode": "playing",
+      "time": 50.88,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 6,
+        "lastKillAt": 50.21440000000069,
+        "best": 24
+      },
+      "over": false,
+      "wall": 50.1
+    },
+    {
+      "mode": "playing",
+      "time": 51.1,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 6,
+        "lastKillAt": 50.21440000000069,
+        "best": 24
+      },
+      "over": false,
+      "wall": 50.4
+    },
+    {
+      "mode": "playing",
+      "time": 51.31,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 7,
+        "lastKillAt": 51.264400000000755,
+        "best": 24
+      },
+      "over": false,
+      "wall": 50.6
+    },
+    {
+      "mode": "playing",
+      "time": 51.53,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 7,
+        "lastKillAt": 51.264400000000755,
+        "best": 24
+      },
+      "over": false,
+      "wall": 50.8
+    },
+    {
+      "mode": "playing",
+      "time": 51.75,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 7,
+        "lastKillAt": 51.264400000000755,
+        "best": 24
+      },
+      "over": false,
+      "wall": 51
+    },
+    {
+      "mode": "playing",
+      "time": 51.96,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 7,
+        "lastKillAt": 51.264400000000755,
+        "best": 24
+      },
+      "over": false,
+      "wall": 51.2
+    },
+    {
+      "mode": "playing",
+      "time": 52.18,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 7,
+        "lastKillAt": 51.264400000000755,
+        "best": 24
+      },
+      "over": false,
+      "wall": 51.4
+    },
+    {
+      "mode": "playing",
+      "time": 52.4,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 7,
+        "lastKillAt": 51.264400000000755,
+        "best": 24
+      },
+      "over": false,
+      "wall": 51.7
+    },
+    {
+      "mode": "playing",
+      "time": 52.61,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 7,
+        "lastKillAt": 51.264400000000755,
+        "best": 24
+      },
+      "over": false,
+      "wall": 51.9
+    },
+    {
+      "mode": "playing",
+      "time": 52.83,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 8,
+        "lastKillAt": 52.664300000000836,
+        "best": 24
+      },
+      "over": false,
+      "wall": 52.1
+    },
+    {
+      "mode": "playing",
+      "time": 53.05,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 8,
+        "lastKillAt": 52.664300000000836,
+        "best": 24
+      },
+      "over": false,
+      "wall": 52.3
+    },
+    {
+      "mode": "playing",
+      "time": 53.26,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 8,
+        "lastKillAt": 52.664300000000836,
+        "best": 24
+      },
+      "over": false,
+      "wall": 52.5
+    },
+    {
+      "mode": "playing",
+      "time": 53.48,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 8,
+        "lastKillAt": 52.664300000000836,
+        "best": 24
+      },
+      "over": false,
+      "wall": 52.7
+    },
+    {
+      "mode": "playing",
+      "time": 53.7,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 8,
+        "lastKillAt": 52.664300000000836,
+        "best": 24
+      },
+      "over": false,
+      "wall": 53
+    },
+    {
+      "mode": "playing",
+      "time": 53.91,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 8,
+        "lastKillAt": 52.664300000000836,
+        "best": 24
+      },
+      "over": false,
+      "wall": 53.2
+    },
+    {
+      "mode": "playing",
+      "time": 54.13,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 8,
+        "lastKillAt": 52.664300000000836,
+        "best": 24
+      },
+      "over": false,
+      "wall": 53.4
+    },
+    {
+      "mode": "playing",
+      "time": 54.35,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 8,
+        "lastKillAt": 52.664300000000836,
+        "best": 24
+      },
+      "over": false,
+      "wall": 53.6
+    },
+    {
+      "mode": "playing",
+      "time": 54.56,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 8,
+        "lastKillAt": 52.664300000000836,
+        "best": 24
+      },
+      "over": false,
+      "wall": 53.8
+    },
+    {
+      "mode": "playing",
+      "time": 54.78,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 8,
+        "lastKillAt": 52.664300000000836,
+        "best": 24
+      },
+      "over": false,
+      "wall": 54
+    },
+    {
+      "mode": "playing",
+      "time": 55.01,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 1,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 54.930900000000975,
+        "best": 24
+      },
+      "over": false,
+      "wall": 54.3
+    },
+    {
+      "mode": "playing",
+      "time": 55.23,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 1,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 54.930900000000975,
+        "best": 24
+      },
+      "over": false,
+      "wall": 54.5
+    },
+    {
+      "mode": "playing",
+      "time": 55.45,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 1,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 54.930900000000975,
+        "best": 24
+      },
+      "over": false,
+      "wall": 54.7
+    },
+    {
+      "mode": "playing",
+      "time": 55.66,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 1,
+      "gates": 0,
+      "supply": true,
+      "banner": "補給箱",
+      "combo": {
+        "count": 1,
+        "lastKillAt": 54.930900000000975,
+        "best": 24
+      },
+      "over": false,
+      "wall": 54.9
+    },
+    {
+      "mode": "playing",
+      "time": 56.46,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 1,
+      "gates": 0,
+      "supply": false,
+      "banner": "補給箱",
+      "combo": {
+        "count": 1,
+        "lastKillAt": 54.930900000000975,
+        "best": 24
+      },
+      "over": false,
+      "wall": 55.7
+    },
+    {
+      "mode": "playing",
+      "time": 56.68,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 1,
+      "gates": 0,
+      "supply": false,
+      "banner": "補給箱",
+      "combo": {
+        "count": 1,
+        "lastKillAt": 54.930900000000975,
+        "best": 24
+      },
+      "over": false,
+      "wall": 55.9
+    },
+    {
+      "mode": "playing",
+      "time": 56.91,
+      "wave": 2,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 1,
+      "gates": 0,
+      "supply": false,
+      "banner": "補給箱",
+      "combo": {
+        "count": 1,
+        "lastKillAt": 54.930900000000975,
+        "best": 24
+      },
+      "over": false,
+      "wall": 56.2
+    },
+    {
+      "mode": "playing",
+      "time": 57.13,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": "事件收束",
+      "combo": {
+        "count": 2,
+        "lastKillAt": 57.0142000000011,
+        "best": 24
+      },
+      "over": false,
+      "wall": 56.4
+    },
+    {
+      "mode": "playing",
+      "time": 57.33,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": "事件收束",
+      "combo": {
+        "count": 2,
+        "lastKillAt": 57.0142000000011,
+        "best": 24
+      },
+      "over": false,
+      "wall": 56.6
+    },
+    {
+      "mode": "playing",
+      "time": 57.55,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": "事件收束",
+      "combo": {
+        "count": 2,
+        "lastKillAt": 57.0142000000011,
+        "best": 24
+      },
+      "over": false,
+      "wall": 56.8
+    },
+    {
+      "mode": "playing",
+      "time": 57.78,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": "事件收束",
+      "combo": {
+        "count": 2,
+        "lastKillAt": 57.0142000000011,
+        "best": 24
+      },
+      "over": false,
+      "wall": 57
+    },
+    {
+      "mode": "playing",
+      "time": 58,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": "事件收束",
+      "combo": {
+        "count": 2,
+        "lastKillAt": 57.0142000000011,
+        "best": 24
+      },
+      "over": false,
+      "wall": 57.3
+    },
+    {
+      "mode": "playing",
+      "time": 58.23,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": "事件收束",
+      "combo": {
+        "count": 2,
+        "lastKillAt": 57.0142000000011,
+        "best": 24
+      },
+      "over": false,
+      "wall": 57.5
+    },
+    {
+      "mode": "playing",
+      "time": 58.45,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": "事件收束",
+      "combo": {
+        "count": 2,
+        "lastKillAt": 57.0142000000011,
+        "best": 24
+      },
+      "over": false,
+      "wall": 57.7
+    },
+    {
+      "mode": "playing",
+      "time": 58.66,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 1,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 57.0142000000011,
+        "best": 24
+      },
+      "over": false,
+      "wall": 57.9
+    },
+    {
+      "mode": "playing",
+      "time": 58.88,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 57.0142000000011,
+        "best": 24
+      },
+      "over": false,
+      "wall": 58.1
+    },
+    {
+      "mode": "playing",
+      "time": 59.1,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 5,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 57.0142000000011,
+        "best": 24
+      },
+      "over": false,
+      "wall": 58.4
+    },
+    {
+      "mode": "playing",
+      "time": 59.3,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 5,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 57.0142000000011,
+        "best": 24
+      },
+      "over": false,
+      "wall": 58.5
+    },
+    {
+      "mode": "playing",
+      "time": 59.5,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 5,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 57.0142000000011,
+        "best": 24
+      },
+      "over": false,
+      "wall": 58.8
+    },
+    {
+      "mode": "playing",
+      "time": 59.7,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 5,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 57.0142000000011,
+        "best": 24
+      },
+      "over": false,
+      "wall": 59
+    },
+    {
+      "mode": "playing",
+      "time": 59.9,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 5,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 0,
+        "lastKillAt": 57.0142000000011,
+        "best": 24
+      },
+      "over": false,
+      "wall": 59.2
+    },
+    {
+      "mode": "playing",
+      "time": 60.13,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 59.930800000001284,
+        "best": 24
+      },
+      "over": false,
+      "wall": 59.4
+    },
+    {
+      "mode": "playing",
+      "time": 60.33,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 59.930800000001284,
+        "best": 24
+      },
+      "over": false,
+      "wall": 59.6
+    },
+    {
+      "mode": "playing",
+      "time": 60.53,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 59.930800000001284,
+        "best": 24
+      },
+      "over": false,
+      "wall": 59.8
+    },
+    {
+      "mode": "playing",
+      "time": 60.73,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 4,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 1,
+        "lastKillAt": 59.930800000001284,
+        "best": 24
+      },
+      "over": false,
+      "wall": 60
+    },
+    {
+      "mode": "playing",
+      "time": 61.01,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 60.99740000000136,
+        "best": 24
+      },
+      "over": false,
+      "wall": 60.3
+    },
+    {
+      "mode": "playing",
+      "time": 61.31,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 2,
+        "lastKillAt": 60.99740000000136,
+        "best": 24
+      },
+      "over": false,
+      "wall": 60.6
+    },
+    {
+      "mode": "playing",
+      "time": 61.53,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 61.414000000001394,
+        "best": 24
+      },
+      "over": false,
+      "wall": 60.8
+    },
+    {
+      "mode": "playing",
+      "time": 61.75,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 61.414000000001394,
+        "best": 24
+      },
+      "over": false,
+      "wall": 61
+    },
+    {
+      "mode": "playing",
+      "time": 61.96,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 61.414000000001394,
+        "best": 24
+      },
+      "over": false,
+      "wall": 61.2
+    },
+    {
+      "mode": "playing",
+      "time": 62.18,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 61.414000000001394,
+        "best": 24
+      },
+      "over": false,
+      "wall": 61.4
+    },
+    {
+      "mode": "playing",
+      "time": 62.4,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 61.414000000001394,
+        "best": 24
+      },
+      "over": false,
+      "wall": 61.6
+    },
+    {
+      "mode": "playing",
+      "time": 62.61,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 61.414000000001394,
+        "best": 24
+      },
+      "over": false,
+      "wall": 61.9
+    }
+  ]
+}

@@ -46,8 +46,8 @@
     </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="manifest.webmanifest?v=R85.1" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R85.1" />
+    <link rel="manifest" href="manifest.webmanifest?v=R86" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R86" />
     <link rel="canonical" href="https://mars-tw.github.io/ashes-convoy/" />
     <title>灰燼護航</title>
     <style>
@@ -625,7 +625,7 @@
 
       .supply-choice-overlay {
         position: absolute;
-        top: max(132px, calc(env(safe-area-inset-top) + 122px));
+        top: max(150px, calc(env(safe-area-inset-top) + 140px));
         left: max(10px, env(safe-area-inset-left));
         right: max(10px, env(safe-area-inset-right));
         z-index: 8;
@@ -801,6 +801,41 @@
         .touch-action-btn.is-active {
           border-color: rgba(94, 212, 203, 0.86);
           background: rgba(94, 212, 203, 0.26);
+        }
+
+        /* R86：「甩」是招牌動作——外圈 conic 冷卻環，滿格亮橘呼吸；有屍體攀車時更急促。 */
+        #touchBoostBtn {
+          border-color: rgba(255, 168, 64, 0.72);
+          background:
+            radial-gradient(circle at 50% 50%, rgba(58, 30, 12, 0.94) 0 60%, transparent 62%),
+            conic-gradient(#ffa840 calc(var(--drift-progress, 1) * 360deg), rgba(255, 255, 255, 0.12) 0);
+          color: #ffe2b0;
+          font-size: 19px;
+          font-weight: 900;
+          text-shadow: 0 1px 0 #2a1406;
+        }
+
+        #touchBoostBtn.is-ready {
+          box-shadow: 0 0 0 2px rgba(255, 168, 64, 0.38), 0 0 16px rgba(255, 150, 50, 0.5), 0 14px 28px rgba(0, 0, 0, 0.34);
+        }
+
+        #touchBoostBtn.is-urgent {
+          animation: drift-urgent 0.55s ease-in-out infinite alternate;
+        }
+
+        #touchBoostBtn.is-active {
+          background:
+            radial-gradient(circle at 50% 50%, rgba(255, 168, 64, 0.5) 0 60%, transparent 62%),
+            conic-gradient(#ffa840 calc(var(--drift-progress, 1) * 360deg), rgba(255, 255, 255, 0.12) 0);
+        }
+
+        @keyframes drift-urgent {
+          from { box-shadow: 0 0 0 2px rgba(255, 120, 60, 0.5), 0 0 10px rgba(255, 110, 40, 0.5); }
+          to { box-shadow: 0 0 0 4px rgba(255, 120, 60, 0.85), 0 0 24px rgba(255, 110, 40, 0.85); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          #touchBoostBtn.is-urgent { animation: none; }
         }
       }
 
@@ -2582,7 +2617,7 @@
           <div class="virtual-joystick-stick" id="virtualJoystickKnob"></div>
         </div>
         <div class="touch-action-pad" aria-label="戰鬥快捷鍵">
-          <button class="touch-action-btn" id="touchBoostBtn" type="button" aria-label="衝刺轉向">衝</button>
+          <button class="touch-action-btn" id="touchBoostBtn" type="button" aria-label="甩尾衝撞（甩飛攀車屍）">甩</button>
           <button class="touch-action-btn" id="touchSkillBtn" type="button" aria-label="補給技能">技</button>
           <button class="touch-action-btn" id="touchWeaponBtn" type="button" aria-label="切換或追蹤彈種">彈</button>
         </div>
@@ -2617,7 +2652,7 @@
             <span id="trailerBonusText">HP +0% · 傷害 +0% · 射速 +0% · 承傷 -0%</span>
           </div>
           <section class="story-log-section" id="storyLogSection" aria-label="無線電日誌" hidden>
-            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R85.1" alt="熹" decoding="async" draggable="false" />
+            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R86" alt="熹" decoding="async" draggable="false" />
             <div class="story-log-list" id="storyLogList"></div>
           </section>
           <div class="trailer-room-body">
@@ -2634,7 +2669,7 @@
               <p class="start-kicker">ASHES CONVOY</p>
               <h1 class="start-logo">灰燼護航</h1>
             </div>
-            <span class="start-release-mark" aria-hidden="true">R85.1</span>
+            <span class="start-release-mark" aria-hidden="true">R86</span>
           </div>
           <div class="start-ledger" id="garageMeta" role="list" aria-label="護航統計">
             <span class="start-stat-chip" role="listitem"><em>零件</em><b id="startPartsValue">0</b></span>
@@ -2855,7 +2890,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R85.1";
+        var key = "ashes_convoy_html_boot_reload_R86";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -2872,15 +2907,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R85.1"></script>
-    <script src="src/sprites.js?v=R85.1"></script>
-    <script src="src/sprite-renderer.js?v=R85.1"></script>
-    <script src="src/shelter-scene.js?v=R85.1"></script>
-    <script src="src/config.js?v=R85.1"></script>
-    <script src="src/rules.js?v=R85.1"></script>
-    <script src="src/fx.js?v=R85.1"></script>
-    <script src="src/audio.js?v=R85.1"></script>
-    <script src="src/game.js?v=R85.1"></script>
-    <script src="src/ui.js?v=R85.1"></script>
+    <script src="src/version.js?v=R86"></script>
+    <script src="src/sprites.js?v=R86"></script>
+    <script src="src/sprite-renderer.js?v=R86"></script>
+    <script src="src/shelter-scene.js?v=R86"></script>
+    <script src="src/config.js?v=R86"></script>
+    <script src="src/rules.js?v=R86"></script>
+    <script src="src/fx.js?v=R86"></script>
+    <script src="src/audio.js?v=R86"></script>
+    <script src="src/game.js?v=R86"></script>
+    <script src="src/ui.js?v=R86"></script>
   </body>
 </html>

@@ -1,0 +1,135 @@
+[
+  {
+    "viewport": "desktop-1366x768",
+    "sortieClickToPlayingMs": null,
+    "firstKillAt": null,
+    "final": {
+      "mode": "playing",
+      "time": 62.25,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 3,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 62.24670000000068,
+        "best": 24
+      },
+      "over": false,
+      "wall": 62
+    },
+    "minHp": 520,
+    "banners": [
+      "壁爐",
+      "增益門逼近",
+      "彈種切換",
+      "灰喉走廊",
+      "增益已選",
+      "事件收束",
+      "補給箱"
+    ],
+    "errors": [],
+    "startedAfterMs": 63585
+  },
+  {
+    "viewport": "laptop-1366x600",
+    "sortieClickToPlayingMs": null,
+    "firstKillAt": null,
+    "final": {
+      "mode": "playing",
+      "time": 62.11,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 0,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 11,
+        "lastKillAt": 59.481000000001146,
+        "best": 24
+      },
+      "over": false,
+      "wall": 61.8
+    },
+    "minHp": 520,
+    "banners": [
+      "壁爐",
+      "增益門逼近",
+      "灰喉走廊",
+      "補給箱",
+      "熹",
+      "彈種切換",
+      "事件收束"
+    ],
+    "errors": [],
+    "startedAfterMs": 63276
+  },
+  {
+    "viewport": "phone-390x844",
+    "sortieClickToPlayingMs": null,
+    "firstKillAt": null,
+    "final": {
+      "mode": "playing",
+      "time": 62.61,
+      "wave": 3,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 2,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 61.414000000001394,
+        "best": 24
+      },
+      "over": false,
+      "wall": 61.9
+    },
+    "minHp": 520,
+    "banners": [
+      "壁爐",
+      "增益門逼近",
+      "熹",
+      "灰喉走廊",
+      "增益已選",
+      "彈種切換",
+      "補給箱",
+      "事件收束"
+    ],
+    "errors": [],
+    "startedAfterMs": 63089
+  },
+  {
+    "viewport": "phone-land-844x390",
+    "sortieClickToPlayingMs": null,
+    "firstKillAt": null,
+    "final": {
+      "mode": "paused",
+      "time": 2.98,
+      "wave": 1,
+      "hp": 520,
+      "maxHp": 520,
+      "enemies": 6,
+      "gates": 0,
+      "supply": false,
+      "banner": null,
+      "combo": {
+        "count": 3,
+        "lastKillAt": 2.016600000000001,
+        "best": 3
+      },
+      "over": false,
+      "wall": 61.9
+    },
+    "minHp": 520,
+    "banners": [],
+    "errors": [],
+    "startedAfterMs": 63115
+  }
+]

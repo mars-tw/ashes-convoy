@@ -7,7 +7,7 @@ const path = require("path");
 const audio = require("../src/audio.js");
 const config = require("../src/config.js");
 
-const EVENTS = ["shoot", "hit", "kill", "bossWarn", "bossKill", "pickup", "hurt", "gateChoice", "gateBreak", "alarm", "ui", "waveStart"];
+const EVENTS = ["shoot", "hit", "kill", "bossWarn", "bossKill", "pickup", "hurt", "gateChoice", "gateBreak", "alarm", "ui", "waveStart", "latch", "fling", "drift"];
 const OSC_WAVES = ["sine", "triangle", "square", "sawtooth"];
 const NOISE_FILTERS = ["lowpass", "highpass", "bandpass"];
 

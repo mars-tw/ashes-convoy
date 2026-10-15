@@ -1047,6 +1047,15 @@
       eventBanner: state.eventBanner ? rules.deepClone(state.eventBanner) : null,
       lastGateChoice: state.lastGateChoice ? rules.deepClone(state.lastGateChoice) : null,
       combo: state.combo ? rules.deepClone(state.combo) : null,
+      latch: state.latch ? {
+        driftReadyAt: state.latch.driftReadyAt,
+        driftCooldown: (LATCH && LATCH.drift && LATCH.drift.cooldown) || 0,
+        lastDriftAt: state.latch.lastDriftAt,
+        lastFlingAt: state.latch.lastFlingAt,
+        lastFlingCount: state.latch.lastFlingCount,
+        latched: latchedEnemies().length,
+        shake: rules.deepClone(state.latch.shake)
+      } : { driftReadyAt: 0, driftCooldown: (LATCH && LATCH.drift && LATCH.drift.cooldown) || 0, latched: 0 },
       fxTimeScaleLeft: state.fxTimeScaleLeft || 0,
       fxTimeScale: state.fxTimeScale || 1,
       fxVisualTime: visualStateTime(),
@@ -1537,6 +1546,14 @@
         variantKills: {},
         runBarks: {},
         routeBroadcasts: {},
+        latchesTaken: 0,
+        latchBites: 0,
+        flung: 0,
+        flingBowled: 0,
+        flingParts: 0,
+        bestFlingChain: 0,
+        drifts: 0,
+        ambushes: 0,
         deathContext: null,
         partsPreview: config.ECONOMY.minRunParts
       },
@@ -1561,6 +1578,7 @@
       fxTimeScaleLeft: 0,
       fxTimeScale: 1,
       lastBroadsideEchoAt: -1000000,
+      latch: null,
       messages: []
     };
 
@@ -1677,7 +1695,8 @@
       dead: false,
       hitCooldown: 0,
       phaseTriggered: {},
-      hitFlash: 0
+      hitFlash: 0,
+      noLatch: opts.noLatch === true
     };
     if (state.enemies.length >= effectiveMaxEnemies()) return null;
     state.enemies.push(enemy);
@@ -2128,6 +2147,9 @@
         damageTimeline: state.stats.damageTimeline,
         recentDamageEvents: state.stats.recentDamageEvents,
         variantKills: state.stats.variantKills,
+        flung: state.stats.flung || 0,
+        bestFlingChain: state.stats.bestFlingChain || 0,
+        latchesTaken: state.stats.latchesTaken || 0,
         duration: state.time,
         difficultyId: state.difficultyId
       },
@@ -2293,6 +2315,7 @@
       spawnedAny = true;
     }
     if (spawnedAny) emitState();
+    processAmbushes();
     while (state.gateIndex < plan.gates.length && plan.gates[state.gateIndex].time <= state.waveElapsed) {
       spawnGatePair(plan.gates[state.gateIndex].options);
       state.gateIndex += 1;
@@ -2331,6 +2354,9 @@
     if (kind === "bossContact") {
       return { anticipation: 0.28, active: 0.1, recovery: 0.52 };
     }
+    if (kind === "latch" && config.CONVOY_LATCH && config.CONVOY_LATCH.biteTiming) {
+      return Object.assign({ anticipation: 0.2, active: 0.06, recovery: 0.28 }, config.CONVOY_LATCH.biteTiming);
+    }
     return { anticipation: 0.13, active: 0.06, recovery: 0.22 };
   }
 
@@ -2360,6 +2386,298 @@
     if (!enemy || enemy.dead || enemy.attackState) return;
     const kind = enemy.boss ? "bossContact" : "contact";
     setEnemyAttackState(enemy, { kind });
+  }
+
+  // ───────────── R86 攀車屍＋甩尾（招牌玩法） ─────────────
+  const LATCH = config.CONVOY_LATCH || null;
+
+  function ensureLatchState() {
+    if (!state.latch) {
+      state.latch = { shake: { left: 0, right: 0, cooldownLeft: 0 }, driftReadyAt: 0, ambushWave: 0, ambushIndex: 0, ambushes: [], lastFlingAt: -1000, lastFlingCount: 0, lastDriftAt: -1000, tutorialShown: false };
+    }
+    return state.latch;
+  }
+
+  function latchedEnemies() {
+    return state.enemies.filter((enemy) => enemy.latched && !enemy.dead);
+  }
+
+  function targetableEnemies() {
+    return state.enemies.filter((enemy) => !enemy.latched && !enemy.flung);
+  }
+
+  function latchAnchorPoint(slotIndex) {
+    const slot = LATCH && LATCH.slots ? LATCH.slots[slotIndex] : null;
+    const vehicle = state.vehicle;
+    if (!slot) return { x: vehicle.x, y: vehicle.y, side: 1 };
+    if (slot.anchor === "trailer") {
+      const pose = state.runTrailerPose;
+      const baseX = pose && Number.isFinite(pose.x) ? pose.x : vehicle.x;
+      const baseY = pose && Number.isFinite(pose.y) ? pose.y : vehicle.y + (LATCH.trailerOffsetY || 42);
+      return { x: baseX + slot.side * slot.dx, y: baseY + slot.dy, side: slot.side };
+    }
+    return { x: vehicle.x + slot.side * slot.dx, y: vehicle.y + slot.dy, side: slot.side };
+  }
+
+  function primaryPointerCoarse() {
+    try {
+      return !!(root.matchMedia && root.matchMedia("(pointer: coarse)").matches);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function latchEnemy(enemy) {
+    if (!LATCH || !rules.isLatchableEnemy(enemy, config)) return false;
+    const occupied = latchedEnemies().map((item) => item.latched.slot);
+    // 依接觸方向優先選同側的槽，讓屍體真的「從那一側爬上來」。
+    const preferSide = enemy.x < state.vehicle.x ? -1 : 1;
+    let slot = -1;
+    LATCH.slots.forEach((spec, index) => {
+      if (slot >= 0 || occupied.indexOf(index) >= 0 || spec.side !== preferSide) return;
+      slot = index;
+    });
+    if (slot < 0) slot = rules.pickLatchSlot(occupied, config);
+    if (slot < 0) return false;
+    const latch = ensureLatchState();
+    enemy.latched = { slot, since: state.time, nextBiteAt: state.time + 0.35 };
+    enemy.attackState = null;
+    enemy.attackPhase = "idle";
+    enemy.anim = "walk";
+    enemy.knockbackX = 0;
+    enemy.knockbackY = 0;
+    enemy.vx = -LATCH.slots[slot].side;
+    state.stats.latchesTaken = (state.stats.latchesTaken || 0) + 1;
+    playSound("latch");
+    pulseShake(fx.resolveShake(FXC, 1.4, meta.settings), 0.16);
+    const anchor = latchAnchorPoint(slot);
+    addFloatingText(LATCH.slots[slot].anchor === "trailer" ? "爬上拖車！" : "攀車！", anchor.x, anchor.y - 18, { color: "#ff8a6a", size: 8, ttl: 0.7, vy: -10 });
+    const seen = meta.tutorial && meta.tutorial.seenLatch === true;
+    if (!seen && !latch.tutorialShown) {
+      latch.tutorialShown = true;
+      pushEventBanner("攀車屍！", primaryPointerCoarse() ? "左右急甩搖桿，或按「甩」甩飛牠們" : "滑鼠左右急甩，或按空白鍵甩尾", { kind: "boss", priority: 85, ttl: 3.2 });
+    }
+    return true;
+  }
+
+  function applyLatchBite(enemy) {
+    if (!enemy.latched) return;
+    const damage = rules.resolveLatchBiteDamage(
+      (LATCH && LATCH.biteDamage) || 7,
+      state.vehicle.armor,
+      state.vehicle.damageTakenMul,
+      config
+    );
+    const anchor = latchAnchorPoint(enemy.latched.slot);
+    addFloatingText(`-${damage}`, anchor.x, anchor.y - 10, { color: "#ff6a5a", size: 7, ttl: 0.45, vy: -12 });
+    state.stats.latchBites = (state.stats.latchBites || 0) + 1;
+    // 走 damageVehicle 的既有死因／結算鏈：damageVehicle 會再算一次 round(raw*mul - armor)，
+    // 所以把護甲加回、倍率除回，讓實際扣血等於上面算好的穿甲傷害。
+    const mul = rules.finiteNumber(state.vehicle.damageTakenMul, 1, { min: 0.45, max: 1.5 });
+    const armor = rules.finiteNumber(state.vehicle.armor, 0, { min: 0 });
+    damageVehicle((damage + armor) / mul, { type: "latch", enemyId: enemy.enemyId });
+  }
+
+  function updateLatchedEnemy(enemy, dt) {
+    const anchor = latchAnchorPoint(enemy.latched.slot);
+    // 物理 root 跟著車身錨點；視覺由攻擊（啃咬）與行走（攀爬）真幀表現。
+    enemy.x = anchor.x;
+    enemy.y = anchor.y;
+    enemy.vx = -anchor.side;
+    enemy.vy = 0;
+    enemy.hitCooldown = Math.max(0, enemy.hitCooldown - dt);
+    enemy.hitFlash = Math.max(0, (enemy.hitFlash || 0) - dt);
+    updateEnemyAttackState(enemy);
+    if (enemy.dead || !enemy.latched) return;
+    if (!enemy.attackState && state.time - enemy.latched.since >= ((LATCH && LATCH.maxLatchSeconds) || 8)) {
+      // 新手保底：被路面顛下車，摔在路上（播受擊幀滑出後走死亡幀），不計甩飛獎勵。
+      const side = LATCH.slots[enemy.latched.slot] ? LATCH.slots[enemy.latched.slot].side : 1;
+      enemy.latched = null;
+      enemy.flung = { vx: side * 70, vy: 30, age: 0, hitIds: {}, slipped: true };
+      enemy.hitFlash = 0.2;
+      enemy.hitFlashMax = 0.2;
+      state.stats.latchSlips = (state.stats.latchSlips || 0) + 1;
+      addFloatingText("顛下車", enemy.x, enemy.y - 12, { color: "#d8c7a8", size: 7, ttl: 0.6, vy: -10 });
+      return;
+    }
+    if (!enemy.attackState && state.time >= enemy.latched.nextBiteAt) {
+      setEnemyAttackState(enemy, { kind: "latch" });
+      enemy.latched.nextBiteAt = state.time + ((LATCH && LATCH.biteInterval) || 0.85);
+    }
+  }
+
+  function updateFlungEnemy(enemy, dt) {
+    const flung = enemy.flung;
+    enemy.x += flung.vx * dt;
+    enemy.y += flung.vy * dt;
+    flung.vy += 60 * dt;
+    flung.age += dt;
+    enemy.hitFlash = Math.max(0.05, (enemy.hitFlash || 0) - dt);
+    const spec = (LATCH && LATCH.fling) || {};
+    const radius = spec.bowlingRadius || 11;
+    for (let i = 0; i < state.enemies.length && !flung.slipped; i += 1) {
+      const other = state.enemies[i];
+      if (other === enemy || other.dead || other.latched || other.flung || flung.hitIds[other.id]) continue;
+      if (distance(enemy, other) > radius + other.radius) continue;
+      flung.hitIds[other.id] = true;
+      applyEnemyIncomingDamage(other, spec.bowlingDamage || 28, null, { sourceKey: "fling" });
+      const dir = Math.sign(flung.vx) || 1;
+      if (!other.boss) other.knockbackX = (other.knockbackX || 0) + dir * (spec.knockback || 9);
+      other.hitFlash = 0.18;
+      other.hitFlashMax = 0.18;
+      state.stats.flingBowled = (state.stats.flingBowled || 0) + 1;
+      addFloatingText("撞！", other.x, other.y - other.radius - 6, { color: "#ffd36a", size: 8, ttl: 0.5, vy: -14 });
+      playSound("hit");
+      if (other.hp <= 0) killEnemy(other, "fling");
+    }
+    const outOfRoad = enemy.x < 4 || enemy.x > W - 4;
+    if (flung.age >= (spec.ttl || 0.42) || outOfRoad) {
+      enemy.flung = null;
+      enemy.x = rules.clamp(enemy.x, 6, W - 6);
+      killEnemy(enemy, "fling");
+    }
+  }
+
+  function flingLatched(reason) {
+    if (!LATCH || !state) return 0;
+    const victims = latchedEnemies();
+    if (!victims.length) return 0;
+    const spec = LATCH.fling || {};
+    const latch = ensureLatchState();
+    victims.forEach((enemy, index) => {
+      const slotSpec = LATCH.slots[enemy.latched.slot];
+      const side = slotSpec ? slotSpec.side : (enemy.x < state.vehicle.x ? -1 : 1);
+      enemy.latched = null;
+      enemy.attackState = null;
+      enemy.attackPhase = "idle";
+      enemy.anim = "walk";
+      enemy.flung = {
+        vx: side * (spec.speed || 230) * (0.9 + (index % 3) * 0.08),
+        vy: (spec.lift || -40) - index * 6,
+        age: 0,
+        hitIds: {}
+      };
+      enemy.vx = side * 10;
+      enemy.hitFlash = 0.3;
+      enemy.hitFlashMax = 0.3;
+      enemy.hitFlashColor = "#fff1c2";
+      if (FXC && fxEnabled()) fx.spawnKillBurst(fxState, FXC, "zombie", enemy.x, enemy.y, fxRng);
+    });
+    const count = victims.length;
+    state.stats.flung = (state.stats.flung || 0) + count;
+    state.stats.bestFlingChain = Math.max(state.stats.bestFlingChain || 0, count);
+    latch.lastFlingAt = state.time;
+    latch.lastFlingCount = count;
+    const bonus = rules.resolveMultiFlingParts(count, config);
+    let granted = 0;
+    if (bonus > 0) {
+      const cap = config.ECONOMY.eventPartsCapPerRun || 12;
+      const before = state.stats.eventParts || 0;
+      state.stats.eventParts = Math.min(cap, before + bonus);
+      granted = state.stats.eventParts - before;
+      state.stats.flingParts = (state.stats.flingParts || 0) + granted;
+    }
+    addFloatingText(count >= 2 ? `甩飛 x${count}！` : "甩飛！", state.vehicle.x, state.vehicle.y - 40, { color: "#ffe08a", size: count >= 3 ? 13 : 11, ttl: 0.9, vy: -16 });
+    if (granted > 0) addFloatingText(`零件 +${granted}`, state.vehicle.x, state.vehicle.y - 26, { color: "#5ed4cb", size: 8, ttl: 0.9, vy: -12 });
+    const multi = LATCH.multiFling || {};
+    pulseShake(fx.resolveShake(FXC, 2.4 + count * 0.6, meta.settings), 0.24);
+    if (flourishFxEnabled()) {
+      if (!Number.isFinite(state.fxVisualTime)) state.fxVisualTime = state.time;
+      state.fxTimeScaleLeft = Math.max(state.fxTimeScaleLeft || 0, multi.hitStopSeconds || 0.12);
+      state.fxTimeScale = multi.hitStopScale || 0.25;
+    }
+    playSound("fling");
+    if (meta.tutorial && meta.tutorial.seenLatch !== true) {
+      meta.tutorial.seenLatch = true;
+      pushEventBanner("甩得好！", "飛出去的屍體會撞倒後面的屍群", { kind: "boss", priority: 86, ttl: 2 });
+    }
+    state.stats.lastFlingReason = reason || "shake";
+    updatePartsPreview();
+    return count;
+  }
+
+  function driftBurst(direction) {
+    if (!LATCH || !state || state.over || state.paused) return getState();
+    const latch = ensureLatchState();
+    if (!rules.driftReady(state.time, latch.driftReadyAt)) return getState();
+    const spec = LATCH.drift || {};
+    latch.driftReadyAt = state.time + (spec.cooldown || 5.5);
+    latch.lastDriftAt = state.time;
+    const vehicle = state.vehicle;
+    const roadCenter = (config.LOGIC.roadLeft + config.LOGIC.roadRight) * 0.5;
+    let dir = Math.sign(Number(direction) || 0);
+    if (!dir) {
+      const pull = (vehicle.followX || vehicle.x) - vehicle.x;
+      dir = Math.abs(pull) > 2 ? Math.sign(pull) : (vehicle.x <= roadCenter ? 1 : -1);
+    }
+    latch.lastDriftDir = dir;
+    const half = getVehicleConfig(state.vehicleId).visualHalfWidth || 15;
+    vehicle.followX = rules.clamp(vehicle.x + dir * (spec.dashDistance || 36), config.LOGIC.roadLeft + half, config.LOGIC.roadRight - half);
+    vehicle.aimX = rules.clamp(vehicle.followX, 26, W - 26);
+    state.stats.drifts = (state.stats.drifts || 0) + 1;
+    // 衝撞：車身周圍的屍體吃傷害並被推開（Boss 只吃傷害）。
+    state.enemies.slice().forEach((enemy) => {
+      if (enemy.dead || enemy.latched || enemy.flung) return;
+      if (distance(enemy, vehicle) > (spec.ramRadius || 30) + enemy.radius) return;
+      applyEnemyIncomingDamage(enemy, spec.ramDamage || 26, null, { sourceKey: "drift" });
+      if (!enemy.boss) enemy.knockbackX = (enemy.knockbackX || 0) + (Math.sign(enemy.x - vehicle.x) || dir) * (spec.knockback || 12);
+      enemy.hitFlash = 0.2;
+      enemy.hitFlashMax = 0.2;
+      if (enemy.hp <= 0) killEnemy(enemy, "drift");
+    });
+    addEffect({ id: nextId("effect"), kind: "drift_skid", x: vehicle.x, y: vehicle.y, dir, ttl: 0.6, age: 0, alpha: 1 });
+    if (FXC && fxEnabled()) fx.spawnKillBurst(fxState, FXC, "mech", vehicle.x - dir * 12, vehicle.y + 10, fxRng);
+    pulseShake(fx.resolveShake(FXC, 2.2, meta.settings), 0.2);
+    playSound("drift");
+    flingLatched("drift");
+    emitState();
+    return getState();
+  }
+
+  function processAmbushes() {
+    if (!LATCH) return;
+    const latch = ensureLatchState();
+    if (latch.ambushWave !== state.wave) {
+      latch.ambushWave = state.wave;
+      latch.ambushIndex = 0;
+      latch.ambushes = rules.ambushesForWave(state.wave, config);
+    }
+    const list = latch.ambushes || [];
+    while (latch.ambushIndex < list.length && list[latch.ambushIndex].at <= state.waveElapsed) {
+      const ambush = list[latch.ambushIndex];
+      latch.ambushIndex += 1;
+      // 波次時間被跳過（讀檔、測試快轉、分頁背景回來）時不補發過期伏擊，避免憑空卡住波次。
+      if (state.waveElapsed - ambush.at > 2) continue;
+      const vehicle = state.vehicle;
+      const aheadY = vehicle.y - (LATCH.ambushSpawnAheadY || 70);
+      let spawned = 0;
+      for (let i = 0; i < ambush.count; i += 1) {
+        const side = i % 2 === 0 ? -1 : 1;
+        const x = side < 0 ? config.LOGIC.roadLeft + 4 + state.rng() * 6 : config.LOGIC.roadRight - 4 - state.rng() * 6;
+        const enemy = spawnEnemy(ambush.enemyId, {
+          x,
+          y: aheadY - Math.floor(i / 2) * 18 - state.rng() * 6,
+          laneOffset: 0,
+          swayAmp: 1,
+          speed: LATCH.ambushLungeSpeed || 120,
+          silent: true
+        });
+        if (enemy) spawned += 1;
+      }
+      if (spawned > 0) {
+        pushEventBanner(ambush.title || "屍群包抄", ambush.body || "", { kind: "event", ttl: 1.8 });
+        playSound("alarm");
+        state.stats.ambushes = (state.stats.ambushes || 0) + 1;
+      }
+    }
+  }
+
+  function updateShake(dx, dt) {
+    if (!LATCH) return;
+    const latch = ensureLatchState();
+    const result = rules.updateShakeTracker(latch.shake, dx, dt, config);
+    latch.shake = result.tracker;
+    if (result.triggered && latchedEnemies().length > 0) flingLatched("shake");
   }
 
   function buildEnemyImpactProjectile(enemy) {
@@ -2441,6 +2759,8 @@
         executeBossPhase(enemy, attack.action);
       } else if (attack.kind === "contact" || attack.kind === "bossContact") {
         applyContactImpact(enemy);
+      } else if (attack.kind === "latch") {
+        applyLatchBite(enemy);
       }
     } else if (attack.fired && state.time >= attack.activeUntil) {
       attack.phase = "recovery";
@@ -2464,6 +2784,14 @@
     const vehicle = state.vehicle;
     state.enemies.forEach((enemy) => {
       if (enemy.dead) return;
+      if (enemy.flung) {
+        updateFlungEnemy(enemy, dt);
+        return;
+      }
+      if (enemy.latched) {
+        updateLatchedEnemy(enemy, dt);
+        return;
+      }
       updateEnemyBurn(enemy);
       if (enemy.dead) return;
       enemy.hitCooldown = Math.max(0, enemy.hitCooldown - dt);
@@ -2557,7 +2885,8 @@
       }
 
       if (distance(enemy, vehicle) <= enemy.radius + vehicle.radius) {
-        if (!enemy.attackState && enemy.hitCooldown <= 0) startContactAttack(enemy);
+        // R86：遊蕩屍／奔屍追上車隊會攀車啃咬（招牌玩法）；槽滿或其他敵種維持接觸撞擊。
+        if (!enemy.attackState && enemy.hitCooldown <= 0 && !latchEnemy(enemy)) startContactAttack(enemy);
       }
     });
     state.enemies = state.enemies.filter((enemy) => !enemy.dead && enemy.y < H + 52);
@@ -2953,7 +3282,7 @@
 
       for (let i = 0; i < state.enemies.length; i += 1) {
         const enemy = state.enemies[i];
-        if (enemy.dead) continue;
+        if (enemy.dead || enemy.latched || enemy.flung) continue;
         if (!projectile.hitIds || typeof projectile.hitIds !== "object" || Array.isArray(projectile.hitIds)) {
           projectile.hitIds = {};
         }
@@ -3161,8 +3490,12 @@
       vehicle.followX += (vehicle.aimX - vehicle.followX) * followRate;
     }
     const targetX = rules.clamp(vehicle.followX, config.LOGIC.roadLeft + half, config.LOGIC.roadRight - half);
-    vehicle.x += (targetX - vehicle.x) * Math.min(1, vehicleConfig.moveResponsiveness * 0.28 * movementMul * dt * 60);
+    const prevX = vehicle.x;
+    const latchCount = LATCH ? latchedEnemies().length : 0;
+    const latchSlow = latchCount > 0 ? Math.max(0.6, 1 - latchCount * (LATCH.slowPerLatched || 0)) : 1;
+    vehicle.x += (targetX - vehicle.x) * Math.min(1, vehicleConfig.moveResponsiveness * 0.28 * movementMul * latchSlow * dt * 60);
     vehicle.x = rules.clamp(vehicle.x, config.LOGIC.roadLeft + half, config.LOGIC.roadRight - half);
+    updateShake(vehicle.x - prevX, dt);
     vehicle.aimY = rules.clamp(vehicle.aimY, config.LOGIC.aimMinY, config.LOGIC.aimMaxY);
     vehicle.assistAimX = vehicle.aimX;
     vehicle.assistAimY = vehicle.aimY;
@@ -3171,7 +3504,7 @@
     if (assistBase > 0) {
       const target = rules.selectAimAssistTarget({
         vehicle,
-        enemies: state.enemies,
+        enemies: targetableEnemies(),
         maxDistance: config.LOGIC.height * 0.54,
         config
       });
@@ -3230,12 +3563,12 @@
 
   function findCompanionTarget(targetId, pose, spec) {
     if (targetId) {
-      const existing = state.enemies.find((enemy) => enemy.id === targetId && !enemy.dead);
+      const existing = state.enemies.find((enemy) => enemy.id === targetId && !enemy.dead && !enemy.latched && !enemy.flung);
       if (existing) return existing;
     }
     return rules.selectGunnerTarget({
       gunner: pose,
-      enemies: state.enemies,
+      enemies: targetableEnemies(),
       range: spec.targetRange,
       config
     });
@@ -3318,7 +3651,7 @@
     if (state.companionCooldown > 0 || state.projectiles.length >= config.PERFORMANCE.maxProjectiles) return;
     const target = rules.selectGunnerTarget({
       gunner: pose,
-      enemies: state.enemies,
+      enemies: targetableEnemies(),
       range: spec.targetRange,
       config
     });
@@ -3568,6 +3901,11 @@
         togglePause();
       } else if (event.key === "r" || event.key === "R") {
         startRun(meta.selectedVehicle);
+      } else if (state && !state.paused && !state.over && (event.code === "Space" || event.key === " " || event.key === "Shift")) {
+        // R86：空白鍵／Shift＝甩尾衝撞（冷卻由 driftBurst 自己守門）。
+        if (event.repeat) return;
+        event.preventDefault();
+        driftBurst(0);
       } else if (state && !state.paused && !state.over && event.key === "ArrowLeft") {
         state.vehicle.followX = rules.clamp((state.vehicle.followX || state.vehicle.x) - 18, 26, W - 26);
       } else if (state && !state.paused && !state.over && event.key === "ArrowRight") {
@@ -5758,6 +6096,150 @@
     drawSprite("gate_damage", "idle", timeMs, 98, 178, 0.95, { alpha: 0.9 });
   }
 
+  // ───────────── R86 招牌玩法與車隊光影的繪製層（純視覺，不動物理座標） ─────────────
+  // 車頭大燈：兩道暖色光錐打在路面，讓玩家車在暗色路面上第一眼就跳出來。
+  function drawConvoyHeadlights(vehicleConfig, vehicle) {
+    if (!FXC || fxLevelSetting() === "off") return;
+    const width = vehicleConfig.visualWidth || 30;
+    const noseY = vehicle.y - fxVehicleVisualHeight(vehicleConfig) * 0.42;
+    const reach = 92;
+    const flicker = 0.92 + 0.08 * Math.sin(stateTime() * 13.7);
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    [-1, 1].forEach((side) => {
+      const baseX = vehicle.x + side * width * 0.22;
+      const gradient = ctx.createLinearGradient(baseX, noseY, baseX, noseY - reach);
+      gradient.addColorStop(0, `rgba(255, 214, 140, ${0.2 * flicker})`);
+      gradient.addColorStop(0.55, `rgba(255, 180, 90, ${0.07 * flicker})`);
+      gradient.addColorStop(1, "rgba(255, 160, 80, 0)");
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.moveTo(baseX - 2.5, noseY);
+      ctx.lineTo(baseX + 2.5, noseY);
+      ctx.lineTo(baseX + side * 6 + 15, noseY - reach);
+      ctx.lineTo(baseX + side * 6 - 15, noseY - reach);
+      ctx.closePath();
+      ctx.fill();
+    });
+    // 地面暖光：車底一圈柔光，拉開與路面的明度層次。
+    const glow = ctx.createRadialGradient(vehicle.x, vehicle.y + 6, 2, vehicle.x, vehicle.y + 6, width * 1.15);
+    glow.addColorStop(0, "rgba(255, 170, 90, 0.16)");
+    glow.addColorStop(1, "rgba(255, 140, 60, 0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.ellipse(vehicle.x, vehicle.y + 6, width * 1.15, width * 0.6, 0, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+    renderDebug.headlightsDrawn = true;
+  }
+
+  // 甩尾充能環：車底的地面環，滿格時亮橘脈動；冷卻中只畫進度弧。
+  function drawDriftRing(vehicleConfig, vehicle) {
+    if (!LATCH || !state.latch) return;
+    const cooldown = (LATCH.drift && LATCH.drift.cooldown) || 5.5;
+    const remaining = Math.max(0, (state.latch.driftReadyAt || 0) - state.time);
+    const progress = 1 - Math.min(1, remaining / cooldown);
+    const width = vehicleConfig.visualWidth || 30;
+    const cy = vehicle.y + fxVehicleVisualHeight(vehicleConfig) * 0.3;
+    const rx = width * 0.78;
+    const ry = width * 0.26;
+    ctx.save();
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = "rgba(20, 14, 10, 0.55)";
+    ctx.beginPath();
+    ctx.ellipse(vehicle.x, cy, rx, ry, 0, 0, TAU);
+    ctx.stroke();
+    if (progress >= 1) {
+      const pulse = 0.55 + 0.45 * Math.sin(stateTime() * 6.5);
+      ctx.strokeStyle = `rgba(255, 168, 64, ${0.55 + pulse * 0.35})`;
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.ellipse(vehicle.x, cy, rx, ry, 0, 0, TAU);
+      ctx.stroke();
+    } else {
+      ctx.strokeStyle = "rgba(255, 196, 120, 0.5)";
+      ctx.beginPath();
+      ctx.ellipse(vehicle.x, cy, rx, ry, 0, -Math.PI / 2, -Math.PI / 2 + TAU * progress);
+      ctx.stroke();
+    }
+    ctx.restore();
+    renderDebug.driftRingDrawn = progress >= 1 ? "ready" : "charging";
+  }
+
+  // 攀附在車身／拖車上的屍體：畫在車之上，像真的掛在車殼外側。
+  function drawLatchedEnemies(timeMs) {
+    if (!LATCH) return;
+    const latched = latchedEnemies();
+    renderDebug.latchedDrawn = latched.length;
+    if (!latched.length) return;
+    const danger = 0.5 + 0.5 * Math.sin(stateTime() * 10);
+    latched.forEach((enemy) => {
+      // 危險紅光墊底＋紅圈，讓棕色屍體不會和棕色車殼糊成一團。
+      ctx.save();
+      const glow = ctx.createRadialGradient(enemy.x, enemy.y, 1, enemy.x, enemy.y, 13);
+      glow.addColorStop(0, `rgba(255, 70, 50, ${0.3 + danger * 0.2})`);
+      glow.addColorStop(1, "rgba(255, 40, 30, 0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(enemy.x, enemy.y, 13, 0, TAU);
+      ctx.fill();
+      ctx.restore();
+      // 不用 ctx.filter（軟體繪製下每隻都要離屏合成，實測拖垮 p95）；改畫一圈紅色握痕描邊。
+      ctx.save();
+      ctx.strokeStyle = `rgba(255, 74, 54, ${0.55 + danger * 0.35})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.ellipse(enemy.x, enemy.y + 1, 7.5, 9.5, 0, 0, TAU);
+      ctx.stroke();
+      ctx.restore();
+      drawEnemyEntity(enemy, timeMs, 1, enemy.anim || "walk");
+    });
+    // 甩動提示：世界座標的左右箭頭會跟著橫向鏡頭一起旋轉，方向永遠正確。
+    const vehicle = state.vehicle;
+    const pulse = 0.55 + 0.45 * Math.sin(stateTime() * 9);
+    const y = vehicle.y - 52;
+    ctx.save();
+    ctx.globalAlpha *= 0.6 + pulse * 0.4;
+    ctx.fillStyle = "#ffcf6a";
+    [-1, 1].forEach((side) => {
+      const tipX = vehicle.x + side * (26 + pulse * 4);
+      ctx.beginPath();
+      ctx.moveTo(tipX, y);
+      ctx.lineTo(tipX - side * 6, y - 4.5);
+      ctx.lineTo(tipX - side * 6, y + 4.5);
+      ctx.closePath();
+      ctx.fill();
+    });
+    ctx.restore();
+    drawWorldText("甩！", vehicle.x, y, { size: 10, color: "#ffe08a", alpha: 0.75 + pulse * 0.25 });
+    renderDebug.latchPromptDrawn = true;
+  }
+
+  function drawDriftSkid(effect) {
+    const t = Math.min(1, effect.age / Math.max(0.01, effect.ttl));
+    const dir = effect.dir || 1;
+    ctx.save();
+    ctx.globalAlpha *= (1 - t) * 0.55;
+    ctx.strokeStyle = "#1a120c";
+    ctx.lineWidth = 2;
+    [-7, 7].forEach((offset) => {
+      ctx.beginPath();
+      ctx.moveTo(effect.x + offset, effect.y + 6);
+      ctx.quadraticCurveTo(effect.x + offset - dir * 10, effect.y + 22, effect.x + offset - dir * 22, effect.y + 34);
+      ctx.stroke();
+    });
+    ctx.globalAlpha = (1 - t) * 0.5;
+    ctx.fillStyle = "#d8b98a";
+    for (let i = 0; i < 5; i += 1) {
+      const px = effect.x - dir * (10 + i * 5 + t * 18);
+      const py = effect.y + 10 + i * 4 - t * 6;
+      ctx.beginPath();
+      ctx.arc(px, py, 2 + t * 4 + i * 0.6, 0, TAU);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   function drawGame(timeMs) {
     state.gates.forEach((gate) => {
       drawSprite(gate.sprite, "idle", timeMs, gate.x, gate.y, gate.scale, { alpha: 0.95 });
@@ -5769,6 +6251,7 @@
     state.weaponPowerups.forEach(drawWeaponPowerup);
     state.projectiles.forEach(drawProjectile);
     state.enemies.forEach((enemy) => {
+      if (enemy.latched) return;
       const alpha = enemy.hitFlash > 0 && flourishFxEnabled() ? 0.7 : 1;
       const anim = enemy.boss && enemy.hp < enemy.maxHp * 0.33 ? "rage" : enemy.anim || "walk";
       drawEnemyEntity(enemy, timeMs, alpha, anim);
@@ -5792,6 +6275,8 @@
         drawWaveCelebration(effect);
       } else if (effect.kind === "enemy_corpse") {
         drawEnemyCorpse(effect, timeMs);
+      } else if (effect.kind === "drift_skid") {
+        drawDriftSkid(effect);
       } else if (effect.kind === "muzzle_flash") {
         // 砲口閃焰放大增亮＋高頻閃爍（reducedFlash 時 flickerHz=0、縮回保守規格）
         const flicker = effect.flickerHz > 0 ? 1 + 0.18 * Math.sin(stateTime() * effect.flickerHz * TAU) : 1;
@@ -5815,6 +6300,8 @@
       ? fx.vehicleMotion(FXC, currentEnvironment(), stateTime(), fxMoveX, fxScratch.motion)
       : null;
     if (motion && motion.shadow) drawVehicleShadow(vehicleConfig, state.vehicle, motion.shadow);
+    drawConvoyHeadlights(vehicleConfig, state.vehicle);
+    drawDriftRing(vehicleConfig, state.vehicle);
     drawRunTrailer(vehicleConfig, state.vehicle);
     drawCompanion(vehicleConfig, state.vehicle);
     ctx.save();
@@ -5839,6 +6326,7 @@
     drawVehicleNavigationLights(vehicleConfig, state.vehicle);
     drawVehicleShield(state.vehicle, timeMs);
     ctx.restore();
+    drawLatchedEnemies(timeMs);
     drawFxParticles();
     drawBossKillFx();
     drawAimGuide();
@@ -6118,6 +6606,8 @@
       finishRun,
       pushWave,
       clearStorage,
+      driftBurst,
+      flingLatched: () => flingLatched("test"),
       getRenderDebug: () => rules.deepClone(renderDebug),
       samplePerformanceFrames,
       config,
@@ -6149,6 +6639,7 @@
     finishRun,
     pushWave,
     clearStorage,
+    driftBurst,
     spritesReady
   };
 

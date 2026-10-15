@@ -338,17 +338,17 @@ async function checkPwaFilesAndSkipRegistration(page) {
       orientation: manifest.orientation,
       icons: manifest.icons.map((icon) => icon.sizes).sort(),
       swHasVersion: swText.includes("CACHE_VERSION"),
-      swImportsVersion: swText.includes('importScripts("src/version.js?v=R85.1")') && swText.includes("DSVersion.CACHE_VERSION"),
+      swImportsVersion: swText.includes('importScripts("src/version.js?v=R86")') && swText.includes("DSVersion.CACHE_VERSION"),
       swHasSkipWaiting: swText.includes("self.skipWaiting()"),
       swHasClientsClaim: swText.includes("self.clients.claim()"),
       swHasNetworkFirst: swText.includes("networkFirst"),
       swHasCacheFirst: swText.includes("cacheFirst"),
-      swCachesJs: swText.includes("src/version.js?v=R85.1") && swText.includes("src/ui.js?v=R85.1") && swText.includes("src/game.js?v=R85.1") && swText.includes("src/rules.js?v=R85.1"),
+      swCachesJs: swText.includes("src/version.js?v=R86") && swText.includes("src/ui.js?v=R86") && swText.includes("src/game.js?v=R86") && swText.includes("src/rules.js?v=R86"),
       swQuerySensitiveCache: swText.includes("cache.match(request);"),
       swHasOffline: swText.includes("offline.html"),
-      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R85.1"),
-      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R85.1"),
-      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R85.1"),
+      htmlHasVersionedScripts: Array.from(document.querySelectorAll("script[src]")).every((node) => new URL(node.getAttribute("src"), location.href).searchParams.get("v") === "R86"),
+      htmlHasVersionedLinks: Array.from(document.querySelectorAll('link[href][rel="manifest"], link[href][rel="apple-touch-icon"]')).every((node) => new URL(node.getAttribute("href"), location.href).searchParams.get("v") === "R86"),
+      htmlBootGuard: document.documentElement.innerHTML.includes("ashes_convoy_html_boot_reload_R86"),
       uiHasControllerChange: uiText.includes("controllerchange"),
       uiHasAutoReloadWindow: uiText.includes("SW_AUTO_RELOAD_WINDOW_MS") && uiText.includes("15000"),
       uiHasSessionGuard: uiText.includes("SW_AUTO_RELOAD_SESSION_KEY") && uiText.includes("sessionStorage"),
@@ -357,7 +357,7 @@ async function checkPwaFilesAndSkipRegistration(page) {
       registrationCount: registrations.length
     };
   });
-  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R85.1", "page should link the versioned web manifest");
+  assert.strictEqual(pwa.manifestHref, "manifest.webmanifest?v=R86", "page should link the versioned web manifest");
   assert.strictEqual(pwa.name, "灰燼護航");
   assert.strictEqual(pwa.orientation, "any");
   assert.deepStrictEqual(pwa.icons, ["192x192", "512x512"], "manifest should expose 192 and 512 icons");
@@ -783,7 +783,7 @@ async function checkSettingsAndQuestBoard(page) {
   assert.strictEqual(fontState.largeClass, true, "large font size should apply a body class");
   assert(fontState.questFont >= 14, `large font size should enlarge quest text, got ${fontState.questFont}`);
   assert(fontState.diagnostics.includes("FPS") && fontState.diagnostics.includes("品質") && fontState.diagnostics.includes("cap"), `performance diagnostics should show FPS/quality/cap: ${fontState.diagnostics}`);
-  assert(fontState.version.includes("R85.1"), `settings should show app version: ${fontState.version}`);
+  assert(fontState.version.includes("R86"), `settings should show app version: ${fontState.version}`);
 
   await page.click("#exportSaveBtn");
   const exported = await page.locator("#saveCodeBox").inputValue();
@@ -1854,6 +1854,8 @@ async function checkR78AttackAtlasTiming(page) {
       y: base.vehicle.y,
       speed: 0,
       hitCooldown: 0,
+      // R86：奔屍預設改為攀車（另有 test-r86-latch-e2e 守門）；此處專測「接觸撞擊」三段路徑。
+      noLatch: true,
       silent: true
     });
     window.__test.step(40);
@@ -3838,7 +3840,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     });
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller);
-    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r85.1")));
+    await page.waitForFunction(async () => (await caches.keys()).some((key) => key.includes("ashes-convoy-r86")));
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -3856,7 +3858,7 @@ async function runServiceWorkerOfflineScenario(browser, baseUrl) {
     assert.strictEqual(offlineShell.title, "灰燼護航", "offline reload should render the meta screen");
     assert.strictEqual(offlineShell.sortieVisible, true, "offline meta screen should keep sortie available");
     assert.strictEqual(offlineShell.hasController, true, "offline page should be controlled by the service worker");
-    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r85.1")), "R85 cache should exist offline");
+    assert(offlineShell.cacheKeys.some((key) => key.includes("ashes-convoy-r86")), "R85 cache should exist offline");
     await clickSortie(page);
     await page.waitForFunction(() => window.__test.getState().mode === "playing");
     const runState = await page.evaluate(() => window.__test.getState());

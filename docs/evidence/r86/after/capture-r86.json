@@ -1,0 +1,26 @@
+[
+  {
+    "viewport": "desktop-1366x768",
+    "latched": 2,
+    "flung": 2,
+    "bowled": 0
+  },
+  {
+    "viewport": "laptop-1366x600",
+    "latched": 2,
+    "flung": 2,
+    "bowled": 0
+  },
+  {
+    "viewport": "phone-390x844",
+    "latched": 2,
+    "flung": 2,
+    "bowled": 0
+  },
+  {
+    "viewport": "phone-land-844x390",
+    "latched": 2,
+    "flung": 2,
+    "bowled": 0
+  }
+]
