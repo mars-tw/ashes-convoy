@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-importScripts("src/version.js?v=R86");
+importScripts("src/version.js?v=R87");
 
 const CACHE_VERSION = self.DSVersion.CACHE_VERSION;
 const APP_CACHE = `${CACHE_VERSION}:app`;
@@ -9,20 +9,20 @@ const APP_SHELL_PATHS = [
   "./",
   "index.html",
   "offline.html",
-  "manifest.webmanifest?v=R86",
-  "src/version.js?v=R86",
-  "src/sprites.js?v=R86",
-  "src/sprite-renderer.js?v=R86",
-  "src/shelter-scene.js?v=R86",
-  "src/config.js?v=R86",
-  "src/rules.js?v=R86",
-  "src/fx.js?v=R86",
-  "src/audio.js?v=R86",
-  "src/game.js?v=R86",
-  "src/ui.js?v=R86"
+  "manifest.webmanifest?v=R87",
+  "src/version.js?v=R87",
+  "src/sprites.js?v=R87",
+  "src/sprite-renderer.js?v=R87",
+  "src/shelter-scene.js?v=R87",
+  "src/config.js?v=R87",
+  "src/rules.js?v=R87",
+  "src/fx.js?v=R87",
+  "src/audio.js?v=R87",
+  "src/game.js?v=R87",
+  "src/ui.js?v=R87"
 ];
 const ASSET_PATHS = [
-  "assets/ui/start.png?v=R86",
+  "assets/ui/start.png?v=R87",
   "assets/ui/start-focus-low.png?v=6a1e8997",
   "assets/ui/start-atmosphere-r79.png?v=31cbd67f",
   "assets/ui/start-atmosphere-r79-medium.png?v=115410f5",
@@ -113,11 +113,11 @@ const ASSET_PATHS = [
   "assets/shelter/trailer/star_telescope.png",
   "assets/shelter/trailer/photo_frame.png",
   "assets/story/xi.png",
-  "assets/story/xi.png?v=R86",
-  "assets/shelter/trailer/crayon_drawing.png?v=R86",
-  "assets/shelter/trailer/star_telescope.png?v=R86",
-  "assets/shelter/trailer/photo_frame.png?v=R86",
-  "assets/icons/icon-192.png?v=R86",
+  "assets/story/xi.png?v=R87",
+  "assets/shelter/trailer/crayon_drawing.png?v=R87",
+  "assets/shelter/trailer/star_telescope.png?v=R87",
+  "assets/shelter/trailer/photo_frame.png?v=R87",
+  "assets/icons/icon-192.png?v=R87",
   "assets/icons/icon-192.png",
   "assets/icons/icon-512.png"
 ];

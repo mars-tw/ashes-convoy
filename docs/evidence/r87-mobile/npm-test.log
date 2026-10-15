@@ -1,0 +1,32 @@
+
+> ashes-convoy@0.87.0 test
+> node scripts/test-config.js && node scripts/test-automation-guards.js && node scripts/test-visual-guards.js && node scripts/test-r79-start-screen.js && node scripts/test-r80-art.js && node scripts/test-animation-assets.js && node scripts/test-rules.js && node scripts/test-supply-choice.js && node scripts/test-economy.js && node scripts/test-storage.js && node scripts/test-sprites-contract.js && node scripts/test-fx.js && node scripts/test-audio.js && node scripts/test-r86-convoy-latch.js && node scripts/test-r87-routes.js
+
+Config tests PASS
+Automation guard tests PASS
+Visual guard tests PASS
+R79.1 provenance/asset/alpha gate PASS (gpt-image-2, gpt-image 2.0, sha256 31cbd67f48bf)
+R80 art governance PASS (C2PA 5/5, desktop 11.97MiB, mobile 3.74MiB)
+Animation asset guards PASS (45 files, 1386517 bytes)
+Rules tests PASS
+Supply choice tests PASS
+Economy tests PASS
+Storage tests PASS
+Sprite contract PASS
+Sprites checked: 36
+Frames checked: 218
+Stage 3 sprites checked: 10
+FX tests PASS
+Audio tests PASS
+R86 convoy latch rules PASS
+PASS 三路目標各自計算，接單前進度不算
+PASS 截止後不能補領，截止瞬間可完成
+PASS 未知路線無獎勵
+PASS 救援維修真實加血，不修改原物件
+PASS 維修不超過滿血；滿血不消耗加成
+PASS 廢車場額外零件共用補給上限
+PASS 火線延長的是真正 buff
+PASS 選錯補給／已用／已結案不可加成
+PASS 存檔舊格式、惡意數值與未知路線清理
+PASS 結算永久收藏與 lastRun 可讀回
+R87 route rules VERIFIED 10/10

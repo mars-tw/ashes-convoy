@@ -4,7 +4,7 @@ const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 3;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R86", CACHE_VERSION: "ashes-convoy-r86-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R87", CACHE_VERSION: "ashes-convoy-r87-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -1342,6 +1342,13 @@ const SUPPLY_DROPS = {
       shieldPct: 0.12
     }
   }
+};
+
+// R87 路線委託：沿用現有敵人、補給與事件零件上限。
+const ROUTE_CONTRACTS = {
+  rescue: { id: "rescue", label: "救援支線", objective: "領取 1 箱補給", metric: "supplyCratesCollected", target: 1, seconds: 24, recommended: "repair_small", bonus: "維修補給額外修復 6%", reward: "護盾 +15%・零件 +2", parts: 2, line: "熹：前面的醫療站還有訊號，帶一箱物資過去。" },
+  salvage: { id: "salvage", label: "廢車場", objective: "甩飛 2 隻攀車屍", metric: "flung", target: 2, seconds: 24, recommended: "parts_cache", bonus: "零件補給額外 +1（共用上限）", reward: "修復 12%・零件 +4", parts: 4, line: "熹：廢車堆裡有料，但別讓那些傢伙搭便車。" },
+  frontline: { id: "frontline", label: "火線突破", objective: "擊殺 6 隻敵人", metric: "kills", target: 6, seconds: 28, recommended: "damage_boost", bonus: "火力補給延長 8 秒", reward: "火力 +15%／20秒・零件 +3", parts: 3, line: "熹：把路口清出來，後面的車隊才過得去。" }
 };
 
 const TRAILER_ROOM = {
@@ -2828,7 +2835,7 @@ const MILESTONES = {
 
 const START_SCREEN = {
   slug: "ashes-r79-start",
-  image: "assets/ui/start.png?v=R86",
+  image: "assets/ui/start.png?v=R87",
   atmosphere: "assets/ui/start-atmosphere-r79.png?v=31cbd67f",
   atmosphereQuality: {
     high: "assets/ui/start-atmosphere-r79.png?v=31cbd67f",
@@ -2874,6 +2881,7 @@ const META_DEFAULT = {
   blueprintWishlist: "sky_barge",
   bossBlueprintPity: 0,
   achievements: {},
+  routeCompletions: { rescue: 0, salvage: 0, frontline: 0 },
   eventStats: {
     sandstorm: { encounters: 0, completions: 0 },
     land_blackout: { encounters: 0, completions: 0 },
@@ -2966,6 +2974,7 @@ const DSConfig = {
   ENEMY_VARIANTS,
   ENVIRONMENT_EVENTS,
   SUPPLY_DROPS,
+  ROUTE_CONTRACTS,
   TRAILER_ROOM,
   QUESTS,
   GATES,

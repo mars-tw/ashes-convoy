@@ -1,0 +1,45 @@
+並發載量測，僅供參考；不代表通過出貨效能閘。
+
+> ashes-convoy@0.87.0 test:perf
+> node scripts/test-r78-performance.js
+
+node.exe : AssertionError [ERR_ASSERTION]: R87 performance gate failed: [{"scenario":"auto-reduced","settings":{"perfor
+manceMode":"auto","fxLevel":"reduced"},"viewport":{"label":"desktop-1366x700","width":1366,"height":700},"seededEnemies
+":54,"logicalEnemyCap":72,"runs":[{"run":1,"sampleCount":220,"p50Ms":28,"p95Ms":30.2,"maxMs":39.6,"enemies":54,"quality
+":"high","attackAtlasSeen":true,"enemyRasterDrawn":54,"enemyFallbackDrawn":0},{"run":2,"sampleCount":220,"p50Ms":27.5,"
+p95Ms":29.5,"maxMs":33.7,"enemies":54,"quality":"high","attackAtlasSeen":true,"enemyRasterDrawn":54,"enemyFallbackDrawn
+":0},{"run":3,"sampleCount":220,"p50Ms":28.1,"p95Ms":29.7,"maxMs":32.1,"enemies":54,"quality":"high","attackAtlasSeen":
+true,"enemyRasterDrawn":54,"enemyFallbackDrawn":0}],"medianP95Ms":29.7,"pass":false},{"scenario":"auto-reduced","settin
+gs":{"performanceMode":"auto","fxLevel":"reduced"},"viewport":{"label":"phone-390x844","width":390,"height":844},"seede
+dEnemies":54,"logicalEnemyCap":72,"runs":[{"run":1,"sampleCount":220,"p50Ms":27.6,"p95Ms":28.6,"maxMs":31.7,"enemies":5
+4,"quality":"high","attackAtlasSeen":true,"enemyRasterDrawn":54,"enemyFallbackDrawn":0},{"run":2,"sampleCount":220,"p50
+Ms":27.8,"p95Ms":28.9,"maxMs":31.3,"enemies":54,"quality":"high","attackAtlasSeen":true,"enemyRasterDrawn":54,"enemyFal
+lbackDrawn":0},{"run":3,"sampleCount":220,"p50Ms":27.8,"p95Ms":29,"maxMs":35.2,"enemies":54,"quality":"high","attackAtl
+asSeen":true,"enemyRasterDrawn":54,"enemyFallbackDrawn":0}],"medianP95Ms":28.9,"pass":false},{"scenario":"low-reduced",
+"settings":{"performanceMode":"low","fxLevel":"reduced"},"viewport":{"label":"desktop-1366x700","width":1366,"height":7
+00},"seededEnemies":54,"logicalEnemyCap":72,"runs":[{"run":1,"sampleCount":220,"p50Ms":1.8,"p95Ms":2.5,"maxMs":4.7,"ene
+mies":54,"quality":"low","attackAtlasSeen":true,"enemyRasterDrawn":54,"enemyFallbackDrawn":0},{"run":2,"sampleCount":22
+0,"p50Ms":2,"p95Ms":3.2,"maxMs":15.5,"enemies":54,"quality":"low","attackAtlasSeen":true,"enemyRasterDrawn":54,"enemyFa
+llbackDrawn":0},{"run":3,"sampleCount":220,"p50Ms":1.9,"p95Ms":2.6,"maxMs":4.1,"enemies":54,"quality":"low","attackAtla
+sSeen":true,"enemyRasterDrawn":54,"enemyFallbackDrawn":0}],"medianP95Ms":2.6,"pass":true},{"scenario":"low-reduced","se
+ttings":{"performanceMode":"low","fxLevel":"reduced"},"viewport":{"label":"phone-390x844","width":390,"height":844},"se
+ededEnemies":54,"logicalEnemyCap":72,"runs":[{"run":1,"sampleCount":220,"p50Ms":2.1,"p95Ms":3.5,"maxMs":10.9,"enemies":
+54,"quality":"low","attackAtlasSeen":true,"enemyRasterDrawn":54,"enemyFallbackDrawn":0},{"run":2,"sampleCount":220,"p50
+Ms":2.3,"p95Ms":3.3,"maxMs":6.3,"enemies":54,"quality":"low","attackAtlasSeen":true,"enemyRasterDrawn":54,"enemyFallbac
+kDrawn":0},{"run":3,"sampleCount":220,"p50Ms":2.3,"p95Ms":3.7,"maxMs":11.2,"enemies":54,"quality":"low","attackAtlasSee
+n":true,"enemyRasterDrawn":54,"enemyFallbackDrawn":0}],"medianP95Ms":3.5,"pass":true}]
+位於 線路:1 字元:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (AssertionError ...5,"pass":true}]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+    at C:\Users\digimkt\Desktop\遊戲\doomsday-shooter\scripts\test-r78-performance.js:207:3
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}

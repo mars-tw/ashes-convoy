@@ -1051,6 +1051,7 @@
         driftReadyAt: state.latch.driftReadyAt,
         driftCooldown: (LATCH && LATCH.drift && LATCH.drift.cooldown) || 0,
         lastDriftAt: state.latch.lastDriftAt,
+        lastDriftDir: state.latch.lastDriftDir,
         lastFlingAt: state.latch.lastFlingAt,
         lastFlingCount: state.latch.lastFlingCount,
         latched: latchedEnemies().length,
@@ -1062,6 +1063,7 @@
       gateChoice: state.gateChoice ? rules.deepClone(state.gateChoice) : null,
       gatePairs: rules.deepClone(state.gatePairs || {}),
       supplyChoice: state.supplyChoice ? rules.deepClone(state.supplyChoice) : null,
+      routeContract: state.routeContract ? rules.deepClone(state.routeContract) : null,
       enemies: state.enemies.map(publicEntity),
       hazards: state.hazards.map(publicEntity),
       enemyProjectiles: state.enemyProjectiles.map(publicEntity),
@@ -1403,6 +1405,7 @@
   function chooseSupplyReward(rewardId) {
     if (!state || state.over || !state.supplyChoice) return getState();
     const choice = state.supplyChoice;
+    const buffId = nextId("buff");
     const result = rules.applySupplyRewardById({
       rewardId,
       time: state.time,
@@ -1410,7 +1413,7 @@
       runMods: state.runMods,
       supplyBuffs: state.supplyBuffs,
       stats: state.stats,
-      buffId: nextId("buff"),
+      buffId,
       config
     });
     if (!result.ok) return getState();
@@ -1418,8 +1421,17 @@
     state.runMods = result.runMods || state.runMods;
     state.supplyBuffs = result.supplyBuffs;
     state.stats = Object.assign(state.stats, result.stats);
+    const bonus = rules.routeSupplyBonus({ contract: state.routeContract, rewardId, buffId, vehicle: state.vehicle, stats: state.stats, supplyBuffs: state.supplyBuffs, config });
+    if (bonus.applied) {
+      state.vehicle = bonus.vehicle;
+      state.stats = Object.assign(state.stats, bonus.stats);
+      state.supplyBuffs = bonus.supplyBuffs;
+      state.routeContract.bonusUsed = true;
+      addFloatingText("路線補給加成！", state.vehicle.x, state.vehicle.y - 60, { color: "#5ed4cb", size: 8, ttl: 1 });
+    }
     applyOverflowReward(result.overflow, choice.x, choice.y - 10);
     state.supplyChoice = null;
+    updateRouteContract();
     state.messages.push({ text: `補給箱：${result.reward.label}`, time: state.time, ttl: 1.8 });
     pushEventBanner("補給箱", result.reward.label, { kind: "supply", ttl: 1.5 });
     pushRunBark("first_supply");
@@ -1512,11 +1524,14 @@
       gateChoice: null,
       gatePairs: {},
       supplyChoice: null,
+      routeContract: null,
       projectiles: [],
       gates: [],
       effects: [],
       runBarksSeen: {},
       stats: {
+        routeCompletions: rules.sanitizeRouteCompletions(null, config),
+        routeFailures: 0,
         kills: 0,
         bossesDefeated: 0,
         damageDealt: 0,
@@ -1601,6 +1616,45 @@
       draw();
     }
     emitState();
+  }
+
+  function acceptRouteContract(id) {
+    const def = config.ROUTE_CONTRACTS[id];
+    if (!state || state.over || !def || def.id !== id || (state.routeContract && (state.routeContract.status === "active" || state.routeContract.wave === state.wave))) return getState();
+    state.routeContract = { id, wave: state.wave, status: "active", progress: 0, baseline: Number(state.stats[def.metric]) || 0, deadline: state.time + def.seconds, bonusUsed: false };
+    spawnSupplyDrop(state.vehicle.x, state.vehicle.y - 10);
+    if (id === "salvage") {
+      [-1, 1].forEach(side => spawnEnemy("runner", { x: state.vehicle.x + side * 6, y: state.vehicle.y - 2, hp: 240 }));
+    } else if (id === "frontline") {
+      for (let i = 0; i < 6; i += 1) spawnEnemy("shambler", { x: 42 + i * 22, y: state.vehicle.y - 100 - i * 9 });
+    }
+    pushEventBanner(def.label, def.line, { kind: "event", priority: 75, ttl: 4 });
+    emitState();
+    return getState();
+  }
+
+  function updateRouteContract() {
+    const route = state.routeContract;
+    if (!route || route.status !== "active") return;
+    const def = config.ROUTE_CONTRACTS[route.id];
+    const result = rules.routeContractProgress(route, state.stats, state.time, config);
+    route.progress = result.progress;
+    if (result.expired) {
+      route.status = "expired";
+      state.stats.routeFailures = (state.stats.routeFailures || 0) + 1;
+      pushEventBanner("路線未完成", "沒有領到獎勵；下一波可再接一條", { kind: "event", priority: 75, ttl: 3 });
+    } else if (result.complete) {
+      route.status = "completed";
+      state.stats.routeCompletions[route.id] += 1;
+      const before = state.stats.eventParts || 0;
+      state.stats.eventParts = Math.min(config.ECONOMY.eventPartsCapPerRun, before + def.parts);
+      route.partsGranted = state.stats.eventParts - before;
+      if (route.id === "rescue") state.vehicle.shield = Math.min(state.vehicle.maxShield, state.vehicle.shield + Math.round(state.vehicle.maxHp * 0.15));
+      if (route.id === "salvage") state.vehicle.hp = Math.min(state.vehicle.maxHp, state.vehicle.hp + Math.round(state.vehicle.maxHp * 0.12));
+      if (route.id === "frontline") state.supplyBuffs.push({ id: nextId("route_buff"), rewardId: "damage_boost", type: "damage", damageAdd: 0.15, until: state.time + 20 });
+      pushEventBanner(`${def.label}完成`, `${def.reward.split("・")[0]}・零件 +${route.partsGranted}${route.partsGranted < def.parts ? "（已達事件上限）" : ""}`, { kind: "event", priority: 76, ttl: 4 });
+      playSound("pickup");
+    }
   }
 
   function startRun(vehicleId, nextMeta, seed) {
@@ -2136,6 +2190,8 @@
         eventRewardMul: state.stats.eventRewardMul,
         eventParts: state.stats.eventParts,
         eventStats: state.stats.eventStats,
+        routeCompletions: state.stats.routeCompletions,
+        routeFailures: state.stats.routeFailures,
         supplyParts: state.stats.supplyParts,
         supplyCratesCollected: state.stats.supplyCratesCollected,
         supplyRewards: state.stats.supplyRewards,
@@ -3678,6 +3734,7 @@
     updateProjectiles(dt);
     updateEnemies(dt);
     updateGatesAndEffects(dt);
+    updateRouteContract();
     updateFx(dt);
     completeWaveIfReady();
     updatePartsPreview();
@@ -4000,7 +4057,8 @@
       const ttl = message.ttl || 1;
       const fade = Math.min(1, Math.max(0, Math.min(elapsed / 0.14, (ttl - elapsed) / 0.32)));
       if (fade <= 0) return;
-      drawWorldText(message.text, W * 0.5, 74 + index * 13, {
+      const messageY = primaryPointerCoarse() ? (displayLandscape ? 260 : 220) : 74;
+      drawWorldText(message.text, W * 0.5, messageY + index * 13, {
         size: 13,
         alpha: fade,
         color: "#f0b64a",
@@ -4032,8 +4090,9 @@
     ctx.lineTo(guideX, guideY + 12);
     ctx.stroke();
     if (state.time < 2) {
-      drawWorldText("拖曳移動＋瞄準", W * 0.5, 113, { size: 9, alpha: 0.92, color: "#f4ead8" });
-      drawWorldText("放開仍射擊（射速較慢）", W * 0.5, 124, { size: 7, alpha: 0.82, color: "#d7cdbb" });
+      const landscapeTouch = primaryPointerCoarse() && displayLandscape;
+      drawWorldText("拖曳移動＋瞄準", landscapeTouch ? 120 : W * 0.5, 113, { size: 9, alpha: 0.92, color: "#f4ead8" });
+      drawWorldText("放開仍射擊（射速較慢）", landscapeTouch ? 129 : W * 0.5, landscapeTouch ? 113 : 124, { size: 7, alpha: 0.82, color: "#d7cdbb" });
       ctx.strokeStyle = "#f4ead8";
       ctx.beginPath();
       ctx.moveTo(W * 0.5, 142);
@@ -6597,6 +6656,7 @@
       spawnGatePair,
       grantGate,
       chooseSupplyReward,
+      acceptRouteContract,
       chooseGate,
       setVirtualAim,
       releaseVirtualAim,
@@ -6630,6 +6690,7 @@
     spawnGatePair,
     grantGate,
     chooseSupplyReward,
+    acceptRouteContract,
     chooseGate,
     setVirtualAim,
     releaseVirtualAim,

@@ -1,0 +1,11 @@
+{
+  "status": "EXECUTED",
+  "description": "Initial regression run before control spacing correction",
+  "case": [
+    {
+      "name": "phone-portrait",
+      "phase": "move",
+      "error": "locator.waitFor: Timeout 8000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#quickUpgradeWheel:not([hidden])') to be visible\u001b[22m\n\n    at runCase (C:\\Users\\digimkt\\Desktop\\遊戲\\doomsday-shooter\\scripts\\test-tablet-aspect.js:106:60)\n    at async C:\\Users\\digimkt\\Desktop\\遊戲\\doomsday-shooter\\scripts\\test-tablet-aspect.js:168:125"
+    }
+  ]
+}

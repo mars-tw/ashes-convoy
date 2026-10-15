@@ -46,8 +46,8 @@
     </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="manifest.webmanifest?v=R86" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R86" />
+    <link rel="manifest" href="manifest.webmanifest?v=R87" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R87" />
     <link rel="canonical" href="https://mars-tw.github.io/ashes-convoy/" />
     <title>灰燼護航</title>
     <style>
@@ -803,7 +803,7 @@
           background: rgba(94, 212, 203, 0.26);
         }
 
-        /* R86：「甩」是招牌動作——外圈 conic 冷卻環，滿格亮橘呼吸；有屍體攀車時更急促。 */
+        /* R87：「甩」是招牌動作——外圈 conic 冷卻環，滿格亮橘呼吸；有屍體攀車時更急促。 */
         #touchBoostBtn {
           border-color: rgba(255, 168, 64, 0.72);
           background:
@@ -2546,6 +2546,55 @@
           font-size: 14px;
         }
       }
+      /* R87：兩角拇指區；中間留給車身與拖車。 */
+      .route-hud-btn { position: absolute; top: max(158px, calc(env(safe-area-inset-top) + 158px)); right: 10px; z-index: 8; min-height: 44px; max-width: calc(100% - 20px); padding: 6px 12px; font-size: 12px; color: #bcebe0; background: #142b2b; border: 1px solid #5ed4cb; border-radius: 8px; }
+      .route-hud-btn[hidden], .route-board[hidden] { display: none; }
+      .route-board { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); background: rgba(4, 9, 12, .94); }
+      .route-board-panel { width: min(100%, 720px); max-height: 100%; display: flex; flex-direction: column; padding: 14px; border: 1px solid #5ed4cb; border-radius: 12px; background: #111b20; }
+      .route-board-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex: none; }
+      .route-board-head h2 { margin: 0; font-size: 20px; }
+      .route-board-head button { min-width: 64px; min-height: 44px; }
+      #routeBoardHint { font-size: 12px; color: #bfccc9; margin: 10px 0; }
+      #routeBoardList { display: grid; gap: 10px; overflow-y: auto; min-height: 0; }
+      .route-card { display: grid; gap: 6px; text-align: left; padding: 12px; border: 1px solid #6e898b; border-radius: 8px; background: #203036; color: #f4ead8; min-height: 112px; touch-action: manipulation; }
+      .route-card b { font-size: 16px; color: #ffd27f; }
+      .route-card em { font-size: 12px; font-style: normal; color: #a6cbc4; }
+      .route-card span, .route-card strong { font-size: 13px; }
+      .route-card small { font-size: 12px; color: #c4d6d4; }
+      .route-card:disabled { opacity: .65; }
+      .supply-choice-btn.is-route-recommended { border-color: #ffd27f; background: #293a31; }
+      .route-supply-note { display: block; font-size: 12px; font-style: normal; line-height: 1.4; color: #ffe1a8; }
+      @media (min-width: 650px) { #routeBoardList { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+      @media (pointer: coarse) {
+        .touch-controls.is-visible { grid-template-columns: 112px 1fr; }
+        .touch-action-pad { display: grid; grid-template-columns: 48px 64px; grid-template-rows: 48px 48px; gap: 10px; align-items: end; justify-items: center; pointer-events: none; }
+        .touch-action-btn { width: 48px; min-width: 48px; height: 48px; min-height: 48px; pointer-events: auto; font-size: 14px; }
+        #touchBoostBtn { grid-column: 2; grid-row: 1 / span 2; width: 64px; min-width: 64px; height: 64px; min-height: 64px; font-size: 22px; }
+        #touchSkillBtn { grid-column: 1; grid-row: 1; }
+        #touchWeaponBtn { grid-column: 1; grid-row: 2; }
+        #touchPauseBtn { position: absolute; left: 0; bottom: 150px; }
+        .touch-guide { position: absolute; left: 64px; bottom: 118px; font-size: 12px; line-height: 1.4; color: #d5e8e3; background: rgba(8, 16, 20, .85); padding: 4px 6px; border-radius: 4px; pointer-events: none; }
+        #touchFeedback { position: absolute; right: 0; bottom: 112px; font-size: 12px; color: #ffe1a8; padding: 4px 6px; background: rgba(8, 16, 20, .9); border-radius: 4px; pointer-events: none; }
+        .supply-choice-overlay { top: max(180px, calc(env(safe-area-inset-top) + 180px)); max-height: calc(100% - 330px); overflow-y: auto; }
+      }
+      @media (pointer: coarse) and (orientation: landscape) {
+        .route-hud-btn { left: 50%; right: auto; top: auto; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); max-width: 240px; }
+        .touch-controls.is-visible { grid-template-columns: auto auto; }
+        .touch-guide { bottom: 92px; }
+        #touchPauseBtn { bottom: 112px; }
+        .supply-choice-overlay { top: max(140px, calc(env(safe-area-inset-top) + 140px)); transform: translateX(-50%); width: min(68vw, 580px); max-height: calc(100dvh - 150px); }
+        .supply-choice-list { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+        .supply-choice-btn { padding: 7px; }
+        .supply-choice-btn b, .supply-choice-btn span { font-size: 12px; }
+      }
+      @media (pointer: coarse) and (orientation: portrait) and (max-height: 700px) {
+        .supply-choice-overlay { top: 150px; max-height: calc(100% - 290px); }
+        .supply-choice-panel { padding: 6px; }
+        .supply-choice-head { margin-bottom: 4px; }
+        .supply-choice-btn { padding: 6px; }
+        .supply-choice-btn b, .supply-choice-btn span { font-size: 12px; }
+        .route-supply-note { font-size: 12px; line-height: 1.2; }
+      }
     </style>
   </head>
   <body>
@@ -2602,6 +2651,14 @@
         <span id="eventBannerBody"></span>
       </div>
       <div class="gate-choice-layer" id="gateChoiceLayer" hidden></div>
+      <button class="route-hud-btn" id="routeHudBtn" type="button" hidden>路線委託：選一條支線 ›</button>
+      <div class="route-board" id="routeBoard" role="dialog" aria-modal="true" aria-labelledby="routeBoardTitle" hidden>
+        <section class="route-board-panel">
+          <header class="route-board-head"><h2 id="routeBoardTitle">護航路線</h2><button id="routeBoardCloseBtn" type="button">返回</button></header>
+          <p id="routeBoardHint"></p>
+          <div id="routeBoardList"></div>
+        </section>
+      </div>
       <div class="supply-choice-overlay" id="supplyChoiceOverlay" role="region" aria-labelledby="supplyChoiceTitle" hidden>
         <div class="supply-choice-panel">
           <div class="supply-choice-head">
@@ -2613,13 +2670,16 @@
       </div>
 
       <div class="touch-controls" id="touchControls" aria-label="行動控制盤">
+        <span class="touch-guide">自動射擊<br>拖曳瞄準</span>
+        <output id="touchFeedback" aria-live="off">甩尾就緒</output>
         <div class="virtual-joystick" id="virtualJoystick" role="application" aria-label="虛擬搖桿">
           <div class="virtual-joystick-stick" id="virtualJoystickKnob"></div>
         </div>
         <div class="touch-action-pad" aria-label="戰鬥快捷鍵">
           <button class="touch-action-btn" id="touchBoostBtn" type="button" aria-label="甩尾衝撞（甩飛攀車屍）">甩</button>
-          <button class="touch-action-btn" id="touchSkillBtn" type="button" aria-label="補給技能">技</button>
+          <button class="touch-action-btn" id="touchSkillBtn" type="button" aria-label="瞄準補給；出現補給卡時直接點卡片">技</button>
           <button class="touch-action-btn" id="touchWeaponBtn" type="button" aria-label="切換或追蹤彈種">彈</button>
+          <button class="touch-action-btn" id="touchPauseBtn" type="button" aria-label="暫停戰鬥">暫</button>
         </div>
       </div>
 
@@ -2652,7 +2712,7 @@
             <span id="trailerBonusText">HP +0% · 傷害 +0% · 射速 +0% · 承傷 -0%</span>
           </div>
           <section class="story-log-section" id="storyLogSection" aria-label="無線電日誌" hidden>
-            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R86" alt="熹" decoding="async" draggable="false" />
+            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R87" alt="熹" decoding="async" draggable="false" />
             <div class="story-log-list" id="storyLogList"></div>
           </section>
           <div class="trailer-room-body">
@@ -2669,7 +2729,7 @@
               <p class="start-kicker">ASHES CONVOY</p>
               <h1 class="start-logo">灰燼護航</h1>
             </div>
-            <span class="start-release-mark" aria-hidden="true">R86</span>
+            <span class="start-release-mark" aria-hidden="true">R87</span>
           </div>
           <div class="start-ledger" id="garageMeta" role="list" aria-label="護航統計">
             <span class="start-stat-chip" role="listitem"><em>零件</em><b id="startPartsValue">0</b></span>
@@ -2890,7 +2950,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R86";
+        var key = "ashes_convoy_html_boot_reload_R87";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -2907,15 +2967,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R86"></script>
-    <script src="src/sprites.js?v=R86"></script>
-    <script src="src/sprite-renderer.js?v=R86"></script>
-    <script src="src/shelter-scene.js?v=R86"></script>
-    <script src="src/config.js?v=R86"></script>
-    <script src="src/rules.js?v=R86"></script>
-    <script src="src/fx.js?v=R86"></script>
-    <script src="src/audio.js?v=R86"></script>
-    <script src="src/game.js?v=R86"></script>
-    <script src="src/ui.js?v=R86"></script>
+    <script src="src/version.js?v=R87"></script>
+    <script src="src/sprites.js?v=R87"></script>
+    <script src="src/sprite-renderer.js?v=R87"></script>
+    <script src="src/shelter-scene.js?v=R87"></script>
+    <script src="src/config.js?v=R87"></script>
+    <script src="src/rules.js?v=R87"></script>
+    <script src="src/fx.js?v=R87"></script>
+    <script src="src/audio.js?v=R87"></script>
+    <script src="src/game.js?v=R87"></script>
+    <script src="src/ui.js?v=R87"></script>
   </body>
 </html>

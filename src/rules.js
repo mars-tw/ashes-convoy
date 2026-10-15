@@ -2400,6 +2400,7 @@ function migrateMeta(raw, options) {
 
   meta.achievements = boolTrueMap(input.achievements);
   meta.eventStats = sanitizeEventStats(input.eventStats, cfg);
+  meta.routeCompletions = sanitizeRouteCompletions(input.routeCompletions, cfg);
   meta.questStats = sanitizeQuestStats(input.questStats, cfg);
   meta.questBaselines = sanitizeQuestBaselines(input.questBaselines, cfg);
   meta.questClaims = boolTrueMap(input.questClaims);
@@ -2500,6 +2501,8 @@ function settleRunRewards(options) {
   meta.totalKills += kills;
   meta.totalBossKills += bossesDefeated;
   meta.eventStats = mergeEventStats(meta.eventStats, eventStats, cfg);
+  const routeCompletions = sanitizeRouteCompletions(run.routeCompletions, cfg);
+  Object.keys(routeCompletions).forEach(id => { meta.routeCompletions[id] = Math.min(999999, meta.routeCompletions[id] + routeCompletions[id]); });
   meta.questStats = applyQuestRunStats(meta, { vehicleId, wavesCleared, bossesDefeated, eventStats, supplyCratesCollected, variantKills }, cfg).questStats;
   meta.bestWave = Math.max(meta.bestWave, wavesCleared);
   meta.bestScore = Math.max(meta.bestScore, score);
@@ -2531,6 +2534,8 @@ function settleRunRewards(options) {
   meta.trailerGoods += scavengeBreakdown.total;
 
   meta.lastRun = {
+    routeCompletions,
+    routeFailures: finiteNumber(run.routeFailures, 0, { min: 0, max: 999, integer: true }),
     vehicleId,
     wavesCleared,
     kills,
@@ -2723,7 +2728,45 @@ function driftReady(time, readyAt) {
   return finiteNumber(time, 0) >= finiteNumber(readyAt, 0);
 }
 
+function sanitizeRouteCompletions(raw, cfg) {
+  const result = {};
+  Object.keys(cfg.ROUTE_CONTRACTS || {}).forEach(id => {
+    result[id] = finiteNumber(raw && raw[id], 0, { min: 0, max: 999999, integer: true });
+  });
+  return result;
+}
+
+function routeContractProgress(contract, stats, time, cfg) {
+  const def = contract && (cfg.ROUTE_CONTRACTS || {})[contract.id];
+  if (!def || def.id !== contract.id) return { progress: 0, complete: false, expired: false };
+  const progress = Math.min(def.target, Math.max(0, (Number(stats[def.metric]) || 0) - contract.baseline));
+  return { progress, complete: time <= contract.deadline && progress >= def.target, expired: time > contract.deadline };
+}
+
+function routeSupplyBonus(options) {
+  const { contract, rewardId, config: cfg } = options;
+  const def = contract && (cfg.ROUTE_CONTRACTS || {})[contract.id];
+  const result = { vehicle: deepClone(options.vehicle), stats: deepClone(options.stats), supplyBuffs: deepClone(options.supplyBuffs), applied: false };
+  if (!def || def.id !== contract.id || contract.status !== "active" || contract.bonusUsed || def.recommended !== rewardId) return result;
+  if (def.id === "rescue") {
+    const before = result.vehicle.hp;
+    result.vehicle.hp = Math.min(result.vehicle.maxHp, before + Math.round(result.vehicle.maxHp * 0.06));
+    result.applied = result.vehicle.hp > before;
+  } else if (def.id === "salvage") {
+    const before = result.stats.supplyParts || 0;
+    result.stats.supplyParts = Math.min(cfg.SUPPLY_DROPS.partsCapPerRun, before + 1);
+    result.applied = result.stats.supplyParts > before;
+  } else {
+    const buff = result.supplyBuffs.find(item => item.id === options.buffId && item.rewardId === rewardId);
+    if (buff) { buff.until += 8; result.applied = true; }
+  }
+  return result;
+}
+
 const DSRules = {
+  sanitizeRouteCompletions,
+  routeContractProgress,
+  routeSupplyBonus,
   deepClone,
   clamp,
   finiteNumber,

@@ -1,0 +1,232 @@
+[
+  {
+    "width": 390,
+    "height": 844,
+    "metrics": [
+      {
+        "id": "routeHudBtn",
+        "x": 226.765625,
+        "y": 158,
+        "width": 153.234375,
+        "height": 44,
+        "hit": true
+      },
+      {
+        "id": "pauseBtn",
+        "x": 326,
+        "y": 10,
+        "width": 54,
+        "height": 44,
+        "hit": true
+      },
+      {
+        "id": "virtualJoystick",
+        "x": 14,
+        "y": 718,
+        "width": 112,
+        "height": 112,
+        "hit": true
+      },
+      {
+        "id": "touchBoostBtn",
+        "x": 312,
+        "y": 766,
+        "width": 64,
+        "height": 64,
+        "hit": true
+      },
+      {
+        "id": "touchSkillBtn",
+        "x": 254,
+        "y": 724,
+        "width": 48,
+        "height": 48,
+        "hit": true
+      },
+      {
+        "id": "touchWeaponBtn",
+        "x": 254,
+        "y": 782,
+        "width": 48,
+        "height": 48,
+        "hit": true
+      },
+      {
+        "id": "touchPauseBtn",
+        "x": 14,
+        "y": 632,
+        "width": 48,
+        "height": 48,
+        "hit": true
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 390,
+    "metrics": [
+      {
+        "id": "routeHudBtn",
+        "x": 345.3828125,
+        "y": 330,
+        "width": 153.234375,
+        "height": 44,
+        "hit": true
+      },
+      {
+        "id": "pauseBtn",
+        "x": 291.625,
+        "y": 8,
+        "width": 54,
+        "height": 44,
+        "hit": true
+      },
+      {
+        "id": "virtualJoystick",
+        "x": 10,
+        "y": 296,
+        "width": 84,
+        "height": 84,
+        "hit": true
+      },
+      {
+        "id": "touchBoostBtn",
+        "x": 770,
+        "y": 316,
+        "width": 64,
+        "height": 64,
+        "hit": true
+      },
+      {
+        "id": "touchSkillBtn",
+        "x": 712,
+        "y": 274,
+        "width": 48,
+        "height": 48,
+        "hit": true
+      },
+      {
+        "id": "touchWeaponBtn",
+        "x": 712,
+        "y": 332,
+        "width": 48,
+        "height": 48,
+        "hit": true
+      },
+      {
+        "id": "touchPauseBtn",
+        "x": 10,
+        "y": 220,
+        "width": 48,
+        "height": 48,
+        "hit": true
+      }
+    ]
+  },
+  {
+    "width": 360,
+    "height": 640,
+    "metrics": [
+      {
+        "id": "routeHudBtn",
+        "x": 164.625,
+        "y": 158,
+        "width": 153.234375,
+        "height": 44,
+        "hit": true
+      },
+      {
+        "id": "pauseBtn",
+        "x": 263.859375,
+        "y": 16.5,
+        "width": 54,
+        "height": 44,
+        "hit": true
+      },
+      {
+        "id": "virtualJoystick",
+        "x": 46.125,
+        "y": 514,
+        "width": 112,
+        "height": 112,
+        "hit": true
+      },
+      {
+        "id": "touchBoostBtn",
+        "x": 249.859375,
+        "y": 562,
+        "width": 64,
+        "height": 64,
+        "hit": true
+      },
+      {
+        "id": "touchSkillBtn",
+        "x": 191.859375,
+        "y": 520,
+        "width": 48,
+        "height": 48,
+        "hit": true
+      },
+      {
+        "id": "touchWeaponBtn",
+        "x": 191.859375,
+        "y": 578,
+        "width": 48,
+        "height": 48,
+        "hit": true
+      },
+      {
+        "id": "touchPauseBtn",
+        "x": 46.125,
+        "y": 428,
+        "width": 48,
+        "height": 48,
+        "hit": true
+      }
+    ]
+  },
+  {
+    "width": 1366,
+    "height": 600,
+    "metrics": [
+      {
+        "id": "routeHudBtn",
+        "x": 657.390625,
+        "y": 159,
+        "width": 153.234375,
+        "height": 44,
+        "hit": true
+      },
+      {
+        "id": "pauseBtn",
+        "x": 756.625,
+        "y": 17.5,
+        "width": 54,
+        "height": 44,
+        "hit": true
+      }
+    ]
+  },
+  {
+    "width": 1280,
+    "height": 640,
+    "metrics": [
+      {
+        "id": "routeHudBtn",
+        "x": 623.625,
+        "y": 159,
+        "width": 153.234375,
+        "height": 44,
+        "hit": true
+      },
+      {
+        "id": "pauseBtn",
+        "x": 722.859375,
+        "y": 17.5,
+        "width": 54,
+        "height": 44,
+        "hit": true
+      }
+    ]
+  }
+]

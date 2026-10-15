@@ -1,0 +1,102 @@
+{
+  "status": "VERIFIED",
+  "before": {
+    "release": "R86",
+    "source_commit": "bcefb9dfc9ffed6b64a820019513dadd5ffc14a0",
+    "captured_before_runtime_edits": true
+  },
+  "after": {
+    "release": "R87",
+    "version": "0.87.0",
+    "capture_command": "npm run evidence:r87",
+    "source_hashes": {
+      "index.html": "329586943ade93b904337484ab932d8f2e67f945c33ebea51927373f949d83b5",
+      "src/version.js": "f73d035e3dea9c5820b93b0084fee6affb7b8ec9b408849b0afc65f07f762a90",
+      "src/config.js": "4e0c56d4f3bf47bc64740c43f844f32637db1270751ff17cd65b1d5cfd3643cb",
+      "src/game.js": "45681aa6ffe17eee1eedb5133d2aee92ec4fcef2ee1d420b1e298f99a9fe9672",
+      "src/rules.js": "faf84535a5235e326c05fac7452f9fafeb3bf2e2f25b6140cde7f3a4f3c20ef6",
+      "src/ui.js": "b7701229d4c28e9a33e1a4cb4db392c20b6fe90c349a08579d31fa33577505ad",
+      "sw.js": "279e66adad0248a95f3c96414c3b4d312e4b6963328a5236da41a00e85189a1e"
+    }
+  },
+  "browser": "headless Chromium; GPU disabled; no visible window",
+  "fixtures": "Fixed combat/latch screenshots; route/supply screenshots use the native accept and pickup flow. Route completion screenshots come from runtime E2E.",
+  "new_art_assets": [],
+  "images": [
+    {
+      "path": "after-1366x600-combat.png",
+      "sha256": "91ad20a6f2041674bb7f5ac29fcb5da8afe370b3e337f7f1a97f6d55726fa341",
+      "bytes": 1047888
+    },
+    {
+      "path": "after-1366x600-routes.png",
+      "sha256": "e75482a33a652a0bc90207f9bcc800f9c0b6e18e2d6215b4907c8f4cb304522e",
+      "bytes": 254815
+    },
+    {
+      "path": "after-1366x600-supply.png",
+      "sha256": "3215a90d6fc6deebb6974b7c588077c9caf8c50c9af62e6f7388832bd39f6d1b",
+      "bytes": 1004781
+    },
+    {
+      "path": "after-390x844-combat.png",
+      "sha256": "edfa6f7046f3904167ff7c071f44de198cb6a05e8c7d1fcf76f9951162facd20",
+      "bytes": 232507
+    },
+    {
+      "path": "after-390x844-routes.png",
+      "sha256": "b663c901c3b29742411c4d7b0e0d6a103c5f222d19c7a7bff4442573357ab56d",
+      "bytes": 70404
+    },
+    {
+      "path": "after-390x844-supply.png",
+      "sha256": "b2bb2bdbe6f4130295ba7e00ec735481317e6fcf978645f62f9bcc7594bfa08a",
+      "bytes": 220423
+    },
+    {
+      "path": "after-844x390-combat.png",
+      "sha256": "6bf16a25d117de251f5a1c26f6b06f0a2bc48060988fcae298e826630b31b726",
+      "bytes": 222299
+    },
+    {
+      "path": "after-844x390-routes.png",
+      "sha256": "eba766491e72fe293caa446a1bd6845f5b39e0f2b5fc02994da0c13a362c034e",
+      "bytes": 63953
+    },
+    {
+      "path": "after-844x390-supply.png",
+      "sha256": "6428b4fbcbf0fe0f98464cbadb9b5bcd0e8b06a9eff32abe5512ae169a8ef2b5",
+      "bytes": 210703
+    },
+    {
+      "path": "before-1366x600-combat.png",
+      "sha256": "a4ed17b23a93a840fa53a2cc8e8aac56c8bee839efde1143c5f4424f62cf87b3",
+      "bytes": 1054493
+    },
+    {
+      "path": "before-390x844-combat.png",
+      "sha256": "547ccb95c3829661c8d48e86589f386a14fd8a146913f12d74ff290e55ade952",
+      "bytes": 229441
+    },
+    {
+      "path": "before-844x390-combat.png",
+      "sha256": "c1df9454770fcef528f5b6a8ae43410770617d419d7ac91bd30036de1ec82e51",
+      "bytes": 215577
+    },
+    {
+      "path": "verified-frontline-completed.png",
+      "sha256": "e858495a9593f38b7bc0462c8b512548636261004322734d1cce3eae0f5b9610",
+      "bytes": 237968
+    },
+    {
+      "path": "verified-rescue-completed.png",
+      "sha256": "114fa64f0f9e927f11efc3183e0c7057ba4da901b7210476beb75d09fc78b90a",
+      "bytes": 242308
+    },
+    {
+      "path": "verified-salvage-completed.png",
+      "sha256": "8082ebc47637b1d5fa430d3040c9e4850fc08a9ca1d6ff048d43b219c06797a4",
+      "bytes": 242630
+    }
+  ]
+}

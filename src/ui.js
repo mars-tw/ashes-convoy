@@ -32,6 +32,9 @@
   let joystickPointerId = null;
   let joystickVector = { x: 0, y: 0 };
   let canvasTapStart = null;
+  let driftPointer = null;
+  let routeBoardOpen = false;
+  let routeReturnToPlay = false;
   let primaryPointerCoarseQuery = null;
   let drawerReturnContext = null;
   const SORTIE_CONFIRM_WINDOW_MS = 5000;
@@ -503,8 +506,8 @@
   function activateTouchSkill() {
     const state = game.getState();
     if (state && state.supplyChoice) {
-      const rewardIds = Array.isArray(state.supplyChoice.rewardIds) ? state.supplyChoice.rewardIds : [];
-      if (rewardIds[0]) game.chooseSupplyReward(rewardIds[0]);
+      const first = els.supplyChoiceList.querySelector(".supply-choice-btn");
+      if (first) first.focus({ preventScroll: true });
       return;
     }
     if (typeof game.focusRunObject === "function") game.focusRunObject("supply");
@@ -537,6 +540,60 @@
     els.touchBoostBtn.style.setProperty("--drift-progress", progress.toFixed(3));
     els.touchBoostBtn.classList.toggle("is-ready", progress >= 1);
     els.touchBoostBtn.classList.toggle("is-urgent", progress >= 1 && Number(state.latch.latched) > 0);
+    els.touchBoostBtn.setAttribute("aria-disabled", remaining > 0 ? "true" : "false");
+    els.touchBoostBtn.setAttribute("aria-label", remaining > 0 ? `甩尾冷卻 ${remaining.toFixed(1)} 秒` : "甩尾衝撞（甩飛攀車屍，拖出按鈕可取消）");
+    const feedback = remaining > 0 ? `甩尾 ${remaining.toFixed(1)} 秒` : Number(state.latch.latched) > 0 ? `攀車 ${state.latch.latched} 隻！按甩` : "甩尾就緒";
+    if (els.touchFeedback.textContent !== feedback) els.touchFeedback.textContent = feedback;
+  }
+
+  function renderRouteHud(state) {
+    if (!els.routeHudBtn) return;
+    const active = state && !state.over && ["playing", "paused"].includes(state.mode);
+    els.routeHudBtn.hidden = !active || !!state.supplyChoice || routeBoardOpen;
+    if (!active) return;
+    const route = state.routeContract;
+    const def = route && config.ROUTE_CONTRACTS[route.id];
+    els.routeHudBtn.textContent = !def ? "路線委託：選一條支線 ›" : route.status === "active"
+      ? `${def.label} ${route.progress}/${def.target}・${Math.max(0, Math.ceil(route.deadline - state.time))}秒 ›`
+      : `${def.label}${route.status === "completed" ? "完成 ✓" : "逾時"}・路線圖 ›`;
+  }
+
+  function closeRouteBoard() {
+    if (!routeBoardOpen) return;
+    routeBoardOpen = false;
+    els.routeBoard.hidden = true;
+    if (routeReturnToPlay && !game.getState().over) game.resume();
+    else onState(game.getState());
+    els.routeHudBtn.focus({ preventScroll: true });
+  }
+
+  function openRouteBoard() {
+    const state = game.getState();
+    if (!state || state.over || !["playing", "paused"].includes(state.mode)) return;
+    routeReturnToPlay = !state.paused;
+    routeBoardOpen = true;
+    resetJoystick();
+    driftPointer = null;
+    els.touchBoostBtn.classList.remove("is-active");
+    game.pause();
+    els.routeBoard.hidden = false;
+    const completions = rules.sanitizeRouteCompletions(meta.routeCompletions, config);
+    const current = state.stats.routeCompletions || {};
+    const discovered = Object.keys(completions).filter(id => completions[id] + (current[id] || 0) > 0).length;
+    const busy = state.routeContract && (state.routeContract.status === "active" || state.routeContract.wave === state.wave);
+    els.routeBoardHint.textContent = `戰鬥已暫停｜路線圖鑑 ${discovered}/3｜${busy ? "本波已接單，下一波可再選" : "一波一單，逾時無獎勵"}`;
+    els.routeBoardList.textContent = "";
+    Object.values(config.ROUTE_CONTRACTS).forEach(def => {
+      const button = root.document.createElement("button");
+      button.type = "button";
+      button.className = "route-card";
+      button.dataset.routeId = def.id;
+      button.disabled = !!busy;
+      button.innerHTML = `<b>${def.label} <em>完成 ${completions[def.id] + (current[def.id] || 0)} 次</em></b><span>${def.objective}／${def.seconds}秒</span><small>${def.bonus}（限一箱）</small><strong>${def.reward}</strong>`;
+      button.addEventListener("click", () => { game.acceptRouteContract(def.id); closeRouteBoard(); });
+      els.routeBoardList.appendChild(button);
+    });
+    els.routeBoardCloseBtn.focus({ preventScroll: true });
   }
 
   function renderTouchControls(state) {
@@ -544,6 +601,7 @@
     const showTouchControls = playing && primaryPointerIsCoarse();
     if (els.touchControls) els.touchControls.classList.toggle("is-visible", showTouchControls);
     if (showTouchControls) renderDriftButton(state);
+    renderRouteHud(state);
     if (!showTouchControls && (joystickPointerId != null || joystickVector.x || joystickVector.y)) {
       resetJoystick();
     }
@@ -1504,6 +1562,7 @@
     if (!els.runAnalysisPanel || !run) return;
     const supplyParts = run.partsBreakdown && run.partsBreakdown.supplyParts ? run.partsBreakdown.supplyParts : run.supplyParts || 0;
     const sections = [
+      ["路線", `${Object.entries(run.routeCompletions || {}).filter(([, n]) => n > 0).map(([id, n]) => `${config.ROUTE_CONTRACTS[id].label} ${n} 次`).join("、") || "尚未完成"}；逾時 ${run.routeFailures || 0} 次`],
       ["死前5秒", deathSummaryLine(run)],
       ["受傷", damageTakenDistributionLine(run)],
       ["事件", eventAnalysisLine(run)],
@@ -1597,7 +1656,9 @@
     const rewardIds = Array.isArray(choice.rewardIds)
       ? choice.rewardIds
       : Object.keys((config.SUPPLY_DROPS && config.SUPPLY_DROPS.rewards) || {});
-    const key = `${choice.dropId}:${rewardIds.join(",")}`;
+    const route = state.routeContract;
+    const routeDef = route && route.status === "active" && !route.bonusUsed ? config.ROUTE_CONTRACTS[route.id] : null;
+    const key = `${choice.dropId}:${rewardIds.join(",")}:${routeDef ? routeDef.id : ""}`;
     if (lastSupplyChoiceKey !== key) {
       if (supplyChoiceUnlockTimer) root.clearTimeout(supplyChoiceUnlockTimer);
       els.supplyChoiceOverlay.classList.add("is-input-guarded");
@@ -1627,6 +1688,13 @@
         button.dataset.rewardId = rewardId;
         button.setAttribute("aria-label", `${reward.label} ${supplyRewardValueText(reward)}`);
         button.innerHTML = `<b>${index + 1}. ${reward.label}</b><span>${supplyRewardValueText(reward)}</span><small>${supplyRewardDetailText(reward)}</small>`;
+        if (routeDef && routeDef.recommended === rewardId) {
+          button.classList.add("is-route-recommended");
+          const note = root.document.createElement("em");
+          note.className = "route-supply-note";
+          note.textContent = `路線加成：${routeDef.id === "rescue" ? "修復 +6%" : routeDef.id === "salvage" ? "零件 +1" : "延長 8 秒"}`;
+          button.appendChild(note);
+        }
         if (optionState.maxed && optionState.overflowText) {
           button.insertAdjacentHTML("beforeend", `<em class="choice-overflow-badge">已滿 → 溢出：${optionState.overflowText}</em>`);
         }
@@ -2154,12 +2222,14 @@
       const runDrawerOpen = !!(
         drawerReturnContext && drawerReturnContext.returnToRun && els.metaDrawer && !els.metaDrawer.hidden
       );
-      if (!quickWheelPausedRun && !runDrawerOpen) showPause();
+      if (!quickWheelPausedRun && !runDrawerOpen && !routeBoardOpen) showPause();
       else els.pausePanel.hidden = true;
     }
   }
 
   function onRunEnd(result) {
+    routeBoardOpen = false;
+    els.routeBoard.hidden = true;
     const storyUnlocks = countNewlyUnlockedStory(meta, result && result.meta ? result.meta : meta);
     meta = migrateUiMeta(result.meta);
     lastSettlement = Object.assign({}, result, { meta });
@@ -2295,6 +2365,19 @@
       if (els.trailerOverlay && !els.trailerOverlay.hidden) renderTrailerRoom();
     });
     els.pauseBtn.addEventListener("click", () => game.togglePause());
+    els.touchPauseBtn.addEventListener("click", () => game.pause());
+    els.routeHudBtn.addEventListener("click", openRouteBoard);
+    els.routeBoardCloseBtn.addEventListener("click", closeRouteBoard);
+    root.document.addEventListener("keydown", event => {
+      if (!routeBoardOpen) return;
+      if (event.key === "Escape") { event.preventDefault(); event.stopImmediatePropagation(); closeRouteBoard(); }
+      else if (event.key === "Tab") {
+        const buttons = Array.from(els.routeBoard.querySelectorAll("button:not(:disabled)"));
+        const index = buttons.indexOf(root.document.activeElement);
+        event.preventDefault();
+        buttons[(index + (event.shiftKey ? -1 : 1) + buttons.length) % buttons.length].focus();
+      } else if (!["Enter", " "].includes(event.key)) event.stopImmediatePropagation();
+    }, true);
     els.resumeBtn.addEventListener("click", () => {
       game.resume();
       showPlaying();
@@ -2344,6 +2427,7 @@
     if (els.quickUpgradeCloseBtn) els.quickUpgradeCloseBtn.addEventListener("click", hideQuickUpgradeWheel);
     if (els.virtualJoystick) {
       els.virtualJoystick.addEventListener("pointerdown", (event) => {
+        if (joystickPointerId != null) return;
         joystickPointerId = event.pointerId;
         // R83（掃描 P2）：合成事件無有效 pointerId 時 setPointerCapture 會丟例外，
         // 觸發全域異常橫幅——包 try/catch，capture 失敗不影響搖桿基本操作。
@@ -2363,22 +2447,35 @@
         event.preventDefault();
       });
       els.virtualJoystick.addEventListener("pointercancel", resetJoystick);
+      els.virtualJoystick.addEventListener("lostpointercapture", resetJoystick);
     }
     if (els.touchBoostBtn) {
       // R86：「甩」＝甩尾衝撞——朝搖桿方向橫甩車身、撞開周圍屍體並甩飛攀車屍；冷卻環由 renderDriftButton 更新。
       els.touchBoostBtn.addEventListener("pointerdown", (event) => {
+        if (driftPointer != null || event.button !== 0) return;
+        driftPointer = event.pointerId;
         els.touchBoostBtn.classList.add("is-active");
-        if (typeof game.driftBurst === "function") {
-          const dir = Math.abs(joystickVector.x || 0) > 0.2 ? Math.sign(joystickVector.x) : 0;
-          game.driftBurst(dir);
+        try { els.touchBoostBtn.setPointerCapture(event.pointerId); } catch (_) { /* pointer may already be released */ }
+        event.preventDefault();
+      });
+      els.touchBoostBtn.addEventListener("pointerup", event => {
+        if (driftPointer !== event.pointerId) return;
+        const box = els.touchBoostBtn.getBoundingClientRect();
+        const inside = event.clientX >= box.left && event.clientX <= box.right && event.clientY >= box.top && event.clientY <= box.bottom;
+        driftPointer = null;
+        els.touchBoostBtn.classList.remove("is-active");
+        if (inside) {
+          const rect = els.gameCanvas.getBoundingClientRect();
+          const axis = rect.width > rect.height ? joystickVector.y : joystickVector.x;
+          game.driftBurst(Math.abs(axis) > 0.2 ? Math.sign(axis) : 0);
         }
         event.preventDefault();
       });
-      ["pointerup", "pointercancel", "pointerleave"].forEach((type) => {
-        els.touchBoostBtn.addEventListener(type, () => {
-          els.touchBoostBtn.classList.remove("is-active");
-        });
-      });
+      const cancelDrift = () => { driftPointer = null; els.touchBoostBtn.classList.remove("is-active"); };
+      ["pointercancel", "lostpointercapture"].forEach(type => els.touchBoostBtn.addEventListener(type, cancelDrift));
+      els.touchBoostBtn.addEventListener("click", event => { if (event.detail === 0 && driftPointer == null) game.driftBurst(0); });
+      root.addEventListener("blur", cancelDrift);
+      root.addEventListener("resize", () => { cancelDrift(); resetJoystick(); });
     }
     if (els.touchSkillBtn) els.touchSkillBtn.addEventListener("click", activateTouchSkill);
     if (els.touchWeaponBtn) els.touchWeaponBtn.addEventListener("click", activateTouchWeapon);
@@ -2533,6 +2630,13 @@
       "supplyChoiceHint",
       "supplyChoiceList",
       "touchControls",
+      "touchFeedback",
+      "touchPauseBtn",
+      "routeHudBtn",
+      "routeBoard",
+      "routeBoardCloseBtn",
+      "routeBoardList",
+      "routeBoardHint",
       "virtualJoystick",
       "virtualJoystickKnob",
       "touchBoostBtn",

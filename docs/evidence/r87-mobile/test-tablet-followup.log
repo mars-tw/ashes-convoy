@@ -1,0 +1,13 @@
+SMOKE_PHASE phone-landscape load
+SMOKE_PHASE phone-landscape real-touch-move
+SMOKE_CASE_PASS phone-landscape
+SMOKE_PHASE phone-portrait load
+SMOKE_PHASE phone-portrait real-touch-move
+SMOKE_CASE_PASS phone-portrait
+SMOKE_PHASE tablet-landscape load
+SMOKE_PHASE tablet-landscape real-touch-move
+SMOKE_CASE_PASS tablet-landscape
+SMOKE_PHASE tablet-portrait load
+SMOKE_PHASE tablet-portrait real-touch-move
+SMOKE_CASE_PASS tablet-portrait
+SMOKE_FINAL {"passed":true,"elapsed_ms":56530,"cases":[{"name":"phone-landscape","passed":true},{"name":"phone-portrait","passed":true},{"name":"tablet-landscape","passed":true},{"name":"tablet-portrait","passed":true}],"cleanup":{"browser_closed":true,"server_closed":true}}

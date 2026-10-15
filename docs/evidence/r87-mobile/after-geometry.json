@@ -1,0 +1,260 @@
+[
+  {
+    "viewport": [
+      390,
+      844
+    ],
+    "controls": [
+      {
+        "id": "virtualJoystick",
+        "box": {
+          "x": 14,
+          "y": 718,
+          "width": 112,
+          "height": 112,
+          "top": 718,
+          "right": 126,
+          "bottom": 830,
+          "left": 14
+        }
+      },
+      {
+        "id": "touchBoostBtn",
+        "box": {
+          "x": 312,
+          "y": 766,
+          "width": 64,
+          "height": 64,
+          "top": 766,
+          "right": 376,
+          "bottom": 830,
+          "left": 312
+        }
+      },
+      {
+        "id": "touchSkillBtn",
+        "box": {
+          "x": 254,
+          "y": 724,
+          "width": 48,
+          "height": 48,
+          "top": 724,
+          "right": 302,
+          "bottom": 772,
+          "left": 254
+        }
+      },
+      {
+        "id": "touchWeaponBtn",
+        "box": {
+          "x": 254,
+          "y": 782,
+          "width": 48,
+          "height": 48,
+          "top": 782,
+          "right": 302,
+          "bottom": 830,
+          "left": 254
+        }
+      },
+      {
+        "id": "touchPauseBtn",
+        "box": {
+          "x": 14,
+          "y": 632,
+          "width": 48,
+          "height": 48,
+          "top": 632,
+          "right": 62,
+          "bottom": 680,
+          "left": 14
+        }
+      },
+      {
+        "id": "routeHudBtn",
+        "box": {
+          "x": 226.765625,
+          "y": 158,
+          "width": 153.234375,
+          "height": 44,
+          "top": 158,
+          "right": 380,
+          "bottom": 202,
+          "left": 226.765625
+        }
+      }
+    ]
+  },
+  {
+    "viewport": [
+      844,
+      390
+    ],
+    "controls": [
+      {
+        "id": "virtualJoystick",
+        "box": {
+          "x": 10,
+          "y": 296,
+          "width": 84,
+          "height": 84,
+          "top": 296,
+          "right": 94,
+          "bottom": 380,
+          "left": 10
+        }
+      },
+      {
+        "id": "touchBoostBtn",
+        "box": {
+          "x": 770,
+          "y": 316,
+          "width": 64,
+          "height": 64,
+          "top": 316,
+          "right": 834,
+          "bottom": 380,
+          "left": 770
+        }
+      },
+      {
+        "id": "touchSkillBtn",
+        "box": {
+          "x": 712,
+          "y": 274,
+          "width": 48,
+          "height": 48,
+          "top": 274,
+          "right": 760,
+          "bottom": 322,
+          "left": 712
+        }
+      },
+      {
+        "id": "touchWeaponBtn",
+        "box": {
+          "x": 712,
+          "y": 332,
+          "width": 48,
+          "height": 48,
+          "top": 332,
+          "right": 760,
+          "bottom": 380,
+          "left": 712
+        }
+      },
+      {
+        "id": "touchPauseBtn",
+        "box": {
+          "x": 10,
+          "y": 220,
+          "width": 48,
+          "height": 48,
+          "top": 220,
+          "right": 58,
+          "bottom": 268,
+          "left": 10
+        }
+      },
+      {
+        "id": "routeHudBtn",
+        "box": {
+          "x": 345.3828125,
+          "y": 330,
+          "width": 153.234375,
+          "height": 44,
+          "top": 330,
+          "right": 498.6171875,
+          "bottom": 374,
+          "left": 345.3828125
+        }
+      }
+    ]
+  },
+  {
+    "viewport": [
+      1366,
+      600
+    ],
+    "controls": [
+      {
+        "id": "virtualJoystick",
+        "box": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      {
+        "id": "touchBoostBtn",
+        "box": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      {
+        "id": "touchSkillBtn",
+        "box": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      {
+        "id": "touchWeaponBtn",
+        "box": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      {
+        "id": "touchPauseBtn",
+        "box": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      {
+        "id": "routeHudBtn",
+        "box": {
+          "x": 657.390625,
+          "y": 159,
+          "width": 153.234375,
+          "height": 44,
+          "top": 159,
+          "right": 810.625,
+          "bottom": 203,
+          "left": 657.390625
+        }
+      }
+    ]
+  }
+]
