@@ -12,22 +12,22 @@ function assertFinitePositive(value, label) {
 
 assert.strictEqual(config.STORAGE_KEY, "ashes_convoy_meta_v1");
 assert.strictEqual(config.META_VERSION, 3);
-assert.strictEqual(config.APP_VERSION, "R87");
-assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r87-v1");
+assert.strictEqual(config.APP_VERSION, "R88");
+assert.strictEqual(config.CACHE_VERSION, "ashes-convoy-r88-v1");
 const vm = require("vm");
 const fallbackContext = { window: {} };
 vm.runInNewContext(fs.readFileSync(path.join(__dirname, "..", "src", "config.js"), "utf8"), fallbackContext);
-assert.strictEqual(fallbackContext.window.DSConfig.APP_VERSION, "R87", "browser fallback must use the same release");
-assert.strictEqual(fallbackContext.window.DSConfig.CACHE_VERSION, "ashes-convoy-r87-v1");
+assert.strictEqual(fallbackContext.window.DSConfig.APP_VERSION, "R88", "browser fallback must use the same release");
+assert.strictEqual(fallbackContext.window.DSConfig.CACHE_VERSION, "ashes-convoy-r88-v1");
 const indexHtml = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-assert(indexHtml.includes("manifest.webmanifest?v=R87"), "index.html should version the web manifest for R85");
-assert(indexHtml.includes("assets/icons/icon-192.png?v=R87"), "index.html should version the app icon for R85");
+assert(indexHtml.includes("manifest.webmanifest?v=R88"), "index.html should version the web manifest for R85");
+assert(indexHtml.includes("assets/icons/icon-192.png?v=R88"), "index.html should version the app icon for R85");
 assert.strictEqual(config.LOGIC.width, 195);
 assert.strictEqual(config.LOGIC.height, 422);
 assert.strictEqual(config.LOGIC.displayWidth, 390);
 assert.strictEqual(config.LOGIC.displayHeight, 844);
 assert.strictEqual(config.LOGIC.renderScale, 2);
-assert.strictEqual(config.START_SCREEN.image, "assets/ui/start.png?v=R87");
+assert.strictEqual(config.START_SCREEN.image, "assets/ui/start.png?v=R88");
 assert.deepStrictEqual(config.ENVIRONMENT_BACKGROUNDS, {
   land: "assets/env/land.png",
   air: "assets/env/air.png",

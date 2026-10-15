@@ -1,0 +1,75 @@
+{
+  "release": "R88",
+  "status": "BLOCKED",
+  "approved_new_runtime_assets": [],
+  "reason": "Built-in output does not attest the explicitly requested gpt-image-2 model. Unchanged verifier rejected both candidates; no fallback model or fake procedural art shipped.",
+  "attempts": [
+    {
+      "enemy": "runner",
+      "status": "BLOCKED",
+      "requested_model_slug": "gpt-image-2",
+      "verified_model_slug": null,
+      "tool": "OpenAI built-in imagegen",
+      "master": "tools\\asset_sources\\imagegen_r88_unverified\\runner-latch.png",
+      "sha256": "7a88ca5f12c0d1011018874c51d7818e4cccd5b113234cf08b7989c2f6ee72f2",
+      "dimensions": [
+        1983,
+        793
+      ],
+      "reference": "assets/enemies/oga_runner_walk.png",
+      "reference_sha256": "cb16d58b6a5b51738168450cf4dd3adc5c696204cfa16a6cd4bf4e7f8ad2805f",
+      "c2pa": {
+        "status": "BLOCKED",
+        "error": "softwareAgent is not gpt-image 2.x: [{'name': 'ChatGPT', 'version': 'gpt-image'}]"
+      },
+      "planned_runtime": "assets/enemies/oga_runner_latch.png",
+      "planned_frames": 4,
+      "planned_frame_size": [
+        40,
+        40
+      ],
+      "runtime_enabled": false,
+      "postprocessing": "None; no candidate accepted or exported",
+      "prompt_summary": "Match existing identity and camera; four independently drawn cling poses in one row; extended arms, alternating elbow pull and knee brace, both elbows flexed, opposite elbow pull; transparent background; no vehicle, props, shadows, text or whole-image transforms."
+    },
+    {
+      "enemy": "shambler",
+      "status": "BLOCKED",
+      "requested_model_slug": "gpt-image-2",
+      "verified_model_slug": null,
+      "tool": "OpenAI built-in imagegen",
+      "master": "tools\\asset_sources\\imagegen_r88_unverified\\shambler-latch.png",
+      "sha256": "04359ad75ed38c560115c18ba69dd623b0d499f0800db32f48e6ab52975aa576",
+      "dimensions": [
+        2172,
+        724
+      ],
+      "reference": "assets/enemies/oga_shambler_walk.png",
+      "reference_sha256": "4e459367f736ae6c7cb4a95a5f4fbd0bd2fbfabd0e98a1190eb6f5d6bd054d68",
+      "c2pa": {
+        "status": "BLOCKED",
+        "error": "softwareAgent is not gpt-image 2.x: [{'name': 'ChatGPT', 'version': 'gpt-image'}]"
+      },
+      "planned_runtime": "assets/enemies/oga_shambler_latch.png",
+      "planned_frames": 4,
+      "planned_frame_size": [
+        40,
+        40
+      ],
+      "runtime_enabled": false,
+      "postprocessing": "None; no candidate accepted or exported",
+      "prompt_summary": "Match existing identity and camera; four independently drawn cling poses in one row; extended arms, alternating elbow pull and knee brace, both elbows flexed, opposite elbow pull; transparent background; no vehicle, props, shadows, text or whole-image transforms."
+    }
+  ],
+  "replacement_contract": {
+    "config": "DSConfig.ENEMIES[enemyId].spriteActions.latch",
+    "image": "verified transparent RGBA atlas, 160x40 for runner and shambler",
+    "frames": 4,
+    "frameWidth": 40,
+    "frameHeight": 40,
+    "fps": 5,
+    "priority": "hurt > active attack > latch > walk",
+    "low_quality": "two real frames, never bobbing",
+    "acceptance": "Verify model source, independently changing limbs, head/clothing consistency, in-game visuals, alpha/unique-frame and impact regressions before enabling"
+  }
+}

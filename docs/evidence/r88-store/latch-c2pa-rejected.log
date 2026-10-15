@@ -1,0 +1,29 @@
+python : Traceback (most recent call last):
+
+位於 線路:2 字元:391
+
++ ... -latch.png; python scripts/verify-c2pa.py tools/asset_sources/imagege ...
+
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+
+    + FullyQualifiedErrorId : NativeCommandError
+
+
+
+  File "C:\Users\digimkt\Desktop\遊戲\doomsday-shooter\scripts\verify-c2pa.py", line 193, in <module>
+
+    main()
+
+  File "C:\Users\digimkt\Desktop\遊戲\doomsday-shooter\scripts\verify-c2pa.py", line 183, in main
+
+    results = [verify(path) for path in args.paths]
+
+               ^^^^^^^^^^^^
+
+  File "C:\Users\digimkt\Desktop\遊戲\doomsday-shooter\scripts\verify-c2pa.py", line 163, in verify
+
+    raise ValueError(f"softwareAgent is not gpt-image 2.x: {agents!r}")
+
+ValueError: softwareAgent is not gpt-image 2.x: [{'name': 'ChatGPT', 'version': 'gpt-image'}]

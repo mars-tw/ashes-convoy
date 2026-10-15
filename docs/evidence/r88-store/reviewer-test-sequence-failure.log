@@ -1,0 +1,91 @@
+PASS R88 reviewer 375x667 1.6s
+
+node : locator.click: Timeout 30000ms exceeded.
+
+位於 線路:2 字元:1
+
++ node scripts/test-r88-reviewer.js *> docs/evidence/r88-store/test-r88 ...
+
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    + CategoryInfo          : NotSpecified: (locator.click: Timeout 30000ms exceeded.:String) [], RemoteException
+
+    + FullyQualifiedErrorId : NativeCommandError
+
+
+
+Call log:
+
+[2m  - waiting for locator('#routeHudBtn')[22m
+
+[2m    - locator resolved to <button type="button" id="routeHudBtn" class="route-hud-btn">廢車場 0/2・24秒 ›</button>[22m
+
+[2m  - attempting click action[22m
+
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+
+[2m      - element is not visible[22m
+
+[2m    - retrying click action[22m
+
+[2m    - waiting 20ms[22m
+
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+
+[2m      - element is not visible[22m
+
+[2m    - retrying click action[22m
+
+[2m      - waiting 100ms[22m
+
+[2m    56 × waiting for element to be visible, enabled and stable[22m
+
+[2m       - element is not visible[22m
+
+[2m     - retrying click action[22m
+
+[2m       - waiting 500ms[22m
+
+
+
+    at C:\Users\digimkt\Desktop\遊戲\doomsday-shooter\scripts\test-r88-reviewer.js:104:40
+
+    at async harness (C:\Users\digimkt\Desktop\遊戲\doomsday-shooter\scripts\mobile-r87-harness.js:22:9) {
+
+  log: [
+
+    "  - waiting for locator('#routeHudBtn')",
+
+    '    - locator resolved to <button type="button" id="routeHudBtn" class="route-hud-btn">廢車場 0/2・24秒 ›</button>',
+
+    '  - attempting click action',
+
+    '    2 × waiting for element to be visible, enabled and stable',
+
+    '      - element is not visible',
+
+    '    - retrying click action',
+
+    '    - waiting 20ms',
+
+    '    2 × waiting for element to be visible, enabled and stable',
+
+    '      - element is not visible',
+
+    '    - retrying click action',
+
+    '      - waiting 100ms',
+
+    '    56 × waiting for element to be visible, enabled and stable',
+
+    '       - element is not visible',
+
+    '     - retrying click action',
+
+    '       - waiting 500ms'
+
+  ],
+
+  name: 'TimeoutError'
+
+}

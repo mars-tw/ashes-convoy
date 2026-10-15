@@ -1,0 +1,67 @@
+[
+  {
+    "id": "rescue",
+    "route": {
+      "id": "rescue",
+      "wave": 2,
+      "status": "completed",
+      "progress": 1,
+      "baseline": 0,
+      "deadline": 24.1667,
+      "bonusUsed": true,
+      "partsGranted": 2
+    },
+    "hpBefore": 260,
+    "hpAfter": 333,
+    "shield": 78,
+    "parts": 2
+  },
+  {
+    "id": "salvage",
+    "route": {
+      "id": "salvage",
+      "wave": 2,
+      "status": "completed",
+      "progress": 2,
+      "baseline": 0,
+      "deadline": 24.0833,
+      "bonusUsed": true,
+      "partsGranted": 4
+    },
+    "flung": 2,
+    "supplyParts": 4,
+    "eventParts": 5
+  },
+  {
+    "id": "frontline",
+    "route": {
+      "id": "frontline",
+      "wave": 2,
+      "status": "completed",
+      "progress": 6,
+      "baseline": 0,
+      "deadline": 28.0667,
+      "bonusUsed": true,
+      "partsGranted": 3
+    },
+    "kills": 6,
+    "buffs": [
+      {
+        "id": "buff_23",
+        "rewardId": "damage_boost",
+        "label": "火力補給",
+        "type": "damage",
+        "fireIntervalMul": 1,
+        "damageAdd": 0.2,
+        "until": 18.58
+      },
+      {
+        "id": "route_buff_94",
+        "rewardId": "damage_boost",
+        "type": "damage",
+        "damageAdd": 0.15,
+        "until": 23.1933
+      }
+    ]
+  }
+]

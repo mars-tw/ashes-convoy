@@ -1,0 +1,25 @@
+{
+  "status": "VERIFIED",
+  "fixtureOnly": true,
+  "productionClingArt": "BLOCKED",
+  "result": {
+    "high": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "low": [
+      0,
+      1
+    ],
+    "attack": true,
+    "fallback": 0
+  },
+  "cache": {
+    "first": 8,
+    "last": 8,
+    "drawn": 10,
+    "cling": 0
+  }
+}

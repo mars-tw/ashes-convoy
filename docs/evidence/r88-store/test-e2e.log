@@ -1,0 +1,189 @@
+> ashes-convoy@0.88.0 test:e2e
+
+> node scripts/test-e2e.js && node scripts/wait-for-browser-memory.js && node scripts/test-r76-controls.js && node scripts/wait-for-browser-memory.js && node scripts/test-r83-p0.js && node scripts/wait-for-browser-memory.js && node scripts/test-r84-playtest.js && node scripts/wait-for-browser-memory.js && node scripts/test-r85-landscape.js && node scripts/wait-for-browser-memory.js && node scripts/test-tablet-aspect.js && node scripts/wait-for-browser-memory.js && node scripts/test-r86-latch-e2e.js && node scripts/wait-for-browser-memory.js && node scripts/test-r87-mobile.js && node scripts/wait-for-browser-memory.js && node scripts/test-r88-reviewer.js && node scripts/wait-for-browser-memory.js && node scripts/test-r88-animation-pipeline.js
+
+
+
+E2E viewport PASS 390x844
+
+E2E viewport PASS 820x1180
+
+E2E viewport PASS 1280x900
+
+E2E viewport PASS 1366x700
+
+E2E image fallback PASS
+
+E2E vehicle image fallback PASS
+
+E2E zombie image fallback PASS
+
+E2E environment background fallback PASS
+
+E2E audio synthesis PASS
+
+E2E service worker offline PASS
+
+E2E tests PASS
+
+BROWSER MEMORY GATE PASS free=35.55GiB attempt=0
+
+R76 controls PASS desktop 1920x1080
+
+R76 controls PASS desktop 1440x780
+
+R76 controls PASS desktop 1366x600
+
+R76 controls PASS desktop 1280x640
+
+R76 controls PASS mobile 390x844
+
+R76 controls tests PASS
+
+BROWSER MEMORY GATE PASS free=35.51GiB attempt=0
+
+PASS 390x844 全域 hidden 安全網與正常顯示切換
+
+PASS 390x844 快速升級輪盤真實點擊可開可關
+
+PASS 390x844 跑局中出擊兩段式確認、非跑局單擊直發
+
+PASS 844x390 全域 hidden 安全網與正常顯示切換
+
+PASS 844x390 快速升級輪盤真實點擊可開可關
+
+PASS 844x390 跑局中出擊兩段式確認、非跑局單擊直發
+
+PASS 844x390 無線電日誌／補給可達性
+
+PASS 出擊確認 4.9s／5.0s／抽屜關閉重開邊界
+
+PASS fine-pointer 補給提示含 1-5 快捷
+
+R83 P0 guard PASS
+
+BROWSER MEMORY GATE PASS free=35.57GiB attempt=0
+
+PASS R1-META-02 跑局設定可點、可關、關後回 playing
+
+PASS R1-SUPPLY-03 既有射擊 click 不誤選、短暫後可選
+
+PASS R1-OUTCOME-04 / R1-SETTLE-05 撤離／陣亡語意與 preventScroll
+
+PASS R1-WHEEL-07 首玩車體快升 affordance 與工坊語意區隔
+
+PASS R1-LAND-01 / R1-TRAILER-06 橫向提示退場與家具雙欄壓縮
+
+R84 PLAYTEST-R1 guard PASS
+
+BROWSER MEMORY GATE PASS free=35.55GiB attempt=0
+
+PASS R85 landscape-native 844x390／HUD-event 分區／逆投影／無線電
+
+R85 R1-LAND-01 guard PASS
+
+BROWSER MEMORY GATE PASS free=35.54GiB attempt=0
+
+SMOKE_PHASE phone-landscape load
+
+SMOKE_PHASE phone-landscape real-touch-move
+
+SMOKE_CASE_PASS phone-landscape
+
+SMOKE_PHASE phone-portrait load
+
+SMOKE_PHASE phone-portrait real-touch-move
+
+SMOKE_CASE_PASS phone-portrait
+
+SMOKE_PHASE tablet-landscape load
+
+SMOKE_PHASE tablet-landscape real-touch-move
+
+SMOKE_CASE_PASS tablet-landscape
+
+SMOKE_PHASE tablet-portrait load
+
+SMOKE_PHASE tablet-portrait real-touch-move
+
+SMOKE_CASE_PASS tablet-portrait
+
+SMOKE_FINAL {"passed":true,"elapsed_ms":55581,"cases":[{"name":"phone-landscape","passed":true},{"name":"phone-portrait","passed":true},{"name":"tablet-landscape","passed":true},{"name":"tablet-portrait","passed":true}],"cleanup":{"browser_closed":true,"server_closed":true}}
+
+BROWSER MEMORY GATE PASS free=34.26GiB attempt=0
+
+PASS R86 攀附＋命中幀啃咬
+
+PASS R86 滑鼠急甩甩飛＋保齡球撞擊
+
+PASS R86 空白鍵甩尾＋冷卻
+
+PASS R86 結算列出甩飛
+
+PASS R86 觸控甩按鈕＋冷卻環
+
+R86 latch e2e PASS
+
+BROWSER MEMORY GATE PASS free=34.06GiB attempt=0
+
+PASS R87 390x844 控制、路線與返回可達
+
+PASS R87 844x390 控制、路線與返回可達
+
+PASS R87 360x640 控制、路線與返回可達
+
+PASS R87 1366x600 控制、路線與返回可達
+
+PASS R87 1280x640 控制、路線與返回可達
+
+PASS R87 救援原生補給、搭配與完成收益
+
+PASS R87 廢車場真攀附、真觸控甩飛、零件搭配
+
+PASS R87 火線真射擊擊殺與延長火力
+
+PASS R87 逾時不發獎與不重複計失敗
+
+PASS R87 取消、拖出、暫停鍵與返回
+
+PASS R87 路線永久收藏、結算與重載
+
+PASS R87 路線鍵盤焦點與 Escape 返回原局
+
+PASS R87 直橫與短手機五張補給卡完整可點
+
+PASS R87 橫向多指搖桿甩尾方向與旋轉清除
+
+R87 mobile VERIFIED 14/14
+
+BROWSER MEMORY GATE PASS free=34.02GiB attempt=0
+
+PASS R88 reviewer 375x667 1.1s
+
+PASS R88 reviewer 390x844 1.1s
+
+PASS R88 reviewer 430x932 1.1s
+
+PASS R88 reviewer 440x956 1.1s
+
+PASS R88 reviewer 844x390 1.1s
+
+PASS R88 reviewer 768x1024 1.1s
+
+PASS R88 reviewer 1024x768 1.2s
+
+PASS R88 reviewer 1032x1376 1.3s
+
+PASS R88 reviewer 1376x1032 1.6s
+
+PASS R88 reviewer 1366x600 1.1s
+
+PASS R88 offline review and persistence
+
+PASS R88 storage quota does not claim a saved checkpoint
+
+R88 reviewer VERIFIED 12/12
+
+BROWSER MEMORY GATE PASS free=33.88GiB attempt=0
+
+R88 animation pipeline + bounded filter cache VERIFIED

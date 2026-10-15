@@ -1,0 +1,737 @@
+[
+  {
+    "file": "docs\\evidence\\r88-store\\after-390x844-base.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 390,
+    "height": 844,
+    "cssViewport": [
+      390,
+      844
+    ],
+    "deviceScaleFactor": 1,
+    "scene": "base",
+    "sha256": "556ec03d8556748bf30730011f53822b4ba385c7fe06e5364f779ca90d2bc0fc",
+    "state": {
+      "mode": "garage",
+      "time": 0.8666000000000003,
+      "trial": null
+    }
+  },
+  {
+    "file": "docs\\evidence\\r88-store\\after-390x844-climbers.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 390,
+    "height": 844,
+    "cssViewport": [
+      390,
+      844
+    ],
+    "deviceScaleFactor": 1,
+    "scene": "climbers",
+    "sha256": "7b7bfa12eb326ad73925b835b87f01bc57d1e45cf1be80eb108fb55f753562dd",
+    "state": {
+      "mode": "playing",
+      "time": 0.28330000000000005,
+      "trial": {
+        "stage": "shed",
+        "startX": 97.5,
+        "lastAmbushAt": 0.18339999999999998,
+        "completedAt": null
+      }
+    }
+  },
+  {
+    "file": "docs\\evidence\\r88-store\\after-390x844-drift.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 390,
+    "height": 844,
+    "cssViewport": [
+      390,
+      844
+    ],
+    "deviceScaleFactor": 1,
+    "scene": "drift",
+    "sha256": "ace9fb8fc1e3559a59a98058b11f89b1d9a59c933c6bdde205f9523d1c6d2a5a",
+    "state": {
+      "mode": "playing",
+      "time": 0.4666999999999999,
+      "trial": {
+        "stage": "supply",
+        "startX": 97.5,
+        "lastAmbushAt": 0.18339999999999998,
+        "completedAt": null
+      }
+    }
+  },
+  {
+    "file": "docs\\evidence\\r88-store\\after-390x844-completed.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 390,
+    "height": 844,
+    "cssViewport": [
+      390,
+      844
+    ],
+    "deviceScaleFactor": 1,
+    "scene": "completed",
+    "sha256": "fe83b1023c82b0954b9fef70090b3f115fe2947cd8368bdeefa43c2c76818478",
+    "state": {
+      "mode": "playing",
+      "time": 0.9833000000000004,
+      "trial": {
+        "stage": "complete",
+        "startX": 97.5,
+        "lastAmbushAt": 0.18339999999999998,
+        "completedAt": 0.9333000000000004,
+        "persisted": true
+      }
+    }
+  },
+  {
+    "file": "docs\\evidence\\r88-store\\after-390x844-routes.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 390,
+    "height": 844,
+    "cssViewport": [
+      390,
+      844
+    ],
+    "deviceScaleFactor": 1,
+    "scene": "routes",
+    "sha256": "7e73f89e7ee9f374cc9be1cae7df1244ea6f89f52a21afa6519bb42b91f542f4",
+    "state": {
+      "mode": "paused",
+      "time": 1.0333000000000003,
+      "trial": {
+        "stage": "complete",
+        "startX": 97.5,
+        "lastAmbushAt": 0.18339999999999998,
+        "completedAt": 0.9333000000000004,
+        "persisted": true
+      }
+    }
+  },
+  {
+    "file": "docs\\evidence\\r88-store\\after-844x390-base.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 844,
+    "height": 390,
+    "cssViewport": [
+      844,
+      390
+    ],
+    "deviceScaleFactor": 1,
+    "scene": "base",
+    "sha256": "9898627d438c6055a5e6c23da511b25259e6b2e3663785ab8c46643cad9fabb9",
+    "state": {
+      "mode": "garage",
+      "time": 0.8167000000000002,
+      "trial": null
+    }
+  },
+  {
+    "file": "docs\\evidence\\r88-store\\after-844x390-climbers.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 844,
+    "height": 390,
+    "cssViewport": [
+      844,
+      390
+    ],
+    "deviceScaleFactor": 1,
+    "scene": "climbers",
+    "sha256": "13d7b9aea40cf93810ccc46a3bbb3aaf35f9a6986a33bbe4c3699a073bdb4d8a",
+    "state": {
+      "mode": "playing",
+      "time": 0.2167000000000001,
+      "trial": {
+        "stage": "shed",
+        "startX": 97.5,
+        "lastAmbushAt": 0.13329999999999997,
+        "completedAt": null
+      }
+    }
+  },
+  {
+    "file": "docs\\evidence\\r88-store\\after-844x390-drift.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 844,
+    "height": 390,
+    "cssViewport": [
+      844,
+      390
+    ],
+    "deviceScaleFactor": 1,
+    "scene": "drift",
+    "sha256": "259117423d5bd0ce03e119cc925f4087123a3dd2f3ed694632b0a826189a23e0",
+    "state": {
+      "mode": "playing",
+      "time": 0.4,
+      "trial": {
+        "stage": "supply",
+        "startX": 97.5,
+        "lastAmbushAt": 0.13329999999999997,
+        "completedAt": null
+      }
+    }
+  },
+  {
+    "file": "docs\\evidence\\r88-store\\after-844x390-completed.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 844,
+    "height": 390,
+    "cssViewport": [
+      844,
+      390
+    ],
+    "deviceScaleFactor": 1,
+    "scene": "completed",
+    "sha256": "1b30db232becbd1f06f26751dd7a87cab5cfd30b3321cdccf9812e83ff07e1f4",
+    "state": {
+      "mode": "playing",
+      "time": 0.9166000000000005,
+      "trial": {
+        "stage": "complete",
+        "startX": 97.5,
+        "lastAmbushAt": 0.13329999999999997,
+        "completedAt": 0.8499000000000004,
+        "persisted": true
+      }
+    }
+  },
+  {
+    "file": "docs\\evidence\\r88-store\\after-844x390-routes.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 844,
+    "height": 390,
+    "cssViewport": [
+      844,
+      390
+    ],
+    "deviceScaleFactor": 1,
+    "scene": "routes",
+    "sha256": "4db9879fdb1d97226f022b2500bd5d5f255381064b5412e315cd3e8062da56a8",
+    "state": {
+      "mode": "paused",
+      "time": 0.9500000000000004,
+      "trial": {
+        "stage": "complete",
+        "startX": 97.5,
+        "lastAmbushAt": 0.13329999999999997,
+        "completedAt": 0.8499000000000004,
+        "persisted": true
+      }
+    }
+  },
+  {
+    "file": "docs\\evidence\\r88-store\\after-1366x600-base.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 1366,
+    "height": 600,
+    "cssViewport": [
+      1366,
+      600
+    ],
+    "deviceScaleFactor": 1,
+    "scene": "base",
+    "sha256": "681c4a50b2a7151cf9a2c3ca75c7c63923a33fbb54a2812560bac634546e522d",
+    "state": {
+      "mode": "garage",
+      "time": 1.0334,
+      "trial": null
+    }
+  },
+  {
+    "file": "docs\\evidence\\r88-store\\after-1366x600-climbers.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 1366,
+    "height": 600,
+    "cssViewport": [
+      1366,
+      600
+    ],
+    "deviceScaleFactor": 1,
+    "scene": "climbers",
+    "sha256": "8dad3a307348a5e54f9f06e8c911b1aec7b270f5f5a05af1a2153cfb77253d0b",
+    "state": {
+      "mode": "playing",
+      "time": 0.44989999999999986,
+      "trial": {
+        "stage": "shed",
+        "startX": 97.5,
+        "lastAmbushAt": 0.16669999999999985,
+        "completedAt": null
+      }
+    }
+  },
+  {
+    "file": "docs\\evidence\\r88-store\\after-1366x600-drift.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 1366,
+    "height": 600,
+    "cssViewport": [
+      1366,
+      600
+    ],
+    "deviceScaleFactor": 1,
+    "scene": "drift",
+    "sha256": "93e1ac378688f6e58c84787ddbb764b4af4d383b9d9bc5d8eb7d9723ded55790",
+    "state": {
+      "mode": "playing",
+      "time": 0.8332999999999998,
+      "trial": {
+        "stage": "supply",
+        "startX": 97.5,
+        "lastAmbushAt": 0.16669999999999985,
+        "completedAt": null
+      }
+    }
+  },
+  {
+    "file": "docs\\evidence\\r88-store\\after-1366x600-completed.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 1366,
+    "height": 600,
+    "cssViewport": [
+      1366,
+      600
+    ],
+    "deviceScaleFactor": 1,
+    "scene": "completed",
+    "sha256": "4d76408f571e25b3b51b0954a09489aa1e85b223b468ded5a4a45b9eaa4e03ab",
+    "state": {
+      "mode": "playing",
+      "time": 1.5833,
+      "trial": {
+        "stage": "complete",
+        "startX": 97.5,
+        "lastAmbushAt": 0.16669999999999985,
+        "completedAt": 1.3166000000000002,
+        "persisted": true
+      }
+    }
+  },
+  {
+    "file": "docs\\evidence\\r88-store\\after-1366x600-routes.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 1366,
+    "height": 600,
+    "cssViewport": [
+      1366,
+      600
+    ],
+    "deviceScaleFactor": 1,
+    "scene": "routes",
+    "sha256": "428e9f7dbd676531c3cdb44a8ef17d21afdaedd02c954c7ec330ba30635451e0",
+    "state": {
+      "mode": "paused",
+      "time": 1.6166,
+      "trial": {
+        "stage": "complete",
+        "startX": 97.5,
+        "lastAmbushAt": 0.16669999999999985,
+        "completedAt": 1.3166000000000002,
+        "persisted": true
+      }
+    }
+  },
+  {
+    "file": "docs\\store\\screenshots\\after-1290x2796-base.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 1290,
+    "height": 2796,
+    "cssViewport": [
+      430,
+      932
+    ],
+    "deviceScaleFactor": 3,
+    "scene": "base",
+    "sha256": "167149180ea7f90cc823e2cf26b4500d32e965f25d5ab06571d1c67b1e7d878f",
+    "state": {
+      "mode": "garage",
+      "time": 1.2500000000000002,
+      "trial": null
+    }
+  },
+  {
+    "file": "docs\\store\\screenshots\\after-1290x2796-climbers.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 1290,
+    "height": 2796,
+    "cssViewport": [
+      430,
+      932
+    ],
+    "deviceScaleFactor": 3,
+    "scene": "climbers",
+    "sha256": "da3e0b9f2212a9b1c63856a72256b24ab61c1e64bffe0c0c9ad7cb7f43081771",
+    "state": {
+      "mode": "playing",
+      "time": 0.43329999999999996,
+      "trial": {
+        "stage": "shed",
+        "startX": 97.5,
+        "lastAmbushAt": 0.13329999999999997,
+        "completedAt": null
+      }
+    }
+  },
+  {
+    "file": "docs\\store\\screenshots\\after-1290x2796-drift.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 1290,
+    "height": 2796,
+    "cssViewport": [
+      430,
+      932
+    ],
+    "deviceScaleFactor": 3,
+    "scene": "drift",
+    "sha256": "6e41814b0afc89f77bdc1c912177050407f2b08d9d8b3496d4efde1a01397cd1",
+    "state": {
+      "mode": "playing",
+      "time": 0.7834000000000001,
+      "trial": {
+        "stage": "supply",
+        "startX": 97.5,
+        "lastAmbushAt": 0.13329999999999997,
+        "completedAt": null
+      }
+    }
+  },
+  {
+    "file": "docs\\store\\screenshots\\after-1290x2796-completed.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 1290,
+    "height": 2796,
+    "cssViewport": [
+      430,
+      932
+    ],
+    "deviceScaleFactor": 3,
+    "scene": "completed",
+    "sha256": "991836052a4d1929f3645e1dfd4a8ea7792b98c765bd58fbf5118d9a2aa96451",
+    "state": {
+      "mode": "playing",
+      "time": 1.7166000000000001,
+      "trial": {
+        "stage": "complete",
+        "startX": 97.5,
+        "lastAmbushAt": 0.13329999999999997,
+        "completedAt": 1.3834000000000004,
+        "persisted": true
+      }
+    }
+  },
+  {
+    "file": "docs\\store\\screenshots\\after-1290x2796-routes.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 1290,
+    "height": 2796,
+    "cssViewport": [
+      430,
+      932
+    ],
+    "deviceScaleFactor": 3,
+    "scene": "routes",
+    "sha256": "5bf985dc436e2bffa2120493e2affa20882c0966b4b18fae9d31f410ecec1a86",
+    "state": {
+      "mode": "paused",
+      "time": 1.7998999999999994,
+      "trial": {
+        "stage": "complete",
+        "startX": 97.5,
+        "lastAmbushAt": 0.13329999999999997,
+        "completedAt": 1.3834000000000004,
+        "persisted": true
+      }
+    }
+  },
+  {
+    "file": "docs\\store\\screenshots\\after-2064x2752-base.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 2064,
+    "height": 2752,
+    "cssViewport": [
+      1032,
+      1376
+    ],
+    "deviceScaleFactor": 2,
+    "scene": "base",
+    "sha256": "dbb189ba409cadd1d9d3da544a11eceef0e8cdc9f09a5501d5a41798bdbbeaea",
+    "state": {
+      "mode": "garage",
+      "time": 1.316700000000001,
+      "trial": null
+    }
+  },
+  {
+    "file": "docs\\store\\screenshots\\after-2064x2752-climbers.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 2064,
+    "height": 2752,
+    "cssViewport": [
+      1032,
+      1376
+    ],
+    "deviceScaleFactor": 2,
+    "scene": "climbers",
+    "sha256": "81c99fc8b2e51e858e3c080cf5c41cf2a6d9750847421201b500a828e2e6a8e5",
+    "state": {
+      "mode": "playing",
+      "time": 0.7165999999999996,
+      "trial": {
+        "stage": "shed",
+        "startX": 97.5,
+        "lastAmbushAt": 0.2165999999999999,
+        "completedAt": null
+      }
+    }
+  },
+  {
+    "file": "docs\\store\\screenshots\\after-2064x2752-drift.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 2064,
+    "height": 2752,
+    "cssViewport": [
+      1032,
+      1376
+    ],
+    "deviceScaleFactor": 2,
+    "scene": "drift",
+    "sha256": "96d96d5057bf56e76df79ee0e176087e20e4cdc6d04b2f2e529b166ad5a9ec69",
+    "state": {
+      "mode": "playing",
+      "time": 1.3665000000000005,
+      "trial": {
+        "stage": "supply",
+        "startX": 97.5,
+        "lastAmbushAt": 0.2165999999999999,
+        "completedAt": null
+      }
+    }
+  },
+  {
+    "file": "docs\\store\\screenshots\\after-2064x2752-completed.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 2064,
+    "height": 2752,
+    "cssViewport": [
+      1032,
+      1376
+    ],
+    "deviceScaleFactor": 2,
+    "scene": "completed",
+    "sha256": "fff26a1758b7c8d6bec6f2302fa501429d3866d09fc3e53ab88172c73e9dd58e",
+    "state": {
+      "mode": "playing",
+      "time": 2.383099999999999,
+      "trial": {
+        "stage": "complete",
+        "startX": 97.5,
+        "lastAmbushAt": 0.2165999999999999,
+        "completedAt": 1.8664999999999998,
+        "persisted": true
+      }
+    }
+  },
+  {
+    "file": "docs\\store\\screenshots\\after-2064x2752-routes.png",
+    "version": "R88",
+    "sourceHashes": {
+      "index.html": "323ab837cbd203a15d3590527cfcc444283c53937fb76393f9ffac617ebe14e9",
+      "src/version.js": "4859a31c6fb5c31309bc2fecc5eaa975c795d6b5c9c3fb0994a77955945e006e",
+      "src/config.js": "8e816dac868893c2827fbbaae7e543372e2d0f14e49f0d2c96b3748b2ed0b5c0",
+      "src/game.js": "ee5e8c4e0dc3dc1a7e9d530d59c59115acc2aee9a28160654c08ed73e6819208",
+      "src/ui.js": "0cb282a2ffaee44ffdaeea528ae3670065885700d86c186920272f91ee8fc158"
+    },
+    "width": 2064,
+    "height": 2752,
+    "cssViewport": [
+      1032,
+      1376
+    ],
+    "deviceScaleFactor": 2,
+    "scene": "routes",
+    "sha256": "c27a759609f6f10cda33179c648f718d6233c1c77dec4e2fe20076b75b95935e",
+    "state": {
+      "mode": "paused",
+      "time": 2.449699999999999,
+      "trial": {
+        "stage": "complete",
+        "startX": 97.5,
+        "lastAmbushAt": 0.2165999999999999,
+        "completedAt": 1.8664999999999998,
+        "persisted": true
+      }
+    }
+  }
+]

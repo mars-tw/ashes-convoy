@@ -1,0 +1,41 @@
+[
+  {
+    "file": "docs\\evidence\\r88-store\\before-390x844-base.png",
+    "version": "R87",
+    "width": 390,
+    "height": 844,
+    "scene": "base",
+    "sha256": "074273d52e25c8f4a1bbf6a81b02aee4f92fcde8d1576f9289d8fdd095ccea14",
+    "state": {
+      "mode": "garage",
+      "time": 0.8500000000000004,
+      "trial": null
+    }
+  },
+  {
+    "file": "docs\\evidence\\r88-store\\before-844x390-base.png",
+    "version": "R87",
+    "width": 844,
+    "height": 390,
+    "scene": "base",
+    "sha256": "b49eec5732dfb4bcc9f619918d95f42f9ac79c812cab48380a8a9c204d5fd015",
+    "state": {
+      "mode": "garage",
+      "time": 0.8166000000000003,
+      "trial": null
+    }
+  },
+  {
+    "file": "docs\\evidence\\r88-store\\before-1366x600-base.png",
+    "version": "R87",
+    "width": 1366,
+    "height": 600,
+    "scene": "base",
+    "sha256": "204eab3dbcaa5c8e6118d7dae78b4964dc4b0f1d88d4e3f9c136b0de1bc7f2f8",
+    "state": {
+      "mode": "garage",
+      "time": 0.9833000000000003,
+      "trial": null
+    }
+  }
+]

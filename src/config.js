@@ -4,7 +4,7 @@ const STORAGE_KEY = "ashes_convoy_meta_v1";
 const META_VERSION = 3;
 const VERSION_SOURCE =
   (typeof globalThis !== "undefined" && globalThis.DSVersion) ||
-  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R87", CACHE_VERSION: "ashes-convoy-r87-v1" });
+  (typeof require === "function" ? require("./version.js") : { APP_VERSION: "R88", CACHE_VERSION: "ashes-convoy-r88-v1" });
 const APP_VERSION = VERSION_SOURCE.APP_VERSION;
 const CACHE_VERSION = VERSION_SOURCE.CACHE_VERSION;
 
@@ -1344,7 +1344,7 @@ const SUPPLY_DROPS = {
   }
 };
 
-// R87 路線委託：沿用現有敵人、補給與事件零件上限。
+// R88 路線委託：沿用現有敵人、補給與事件零件上限。
 const ROUTE_CONTRACTS = {
   rescue: { id: "rescue", label: "救援支線", objective: "領取 1 箱補給", metric: "supplyCratesCollected", target: 1, seconds: 24, recommended: "repair_small", bonus: "維修補給額外修復 6%", reward: "護盾 +15%・零件 +2", parts: 2, line: "熹：前面的醫療站還有訊號，帶一箱物資過去。" },
   salvage: { id: "salvage", label: "廢車場", objective: "甩飛 2 隻攀車屍", metric: "flung", target: 2, seconds: 24, recommended: "parts_cache", bonus: "零件補給額外 +1（共用上限）", reward: "修復 12%・零件 +4", parts: 4, line: "熹：廢車堆裡有料，但別讓那些傢伙搭便車。" },
@@ -2835,7 +2835,7 @@ const MILESTONES = {
 
 const START_SCREEN = {
   slug: "ashes-r79-start",
-  image: "assets/ui/start.png?v=R87",
+  image: "assets/ui/start.png?v=R88",
   atmosphere: "assets/ui/start-atmosphere-r79.png?v=31cbd67f",
   atmosphereQuality: {
     high: "assets/ui/start-atmosphere-r79.png?v=31cbd67f",
@@ -2944,7 +2944,8 @@ const META_DEFAULT = {
     seenGate: false,
     seenGarage: false,
     seenQuickUpgrade: false,
-    seenLatch: false
+    seenLatch: false,
+    completedConvoyTrial: false
   },
   recovery: {
     pending: false,

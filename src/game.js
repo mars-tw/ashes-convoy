@@ -650,6 +650,27 @@
     return record.status;
   }
 
+  // Cache color grading on the shared atlas, rather than asking Canvas to run
+  // CSS filters separately for every enemy on every frame. Physics and frames
+  // are unchanged. Bounded per atlas, including dynamically colored variants.
+  function filteredEnemyAtlas(record, filter) {
+    if (!filter || !record || record.status !== "loaded") return null;
+    if (!record.filterCache) record.filterCache = new Map();
+    if (record.filterCache.has(filter)) return record.filterCache.get(filter);
+    if (record.filterCache.size >= 8) return null;
+    const source = record.tintCanvas || record.image;
+    const buffer = root.document.createElement("canvas");
+    buffer.width = source.width;
+    buffer.height = source.height;
+    const context = buffer.getContext("2d");
+    if (!("filter" in context)) return null;
+    context.imageSmoothingEnabled = false;
+    context.filter = filter;
+    context.drawImage(source, 0, 0);
+    record.filterCache.set(filter, buffer);
+    return buffer;
+  }
+
   function buildEnemyActionTint(enemyId, actionName) {
     const enemy = config.ENEMIES[enemyId];
     const rootRecord = enemyImages[enemyId];
@@ -1034,6 +1055,7 @@
       seed: state.seed,
       time: state.time,
       paused: state.paused,
+      convoyTrial: state.convoyTrial ? rules.deepClone(state.convoyTrial) : null,
       over: state.over,
       wave: state.wave,
       waveElapsed: state.waveElapsed,
@@ -1665,8 +1687,50 @@
     return getState();
   }
 
+  // A playable driving lesson available to everyone, using the normal physics,
+  // enemy hitboxes, drift cooldown and supply choice. No review-only shortcuts.
+  function startConvoyTrial(nextMeta) {
+    startRun("land_rig", nextMeta);
+    state.convoyTrial = { stage: "steer", startX: state.vehicle.x, lastAmbushAt: -10, completedAt: null };
+    state.wavePlan = { spawns: [], gates: [], duration: 999, boss: false, environmentEvent: null };
+    state.environmentEvent = null;
+    draw();
+    emitState();
+    return getState();
+  }
+
+  function updateConvoyTrial() {
+    const trial = state.convoyTrial;
+    if (!trial || trial.stage === "complete") return;
+    if (trial.stage === "steer" && Math.abs(state.vehicle.x - trial.startX) >= 12) trial.stage = "shed";
+    if (trial.stage === "shed") {
+      if ((state.stats.flung || 0) >= 2) {
+        trial.stage = "supply";
+        spawnSupplyDrop(state.vehicle.x, state.vehicle.y - 10);
+      } else if (latchedEnemies().length === 0 && state.time - trial.lastAmbushAt >= 3) {
+        trial.lastAmbushAt = state.time;
+        [-1, 1].forEach(side => spawnEnemy("runner", { x: state.vehicle.x + side * 6, y: state.vehicle.y - 2, hp: 600 }));
+      }
+    }
+    if (trial.stage === "supply" && state.stats.supplyCratesCollected >= 1) {
+      trial.stage = "complete";
+      trial.completedAt = state.time;
+      meta.tutorial.completedConvoyTrial = true;
+      meta.tutorial.seenLatch = true;
+      // Save the completion before a run ends; no repeatable currency reward.
+      trial.persisted = !!(callbacks.onCheckpoint && callbacks.onCheckpoint(rules.deepClone(meta)));
+      state.wavePlan = makeWavePlan(1);
+      state.waveElapsed = 0;
+      state.spawnIndex = 0;
+      state.gateIndex = 0;
+      pushEventBanner(trial.persisted ? "首航完成・行車紀錄已保存" : "首航完成・本機紀錄尚未保存", "繼續護航，或暫停後結束本局返回基地", { kind: "event", priority: 88, ttl: 5 });
+    }
+  }
+
   function pause() {
     if (!state || state.over) return;
+    state.input.dragging = false;
+    state.input.lastPointer = null;
     state.paused = true;
     state.mode = "paused";
     emitState();
@@ -3503,6 +3567,7 @@
   }
 
   function completeWaveIfReady() {
+    if (state.convoyTrial && state.convoyTrial.stage !== "complete") return;
     const plan = state.wavePlan;
     const spawnedAll = state.spawnIndex >= plan.spawns.length;
     const bossAlive = state.enemies.some((enemy) => enemy.boss);
@@ -3724,7 +3789,7 @@
     if (state.time >= 3) pushRunBark("sortie_start");
     state.scroll = (state.scroll + 112 * dt) % 32;
     updateVehicleAim(dt);
-    processWaveEvents();
+    if (!state.convoyTrial || state.convoyTrial.stage === "complete") processWaveEvents();
     fireProjectiles(dt);
     updateCompanion(dt);
     updateHazards(dt);
@@ -3735,6 +3800,7 @@
     updateEnemies(dt);
     updateGatesAndEffects(dt);
     updateRouteContract();
+    updateConvoyTrial();
     updateFx(dt);
     completeWaveIfReady();
     updatePartsPreview();
@@ -4051,6 +4117,7 @@
   }
 
   function drawMessages() {
+    if (state && state.convoyTrial && state.convoyTrial.stage !== "complete") return;
     if (!state) return;
     state.messages.forEach((message, index) => {
       const elapsed = state.time - message.time;
@@ -4089,7 +4156,7 @@
     ctx.moveTo(guideX, guideY - 12);
     ctx.lineTo(guideX, guideY + 12);
     ctx.stroke();
-    if (state.time < 2) {
+    if (state.time < 2 && !state.convoyTrial) {
       const landscapeTouch = primaryPointerCoarse() && displayLandscape;
       drawWorldText("拖曳移動＋瞄準", landscapeTouch ? 120 : W * 0.5, 113, { size: 9, alpha: 0.92, color: "#f4ead8" });
       drawWorldText("放開仍射擊（射速較慢）", landscapeTouch ? 129 : W * 0.5, landscapeTouch ? 113 : 124, { size: 7, alpha: 0.82, color: "#d7cdbb" });
@@ -5018,6 +5085,11 @@
       : null;
     const attackRecord = attackAnimation && record && record.actions ? record.actions.attack : null;
     const useAttackAtlas = !!attackRecord && enemyActionImageStatus(enemy.enemyId, "attack") === "loaded";
+    // Optional authored cling action: the common loader accepts spriteActions.latch.
+    // Until a verified atlas exists, retain the honest walk/attack fallback.
+    const latchAnimation = enemy.latched && enemyConfig && enemyConfig.spriteActions ? enemyConfig.spriteActions.latch : null;
+    const latchRecord = latchAnimation && record && record.actions ? record.actions.latch : null;
+    const useLatchAtlas = !!latchRecord && enemyActionImageStatus(enemy.enemyId, "latch") === "loaded";
 
     if (renderDebug.enemyImageStatus) renderDebug.enemyImageStatus[enemy.enemyId] = status;
     if (hurtActive && renderDebug.enemyActionImageStatus) {
@@ -5032,14 +5104,17 @@
     drawEnemyShadow(enemy, width, 0, drawAlpha, knockX, knockY);
 
     if (record && status === "loaded") {
-      const activeRecord = useHurtAtlas ? hurtRecord : useAttackAtlas ? attackRecord : record;
-      const activeAnimation = useHurtAtlas ? hurtAnimation : useAttackAtlas ? attackAnimation : animation;
-      const image = activeRecord.tintCanvas || activeRecord.image;
+      const activeRecord = useHurtAtlas ? hurtRecord : useAttackAtlas ? attackRecord : useLatchAtlas ? latchRecord : record;
+      const activeAnimation = useHurtAtlas ? hurtAnimation : useAttackAtlas ? attackAnimation : useLatchAtlas ? latchAnimation : animation;
+      const filtered = performanceState.quality !== "low" ? filteredEnemyAtlas(activeRecord, enemy.filter) : null;
+      const image = filtered || activeRecord.tintCanvas || activeRecord.image;
       const hurtElapsed = Math.max(0, (enemy.hitFlashMax || 0.2) - (enemy.hitFlash || 0));
       const frameState = useHurtAtlas
         ? { frame: enemyActionFrame(hurtElapsed, activeAnimation), tier: "hurt" }
         : attackActive && activeAnimation
           ? { frame: enemyAttackFrame(enemy, activeAnimation), tier: `attack-${enemy.attackPhase}` }
+        : useLatchAtlas
+          ? { frame: Math.floor(Math.max(0, stateTime() - enemy.latched.since) * (activeAnimation.fps || 5)) % Math.min(activeAnimation.frames, performanceState.quality === "low" ? 2 : activeAnimation.frames), tier: "latch" }
         : activeAnimation
           ? enemyAnimationFrame(enemy, activeAnimation)
           : { frame: 0, tier: "static" };
@@ -5053,7 +5128,7 @@
       ctx.translate(enemy.x + knockX, enemy.y + knockY);
       ctx.globalAlpha *= flash ? drawAlpha * 0.9 : drawAlpha;
       ctx.imageSmoothingEnabled = false;
-      if (enemy.filter && performanceState.quality !== "low") ctx.filter = enemy.filter;
+      if (enemy.filter && performanceState.quality !== "low" && !filtered) ctx.filter = enemy.filter;
       ctx.drawImage(
         image,
         frameState.frame * frameWidth,
@@ -5084,6 +5159,7 @@
         renderDebug.enemyAnimationFrames[enemy.enemyId] = frameState.frame;
         renderDebug.enemyAnimationTier = frameState.tier;
         if (useHurtAtlas) renderDebug.enemyHurtPoseDrawn += 1;
+        if (useLatchAtlas && !useHurtAtlas && !useAttackAtlas) renderDebug.enemyLatchAtlasDrawn += 1;
         if (attackActive) {
           renderDebug.enemyAttackPhaseDrawn = true;
           renderDebug.enemyAttackPhase = enemy.attackPhase;
@@ -5119,7 +5195,8 @@
       renderDebug.enemyActionImageStatus[`${effect.enemyId}:death`] = enemyActionImageStatus(effect.enemyId, "death");
     }
     if (!animation || !record || enemyActionImageStatus(effect.enemyId, "death") !== "loaded") return;
-    const image = record.tintCanvas || record.image;
+    const filtered = performanceState.quality !== "low" ? filteredEnemyAtlas(record, effect.filter) : null;
+    const image = filtered || record.tintCanvas || record.image;
     const width = enemyVisualWidth(effect, enemyConfig);
     const height = width * (animation.frameHeight / animation.frameWidth);
     const frame = enemyActionFrame(effect.age, animation);
@@ -5130,7 +5207,7 @@
     ctx.translate(effect.x, effect.y);
     ctx.globalAlpha *= effect.alpha;
     ctx.imageSmoothingEnabled = false;
-    if (effect.filter && performanceState.quality !== "low") ctx.filter = effect.filter;
+    if (effect.filter && performanceState.quality !== "low" && !filtered) ctx.filter = effect.filter;
     ctx.drawImage(
       image,
       frame * animation.frameWidth,
@@ -6399,7 +6476,7 @@
       0.8,
       { alpha: state.input.dragging ? 0.62 : 0.35 }
     );
-    drawWaveBanner();
+    if (!state.convoyTrial || state.convoyTrial.stage === "complete") drawWaveBanner();
     drawComboCounter();
     drawMessages();
   }
@@ -6446,6 +6523,7 @@
       enemyAnimatedDrawn: 0,
       enemyArmoredDrawn: 0,
       enemyHurtPoseDrawn: 0,
+      enemyLatchAtlasDrawn: 0,
       enemyDeathPoseDrawn: 0,
       enemyDeathAtlasFrame: -1,
       enemyFacingLeftDrawn: 0,
@@ -6454,6 +6532,7 @@
       enemyAttackPhaseDrawn: false,
       enemyAttackPhase: "",
       enemyTintCacheCount: Object.values(enemyImages).filter((record) => !!record.tintCanvas).length,
+      enemyFilterCacheCount: Object.values(enemyImages).reduce((sum, record) => sum + (record.filterCache ? record.filterCache.size : 0) + Object.values(record.actions || {}).reduce((n, action) => n + (action.filterCache ? action.filterCache.size : 0), 0), 0),
       fxActive: fxState ? fxState.activeCount : 0,
       fxMaxParticles: fxState ? fxState.maxParticles : 0,
       fxQuality: fxState ? fxState.quality : "none",
@@ -6681,6 +6760,7 @@
     setMeta,
     getState,
     startRun,
+    startConvoyTrial,
     pause,
     resume,
     togglePause,

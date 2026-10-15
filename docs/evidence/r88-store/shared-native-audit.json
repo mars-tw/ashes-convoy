@@ -1,0 +1,287 @@
+{
+  "status": "VERIFIED",
+  "method": "Exact SHA-256; runtime source/media only; excluded third-party/generated/history trees; not a semantic or full binary comparison",
+  "ownFiles": 106,
+  "peers": [
+    {
+      "repo": "rift-survivors",
+      "exists": true,
+      "filesScanned": 1196,
+      "additionalNativeWeb": null
+    },
+    {
+      "repo": "storm-apocalypse",
+      "exists": true,
+      "filesScanned": 51,
+      "additionalNativeWeb": null
+    },
+    {
+      "repo": "tower-defense",
+      "exists": true,
+      "filesScanned": 186,
+      "additionalNativeWeb": null
+    },
+    {
+      "repo": "skill",
+      "exists": true,
+      "filesScanned": 132,
+      "additionalNativeWeb": null
+    },
+    {
+      "repo": "pixel-idle-farm-skill",
+      "exists": true,
+      "filesScanned": 287,
+      "additionalNativeWeb": null
+    },
+    {
+      "repo": "village-siege",
+      "exists": true,
+      "filesScanned": 124,
+      "additionalNativeWeb": null
+    },
+    {
+      "repo": "seven-district-reckoning",
+      "exists": true,
+      "filesScanned": 537,
+      "additionalNativeWeb": null
+    },
+    {
+      "repo": "rift-forge-3d",
+      "exists": true,
+      "filesScanned": 62,
+      "additionalNativeWeb": null
+    },
+    {
+      "repo": "taiwan-island-drive",
+      "exists": true,
+      "filesScanned": 365,
+      "additionalNativeWeb": null
+    },
+    {
+      "repo": "taiwan-train-math",
+      "exists": true,
+      "filesScanned": 708,
+      "additionalNativeWeb": null
+    },
+    {
+      "repo": "夜行列車_重製企劃_20261002",
+      "exists": true,
+      "filesScanned": 50,
+      "additionalNativeWeb": "C:\\Users\\digimkt\\Desktop\\遊戲\\game-store-publisher\\native-kit\\apps\\night-train-watch-protocol\\web"
+    },
+    {
+      "repo": "island-flight-school",
+      "exists": true,
+      "filesScanned": 19,
+      "additionalNativeWeb": null
+    },
+    {
+      "repo": "taiwan-train-school",
+      "exists": true,
+      "filesScanned": 15,
+      "additionalNativeWeb": null
+    }
+  ],
+  "matches": [],
+  "runtimePatterns": {
+    "index.html": [
+      {
+        "line": 8,
+        "text": "<meta property=\"og:url\" content=\"https://mars-tw.github.io/ashes-convoy/\" />"
+      },
+      {
+        "line": 9,
+        "text": "<meta property=\"og:image\" content=\"https://mars-tw.github.io/ashes-convoy/assets/cover.png\" />"
+      },
+      {
+        "line": 12,
+        "text": "<meta name=\"twitter:image\" content=\"https://mars-tw.github.io/ashes-convoy/assets/cover.png\" />"
+      },
+      {
+        "line": 51,
+        "text": "<link rel=\"canonical\" href=\"https://mars-tw.github.io/ashes-convoy/\" />"
+      }
+    ],
+    "sw.js": [
+      {
+        "line": 156,
+        "text": "const response = await fetch(request);"
+      },
+      {
+        "line": 164,
+        "text": "const response = await fetch(request);"
+      }
+    ],
+    "src/game.js": [
+      {
+        "line": 6695,
+        "text": "if (root.localStorage) root.localStorage.removeItem(config.STORAGE_KEY);"
+      }
+    ],
+    "src/ui.js": [
+      {
+        "line": 87,
+        "text": "try { raw = root.localStorage ? root.localStorage.getItem(config.STORAGE_KEY) : null; }"
+      },
+      {
+        "line": 95,
+        "text": "if (!root.localStorage) return false;"
+      },
+      {
+        "line": 96,
+        "text": "root.localStorage.setItem(config.STORAGE_KEY, JSON.stringify(meta));"
+      },
+      {
+        "line": 2129,
+        "text": "if (root.localStorage) {"
+      },
+      {
+        "line": 2130,
+        "text": "root.localStorage.setItem(`${config.STORAGE_KEY}_backup`, JSON.stringify(meta));"
+      },
+      {
+        "line": 2131,
+        "text": "root.localStorage.setItem(config.STORAGE_KEY, JSON.stringify(decoded.meta));"
+      },
+      {
+        "line": 2224,
+        "text": "if (root.localStorage) {"
+      },
+      {
+        "line": 2226,
+        "text": "const current = root.localStorage.getItem(config.STORAGE_KEY);"
+      },
+      {
+        "line": 2227,
+        "text": "if (current) root.localStorage.setItem(config.STORAGE_KEY + \":backup\", current);"
+      },
+      {
+        "line": 2230,
+        "text": "if (root.localStorage) root.localStorage.removeItem(config.STORAGE_KEY);"
+      }
+    ]
+  },
+  "nativeReadOnly": [
+    {
+      "path": "C:\\Users\\digimkt\\Desktop\\遊戲\\game-store-publisher\\native-kit\\apps\\ashes-convoy\\capacitor.config.json",
+      "exists": true,
+      "sha256": "cb24cb9371dd609263071a68065421cfb27ba31eef9a798c7bf43f7ee043a660",
+      "text": "{\n  \"appId\": \"tw.mars.ashesconvoy\",\n  \"appName\": \"灰燼護航\",\n  \"webDir\": \"web\",\n  \"server\": {\n    \"hostname\": \"localhost\",\n    \"androidScheme\": \"https\"\n  },\n  \"android\": {\n    \"allowMixedContent\": false,\n    \"webContentsDebuggingEnabled\": false,\n    \"backgroundColor\": \"#ffffff\"\n  },\n  \"ios\": {\n    \"contentInset\": \"automatic\",\n    \"backgroundColor\": \"#ffffff\"\n  }\n}\n"
+    },
+    {
+      "path": "C:\\Users\\digimkt\\Desktop\\遊戲\\game-store-publisher\\native-kit\\apps\\ashes-convoy\\ios\\App\\App\\PrivacyInfo.xcprivacy",
+      "exists": true,
+      "sha256": "6452295a6ad29254c92c668038f2c6a2cfd440c07cda81f814e996ac215b8415",
+      "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\">\n<dict>\n\t<key>NSPrivacyTracking</key>\n\t<false/>\n\t<key>NSPrivacyCollectedDataTypes</key>\n\t<array/>\n\t<key>NSPrivacyAccessedAPITypes</key>\n\t<array>\n\t\t<dict>\n\t\t\t<key>NSPrivacyAccessedAPIType</key>\n\t\t\t<string>NSPrivacyAccessedAPICategoryUserDefaults</string>\n\t\t\t<key>NSPrivacyAccessedAPITypeReasons</key>\n\t\t\t<array>\n\t\t\t\t<string>CA92.1</string>\n\t\t\t</array>\n\t\t</dict>\n\t</array>\n</dict>\n</plist>\n"
+    },
+    {
+      "path": "C:\\Users\\digimkt\\Desktop\\遊戲\\game-store-publisher\\native-kit\\apps\\ashes-convoy\\ios\\App\\App\\Info.plist",
+      "exists": true,
+      "sha256": "8a1fcaba19b22759ddf2a6d35eac25d1b4cd4b6a383df488cc248da0a95cf9e9",
+      "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\">\n<dict>\n\t<key>CAPACITOR_DEBUG</key>\n\t<string>$(CAPACITOR_DEBUG)</string>\n\t<key>CFBundleDevelopmentRegion</key>\n\t<string>en</string>\n\t<key>CFBundleDisplayName</key>\n\t<string>灰燼護航</string>\n\t<key>CFBundleExecutable</key>\n\t<string>$(EXECUTABLE_NAME)</string>\n\t<key>CFBundleIdentifier</key>\n\t<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>\n\t<key>CFBundleInfoDictionaryVersion</key>\n\t<string>6.0</string>\n\t<key>CFBundleName</key>\n\t<string>$(PRODUCT_NAME)</string>\n\t<key>CFBundlePackageType</key>\n\t<string>APPL</string>\n\t<key>CFBundleShortVersionString</key>\n\t<string>$(MARKETING_VERSION)</string>\n\t<key>CFBundleVersion</key>\n\t<string>$(CURRENT_PROJECT_VERSION)</string>\n\t<key>LSRequiresIPhoneOS</key>\n\t<true/>\n\t<key>UIApplicationSceneManifest</key>\n\t<dict>\n\t\t<key>UIApplicationSupportsMultipleScenes</key>\n\t\t<false/>\n\t\t<key>UISceneConfigurations</key>\n\t\t<dict>\n\t\t\t<key>UIWindowSceneSessionRoleApplication</key>\n\t\t\t<array>\n\t\t\t\t<dict>\n\t\t\t\t\t<key>UISceneConfigurationName</key>\n\t\t\t\t\t<string>Default Configuration</string>\n\t\t\t\t\t<key>UISceneDelegateClassName</key>\n\t\t\t\t\t<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>\n\t\t\t\t\t<key>UISceneStoryboardFile</key>\n\t\t\t\t\t<string>Main</string>\n\t\t\t\t</dict>\n\t\t\t</array>\n\t\t</dict>\n\t</dict>\n\t<key>UILaunchStoryboardName</key>\n\t<string>LaunchScreen</string>\n\t<key>UIMainStoryboardFile</key>\n\t<string>Main</string>\n\t<key>UIRequiredDeviceCapabilities</key>\n\t<array>\n\t\t<string>armv7</string>\n\t</array>\n\t<key>UISupportedInterfaceOrientations</key>\n\t<array>\n\t\t<string>UIInterfaceOrientationPortrait</string>\n\t\t<string>UIInterfaceOrientationLandscapeLeft</string>\n\t\t<string>UIInterfaceOrientationLandscapeRight</string>\n\t</array>\n\t<key>UISupportedInterfaceOrientations~ipad</key>\n\t<array>\n\t\t<string>UIInterfaceOrientationPortrait</string>\n\t\t<string>UIInterfaceOrientationPortraitUpsideDown</string>\n\t\t<string>UIInterfaceOrientationLandscapeLeft</string>\n\t\t<string>UIInterfaceOrientationLandscapeRight</string>\n\t</array>\n\t<key>UIViewControllerBasedStatusBarAppearance</key>\n\t<true/>\n\t<key>ITSAppUsesNonExemptEncryption</key>\n\t<false/>\n</dict>\n</plist>\n"
+    },
+    {
+      "path": "C:\\Users\\digimkt\\Desktop\\遊戲\\game-store-publisher\\native-kit\\apps\\ashes-convoy\\android\\app\\src\\main\\AndroidManifest.xml",
+      "exists": true,
+      "sha256": "a91441960aad37b4887a4493f02acc5c2a085d1e7a1e144db260a66c8fcfeb73",
+      "text": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">\n\n    <application\n        android:allowBackup=\"false\"\n        android:icon=\"@mipmap/ic_launcher\"\n        android:label=\"@string/app_name\"\n        android:roundIcon=\"@mipmap/ic_launcher_round\"\n        android:supportsRtl=\"true\"\n        android:theme=\"@style/AppTheme\">\n\n        <activity\n            android:configChanges=\"orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density\"\n            android:name=\".MainActivity\"\n            android:label=\"@string/title_activity_main\"\n            android:theme=\"@style/AppTheme.NoActionBarLaunch\"\n            android:launchMode=\"singleTask\"\n            android:exported=\"true\">\n\n            <intent-filter>\n                <action android:name=\"android.intent.action.MAIN\" />\n                <category android:name=\"android.intent.category.LAUNCHER\" />\n            </intent-filter>\n\n        </activity>\n\n        <provider\n            android:name=\"androidx.core.content.FileProvider\"\n            android:authorities=\"${applicationId}.fileprovider\"\n            android:exported=\"false\"\n            android:grantUriPermissions=\"true\">\n            <meta-data\n                android:name=\"android.support.FILE_PROVIDER_PATHS\"\n                android:resource=\"@xml/file_paths\"></meta-data>\n        </provider>\n    </application>\n\n    <!-- Permissions -->\n</manifest>\n"
+    },
+    {
+      "path": "C:\\Users\\digimkt\\Desktop\\遊戲\\game-store-publisher\\native-kit\\apps\\ashes-convoy\\package.json",
+      "exists": true,
+      "sha256": "31a2544d8dc6ff1bef965ca272fdbb6c756d113f7fe99ffdbe95d3ff81a60458",
+      "text": "{\n  \"name\": \"mars-native-ashes-convoy\",\n  \"version\": \"1.0.1\",\n  \"private\": true,\n  \"type\": \"module\",\n  \"engines\": {\n    \"node\": \">=22\"\n  },\n  \"dependencies\": {\n    \"@capacitor/android\": \"8.5.2\",\n    \"@capacitor/app\": \"8.1.2\",\n    \"@capacitor/core\": \"8.5.2\",\n    \"@capacitor/ios\": \"8.5.2\",\n    \"@capacitor/preferences\": \"8.0.1\"\n  },\n  \"devDependencies\": {\n    \"@capacitor/cli\": \"8.5.2\",\n    \"esbuild\": \"0.28.2\",\n    \"sharp\": \"0.35.5\"\n  },\n  \"overrides\": {\n    \"xcode\": {\n      \"uuid\": \"11.1.1\"\n    }\n  }\n}\n"
+    },
+    {
+      "path": "C:\\Users\\digimkt\\Desktop\\遊戲\\game-store-publisher\\native-kit\\apps\\ashes-convoy\\web\\src\\version.js",
+      "exists": true,
+      "sha256": "ac5dc8498967bd1b21853973226d4d076105284485f9fb003f5f4397264eb83f",
+      "text": "﻿\"use strict\";\n\n(function attachVersion(root) {\n  const APP_VERSION = \"R85.1\";\n  const CACHE_VERSION = `ashes-convoy-${APP_VERSION.toLowerCase()}-v1`;\n  const DSVersion = {\n    APP_VERSION,\n    CACHE_VERSION\n  };\n\n  root.DSVersion = DSVersion;\n  if (typeof module !== \"undefined\" && module.exports) module.exports = DSVersion;\n})(typeof globalThis !== \"undefined\" ? globalThis : this);\n"
+    },
+    {
+      "path": "C:\\Users\\digimkt\\Desktop\\遊戲\\game-store-publisher\\native-kit\\apps\\ashes-convoy\\web\\native-host.js",
+      "exists": true,
+      "sha256": "62b5d205324d95578a79dbead4b0f60cf15415e0929f9e81edbf3cffb0fd8e25",
+      "text": "(()=>{var Y=Object.defineProperty;var I=(r,e,t)=>()=>{if(t)throw t[0];try{return r&&(e=r(r=0)),e}catch(i){throw t=[i],i}};var Z=(r,e)=>{for(var t in e)Y(r,t,{get:e[t],enumerable:!0})};var P,E,N,ee,te,C,k,y,_,M,T,oe,re,ne,se,ie,D,ce,G,K,R,le,U=I(()=>{(function(r){r.Unimplemented=\"UNIMPLEMENTED\",r.Unavailable=\"UNAVAILABLE\"})(P||(P={}));E=class extends Error{constructor(e,t,i){super(e),this.message=e,this.code=t,this.data=i}},N=r=>{var e,t;return r?.androidBridge?\"android\":!((t=(e=r?.webkit)===null||e===void 0?void 0:e.messageHandlers)===null||t===void 0)&&t.bridge?\"ios\":\"web\"},ee=r=>{let e=r.CapacitorCustomPlatform||null,t=r.Capacitor||{},i=t.Plugins=t.Plugins||{},s=()=>e!==null?e.name:N(r),n=()=>s()!==\"web\",o=a=>{let c=g.get(a);return!!(c?.platforms.has(s())||l(a))},l=a=>{var c;return(c=t.PluginHeaders)===null||c===void 0?void 0:c.find(x=>x.name===a)},u=a=>r.console.error(a),g=new Map,A=(a,c={})=>{let x=g.get(a);if(x)return console.warn(`Capacitor plugin \"${a}\" already registered. Cannot register plugins twice.`),x.proxy;let v=s(),L=l(a),w,J=async()=>(!w&&v in c?w=typeof c[v]==\"function\"?w=await c[v]():w=c[v]:e!==null&&!w&&\"web\"in c&&(w=typeof c.web==\"function\"?w=await c.web():w=c.web),w),Q=(d,h)=>{var m,p;if(L){let b=L?.methods.find(f=>h===f.name);if(b)return b.rtype===\"promise\"?f=>t.nativePromise(a,h.toString(),f):(f,O)=>t.nativeCallback(a,h.toString(),f,O);if(d)return(m=d[h])===null||m===void 0?void 0:m.bind(d)}else{if(d)return(p=d[h])===null||p===void 0?void 0:p.bind(d);throw new E(`\"${a}\" plugin is not implemented on ${v}`,P.Unimplemented)}},S=d=>{let h,m=(...p)=>{let b=J().then(f=>{let O=Q(f,d);if(O){let $=O(...p);return h=$?.remove,$}else throw new E(`\"${a}.${d}()\" is not implemented on ${v}`,P.Unimplemented)});return d===\"addListener\"&&(b.remove=async()=>h()),b};return m.toString=()=>`${d.toString()}() { [capacitor code] }`,Object.defineProperty(m,\"name\",{value:d,writable:!1,configurable:!1}),m},W=S(\"addListener\"),q=S(\"removeListener\"),X=(d,h)=>{let m=W({eventName:d},h),p=async()=>{let f=await m;q({eventName:d,callbackId:f},h)},b=new Promise(f=>m.then(()=>f({remove:p})));return b.remove=async()=>{console.warn(\"Using addListener() without 'await' is deprecated.\"),await p()},b},B=new Proxy({},{get(d,h){switch(h){case\"$$typeof\":return;case\"toJSON\":return()=>({});case\"addListener\":return L?X:W;case\"removeListener\":return q;default:return S(h)}}});return i[a]=B,g.set(a,{name:a,proxy:B,platforms:new Set([...Object.keys(c),...L?[v]:[]])}),B};return t.convertFileSrc||(t.convertFileSrc=a=>a),t.getPlatform=s,t.handleError=u,t.isNativePlatform=n,t.isPluginAvailable=o,t.registerPlugin=A,t.Exception=E,t.DEBUG=!!t.DEBUG,t.isLoggingEnabled=!!t.isLoggingEnabled,t},te=r=>r.Capacitor=ee(r),C=te(typeof globalThis<\"u\"?globalThis:typeof self<\"u\"?self:typeof window<\"u\"?window:typeof global<\"u\"?global:{}),k=C.registerPlugin,y=class{constructor(){this.listeners={},this.retainedEventArguments={},this.windowListeners={}}addListener(e,t){let i=!1;this.listeners[e]||(this.listeners[e]=[],i=!0),this.listeners[e].push(t);let n=this.windowListeners[e];n&&!n.registered&&this.addWindowListener(n),i&&this.sendRetainedArgumentsForEvent(e);let o=async()=>this.removeListener(e,t);return Promise.resolve({remove:o})}async removeAllListeners(){this.listeners={};for(let e in this.windowListeners)this.removeWindowListener(this.windowListeners[e]);this.windowListeners={}}notifyListeners(e,t,i){let s=this.listeners[e];if(!s){if(i){let n=this.retainedEventArguments[e];n||(n=[]),n.push(t),this.retainedEventArguments[e]=n}return}s.forEach(n=>n(t))}hasListeners(e){var t;return!!(!((t=this.listeners[e])===null||t===void 0)&&t.length)}registerWindowListener(e,t){this.windowListeners[t]={registered:!1,windowEventName:e,pluginEventName:t,handler:i=>{this.notifyListeners(t,i)}}}unimplemented(e=\"not implemented\"){return new C.Exception(e,P.Unimplemented)}unavailable(e=\"not available\"){return new C.Exception(e,P.Unavailable)}async removeListener(e,t){let i=this.listeners[e];if(!i)return;let s=i.indexOf(t);s!==-1&&this.listeners[e].splice(s,1),this.listeners[e].length||this.removeWindowListener(this.windowListeners[e])}addWindowListener(e){window.addEventListener(e.windowEventName,e.handler),e.registered=!0}removeWindowListener(e){e&&(window.removeEventListener(e.windowEventName,e.handler),e.registered=!1)}sendRetainedArgumentsForEvent(e){let t=this.retainedEventArguments[e];t&&(delete this.retainedEventArguments[e],t.forEach(i=>{this.notifyListeners(e,i)}))}},_=r=>encodeURIComponent(r).replace(/%(2[346B]|5E|60|7C)/g,decodeURIComponent).replace(/[()]/g,escape),M=r=>r.replace(/(%[\\dA-F]{2})+/gi,decodeURIComponent),T=class extends y{async getCookies(){let e=document.cookie,t={};return e.split(\";\").forEach(i=>{if(i.length<=0)return;let[s,n]=i.replace(/=/,\"CAP_COOKIE\").split(\"CAP_COOKIE\");s=M(s).trim(),n=M(n).trim(),t[s]=n}),t}async setCookie(e){try{let t=_(e.key),i=_(e.value),s=e.expires?`; expires=${e.expires.replace(\"expires=\",\"\")}`:\"\",n=(e.path||\"/\").replace(\"path=\",\"\"),o=e.url!=null&&e.url.length>0?`domain=${e.url}`:\"\";document.cookie=`${t}=${i||\"\"}${s}; path=${n}; ${o};`}catch(t){return Promise.reject(t)}}async deleteCookie(e){try{document.cookie=`${e.key}=; Max-Age=0`}catch(t){return Promise.reject(t)}}async clearCookies(){try{let e=document.cookie.split(\";\")||[];for(let t of e)document.cookie=t.replace(/^ +/,\"\").replace(/=.*/,`=;expires=${new Date().toUTCString()};path=/`)}catch(e){return Promise.reject(e)}}async clearAllCookies(){try{await this.clearCookies()}catch(e){return Promise.reject(e)}}},oe=k(\"CapacitorCookies\",{web:()=>new T}),re=async r=>new Promise((e,t)=>{let i=new FileReader;i.onload=()=>{let s=i.result;e(s.indexOf(\",\")>=0?s.split(\",\")[1]:s)},i.onerror=s=>t(s),i.readAsDataURL(r)}),ne=(r={})=>{let e=Object.keys(r);return Object.keys(r).map(s=>s.toLocaleLowerCase()).reduce((s,n,o)=>(s[n]=r[e[o]],s),{})},se=(r,e=!0)=>r?Object.entries(r).reduce((i,s)=>{let[n,o]=s,l,u;return Array.isArray(o)?(u=\"\",o.forEach(g=>{l=e?encodeURIComponent(g):g,u+=`${n}=${l}&`}),u.slice(0,-1)):(l=e?encodeURIComponent(o):o,u=`${n}=${l}`),`${i}&${u}`},\"\").substr(1):null,ie=(r,e={})=>{let t=Object.assign({method:r.method||\"GET\",headers:r.headers},e),s=ne(r.headers)[\"content-type\"]||\"\";if(typeof r.data==\"string\")t.body=r.data;else if(s.includes(\"application/x-www-form-urlencoded\")){let n=new URLSearchParams;for(let[o,l]of Object.entries(r.data||{}))n.set(o,l);t.body=n.toString()}else if(s.includes(\"multipart/form-data\")||r.data instanceof FormData){let n=new FormData;if(r.data instanceof FormData)r.data.forEach((l,u)=>{n.append(u,l)});else for(let l of Object.keys(r.data))n.append(l,r.data[l]);t.body=n;let o=new Headers(t.headers);o.delete(\"content-type\"),t.headers=o}else(s.includes(\"application/json\")||typeof r.data==\"object\")&&(t.body=JSON.stringify(r.data));return t},D=class extends y{async request(e){let t=ie(e,e.webFetchExtra),i=se(e.params,e.shouldEncodeUrlParams),s=i?`${e.url}?${i}`:e.url,n=await fetch(s,t),o=n.headers.get(\"content-type\")||\"\",{responseType:l=\"text\"}=n.ok?e:{};o.includes(\"application/json\")&&(l=\"json\");let u,g;switch(l){case\"arraybuffer\":case\"blob\":g=await n.blob(),u=await re(g);break;case\"json\":u=await n.json();break;default:u=await n.text()}let A={};return n.headers.forEach((a,c)=>{A[c]=a}),{data:u,headers:A,status:n.status,url:n.url}}async get(e){return this.request(Object.assign(Object.assign({},e),{method:\"GET\"}))}async post(e){return this.request(Object.assign(Object.assign({},e),{method:\"POST\"}))}async put(e){return this.request(Object.assign(Object.assign({},e),{method:\"PUT\"}))}async patch(e){return this.request(Object.assign(Object.assign({},e),{method:\"PATCH\"}))}async delete(e){return this.request(Object.assign(Object.assign({},e),{method:\"DELETE\"}))}},ce=k(\"CapacitorHttp\",{web:()=>new D});(function(r){r.Dark=\"DARK\",r.Light=\"LIGHT\",r.Default=\"DEFAULT\"})(G||(G={}));(function(r){r.StatusBar=\"StatusBar\",r.NavigationBar=\"NavigationBar\"})(K||(K={}));R=class extends y{async setStyle(){this.unavailable(\"not available for web\")}async setAnimation(){this.unavailable(\"not available for web\")}async show(){this.unavailable(\"not available for web\")}async hide(){this.unavailable(\"not available for web\")}},le=k(\"SystemBars\",{web:()=>new R})});var V={};Z(V,{AppWeb:()=>H});var H,z=I(()=>{U();H=class extends y{constructor(){super(),this.handleVisibilityChange=()=>{let e={isActive:document.hidden!==!0};this.notifyListeners(\"appStateChange\",e),document.hidden?this.notifyListeners(\"pause\",null):this.notifyListeners(\"resume\",null)},document.addEventListener(\"visibilitychange\",this.handleVisibilityChange,!1)}exitApp(){throw this.unimplemented(\"Not implemented on web.\")}async getInfo(){throw this.unimplemented(\"Not implemented on web.\")}async getLaunchUrl(){return{url:\"\"}}async getState(){return{isActive:document.hidden!==!0}}async minimizeApp(){throw this.unimplemented(\"Not implemented on web.\")}async toggleBackButtonHandler(){throw this.unimplemented(\"Not implemented on web.\")}async getAppLanguage(){return{value:navigator.language.split(\"-\")[0].toLowerCase()}}}});U();U();var j=k(\"App\",{web:()=>Promise.resolve().then(()=>(z(),V)).then(r=>new r.AppWeb)});var F=window.MarsGameNative={native:C.isNativePlatform(),ready:Promise.resolve(),permitsServiceWorker:r=>!F.native&&!!r&&\"serviceWorker\"in r};F.native&&(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations().then(r=>Promise.all(r.map(e=>e.unregister()))).catch(()=>{}),F.ready=j.addListener(\"backButton\",async({canGoBack:r})=>{let e=document.querySelector(\"dialog[open]\");if(e){e.close();return}if(r){history.back();return}await j.minimizeApp()}),j.addListener(\"appStateChange\",({isActive:r})=>{window.dispatchEvent(new CustomEvent(\"mars-native-state\",{detail:{isActive:r}}))}));})();\n/*! Bundled license information:\n\n@capacitor/core/dist/index.js:\n  (*! Capacitor: https://capacitorjs.com/ - MIT License *)\n*/\n"
+    }
+  ],
+  "artCapability": {
+    "requestedModel": "gpt-image-2",
+    "status": "BLOCKED",
+    "reason": "Two built-in imagegen attempts produced independent poses; unchanged C2PA verifier rejected softwareAgent ChatGPT / gpt-image, which does not attest gpt-image-2. Unverified masters quarantined under ignored tools/asset_sources/imagegen_r88_unverified, not runtime.",
+    "missing": [
+      "assets/enemies/oga_runner_latch.png",
+      "assets/enemies/oga_shambler_latch.png"
+    ]
+  },
+  "capturedAt": "2026-10-15T12:47:31.284930+00:00",
+  "peerReadmeEvidence": [
+    {
+      "repo": "rift-survivors",
+      "source": "C:\\Users\\digimkt\\Desktop\\遊戲\\rift-survivors\\README.md",
+      "sha256": "56b3ad11fa9889d970b7d1ce581d242d54556ff8814f1a3a78add1a5ce82f238",
+      "excerpt": "# Crackveil Vanguard\n\n[![Deploy Web](https://github.com/mars-tw/crackveil-vanguard/actions/workflows/deploy-web.yml/badge.svg)](https://github.com/mars-tw/crackveil-vanguard/actions/workflows/deploy-web.yml)\n[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)\n\n[![Crackveil Vanguard 封面](assets/art/r33/r33_keyart.png)](https://mars-tw.github.io/crackveil-vanguard/)\n\nCrackveil Vanguard 是一款以小隊編成為核心的 2D survivors roguelite。從世界地圖選擇十個異變戰場，在連發火網中招募英雄、組合羈絆、選擇進化，清除怪群並挑戰各關 Boss。\n\n目前版本：**0.29.0-r44**（與 `project.godot` 一致）。`main` 分支通過檢查後自動更新 GitHub Pages。\n\nR43 加入十關、三十枚戰術徽記：走位並練習三種陣形、追獵兩名菁英、擊破 Boss，各可領取一次殘響；集齊一關另有紀錄與全隊傷害成長。手機長按陣形可直接選擇，支援一指移動、一指換陣；32 秒追獵預告與 Boss 半血護衛讓換陣更有時機。[手機內容優化與驗證](docs/CODEX_RESPONSE_R43_MOBILE.md)。\n\nR42 新增**陣形戰術**：戰鬥中按 `Q` 或「陣形」按鈕，即時在楔形突擊、圓陣護衛、散兵游擊之間切換。整支小隊會實際移動到新位置，傷害、受傷、拾取範圍與移動速度跟著改變。四組羈絆各自對應一種陣形，對上時產生共鳴；斥候、補線、守衛、爆破四名英雄的被動也綁定陣形。[陣形戰術說明與驗證](docs/R42_FORMATION_REPORT.md)。\n\nR41 針對手機載入減量，縮小遊戲包、限制手機畫布像素並調整啟動順序；修改、實測與 iPhone 驗證限制見 [手機載入優化紀錄](docs/R41_IPHONE_LOADING.md)。\n\nR40 統一行走、近戰與施法的方向判定：移動面向跟隨操作，成功出手後固定朝向至收招，避免前搖期間換邊。[方向修正與驗證](docs/R40_FACING_ATTACK.md)。\n\nR39 修正手機操作板遮擋戰場：搖桿與斬擊縮至底部角落，召喚與裝備改為小型入口，自動戰鬥開關移至「暫停 → 本局」。[手機版修正與實測](docs/R39_MOBILE_HUD.md)。\n\n新版改為可持續移動的環狀世界，沿路有八處地標，怪群從畫面外持續湧入。裂線起手每輪 12 發，可升到 20 發；近身範圍斬、按住旋斬與四種可抽法術共同清怪。每個戰場除了 Boss，也有六種特殊菁英；金幣可抽技能與永久寵物。擊敗各關 Boss 後仍可進入對應無盡模式。\n\n[直接遊玩](https://mars-tw.github.io/crackveil-vanguard/)；本次擴充見 [R38 發布報告](docs/R38_RELEASE_REPORT.md)，前一版效能回報見 [戰鬥與效能紀錄](docs/R37_COMBAT_PERFORMANCE.md)。\n\n## 線上遊玩\n\n**[立即遊玩 Crackveil Vanguard](https://mars-tw.github.io/crackveil-vanguard/)**\n\nWeb 版不需安裝。R41 的 WebAssembly 與遊戲包合計約 56 MiB，行動裝置建議使用橫向畫面。Web 版不提供完整離線遊玩；斷線重新整理會顯示輕量「需要連線」提示，恢復連線後即可重新載入。\n\n## 最新特色\n\n- **環狀世界與特殊菁英**：4096 × 3072 的週期世界可以持續往外走；八處地標、環狀主路與中央支路維持方向感。六關沿用不同地景色調，各有召喚、衝鋒、護盾、冰霜、火焰與寶藏菁英。\n- **大量火力與金幣召喚**"
+    },
+    {
+      "repo": "storm-apocalypse",
+      "source": "C:\\Users\\digimkt\\Desktop\\遊戲\\storm-apocalypse\\README.md",
+      "sha256": "afa95383bec79ea52641c039b097775736c045acd21c712c8743ff054e2372e2",
+      "excerpt": "# 暴風啟示錄 Storm Apocalypse\n\n[![Deploy Pages](https://github.com/mars-tw/storm-apocalypse/actions/workflows/deploy.yml/badge.svg)](https://github.com/mars-tw/storm-apocalypse/actions/workflows/deploy.yml)\n[![Version](https://img.shields.io/badge/version-0.3.0-c66b3d)](package.json)\n[![License: MIT](https://img.shields.io/badge/License-MIT-79c3d2.svg)](LICENSE)\n\n在永夜暴雪中狩獵、經營最後一間肉舖，建立防線並在三十次鐘聲裡守住僅存的燈火。《暴風啟示錄》是一款可直接在瀏覽器遊玩的 3D 經營 × 動作 × 塔防遊戲。\n\n**[立即線上遊玩](https://mars-tw.github.io/storm-apocalypse/)**\n\n[![暴風啟示錄封面：誰來走進暴風](assets/cover.png)](https://mars-tw.github.io/storm-apocalypse/)\n\n## 最新特色\n\n- **三位可選主角與骨架動畫**：屠夫老闆娘、退伍狙擊手、機械師少年各有專屬模型；Blender 5.1 產線輸出共用 18 骨骨架及 `idle`、`run`、`attack_melee`、`attack_ranged` 動畫片段。\n- **R8 角色藝術總修**：主角、四名常客、三種殭屍與 Boss 統一為可重建的 stylized low-poly 視覺，補齊剪影、五官、敘事配件、材質層次與戰鬥反應。\n- **Blender 渲染 UI**：角色立繪、主選單背景、圖示、atlas 與 9-slice 元件由同一套 `bpy` 色票及燈光 preset 產出。\n- **任務鏈**：15 章生存手冊串起狩獵、肉舖經營、武器、員工、牧場與防禦塔解鎖，夜襲另有輪替目標。\n- **30 波戰役**：白晝整備、夜間守備、敵人梯次與每 10 波 Boss 戰，進度保存於瀏覽器本機。\n- **R12 聲音與設定中樞**：八類零外部資產的 WebAudio 程序化音效，支援主音量、效果音、靜音、螢幕震動與暫停。\n- **R12.1 手機 HUD 分區**：資源／整備、任務、提示、塔列與波次列各自佔位，390×844 與 844×390 具備可見 HUD 互斥 smoke 守門。\n- **R13 世界一致性與命中 VFX**：12 個 R8 語言 low-poly GLB 取代舊牛隻、松樹、岩石、柵欄與雪屋外殼；8 張透明戰鬥 VFX 在實際傷害 frame 提供雪爆、木屑、血量警示與地面 decal。\n- **R14 modal 互斥**：開場、選角、手機整備、暫停設定與結算開啟時，背景 HUD 同步 `inert`、隱藏且不可命中；1366×600、390×844 與 844×390 納入真實 `elementFromPoint` smoke 守門。\n- **R15 暴雪視覺**：gpt-image-2／C2PA 主選單 key art 與程序性 low/medium/high 風雪分級；低畫質只降低天候粒子密度，不改強度行為。\n- **R19 直向戰鬥安全框**：極窄手機直向鏡頭依實際上下 HUD 保留可視區，角色姿勢與命中方向不再被底部控制或圍欄遮蔽；旋轉時 Babylon resize 改為穩定後單次重建。\n- **R20 終波平衡回歸**：固定 seed 無頭模擬與遊戲共用敵人、武器、塔、彈道及 impact 規則；第 30 波 HP 乘數由 1.08 收斂至 1.07，保留站位差異與一般配置壓力。\n- **R21 模擬保真修正**：固定 seed 模擬改用 60 Hz 與分數餘量生成時鐘，移除被量化假象誤導的 W27–30 HP 調整，並以一般 15–40%、滿配 50–70% 的終波區間誠實守門。\n- **R24 手機操作與守夜補給**：塔快捷列先選位、預覽射程，再確認"
+    },
+    {
+      "repo": "tower-defense",
+      "source": "C:\\Users\\digimkt\\Desktop\\遊戲\\tower-defense\\README.md",
+      "sha256": "77f996ec84bbe33768f1f55a9d804f4a3a79f6ed06989c2895cf7bfff958cb99",
+      "excerpt": "# 無盡塔防 · Endless Tower Defense\n\n[![CI & Deploy Pages](https://github.com/mars-tw/tower-defense-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/mars-tw/tower-defense-skill/actions/workflows/ci.yml)\n[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)\n[![Version 0.15.0](https://img.shields.io/badge/version-0.15.0-blue.svg)](package.json)\n[![Play Online](https://img.shields.io/badge/Play-GitHub%20Pages-brightgreen.svg)](https://mars-tw.github.io/tower-defense-skill/)\n\n![無盡塔防封面](assets/cover.png)\n\n以原生 JavaScript 與 Canvas 2D 製作的塔防遊戲。建造元素高塔、召喚神話英雄、升級守護女神，挑戰十二波遠征或無盡妖魔浪潮；每局成果會累積至英雄羈絆、通關紀錄與成就。\n\n**[立即線上遊玩](https://mars-tw.github.io/tower-defense-skill/)**\n\nR87 新增「三才試陣」：首屏用實際塔原畫呈現火、冰、雷，定位預覽後確認購塔，三塔相鄰時各有 30% 傷害增幅。用同一座陣守過一波，再選正式戰場；試陣成就納入本機紀錄與存檔備份。上架草稿、驗證與缺件見 [R87 商店報告](docs/CODEX_RESPONSE_R87_STORE.md)。\n\n目前版本：`0.15.0`／PWA 快取版本 `td-r87-v1`。手機可將塔卡拖到戰場預覽，確認才建造；升級前可比較下一級數值。從「更多 → 功能 → 六波巡守／印記」選擇暮翼護橋、斷谷醫隊或餘燼換陣，守住六波、選擇祝福並收集九枚跨局印記與記事。巡守紀錄包含在存檔匯出／匯入中。驗證與限制見 [R86 手機優化報告](docs/CODEX_RESPONSE_R86_MOBILE.md)；前輪見 [R85 好玩與美觀報告](docs/R85_FUN_AND_POLISH_REPORT.md)。\n\n## 遊戲畫面\n\n| 桌機戰鬥 | 平板技能預覽 | 手機控制盤 |\n|---|---|---|\n| ![十二波桌機終戰](docs/releases/0.12.2/desktop-combat.png) | ![平板技能預覽 fixture](docs/releases/0.12.2/tablet-control.png) | ![手機控制盤](docs/releases/0.12.2/mobile-control.png) |\n\n## 最新特色\n\n- **R84 手機與平板控制盤**：依觸控能力啟用，寬螢幕平板也有完整定位列。建塔、技能、已建塔及其他功能分頁顯示；選項採完整名稱與大按鈕，技能先預覽範圍再確認，已建塔可由列表直接檢視。操作時可自動暫停規劃，取消後保留原先的手動暫停狀態。\n\n[R84 觸控控制盤改善](docs/RELEASE-0.12.2.md)\n\n- **R83 手機建塔**：選塔後可用「建議位」預覽、四方向逐格微調與底部大確認鈕；附近無效位置只會有限對齊合法格，拖曳或微調不會自動扣錢。建好後返回選塔列，下一次點塔可開啟升級資訊。\n\n[R83 手機建塔改善](docs/RELEASE-0.12.2.md)\n\n- **R82 三套遠征**：溪橋守望、裂谷封鎖、熔心封印各有十二波敵群與四段壓力，第十二波守住後完成戰役。無盡守城繼續保留。\n- **R82 本局祝福**：第 3、6、9 波後，各從三張未持有的祝福中選一張。十二種效果涵蓋物理穿透、範圍炮火、冰雷配合、經濟、技能與英雄；下一局重新選擇。\n- **R82 可選契約**：波間可讓敵人加速、增加援軍，或禁用主動技能；守"
+    },
+    {
+      "repo": "skill",
+      "source": "C:\\Users\\digimkt\\Desktop\\遊戲\\skill\\README.md",
+      "sha256": "5eabb799b3665d4783ce36c788708de5058405c2c71c96547d4642c60f626b59",
+      "excerpt": "# 裂潮卡牌｜TIDEREND CARDS\n\n[![CI & Deploy Pages](https://github.com/mars-tw/web-card-game-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/mars-tw/web-card-game-skill/actions/workflows/ci.yml)\n[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)\n[![Play Online](https://img.shields.io/badge/Play-GitHub%20Pages-brightgreen)](https://mars-tw.github.io/web-card-game-skill/)\n\n![裂潮卡牌封面](assets/cover.png)\n\n《裂潮卡牌》是一款以原生 HTML、CSS 與 JavaScript 製作的單人網頁卡牌對戰遊戲。玩家可以開卡包、收集卡牌、組成 20 張牌組，在自由對戰挑戰三位具名 AI，或沿五站航程對抗五位對手；任務、收藏、牌組與戰績皆保存在瀏覽器 `localStorage`，遊戲執行時不需要後端服務。\n\n**[立即線上遊玩](https://mars-tw.github.io/web-card-game-skill/)**\n\n目前版本：`0.6.0`／PWA revision `card-battle-r73-v1`。\n\n## 手機與五站歸航（R73）\n\n- 手機點手牌先預覽，再按「確認出牌」；也能上拖到己方戰場後預覽。橫滑看牌、放回原處或中斷觸控都不會出牌。桌機保留點選出牌。\n- 從「⋯ → 航程／試用牌組」出發，依序挑戰白潮、荒野、殘響、霜牙、長暮；每站提供劇情、打法提示與下一站目標，勝利才推進。\n- 20 張「荒野突襲」起始可試用，通過第 1／3 站解鎖「白潮列陣」／「殘響詠潮」。可切回自己的收藏牌組；試用不增加收藏，也不覆寫原牌組。\n- 航程進度包含在完整存檔匯出／匯入；匯入未包含航程的舊版存檔，保留當前航程。\n\n驗證與限制見 [R73 手機報告](docs/CODEX_RESPONSE_R73_MOBILE.md)。\n\n## 招牌玩法：裂潮（R72）\n\n- **潮能**：雙方各有 0–6 潮能，每回合開始 +1、己方隨從陣亡 +1——越被壓著打，浪頭越快回來。\n- **裂潮爆發**：滿潮時按「裂潮」（0 費），對所有敵方隨從造成 1 點、敵方英雄 2 點，潮能歸零。現在放還是留著清場、斬殺，是每局都要做的時機判斷。\n- **對手潮汐親和**：哈爾登「守城潮」、維伊「詠潮」（施法也充能）、斯卡拉「血潮」（陣亡充能加倍），三位對手的節奏各不相同；AI 會看局面決定何時掀浪。\n- **星級挑戰**：每位對手 × 難度三顆星（獲勝／生命過半／用過裂潮爆發），結算逐顆點亮並記錄最佳成績。\n- **開場與回饋**：VS 開場演出（對手立繪、台詞、戰場）、回合橫幅、潮浪橫掃特效。\n\n## 最新特色（R60–R61）\n\n- **「對座六影」具名傳說角色卡**：哈爾登隊長、維伊魔導師、斯卡拉狼首、伊索德·長暮、霜牙百夫長·魯恩、潮間仲裁者·茉恩；六張卡各有專屬機制與唯一構築限制。\n- **角色專屬立繪**：R61 為六位角色補齊統一風格立繪，並接入戰場、開包揭示與收藏冊；卡面美術為 AI 產出，詳見 [CREDITS.md](CREDITS.md)。\n- **角色抽取保護**：抽到傳說時有 28% 機率偏向角色子池；連續 35 包未取得角色傳說時觸發保底，並優先補未擁有角色。\n- **具名 AI 對手**：哈爾登偏控制、維伊偏法術、斯卡拉偏快攻；可切換簡單、普通、困難與動態難度調節。\n- **完整對戰表現**：傳說框掃光、閃卡虹彩、潮印收藏變體、英雄資源寶石、低血量警示，以及可停用的高動態效果。\n\n## 遊戲內容\n\n- **回合制對戰**：法力上限 10、場面上限 7、手牌上限 8，包含疲勞、目標選擇、AI 提示與戰鬥紀錄。\n- **92 張卡牌**：25 普通、24 稀有、23 史詩、2"
+    },
+    {
+      "repo": "pixel-idle-farm-skill",
+      "source": "C:\\Users\\digimkt\\Desktop\\遊戲\\pixel-idle-farm-skill\\README.md",
+      "sha256": "1042e1306ad617064c45d9357f4e2e8280dea31a491dfa2c082ce12a9b0a9527",
+      "excerpt": "# 阿軒割割陽光農場開源遊戲世界\n\n![晨光農場封面](assets/cover.png)\n\n[![CI & Deploy Pages](https://github.com/mars-tw/pixel-idle-farm-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/mars-tw/pixel-idle-farm-skill/actions/workflows/ci.yml)\n[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)\n[![Play Online](https://img.shields.io/badge/Play-GitHub%20Pages-brightgreen)](https://mars-tw.github.io/pixel-idle-farm-skill/)\n\n《陽光農場》是一款原生 HTML、CSS 與 JavaScript 的像素農場 RPG。接下祖母留下的田地，替鎮民準備食物、修復河畔、照顧動物，讓這座農場重新有人來。作物與動物保留離線成長，主動遊玩則能做料理、釣魚、交付餐籃與探索東林。\n\n**[線上遊玩](https://mars-tw.github.io/pixel-idle-farm-skill/)** ・目前本機版本：**R80**（`r80-20261015-1`）。\n\n## R80 晨光日誌與單手收成\n\n手機右下角會顯示成熟田地數量。點一次就走近收一格，優先收陽光照到的作物，連按也不會重開動作；倉庫放不下整份收成時，作物會留在田裡。沒有成熟作物時，這顆鍵可以與前方目標互動。\n\n底部「日誌」每天提供澆水、收成與鄰居餐籃三項農務。點領取或交付後才給獎勵，餐籃會取走兩份作物。三項完成可拿印章與堆肥各一份，累積 3／7 枚印章能讀到祖母留下的兩頁手記。不必連續登入；每日台灣時間 00:00 更新，已拿到的印章與收藏會保留。玩法與證據見 [R80 手機報告](docs/CODEX_RESPONSE_R80_MOBILE.md)。\n\n## R79 陽光光斑與手感、畫面修飾\n\n招牌玩法「陽光光斑」：種下作物後，田上會不時灑下一道光，約 16 秒後散去。在光裡種下或澆水，作物馬上長快三成；在光裡收成多一份。雨、雪、霧和暴風雨不出光斑，放著不玩也不累積，主動照顧田地才有額外收穫。\n\n另有走路途中可直接改道、任務列顯示成熟倒數、收成作物飛進倉庫、中文連收提示、晴天雲影與暖光、手機資源列不被系統鈕遮住、toast 去重並避開對話框，以及本機生成的田園背景音樂（設定可關）。計畫與驗收見 [R79 計畫](docs/OPTIM_PLAN_R79.md) 與 [R79 報告](docs/R79_FUN_AND_POLISH_REPORT.md)。\n\n## R78 澆水任務修正\n\n澆水任務會先帶玩家找還能澆水的作物；作物已成熟時，會引導先收成並補種。選擇水壺也不會誤把成熟作物採收。手機與桌面流程均有回歸測試。\n\n## R77 顯示修正\n\nNPC 光點、任務箭頭與對話泡泡依角色圖片頂緣定位，包含發光和脈動的安全間距；同一 NPC 只顯示一個狀態標記。32 個按鈕圖示改用完整的單張透明 PNG，手機縮小時不再被固定圖集座標裁掉。詳見 [顯示修正紀錄](docs/r77-display-fix.md)。\n\n## R76 素材更新\n\n釣台和野餐桌各有專用的損壞／修復像素圖，取代借用的橋梁與市集攤位。四個 frame 統一為 96px、真透明背景、共用色盤和腳底錨點。釣台畫在池塘上方，從岸邊走近互動。\n\n來源圖、完整提示詞、裁切工具和雜湊一起開源，見 [R76 素材與發布紀錄](docs/r76-art-release.md)。另修正野餐居民搬遷與新場址的讀檔衝突，保留既有建物和動物。\n\n## R75 世界重製\n\n主畫面改成完整視口的農場，相機跟著人物移動。手機預設保持可讀的圖磚大小；任務、訂單、升級與圖鑑按需要展開，地面沒有常駐格線。\n\n新主線有三章九個任務：「回家與第一餐」、「河畔復興」、「收穫野餐」。收成會變成料理和居民委託；釣台、餐桌與花園能"
+    },
+    {
+      "repo": "village-siege",
+      "source": "C:\\Users\\digimkt\\Desktop\\遊戲\\village-siege\\README.md",
+      "sha256": "bf537e4bb80bd45ef077a4ab7454b33d2cae65b3ded249a1a7999dae89dfed5d",
+      "excerpt": "# Village Siege／村莊攻防\n\nVillage Siege 是 MIT 授權的開源瀏覽器即時戰略遊戲。指揮工匠採集、興建村莊、發展科技，再集結軍隊穿過河谷與野獸營地。採用原創中世紀等角美術，支援電腦與手機、平板橫向操作。\n\n**[開始遊玩 1.5.0](https://mars-tw.github.io/village-siege/play.html?v=1.5.0)** · 電腦／手機與平板橫向 · 單人離線 PWA\n\n## 遊玩介紹影片\n\n先看 72 秒真實操作：指揮工匠採集、放置兵營、查看軍備科技，再帶兩名戰士進入林緣遭遇戰。正常新局與自有戰局接續錄製，影片無音訊。\n\nhttps://github.com/user-attachments/assets/5a5ebbdf-72f7-4fb2-9eec-971393ddfd76\n\n| 時間 | 遊戲內容 |\n| --- | --- |\n| 0:00–0:24 | 採集與建造：派工匠前往林木，放置兵營地基並施工。 |\n| 0:24–0:48 | 科技與部隊移動：查看軍備科技，再選取戰士下達移動命令。 |\n| 0:48–1:12 | 林緣遭遇戰：接近可見野獸、近身交戰與戰利品結果。 |\n\n### 原始片段\n\n| 採集與建造 · 24 秒 | 科技與部隊移動 · 24 秒 | 林緣遭遇戰 · 24 秒 |\n| --- | --- | --- |\n| [![播放採集與建造](docs/media/gameplay/economy.webp)](docs/media/gameplay/economy.mp4) | [![播放科技與部隊移動](docs/media/gameplay/movement.webp)](docs/media/gameplay/movement.mp4) | [![播放林緣遭遇戰](docs/media/gameplay/battle.webp)](docs/media/gameplay/battle.mp4) |\n\n[下載 72 秒介紹影片](docs/media/gameplay/overview.mp4) · [錄影來源與授權](assets/GAMEPLAY_RECORDINGS.md) · [更新紀錄](CHANGELOG.md)\n\n## 1.5：手機指揮與邊境三章（2026-10-15）\n\n主選單的「邊境三章」從松林補給、河谷駐守一路推進到高地攻城。每章都有實際目標、完成結算、最佳時間與三枚勳章；完成後解鎖下一章。關卡中途離開會從頭開始，原有自由戰役仍可自動存檔。\n\n手機橫向時，下方可隨時選取工匠、軍隊，開啟「加選」逐一加入或移除友軍；「取消」清除選取與選點。點選單位有 52 CSS px 的容錯範圍，右上角可暫停；直向顯示清楚的旋轉提示，也能直接返回主選單。\n\n本機版本 1.5.0；公開網站尚未部署本輪更新。[驗證報告](docs/CODEX_RESPONSE_R30_MOBILE.md)\n\n## 1.4：開局指引、攻城回饋與戰報（2026-10-15）\n\n開局就知道下一步：左上角「戰役指引」帶你增派工匠、蓋兵營、集結士兵、偵察，最後攻下敵方議事堂，每完成一步都有提示，點一下就能執行。攻城時看得到敵方議事堂還剩多少，城牆破口會震動鏡頭。打完一場會出戰報與三星評價，記錄你在每座聚落、每種難度的最佳成績，第一次遊玩自動從新手難度開始。\n\n[本輪報告](docs/R29_FUN_AND_POLISH_REPORT.md)\n\n## 1.2：移動、進場與出征指引（2026-10-02）\n\n修正工匠與軍隊走路時被位置更新打斷的跳動，停下前會走完最後一段；單向圖集依左右轉向，六方向圖集保留各自原圖。新增「戰場目標」，串接生產、集結、偵察與攻城，操作使用正常資源與指令。\n\n選單改用專用縮圖，戰場保留相同可見像素的 WebP 地景；未出現的兵種與怪物延後下載。相同 400 KiB/s、60ms 模擬網路的單次前後量測，開始至可操作由 13.1 秒降為 7.6 秒；這是受控測量，實際公網速度依網路而異。\n\n**[立即遊玩 1.2.0](https://mars-tw.github.io/village-siege/play.html?v=1.2.0)** · ["
+    },
+    {
+      "repo": "seven-district-reckoning",
+      "source": "C:\\Users\\digimkt\\Desktop\\遊戲\\seven-district-reckoning\\README.md",
+      "sha256": "db3a76cac7555ba195c649eb4af822e5d51169b6107b668681192605e61178e3",
+      "excerpt": "# 七期：斷鏈行動 / Seven District: Break the Chain\n\n本機開發版為 **0.6.0**：新增三份可走訪、核對線索與收集人物後記的章節回訪，以及手機互動提示、觸控取消回饋與暫停分頁。本輪未發布；以下公開連結仍是既有版本。驗證與限制見 [R2 手機優化報告](docs/CODEX_RESPONSE_R2_MOBILE.md)。\n\n**Alpha 0.4.0 已上線：台灣街坊生活、800 公尺地圖與三端操作。** 原創第三人稱沙盒動作遊戲，以台中七期的高級商辦與台灣街景為靈感，使用 Blender 製作資產、Godot 執行遊戲。\n\n[手機版](https://seven-district-reckoning.digimkt.workers.dev/phone/) · [平板版](https://seven-district-reckoning.digimkt.workers.dev/tablet/) · [電腦版](https://seven-district-reckoning.digimkt.workers.dev/desktop/) · [Windows Alpha 0.4.0](https://github.com/mars-tw/seven-district-reckoning/releases/tag/v0.4.0) · [操作與存檔說明](docs/newv04-device-entry.md)\n\nAlpha 0.4 瀏覽器版免安裝，首次開啟需要下載遊戲資料；這是單人遊戲。首頁可自動判斷裝置，三個專用入口各有控制、介面與畫面預算。遊戲存檔留在同一個瀏覽器與網站內，切換手機／平板／電腦模式可接續同一份進度。[三端操作與驗收範圍](docs/newv04-device-entry.md)\n\n玩家扮演被虛擬貨幣假投資平台騙走積蓄的外送員。從確認失聯訊息、拆掉假客服門面，到騎自行車帶回線索、救出受困者，最後選擇打砸、蒐證或救援的處理重心。企業、人物、設施和可玩地圖均為虛構；作品使用原創與可再散布的素材。\n\nA stylized, original third-person action sandbox made with **Godot 4.7.2** and **Blender 5.2.0 LTS**. Alpha 0.4 is live in the browser, with an 800 × 800 m fictional Taiwan-inspired district, food/store/parcel jobs, character stories, four culture activities and distinct phone, tablet and desktop profiles. Windows x64 is available through the release link above.\n\n![Alpha 0.4 八位街坊角色，原生 Godot 造型檢查場景](qa/art/taiwan/integrated/story_people.png)\n\n上圖是八位新角色的原生 Godot 造型檢查場景。[公開手機版實際畫面](qa/browser/v04/phone-play-public.png)與[外送選單](qa/browser/v04/phone-jobs-public.png)另有瀏覽器截圖；造型檢查場景不代表公開 Web 畫面。[歷史 Alpha 0.3 畫面](docs/evidence/web-public-alpha-0.3.jpg) · [歷史 Alpha 0.2 畫面](docs/evidence/web-public-alpha-0.2.jpg)\n\n## Alpha 0.4 本輪內容\n\n- 保留第一章主線與原有核心，新增晨光市場、星燈夜市、日常便利街、橘盒物流街、青蔭里民綠廊、澄川河岸、犁光騎樓老街與紙光文創聚落。擴建地圖為 **800 × 800 m**，32 個站點供取餐、交談、取貨與送達。\n- 研究 52 份已讀主來源，涵蓋 31 類台灣文化、街景與活動主題、98 個細分標籤；內容包括早餐與夜市、騎樓、河濱、便利商店、店到店取貨、里民活動、"
+    },
+    {
+      "repo": "taiwan-island-drive",
+      "source": "C:\\Users\\digimkt\\Desktop\\遊戲\\taiwan-island-drive\\README.md",
+      "sha256": "a7852502dc96f1772668e9cdbf14497954088b9a3ccef8cac2312b5d4835da51",
+      "excerpt": "# 島嶼交通學院｜Island Transport Academy\n\n汽車、火車與飛機已合併成同一個開源手機遊戲專案。從大廳選交通工具，共用一套 npm／Vite 建置、一個 GitHub 儲存庫、一份 PWA 與離線素材庫。手機只需加入主畫面一次。\n\n**[開啟交通學院](https://mars-tw.github.io/taiwan-island-drive/)** · [完整原始碼與模型下載](https://mars-tw.github.io/taiwan-island-drive/downloads/island-drive-source.zip)\n\n| 模式 | 操作與學習 | 專案內入口 |\n| --- | --- | --- |\n| 汽車 | 四款車、四張台灣主題地圖、觸控／手機方向盤、自由駕駛與計時挑戰 | `/car/` |\n| 火車 | 慣性、延遲煞車、車門與方向互鎖、號誌、停站接客；三課程與停車輔助 | `/train/` |\n| 飛機 | 四個 36×36 km 風景地圖；尋寶、郵件投遞、景點巡航、起飛、導航、降落及自由飛行；單次點擊助飛與物理返航 | `/flight/` |\n\n火車與飛機預設 3～5 歲幼兒模式，有大按鈕、簡短中文語音及操作輔助。家長可改成完整手動模式。大廳的幼兒模式、聲音與畫質設定會同步到三種遊戲；汽車的車種、顏色等個別選擇仍會保存。\n\n2.2 版重整飛機的手機／平板介面：WebGL 使用獨立飛行視窗，任務列與控制列占自己的空間；幼兒只需點擊向左、主動作與向右，助飛會持續管理油門、轉彎與姿態。看儀表時重新量測可用視窗，家長仍可切換完整手動操作。新增尋寶、實際重力郵件投遞及景點巡航，詳細變更見 [介面](docs/flight-upgrade-ui.md)、[控制與玩法](docs/flight-upgrade-controls.md)、[世界與鏡頭](docs/flight-upgrade-world.md)。\n\n2.4 版讓幼兒更好上手，也更有獎勵感。大廳換成明亮的天空配色，三張大卡片在手機直式、橫式都不用捲動。汽車路上有 12 顆金色星星可以收集，火車每接到一站乘客就會慶祝，飛機找到星星、送到郵件也會。三種模式收集到的星星都會顯示在大廳的星星架上。大廳另有一段可關閉的背景音樂，來源記在 [CREDITS](CREDITS.md)。改動與驗收紀錄見 [R1 報告](docs/R1_FUN_AND_POLISH_REPORT.md)。這一版只更新網頁原始碼，商店上的原生包仍是 2.3.0。\n\n## iOS／Android 商店版準備包\n\n已建立 Capacitor 原生工程，全部遊戲與模型本機打包。新 [LOGO 與透明字標](docs/branding/README.md)已納入 Android 測試 APK（39,339,054 bytes）、上傳簽章 AAB（37,141,256 bytes）及實際上傳的 iOS 簽章 IPA（37,440,871 bytes）；簽章與隨附資源驗證通過，104 項程式測試通過。[公開 Android 測試版 rc.2](https://github.com/mars-tw/taiwan-island-drive/releases/tag/native-v1.0.0-rc.2)已發布，三個檔案 digest 已核對。完整交付與重建見 [native-package](docs/native-package.md)，最新包、舊 `e580ef1`／`7cd0d75` 證據與驗證限制見 [native-build-verification](docs/native-build-verification.md)。\n\nApple 已透過官方 direct API 完成上傳與處理，Build 1.0.0／build 1 為 `VALID`，`usesNonExemptEncryption=false`；選用 Build 並提交 ReviewSubmission 後，實際 GET 版本與審查工作皆為 `WAITING_FOR_REVIEW`，尚未核准。完整上傳及送審紀錄見 [Apple API journal](store/review/apple-api-s"
+    },
+    {
+      "repo": "taiwan-train-math",
+      "source": "C:\\Users\\digimkt\\Desktop\\遊戲\\taiwan-train-math\\README.md",
+      "sha256": "d7ec2ee16ec083722b00e88562b8c0c26d98dfb09ad7c37b3eb9f40696743768",
+      "excerpt": "# 小小列車長｜台灣火車數學樂園\n\n給 **3–8 歲**小小鐵道迷的免費繁體中文遊戲，提供網頁及 Android／iPhone／iPad 原生專案。陪星光高鐵送信到海邊，打開故事任務，再選喜歡的真實列車，練習數數、簡單加減、排序、規律、裝箱、記憶、時鐘、空間方向、分享與尋寶。\n\n[直接遊玩](https://mars-tw.github.io/taiwan-train-math/) · [公開程式庫](https://github.com/mars-tw/taiwan-train-math)\n\n## 可以玩什麼\n\n- **小站任務冊**：月台準備、野餐補給、沿路找朋友、平安送到站，四章各三個目標。三種難度各有 12 格，從數數與規律，逐步練到分享、車票與重量。完整玩完對應的一趟才前進；每三格留一枚收藏章，完成頁可接著玩下一個。提示、重試與休息都不扣獎勵，所有遊戲仍能自由選。\n- **3–4 歲**：1–5 數量與點點配對、列車名稱配對、三節車廂排序、AB 圖形規律、1–5 箱裝貨、兩對記憶翻卡；每趟三站。\n- **5–6 歲**：0–10 數數、10 以內上車下車加減、列車配對、五節排序、數量比較、AAB／ABC 規律、10 箱內裝貨、三對翻卡及整點時鐘。\n- **7–8 歲**：0–20 數數與加減、列車型號配對、排序與比較、跳數規律、20 箱內裝貨、四對翻卡及整點半點。跨十加減由家長開啟。\n- **星光高鐵故事**：獨立透明列車沿山海軌道緩緩向下開，四段情節，可暫停、重播、手動換段和聽故事。打開「故事任務」，可以直接玩接軌、分享和尋寶。\n- **三個新冒險**：旋轉軌道接通路線；把點心公平分給朋友，可隨時搬回；在風景裡找星星、葉子與貝殼。三種都依年齡調整，無時間壓力。\n- **首頁與遊戲室**：首頁先看山海列車故事，第一次從同一種數數玩法開始，之後保留驚喜旅程；也能直接自己選遊戲。遊戲室預設從數學開始，二十種玩法分成四類，每次只顯示一類；不適齡挑戰和六條主題旅程可另行展開。\n- **一小步就開始**：每題有短目標與一行「這一步」，選片後提示放片、放滿後提示自行檢查。聽題目會讀操作方法，提示只教方法；手機提示放在底部操作區，桌機也會讓回饋保持可見。\n- **自己數、自己算**：數數只留下 ✓，不先報累計人數；加減仍只顯示兩筆紀錄及未知總數，算對才顯示結果。點心要全分完且每位一樣多，代幣按面額搭配，不自動計出答案。\n- **旅途小發現**：答對後有一句概念說明和一張短卡，認識真實列車或台灣地點。59 個車輛條目、六個真實地點附官方來源；首頁的星光高鐵及山海圖明示為想像故事，地點小知識不代表列車路線。[模擬試玩與改善紀錄](docs/child-playtest-v1.10.md)。\n- 自由選車、圖鑑搜尋、二十種單項練習與隨機驚喜旅程、本機鐵道護照、中文裝置語音、柔和音效與減少動畫。\n- **答對有慶祝、答錯有鼓勵**：首頁一打開就有「開始玩！」大按鈕。答對時答案打勾、彩帶星星和鼓勵語，進度列的小列車開往下一站、完成站變金星；答錯只輕輕搖一下並提醒再試。終點蓋紀念章、數星星。聲音由裝置即時合成，可在家長設定關閉；減少動畫時特效全部停止。\n- 完成旅程可拆開紀念信封，收藏三十六款旅途小禮物；不付費、不鎖遊戲、不限時收集。\n- 驚喜旅程輪替適齡任務，記住最近玩過的題目；列車辨識會換車，排序與接軌也有不同組合。\n- 加減題讀乘客紀錄、自己輸入答案。答對後才顯示結果；提示只教方法，不會直接報答案或自動做完。\n- 完成後可以換台列車、玩新任務，也能搭同台列車練新題。無計時扣分，答錯可以再試。所有列車直接開放。\n- **火車拼圖**：4／6／9 片，點一片再點位置，能取回、換片與主動看原圖；每站會換列車照片，自己拼好才完成。\n- **行李分類站**：依年齡按顏色、形狀或兩個條件分類，放錯可以取回重分。**車站迷宮**有 3×3／4×4／5×5 不同路線，方向鈕或鍵盤都能玩。\n- **旅途收藏冊**：六個主題、36 款小禮物，每趟可從新禮物中選一份，收齊主題有套組章。小禮物能點開玩，未領的份數和已開信封會留在本機。\n- **手機與平板**：首頁有大按鈕，遊戲中縮短頂部、將送出放在下方。拼圖可拖放或點選，橫放與平板會並排顯示；數字題預設用畫面鍵盤，"
+    },
+    {
+      "repo": "island-flight-school",
+      "source": "C:\\Users\\digimkt\\Desktop\\遊戲\\island-flight-school\\README.md",
+      "sha256": "ef2d75fe67a9a873656520090bb1024b2ba1bf749e750211e1532ce09f0d37ca",
+      "excerpt": "# 島嶼飛行學校 / Island Flight School\n\n讓 3～5 歲孩子在台灣主題練習場認識起飛、轉彎與降落的親子手機 3D 遊戲。預設小小飛行員模式，提供 64px 以上大按鈕、簡短繁中語音與相同字幕；另有家長完整手動模式。Three.js、原創 Blender 高翼飛機、真正 IMG UV 材質、觸控操縱桿與動態六大儀表。程式、模型、貼圖及聲音程式採 MIT 開源。\n\n[手機直接玩](https://mars-tw.github.io/island-flight-school/) · [公開原始碼](https://github.com/mars-tw/island-flight-school) · [下載完整開源包](https://mars-tw.github.io/island-flight-school/downloads/flight-school-source.zip)\n\n網站已透過 GitHub Pages 公開，電腦不需要開機。使用 Safari 或 Chrome 可加入主畫面；第一次完整載入後，可離線遊玩。\n\n## 可以玩什麼\n\n- 花東海岸、縱谷練習場、澎湖離島：原創台灣主題地景，非測繪或真實機場資料。\n- 海燕教練機與白鷺巡航機：共用原創高翼機體，有不同重量、推力與起飛速度設定；不對應任何品牌或認證機型。\n- 滑行與起飛、空中導航、進場降落，以及自由飛行。\n- 機外追蹤與 Blender 座艙視角，空速、姿態、高度、航向、升降率、RPM 六大儀表。\n- 幼兒模式：推大油門、等速度足夠再按「抬頭起飛」，操作仍透過升力與力矩；導航可按「一起找路」、進場可按「一起降落」輔助，接地後孩子按住「慢慢停」。\n- 語音每次只念一句，瀏覽器無可用語音時保留字幕；聲音按鈕可一併關掉語音與引擎聲。\n- 家長手動模式的手機雙指操作：一指操縱桿，另一指油門、方向舵、襟翼、煞車。\n- 穩定輔助可關閉，暫停、重新開始、課程成績保存在本機。無帳號、無廣告、無追蹤。\n- PWA：第一次在線上完整載入後，HTTPS 網站可加入手機主畫面並離線使用。\n\n## 開始玩\n\n```sh\nnpm install\nnpm run dev\n```\n\n開啟 `http://localhost:5181/`。手機與電腦使用同一個 Wi-Fi，開啟 `http://電腦的區網IP:5181/`；HTTPS 公開部署入口由倉庫 Pages workflow 建置。iPhone 用 Safari「分享」→「加入主畫面」，Android 可用 Chrome 的安裝選項。\n\n```sh\nnpm test\nnpm run build\nnode scripts/serve.mjs\n```\n\nNode.js 24 測試通過。`scripts/serve.mjs` 直接提供建好的 `dist/`，可設定 `FLIGHT_SCHOOL_PORT`。使用 PowerShell 執行 `scripts/package-source.ps1`，會產出 `release/flight-school-source.zip`，含可直接啟動的 dist、原始碼、真實 `.blend` 檔、建模腳本、GLB、IMG 貼圖、授權與測試。GitHub Pages workflow 會將 ZIP 放入網站 downloads 目錄。\n\n## 操作與學習\n\n| 操作 | 電腦 | 手機 |\n| --- | --- | --- |\n| 推桿／機頭下降 | ↑ / W | 操縱桿往上推 |\n| 拉桿／機頭抬起 | ↓ / S | 操縱桿往下拉 |\n| 機翼傾斜 | ← → / A D | 操縱桿左右移 |\n| 方向舵、地面轉向 | Q / E | ◀ / ▶ |\n| 加大／減小油門 | Shift / Ctrl | 油門滑桿 |\n| 襟翼 0°、10°、20° | F | 襟翼按鈕 |\n| 輪胎煞車 | Space 按住 | 煞車按住 |\n| 機外／座艙 | C | 視角按鈕 |\n| 暫停、再來一次 | Esc、R | 暫停及再練一次 |\n\n空速的 KT 是「節」，高度 FT 是「呎」，升降率 FT/M 是「每分鐘呎」。航向 000° 向北、090° 向東。操縱桿先小幅操作；拉太多會增加迎角、降"
+    },
+    {
+      "repo": "taiwan-train-school",
+      "source": "C:\\Users\\digimkt\\Desktop\\遊戲\\taiwan-train-school\\README.md",
+      "sha256": "b51c1f0522c42e0d0f209be8ceb910be077f18aeda48a53825985e2db74502f7",
+      "excerpt": "# 島嶼鐵道學校\n\n讓 3～5 歲孩子在手機上試著開火車。先按大綠色按鈕準備出發，再前進、煞車、停靠車站、開門接客。中文語音教練會提醒下一個動作，家長可以展開完整駕駛台，陪孩子認識列車慣性、牽引力、空氣煞車與號誌。\n\n此專案是 MIT 開源的 Three.js／Vite 3D 遊戲，車輛與駕駛艙由 Blender 建模，使用真正的 PNG 材質 atlas 經 UV 貼在模型上，並將圖片內嵌於 GLB。離線需要的程式、字型、模型與貼圖皆由網站自身提供，沒有帳號、付費門檻或遠端資料蒐集。\n\n公開位置由發布流程部署：\n\n- 網站：[島嶼鐵道學校](https://mars-tw.github.io/taiwan-train-school/)\n- 原始碼：[mars-tw/taiwan-train-school](https://github.com/mars-tw/taiwan-train-school)\n\n網站已透過 GitHub Pages 公開，電腦不需要保持開機。手機可用 Safari 或 Chrome 開啟網站，加入主畫面；首次完整載入後，PWA 會快取模型及圖片，再次使用可離線開啟。公開首頁、模型與完整原始碼 ZIP 均已讀回 HTTP 200，390×844 手機尺寸與離線重新載入也已驗證。\n\n![幼兒操作畫面](docs/game-mobile.png)\n\n## 孩子怎麼玩\n\n1. 按「準備出發」，教練協助依序開主電源、關門、選前進方向、釋放煞車。\n2. 按「開始前進」，以低段動力起步。火車會慢慢加速。\n3. 看見車站或紅燈，按「慢慢停」。火車有慣性，煞車需要建立氣壓，不會立刻停住。\n4. 想練習到站時按「幫我停好」。教練透過實際動力、煞車與低速微調協助停車，不跳過路程或移動列車位置。\n5. 停穩後按「開門接客」，等乘客上車，再按「關門出發」。\n\n預設六個主要按鈕有顏色、圖示與文字，觸控高度至少 64 px。教練會用外框標示下一個按鈕。第一次操作後啟用瀏覽器的 `speechSynthesis` 中文語音；右上角音符可以靜音。裝置沒有可用中文語音或不支援語音時，畫面仍會完整顯示大字提示。\n\n家長可以按「家長／進階操作」展開獨立動力和煞車手柄、主電源、車門、方向選擇，以及即時煞車缸壓和牽引力。設定頁可以關閉幼兒模式，改成完整手動操作。輔助模式會提示停車距離，超速過多時協助減速；進階模式保留全部物理與互鎖，讓玩家自行控制。\n\n## 路線與課程\n\n三條風景路線為台灣景觀啟發的原創練習路線：花東海岸、台北城市、阿里山森林。地形曲率、坡度、景物與站名各有差異，不是實際鐵路的路線圖。兩種列車共用原創車體，但有不同質量、牽引曲線與煞車參數：海島通勤電車、山海區間列車。\n\n| 課程 | 練習內容 | 停靠 |\n| --- | --- | --- |\n| 01 起步與停車 | 行車準備、低段動力、提早煞車、上下客 | 一站 |\n| 02 精準停靠 | 慣性與空氣煞車延遲、連續接客 | 兩站 |\n| 03 號誌與限速 | 紅燈前等候、30 km/h 限速區、重新起步 | 兩站 |\n\n紅燈前 70 公尺內停穩並等 4 秒後，前方列車離開，號誌轉綠。幼兒模式會等待玩家重新按前進。越過紅燈會切除牽引並施加緊急煞車；停穩等待號誌轉綠，解除保護後可繼續，不必重開遊戲。\n\n每站停車區為標記前後 12 公尺，速度必須低於 0.15 m/s；保持至少第 3 段煞車才能開門。上下客要等 4 秒，關門才完成該站。最後一站會顯示完成分數、每站誤差及重玩／下一課按鈕。課程隨時可以暫停、重置。\n\n## 擬真模型\n\n物理採用 SI 單位，在固定 60 Hz 時間步進運行。速度以 km/h 顯示。模型包含質量與慣性、低速牽引力／高速功率上限、簡化 Davis 行車阻力、坡度力、輪軌黏著力上限、牽引建立延遲、加速度變化限制、空氣制動建立延遲、煞車缸壓的指數建立／釋放，以及緊急制動。釋放動力後列車仍會滑行。\n\n所有列車數值都是可調整的原創教育參數，煞車缸壓的 kPa 顯示是遊戲內的模擬值。課程用三色號誌教學，沒有重建台鐵某型車的完整設備或規章。這裡學習的重點是準備順序、停車要提早、門與動力互鎖、看號誌和遵守限速；真實列車另有更多程序與資格要求。\n\n教學設計參考鐵路營運單位的公"
+    }
+  ],
+  "exactLongCssRuleMatches": []
+}

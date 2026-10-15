@@ -1,7 +1,7 @@
 ﻿# 灰燼護航 Ashes Convoy
 
 [![CI & Deploy Pages](https://github.com/mars-tw/ashes-convoy/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mars-tw/ashes-convoy/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/badge/release-R87-f0b64a)](src/version.js)
+[![Release](https://img.shields.io/badge/release-R88-f0b64a)](src/version.js)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5ed4cb)](LICENSE)
 
 《灰燼護航》是一款手機直式優先的 Canvas 2D 末世護送射擊遊戲。駕駛裝甲載具拖著倖存者車廂穿越屍潮，在每一波中清敵、打破增益門、收集補給，並把零件、藍圖與戰績帶回基地。
@@ -12,6 +12,7 @@
 
 ## 最新特色
 
+- **R88 實戰首航與行車紀錄**：首頁點「首航：甩尾護車」，依序轉向、甩飛攀車屍與選擇補給；完成即保存，之後可重練或繼續一般護航。背景切換與原生宿主的離開事件會暫停戰鬥。新增審查員路徑、離線重開與手機／平板驗證；商店草稿及限制見 `docs/store/`，尚未重包或送審。
 - **R87 手機控制與路線委託**：右下 64px 甩尾鍵可按住、拖出取消，顯示冷卻秒數；左下搖桿自動射擊，直橫向皆可玩。戰鬥中點「路線委託」，暫停挑選救援、廢車場或火線任務，完成後取得實際獎勵並累積路線圖鑑。每波限一單，逾時無完成獎勵。
 - **路線補給搭配**：救援搭配維修多修復 6%；廢車場搭配零件多 +1；火線搭配火力延長 8 秒。每單限一箱，補給與事件零件仍各自遵守原有每局上限；路線圖鑑在結算後存檔。
 - **R80 拖車房間與宣傳素材**：拖車管理抽屜改用 C2PA 可驗證的暖灰燼／冷鋼內裝，並提供同源 low、medium、high runtime；四環境宣傳圖保存在 `docs/promo/`，不進入遊戲載入路徑。

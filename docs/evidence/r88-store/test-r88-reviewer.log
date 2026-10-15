@@ -1,0 +1,25 @@
+PASS R88 reviewer 375x667 1.2s
+
+PASS R88 reviewer 390x844 1.1s
+
+PASS R88 reviewer 430x932 1.1s
+
+PASS R88 reviewer 440x956 1.1s
+
+PASS R88 reviewer 844x390 1.1s
+
+PASS R88 reviewer 768x1024 1.1s
+
+PASS R88 reviewer 1024x768 1.1s
+
+PASS R88 reviewer 1032x1376 1.2s
+
+PASS R88 reviewer 1376x1032 1.4s
+
+PASS R88 reviewer 1366x600 1.1s
+
+PASS R88 offline review and persistence
+
+PASS R88 storage quota does not claim a saved checkpoint
+
+R88 reviewer VERIFIED 12/12

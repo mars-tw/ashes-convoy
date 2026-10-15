@@ -1,0 +1,30 @@
+{
+  "status": "VERIFIED",
+  "scope": "local R88 source/evidence only; store readiness has explicit blockers",
+  "capturedAt": "2026-10-15T12:51:48.851328+00:00",
+  "syntaxFiles": 49,
+  "diffCheck": true,
+  "staleRuntimeVersions": [],
+  "secretScan": {
+    "files": 239,
+    "hits": 0,
+    "exclusions": [
+      ".git",
+      "node_modules",
+      "tools",
+      "tmp",
+      "pre-existing docs/playtest"
+    ]
+  },
+  "screenshots": {
+    "total": 25,
+    "store": 10,
+    "dimensionsAndHashesVerified": true
+  },
+  "metadataLengths": {
+    "名稱": 9,
+    "副標題": 16
+  },
+  "reviewerScenarios": 12,
+  "artStatus": "BLOCKED: model provenance not gpt-image-2 attested"
+}

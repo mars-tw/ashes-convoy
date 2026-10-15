@@ -1,0 +1,7 @@
+> ashes-convoy@0.88.0 test:perf
+
+> node scripts/test-r78-performance.js
+
+
+
+R88 performance PASS (auto-reduced/desktop-1366x700 2.3ms, auto-reduced/phone-390x844 2.8ms, low-reduced/desktop-1366x700 2.1ms, low-reduced/phone-390x844 3.8ms)

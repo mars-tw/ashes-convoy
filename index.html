@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta property="og:title" content="灰燼護航 ASHES CONVOY" />
-    <meta property="og:description" content="駕駛裝甲車護送末世車隊，在沙暴與怪潮中殺出一條生路。" />
+    <meta property="og:description" content="駕駛卡車護送拖車，用甩尾清除攀車屍，沿路接單、挑補給，再把戰利品帶回基地。" />
     <meta property="og:url" content="https://mars-tw.github.io/ashes-convoy/" />
     <meta property="og:image" content="https://mars-tw.github.io/ashes-convoy/assets/cover.png" />
     <meta property="og:type" content="website" />
@@ -46,8 +46,8 @@
     </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="manifest.webmanifest?v=R87" />
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R87" />
+    <link rel="manifest" href="manifest.webmanifest?v=R88" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png?v=R88" />
     <link rel="canonical" href="https://mars-tw.github.io/ashes-convoy/" />
     <title>灰燼護航</title>
     <style>
@@ -803,7 +803,7 @@
           background: rgba(94, 212, 203, 0.26);
         }
 
-        /* R87：「甩」是招牌動作——外圈 conic 冷卻環，滿格亮橘呼吸；有屍體攀車時更急促。 */
+        /* R88：「甩」是招牌動作——外圈 conic 冷卻環，滿格亮橘呼吸；有屍體攀車時更急促。 */
         #touchBoostBtn {
           border-color: rgba(255, 168, 64, 0.72);
           background:
@@ -2546,7 +2546,7 @@
           font-size: 14px;
         }
       }
-      /* R87：兩角拇指區；中間留給車身與拖車。 */
+      /* R88：兩角拇指區；中間留給車身與拖車。 */
       .route-hud-btn { position: absolute; top: max(158px, calc(env(safe-area-inset-top) + 158px)); right: 10px; z-index: 8; min-height: 44px; max-width: calc(100% - 20px); padding: 6px 12px; font-size: 12px; color: #bcebe0; background: #142b2b; border: 1px solid #5ed4cb; border-radius: 8px; }
       .route-hud-btn[hidden], .route-board[hidden] { display: none; }
       .route-board { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); background: rgba(4, 9, 12, .94); }
@@ -2594,6 +2594,25 @@
         .supply-choice-btn { padding: 6px; }
         .supply-choice-btn b, .supply-choice-btn span { font-size: 12px; }
         .route-supply-note { font-size: 12px; line-height: 1.2; }
+      }
+      /* R88 行車紀錄：實戰首航與車隊儀表，不沿用通用遊戲卡片。 */
+      .convoy-trial-entry {
+        position: relative; z-index: 4; pointer-events: auto;
+        width: 100%; min-height: 44px; margin-top: 5px;
+        border: 1px solid #d49a46; border-left: 5px solid #f0b64a;
+        border-radius: 2px; background: #272016; color: #ffe2a1;
+        font-weight: 800; font-variant-numeric: tabular-nums;
+      }
+      .convoy-trial-hud {
+        position: absolute; z-index: 12; top: 100px; left: 12px; right: 12px;
+        padding: 8px 10px; border-left: 4px solid #f0b64a;
+        background: rgba(22, 19, 13, .94); color: #ffe2a1;
+        font-size: 12px; line-height: 1.5; white-space: pre-line;
+        pointer-events: none; font-variant-numeric: tabular-nums;
+      }
+      .convoy-trial-hud[data-stage="complete"] { border-color: #87d27d; color: #c5efba; }
+      @media (orientation: landscape) {
+        .convoy-trial-hud { top: 74px; left: 70px; right: 70px; padding: 4px 8px; font-size: 11px; }
       }
     </style>
   </head>
@@ -2651,6 +2670,7 @@
         <span id="eventBannerBody"></span>
       </div>
       <div class="gate-choice-layer" id="gateChoiceLayer" hidden></div>
+      <output id="convoyTrialHud" class="convoy-trial-hud" aria-live="polite" hidden></output>
       <button class="route-hud-btn" id="routeHudBtn" type="button" hidden>路線委託：選一條支線 ›</button>
       <div class="route-board" id="routeBoard" role="dialog" aria-modal="true" aria-labelledby="routeBoardTitle" hidden>
         <section class="route-board-panel">
@@ -2712,7 +2732,7 @@
             <span id="trailerBonusText">HP +0% · 傷害 +0% · 射速 +0% · 承傷 -0%</span>
           </div>
           <section class="story-log-section" id="storyLogSection" aria-label="無線電日誌" hidden>
-            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R87" alt="熹" decoding="async" draggable="false" />
+            <img id="xiPortrait" class="xi-portrait" src="assets/story/xi.png?v=R88" alt="熹" decoding="async" draggable="false" />
             <div class="story-log-list" id="storyLogList"></div>
           </section>
           <div class="trailer-room-body">
@@ -2729,7 +2749,7 @@
               <p class="start-kicker">ASHES CONVOY</p>
               <h1 class="start-logo">灰燼護航</h1>
             </div>
-            <span class="start-release-mark" aria-hidden="true">R87</span>
+            <span class="start-release-mark" aria-hidden="true">R88</span>
           </div>
           <div class="start-ledger" id="garageMeta" role="list" aria-label="護航統計">
             <span class="start-stat-chip" role="listitem"><em>零件</em><b id="startPartsValue">0</b></span>
@@ -2738,6 +2758,7 @@
             <span class="start-stat-chip" role="listitem"><em>擊殺</em><b id="startKillsValue">0</b></span>
           </div>
           <div class="status" id="garageStatus" role="status" aria-live="polite" aria-atomic="true"></div>
+          <button id="convoyTrialBtn" class="convoy-trial-entry" type="button">首航：甩尾護車・三步上路</button>
         </div>
 
         <div class="start-art-stage">
@@ -2747,7 +2768,7 @@
 
         <div class="hotspot-layer" id="hotspotLayer" aria-label="避難所互動" hidden>
           <button class="hotspot-btn hotspot-primary" id="sortieBtn" type="button" aria-label="開始出勤">
-            <span class="cta-copy"><strong>出勤</strong><small>IGNITE THE CONVOY</small></span>
+            <span class="cta-copy"><strong>出勤</strong><small>甩掉攀車屍・護送拖車</small></span>
             <span class="cta-arrow" aria-hidden="true">›</span>
           </button>
           <button class="hotspot-btn hotspot-base-toggle" id="baseToggleBtn" type="button" aria-expanded="false" aria-controls="baseActions">
@@ -2782,13 +2803,9 @@
               <div class="milestone-list" id="milestoneList"></div>
               <div class="event-codex-list" id="eventCodexList"></div>
               <div class="achievement-list" id="achievementList"></div>
-              <footer class="series-footer" aria-label="阿軒的小遊戲系列">
-                <div class="series-title">🎮 阿軒的小遊戲系列</div>
-                <nav class="series-links" aria-label="姊妹作連結">
-                  <a href="https://mars-tw.github.io/web-card-game-skill/templates/card-battle/" target="_blank" rel="noopener">卡牌對戰</a>
-                  <a href="https://mars-tw.github.io/tower-defense-skill/" target="_blank" rel="noopener">無盡塔防</a>
-                  <a href="https://mars-tw.github.io/pixel-idle-farm-skill/" target="_blank" rel="noopener">像素農場</a>
-                </nav>
+              <footer class="series-footer" aria-label="車隊行車紀錄">
+                <div class="series-title">車隊行車紀錄</div>
+                <p class="subtle">甩飛攀車屍、完成支線，把每趟護航帶回基地。</p>
               </footer>
             </section>
             <section class="meta-section" data-meta-section="operations">
@@ -2873,9 +2890,10 @@
                   <small id="versionText">版本</small>
                   <button id="checkUpdateBtn" type="button" aria-label="檢查更新並套用">檢查更新</button>
                 </div>
-                <div class="settings-row" id="performanceDiagnostics">
+                <div class="settings-row" id="performanceDiagnostics" hidden>
                   <small id="performanceDiagnosticText">FPS --｜品質 --｜cap --</small>
                 </div>
+                <p class="subtle" id="localPrivacyNote">本機隱私說明：進度留在此裝置，不會上傳。沒有帳號、廣告或分析工具。「清除存檔」會重設目前進度，保留一份本機復原備份；要一併移除，可在裝置設定清除網站或 App 資料。</p>
                 <div class="save-manager" id="saveManager">
                   <strong>存檔管家</strong>
                   <textarea id="saveCodeBox" spellcheck="false" aria-label="存檔代碼"></textarea>
@@ -2950,7 +2968,7 @@
       (function () {
         if (!("serviceWorker" in navigator)) return;
         var startedAt = Date.now();
-        var key = "ashes_convoy_html_boot_reload_R87";
+        var key = "ashes_convoy_html_boot_reload_R88";
         var controlledAtLoad = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", function () {
           if (!controlledAtLoad) return;
@@ -2967,15 +2985,15 @@
         }).catch(function () {});
       })();
     </script>
-    <script src="src/version.js?v=R87"></script>
-    <script src="src/sprites.js?v=R87"></script>
-    <script src="src/sprite-renderer.js?v=R87"></script>
-    <script src="src/shelter-scene.js?v=R87"></script>
-    <script src="src/config.js?v=R87"></script>
-    <script src="src/rules.js?v=R87"></script>
-    <script src="src/fx.js?v=R87"></script>
-    <script src="src/audio.js?v=R87"></script>
-    <script src="src/game.js?v=R87"></script>
-    <script src="src/ui.js?v=R87"></script>
+    <script src="src/version.js?v=R88"></script>
+    <script src="src/sprites.js?v=R88"></script>
+    <script src="src/sprite-renderer.js?v=R88"></script>
+    <script src="src/shelter-scene.js?v=R88"></script>
+    <script src="src/config.js?v=R88"></script>
+    <script src="src/rules.js?v=R88"></script>
+    <script src="src/fx.js?v=R88"></script>
+    <script src="src/audio.js?v=R88"></script>
+    <script src="src/game.js?v=R88"></script>
+    <script src="src/ui.js?v=R88"></script>
   </body>
 </html>

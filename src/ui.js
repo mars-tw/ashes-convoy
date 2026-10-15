@@ -83,13 +83,20 @@
   }
 
   function loadMeta() {
-    const raw = root.localStorage ? root.localStorage.getItem(config.STORAGE_KEY) : null;
+    let raw = null;
+    try { raw = root.localStorage ? root.localStorage.getItem(config.STORAGE_KEY) : null; }
+    catch (error) { setStatus("無法讀取本機存檔；這次仍可遊玩。"); }
     meta = migrateUiMeta(raw);
     return meta;
   }
 
   function saveMeta() {
-    if (root.localStorage) root.localStorage.setItem(config.STORAGE_KEY, JSON.stringify(meta));
+    try {
+      if (!root.localStorage) return false;
+      root.localStorage.setItem(config.STORAGE_KEY, JSON.stringify(meta));
+      return true;
+    }
+    catch (error) { setStatus("本機儲存空間不足，這次進度尚未保存。"); return false; }
   }
 
   function setStatus(text) {
@@ -419,7 +426,7 @@
     });
     const latched = !!(state && state.latch && Number(state.latch.latched) > 0);
     const visible = !!(
-      unseen && state && state.mode === "playing" && !state.paused && !state.over &&
+      unseen && state && !state.convoyTrial && state.mode === "playing" && !state.paused && !state.over &&
       state.vehicle && !state.supplyChoice && !latched && (state.time < 6 || affordable)
     );
     els.quickUpgradeHint.hidden = !visible;
@@ -547,6 +554,10 @@
   }
 
   function renderRouteHud(state) {
+    if (state && state.convoyTrial && state.convoyTrial.stage !== "complete") {
+      els.routeHudBtn.hidden = true;
+      return;
+    }
     if (!els.routeHudBtn) return;
     const active = state && !state.over && ["playing", "paused"].includes(state.mode);
     els.routeHudBtn.hidden = !active || !!state.supplyChoice || routeBoardOpen;
@@ -1588,6 +1599,7 @@
   }
 
   function renderGarage() {
+    if (els.convoyTrialBtn) els.convoyTrialBtn.textContent = meta.tutorial.completedConvoyTrial ? "首航已完成・再練一次" : "首航：甩尾護車・三步上路";
     applyFontSize();
     if (els.startPartsValue && els.startGoodsValue && els.startWaveValue && els.startKillsValue) {
       els.startPartsValue.textContent = String(meta.parts);
@@ -1761,7 +1773,9 @@
 
   function renderEventBanner(state) {
     if (!els.eventBanner) return;
-    const banner = state && state.eventBanner;
+    const trial = state && state.convoyTrial;
+    const lessonForeground = trial && (trial.stage !== "complete" || state.time - trial.completedAt < 5);
+    const banner = state && !lessonForeground && state.eventBanner;
     if (!banner) {
       els.eventBanner.hidden = true;
       els.eventBannerTitle.textContent = "";
@@ -2182,6 +2196,29 @@
     showPlaying();
   }
 
+  function startConvoyTrial() {
+    const current = game.getState();
+    if (current && !current.over && ["playing", "paused"].includes(current.mode)) return;
+    stopShelterLoop();
+    latestState = game.startConvoyTrial(meta);
+    showPlaying();
+  }
+
+  function renderConvoyTrial(state) {
+    const trial = state && state.convoyTrial;
+    els.convoyTrialHud.hidden = !trial || state.over || !els.garagePanel.hidden || (trial.stage === "complete" && state.time - trial.completedAt >= 5);
+    if (!trial) return;
+    const copy = {
+      steer: ["首航 1／3・試轉方向", "拖曳道路或左下搖桿，讓卡車換到另一側。"],
+      shed: ["首航 2／3・甩掉攀車屍", `攀車 ${state.latch.latched} 隻｜點右下「甩」或按空白鍵，甩飛兩隻。`],
+      supply: ["首航 3／3・領取護航補給", "點補給卡領取；修復、護盾或火力由你選。"],
+      complete: [trial.persisted ? "首航完成・行車紀錄已保存" : "首航完成・本機紀錄尚未保存", "可繼續護航；暫停後結束本局，就能返回基地。"]
+    }[trial.stage];
+    const text = copy.join("\n");
+    if (els.convoyTrialHud.textContent !== text) els.convoyTrialHud.textContent = text;
+    els.convoyTrialHud.dataset.stage = trial.stage;
+  }
+
   function clearStorage() {
     // R81（辯論裁決 C-02）：清檔前寫入單一 backup key（覆寫式，不膨脹 storage），供一次性復原
     if (root.localStorage) {
@@ -2211,6 +2248,7 @@
 
   function onState(state) {
     latestState = state;
+    renderConvoyTrial(state);
     if (state.mode === "playing") {
       els.pausePanel.hidden = true;
       renderHud(state);
@@ -2306,6 +2344,21 @@
   }
 
   function bindEvents() {
+    els.convoyTrialBtn.addEventListener("click", startConvoyTrial);
+    const suspend = () => {
+      resetJoystick();
+      driftPointer = null;
+      els.touchBoostBtn.classList.remove("is-active");
+      activePointerIds.clear();
+      canvasTapStart = null;
+      const current = game.getState();
+      if (current && current.mode === "playing" && !current.over) game.pause();
+    };
+    root.document.addEventListener("visibilitychange", () => { if (root.document.hidden) suspend(); });
+    root.addEventListener("pagehide", suspend);
+    root.addEventListener("mars-native-state", event => {
+      if (event.detail && event.detail.isActive === false) suspend();
+    });
     root.document.addEventListener("pointerdown", (event) => {
       activePointerIds.add(event.pointerId);
     }, true);
@@ -2604,6 +2657,8 @@
 
   function collectElements() {
     [
+      "convoyTrialBtn",
+      "convoyTrialHud",
       "hud",
       "battleStage",
       "gameCanvas",
@@ -2749,10 +2804,17 @@
       meta,
       now: nowIso,
       onState,
+      onCheckpoint: (nextMeta) => {
+        meta = migrateUiMeta(nextMeta);
+        const saved = saveMeta();
+        els.convoyTrialBtn.textContent = saved ? "首航已完成・再練一次" : "首航已完成・尚未保存";
+        return saved;
+      },
       onRunEnd
     });
     exposeTestApi();
     showGarage();
+    if (meta.tutorial.completedConvoyTrial) els.convoyTrialBtn.textContent = "首航已完成・再練一次";
     markPerformanceOnce("ashes-start-interactive");
     root.dispatchEvent(new root.CustomEvent("ashes-start-interactive"));
     registerServiceWorker();

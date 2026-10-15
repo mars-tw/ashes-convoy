@@ -1,0 +1,37 @@
+> ashes-convoy@0.88.0 test:e2e
+
+> node scripts/test-e2e.js && node scripts/wait-for-browser-memory.js && node scripts/test-r76-controls.js && node scripts/wait-for-browser-memory.js && node scripts/test-r83-p0.js && node scripts/wait-for-browser-memory.js && node scripts/test-r84-playtest.js && node scripts/wait-for-browser-memory.js && node scripts/test-r85-landscape.js && node scripts/wait-for-browser-memory.js && node scripts/test-tablet-aspect.js && node scripts/wait-for-browser-memory.js && node scripts/test-r86-latch-e2e.js && node scripts/wait-for-browser-memory.js && node scripts/test-r87-mobile.js && node scripts/wait-for-browser-memory.js && node scripts/test-r88-reviewer.js && node scripts/wait-for-browser-memory.js && node scripts/test-r88-animation-pipeline.js
+
+
+
+E2E viewport PASS 390x844
+
+E2E viewport PASS 820x1180
+
+node.exe : page.waitForFunction: Timeout 30000ms exceeded.
+
+位於 線路:1 字元:1
+
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
+
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    + CategoryInfo          : NotSpecified: (page.waitForFun...000ms exceeded.:String) [], RemoteException
+
+    + FullyQualifiedErrorId : NativeCommandError
+
+
+
+    at checkClearStorageButton (C:\Users\digimkt\Desktop\遊戲\doomsday-shooter\scripts\test-e2e.js:603:14)
+
+    at async checkShelterMeta (C:\Users\digimkt\Desktop\遊戲\doomsday-shooter\scripts\test-e2e.js:624:3)
+
+    at async runScenario (C:\Users\digimkt\Desktop\遊戲\doomsday-shooter\scripts\test-e2e.js:3463:3)
+
+    at async C:\Users\digimkt\Desktop\遊戲\doomsday-shooter\scripts\test-e2e.js:3900:7 {
+
+  log: [],
+
+  name: 'TimeoutError'
+
+}

@@ -1,0 +1,221 @@
+{
+  "status": "VERIFIED",
+  "version": "R88",
+  "results": [
+    {
+      "viewport": [
+        375,
+        667
+      ],
+      "status": "VERIFIED",
+      "seconds": 1.143,
+      "note": "並發載量測，僅供參考",
+      "entry": {
+        "x": 42.390625,
+        "y": 90.390625,
+        "width": 290.203125,
+        "height": 44,
+        "inside": true,
+        "hit": true
+      },
+      "completedAt": 1.0832000000000002,
+      "flung": 2,
+      "parts": 10
+    },
+    {
+      "viewport": [
+        390,
+        844
+      ],
+      "status": "VERIFIED",
+      "seconds": 1.138,
+      "note": "並發載量測，僅供參考",
+      "entry": {
+        "x": 14,
+        "y": 90.390625,
+        "width": 362,
+        "height": 44,
+        "inside": true,
+        "hit": true
+      },
+      "completedAt": 1.0666000000000002,
+      "flung": 2,
+      "parts": 13
+    },
+    {
+      "viewport": [
+        430,
+        932
+      ],
+      "status": "VERIFIED",
+      "seconds": 1.135,
+      "note": "並發載量測，僅供參考",
+      "entry": {
+        "x": 14,
+        "y": 91.109375,
+        "width": 402,
+        "height": 44,
+        "inside": true,
+        "hit": true
+      },
+      "completedAt": 1.0499000000000003,
+      "flung": 2,
+      "parts": 10
+    },
+    {
+      "viewport": [
+        440,
+        956
+      ],
+      "status": "VERIFIED",
+      "seconds": 1.104,
+      "note": "並發載量測，僅供參考",
+      "entry": {
+        "x": 14,
+        "y": 92.28125,
+        "width": 412,
+        "height": 44,
+        "inside": true,
+        "hit": true
+      },
+      "completedAt": 1.0499,
+      "flung": 2,
+      "parts": 10
+    },
+    {
+      "viewport": [
+        844,
+        390
+      ],
+      "status": "VERIFIED",
+      "seconds": 1.106,
+      "note": "並發載量測，僅供參考",
+      "entry": {
+        "x": 14,
+        "y": 90.390625,
+        "width": 816,
+        "height": 44,
+        "inside": true,
+        "hit": true
+      },
+      "completedAt": 1.0166000000000004,
+      "flung": 2,
+      "parts": 10
+    },
+    {
+      "viewport": [
+        768,
+        1024
+      ],
+      "status": "VERIFIED",
+      "seconds": 1.143,
+      "note": "並發載量測，僅供參考",
+      "entry": {
+        "x": 161.40625,
+        "y": 90.390625,
+        "width": 445.171875,
+        "height": 44,
+        "inside": true,
+        "hit": true
+      },
+      "completedAt": 1.0667000000000004,
+      "flung": 2,
+      "parts": 10
+    },
+    {
+      "viewport": [
+        1024,
+        768
+      ],
+      "status": "VERIFIED",
+      "seconds": 1.182,
+      "note": "並發載量測，僅供參考",
+      "entry": {
+        "x": 14,
+        "y": 90.390625,
+        "width": 996,
+        "height": 44,
+        "inside": true,
+        "hit": true
+      },
+      "completedAt": 1.1000000000000003,
+      "flung": 2,
+      "parts": 10
+    },
+    {
+      "viewport": [
+        1032,
+        1376
+      ],
+      "status": "VERIFIED",
+      "seconds": 1.255,
+      "note": "並發載量測，僅供參考",
+      "entry": {
+        "x": 212.078125,
+        "y": 90.390625,
+        "width": 607.828125,
+        "height": 44,
+        "inside": true,
+        "hit": true
+      },
+      "completedAt": 1.0832000000000002,
+      "flung": 2,
+      "parts": 10
+    },
+    {
+      "viewport": [
+        1376,
+        1032
+      ],
+      "status": "VERIFIED",
+      "seconds": 1.583,
+      "note": "並發載量測，僅供參考",
+      "entry": {
+        "x": 14,
+        "y": 90.390625,
+        "width": 1348,
+        "height": 44,
+        "inside": true,
+        "hit": true
+      },
+      "completedAt": 1.3999999999999997,
+      "flung": 2,
+      "parts": 10
+    },
+    {
+      "viewport": [
+        1366,
+        600
+      ],
+      "status": "VERIFIED",
+      "seconds": 1.131,
+      "note": "並發載量測，僅供參考",
+      "entry": {
+        "x": 554.375,
+        "y": 91.390625,
+        "width": 257.25,
+        "height": 44,
+        "inside": true,
+        "hit": true
+      },
+      "completedAt": 1.0333,
+      "flung": 2,
+      "parts": 10
+    },
+    {
+      "scenario": "offline-cold-reload-complete-and-reload",
+      "status": "VERIFIED"
+    },
+    {
+      "scenario": "storage-quota-no-crash-no-false-save",
+      "status": "VERIFIED"
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "limitations": [
+    "Headless Chromium; not physical iOS/Android lifecycle or human beta",
+    "Existing npm regression covers legacy controls and attack impact/hurt/death",
+    "Live unfinished runs restart; completed trial and settled progression persist"
+  ]
+}
