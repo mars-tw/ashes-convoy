@@ -1,3 +1,7 @@
+> 本專案已併入 [燼途：最後一站 Emberline: Last Haven](https://github.com/mars-tw/emberline-last-haven)，後續更新在新 repo 進行；本 repo 保留為歷史紀錄。
+>
+> This project has been merged into [Emberline: Last Haven](https://github.com/mars-tw/emberline-last-haven). Future updates will take place in the new repository; this repository is retained as a historical record.
+
 ﻿# 灰燼護航 Ashes Convoy
 
 [![CI & Deploy Pages](https://github.com/mars-tw/ashes-convoy/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mars-tw/ashes-convoy/actions/workflows/ci.yml)
