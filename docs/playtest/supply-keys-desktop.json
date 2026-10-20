@@ -1,0 +1,160 @@
+{
+  "choices": [
+    {
+      "key": "Digit1",
+      "before": {
+        "mode": "playing",
+        "wave": 2,
+        "time": 20.179800000000082,
+        "kills": 27,
+        "hp": 520,
+        "supplyChoice": {
+          "dropId": "supply_245",
+          "x": 103.90252099615502,
+          "y": 312.9989397428897,
+          "openedAt": 19.746500000000072,
+          "rewardIds": [
+            "rate_boost",
+            "damage_boost",
+            "repair_small",
+            "parts_cache",
+            "overshield"
+          ]
+        },
+        "supplyCratesCollected": 2,
+        "supplyRewards": {
+          "damage_boost": 1,
+          "repair_small": 1
+        },
+        "overlay": {
+          "hidden": false,
+          "rect": {
+            "x": 517,
+            "y": 133,
+            "width": 333,
+            "height": 266
+          }
+        },
+        "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 2 波\n暫停\n增益：超載 1 · 射速 x1.25\n擊殺 27\n零件 8\n補給箱\n選一項補給，戰鬥不中斷\n補給箱\n按 1-5 快選或點擊領取；戰鬥不中斷\n1. 射速補給\n15% 裝填加速\n10 秒\n2. 火力補給\n20% 傷害加成\n10 秒\n3. 維修補給\n8% 立即維修\n立即生效\n已滿 → 溢出：分數 +80\n4. 零件補給\n零件 +3\n本局結算列入補給收益\n5. 護盾補給\n12% 護盾\n立即加到護盾上限\n◎\n任務\n★\n成就\n⚙\n設定"
+      },
+      "after": {
+        "mode": "playing",
+        "wave": 2,
+        "time": 21.196500000000096,
+        "kills": 29,
+        "hp": 520,
+        "supplyChoice": null,
+        "supplyCratesCollected": 3,
+        "supplyRewards": {
+          "damage_boost": 1,
+          "repair_small": 1,
+          "rate_boost": 1
+        },
+        "overlay": {
+          "hidden": true,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          }
+        },
+        "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 2 波\n暫停\n增益：超載 1 · 射速 x1.25\n擊殺 29\n零件 8\n補給箱\n射速補給\n◎\n任務\n★\n成就\n⚙\n設定"
+      },
+      "beforeShot": "12-desktop-supply-1-before-Digit1.png",
+      "afterShot": "12-desktop-supply-1-after-Digit1.png"
+    },
+    {
+      "key": "Numpad5",
+      "before": {
+        "mode": "playing",
+        "wave": 3,
+        "time": 75.85469999999863,
+        "kills": 66,
+        "hp": 520,
+        "supplyChoice": {
+          "dropId": "supply_1133",
+          "x": 91.74909981628807,
+          "y": 315.9802935666945,
+          "openedAt": 75.17149999999869,
+          "rewardIds": [
+            "rate_boost",
+            "damage_boost",
+            "repair_small",
+            "parts_cache",
+            "overshield"
+          ]
+        },
+        "supplyCratesCollected": 4,
+        "supplyRewards": {
+          "damage_boost": 1,
+          "repair_small": 1,
+          "rate_boost": 2
+        },
+        "overlay": {
+          "hidden": false,
+          "rect": {
+            "x": 517,
+            "y": 133,
+            "width": 333,
+            "height": 266
+          }
+        },
+        "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 3 波\n暫停\n增益：燼燃 Lv1 · 超載 1 · 火力 x1.35 · 射速 x1.56\n擊殺 66\n零件 19\n補給箱\n選一項補給，戰鬥不中斷\n補給箱\n按 1-5 快選或點擊領取；戰鬥不中斷\n1. 射速補給\n15% 裝填加速\n10 秒\n2. 火力補給\n20% 傷害加成\n10 秒\n3. 維修補給\n8% 立即維修\n立即生效\n已滿 → 溢出：分數 +80\n4. 零件補給\n零件 +3\n本局結算列入補給收益\n5. 護盾補給\n12% 護盾\n立即加到護盾上限\n◎\n任務\n★\n成就\n⚙\n設定"
+      },
+      "after": {
+        "mode": "playing",
+        "wave": 3,
+        "time": 76.9379999999986,
+        "kills": 67,
+        "hp": 520,
+        "supplyChoice": null,
+        "supplyCratesCollected": 5,
+        "supplyRewards": {
+          "damage_boost": 1,
+          "repair_small": 1,
+          "rate_boost": 2,
+          "overshield": 1
+        },
+        "overlay": {
+          "hidden": true,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          }
+        },
+        "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520 · 盾 62\n第 3 波\n暫停\n增益：裂片 Lv1 · 超載 1 · 火力 x1.35 · 射速 x1.56\n擊殺 67\n零件 19\n彈種切換\n裂片 Lv1\n◎\n任務\n★\n成就\n⚙\n設定"
+      },
+      "beforeShot": "12-desktop-supply-2-before-Numpad5.png",
+      "afterShot": "12-desktop-supply-2-after-Numpad5.png"
+    }
+  ],
+  "final": {
+    "mode": "playing",
+    "wave": 3,
+    "time": 77.90459999999855,
+    "kills": 67,
+    "hp": 520,
+    "supplyChoice": null,
+    "supplyCratesCollected": 5,
+    "supplyRewards": {
+      "damage_boost": 1,
+      "repair_small": 1,
+      "rate_boost": 2,
+      "overshield": 1
+    },
+    "overlay": {
+      "hidden": true,
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+      }
+    },
+    "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520 · 盾 62\n第 3 波\n暫停\n增益：裂片 Lv1 · 超載 1 · 火力 x1.35 · 射速 x1.56\n擊殺 67\n零件 19\n彈種切換\n裂片 Lv1\n◎\n任務\n★\n成就\n⚙\n設定"
+  },
+  "errors": []
+}

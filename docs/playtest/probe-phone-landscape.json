@@ -1,0 +1,167 @@
+{
+  "id": "phone-landscape",
+  "width": 844,
+  "height": 390,
+  "coarse": true,
+  "status": 200,
+  "domContentLoadedMs": 515,
+  "loadMs": 966,
+  "firstInteractionMs": 1033,
+  "bootMs": 491,
+  "shot": "shots/00-phone-landscape-boot.png",
+  "errors": [],
+  "snapshot": {
+    "title": "灰燼護航",
+    "bodyText": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+    "interactive": [
+      {
+        "tag": "BUTTON",
+        "id": "railUpgradeBtn",
+        "text": "▲\n升級",
+        "disabled": false,
+        "rect": {
+          "x": 266,
+          "y": 153,
+          "width": 58,
+          "height": 58
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "railVehicleBtn",
+        "text": "▣\n載具",
+        "disabled": false,
+        "rect": {
+          "x": 266,
+          "y": 223,
+          "width": 58,
+          "height": 58
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "sortieBtn",
+        "text": "出勤\nIGNITE THE CONVOY\n›",
+        "disabled": false,
+        "rect": {
+          "x": 12,
+          "y": 318,
+          "width": 588,
+          "height": 62
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "baseToggleBtn",
+        "text": "基地",
+        "disabled": false,
+        "rect": {
+          "x": 608,
+          "y": 318,
+          "width": 224,
+          "height": 62
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "railOpsBtn",
+        "text": "◎\n任務",
+        "disabled": false,
+        "rect": {
+          "x": 520,
+          "y": 118,
+          "width": 58,
+          "height": 58
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "railAchievementsBtn",
+        "text": "★\n成就",
+        "disabled": false,
+        "rect": {
+          "x": 520,
+          "y": 188,
+          "width": 58,
+          "height": 58
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "railSettingsBtn",
+        "text": "⚙\n設定",
+        "disabled": false,
+        "rect": {
+          "x": 520,
+          "y": 258,
+          "width": 58,
+          "height": 58
+        }
+      }
+    ],
+    "canvas": [
+      {
+        "id": "gameCanvas",
+        "rect": {
+          "x": 333,
+          "y": 1,
+          "width": 178,
+          "height": 388
+        }
+      }
+    ],
+    "hiddenWithArea": [],
+    "perf": {
+      "name": "http://127.0.0.1:8000/",
+      "entryType": "navigation",
+      "startTime": 0,
+      "duration": 960.4000000953674,
+      "initiatorType": "navigation",
+      "deliveryType": "",
+      "nextHopProtocol": "http/1.0",
+      "renderBlockingStatus": "non-blocking",
+      "contentType": "text/html",
+      "contentEncoding": "",
+      "workerStart": 0,
+      "workerRouterEvaluationStart": 0,
+      "workerCacheLookupStart": 0,
+      "workerMatchedSourceType": "",
+      "workerFinalSourceType": "",
+      "redirectStart": 0,
+      "redirectEnd": 0,
+      "fetchStart": 0.3000001907348633,
+      "domainLookupStart": 1.4000000953674316,
+      "domainLookupEnd": 3.0999999046325684,
+      "connectStart": 3.0999999046325684,
+      "secureConnectionStart": 0,
+      "connectEnd": 4.599999904632568,
+      "requestStart": 4.800000190734863,
+      "responseStart": 7.099999904632568,
+      "firstInterimResponseStart": 0,
+      "finalResponseHeadersStart": 7.099999904632568,
+      "responseEnd": 10.800000190734863,
+      "transferSize": 83698,
+      "encodedBodySize": 83398,
+      "decodedBodySize": 83398,
+      "responseStatus": 200,
+      "serverTiming": [],
+      "unloadEventStart": 0,
+      "unloadEventEnd": 0,
+      "domInteractive": 288.80000019073486,
+      "domContentLoadedEventStart": 288.90000009536743,
+      "domContentLoadedEventEnd": 502.59999990463257,
+      "domComplete": 960.4000000953674,
+      "loadEventStart": 960.4000000953674,
+      "loadEventEnd": 960.4000000953674,
+      "type": "navigate",
+      "redirectCount": 0,
+      "activationStart": 0,
+      "criticalCHRestart": 0,
+      "notRestoredReasons": null,
+      "confidence": {
+        "randomizedTriggerRate": 0.4994798,
+        "value": "low"
+      }
+    }
+  }
+}

@@ -1,0 +1,167 @@
+{
+  "id": "laptop-short",
+  "width": 1366,
+  "height": 600,
+  "coarse": false,
+  "status": 200,
+  "domContentLoadedMs": 10903,
+  "loadMs": 11251,
+  "firstInteractionMs": 11415,
+  "bootMs": 10885,
+  "shot": "shots/00-laptop-short-boot-t1.png",
+  "errors": [],
+  "snapshot": {
+    "title": "灰燼護航",
+    "bodyText": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+    "interactive": [
+      {
+        "tag": "BUTTON",
+        "id": "railUpgradeBtn",
+        "text": "▲\n升級",
+        "disabled": false,
+        "rect": {
+          "x": 474,
+          "y": 258,
+          "width": 58,
+          "height": 58
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "railVehicleBtn",
+        "text": "▣\n載具",
+        "disabled": false,
+        "rect": {
+          "x": 474,
+          "y": 328,
+          "width": 58,
+          "height": 58
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "sortieBtn",
+        "text": "出勤\n›",
+        "disabled": false,
+        "rect": {
+          "x": 553,
+          "y": 527,
+          "width": 167,
+          "height": 62
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "baseToggleBtn",
+        "text": "基地",
+        "disabled": false,
+        "rect": {
+          "x": 729,
+          "y": 527,
+          "width": 84,
+          "height": 62
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "railOpsBtn",
+        "text": "◎\n任務",
+        "disabled": false,
+        "rect": {
+          "x": 834,
+          "y": 223,
+          "width": 58,
+          "height": 58
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "railAchievementsBtn",
+        "text": "★\n成就",
+        "disabled": false,
+        "rect": {
+          "x": 834,
+          "y": 293,
+          "width": 58,
+          "height": 58
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "railSettingsBtn",
+        "text": "⚙\n設定",
+        "disabled": false,
+        "rect": {
+          "x": 834,
+          "y": 363,
+          "width": 58,
+          "height": 58
+        }
+      }
+    ],
+    "canvas": [
+      {
+        "id": "gameCanvas",
+        "rect": {
+          "x": 545,
+          "y": 1,
+          "width": 275,
+          "height": 598
+        }
+      }
+    ],
+    "hiddenWithArea": [],
+    "perf": {
+      "name": "http://127.0.0.1:8000/",
+      "entryType": "navigation",
+      "startTime": 0,
+      "duration": 11246,
+      "initiatorType": "navigation",
+      "deliveryType": "",
+      "nextHopProtocol": "http/1.0",
+      "renderBlockingStatus": "non-blocking",
+      "contentType": "text/html",
+      "contentEncoding": "",
+      "workerStart": 0,
+      "workerRouterEvaluationStart": 0,
+      "workerCacheLookupStart": 0,
+      "workerMatchedSourceType": "",
+      "workerFinalSourceType": "",
+      "redirectStart": 0,
+      "redirectEnd": 0,
+      "fetchStart": 0.20000028610229492,
+      "domainLookupStart": 5790.800000190735,
+      "domainLookupEnd": 5792.200000286102,
+      "connectStart": 5792.200000286102,
+      "secureConnectionStart": 0,
+      "connectEnd": 5793,
+      "requestStart": 5793.099999904633,
+      "responseStart": 5795.400000095367,
+      "firstInterimResponseStart": 0,
+      "finalResponseHeadersStart": 5795.400000095367,
+      "responseEnd": 5797.599999904633,
+      "transferSize": 83698,
+      "encodedBodySize": 83398,
+      "decodedBodySize": 83398,
+      "responseStatus": 200,
+      "serverTiming": [],
+      "unloadEventStart": 0,
+      "unloadEventEnd": 0,
+      "domInteractive": 10709.599999904633,
+      "domContentLoadedEventStart": 10709.599999904633,
+      "domContentLoadedEventEnd": 10894.700000286102,
+      "domComplete": 11246,
+      "loadEventStart": 11246,
+      "loadEventEnd": 11246,
+      "type": "navigate",
+      "redirectCount": 0,
+      "activationStart": 0,
+      "criticalCHRestart": 0,
+      "notRestoredReasons": null,
+      "confidence": {
+        "randomizedTriggerRate": 0.4994798,
+        "value": "high"
+      }
+    }
+  }
+}

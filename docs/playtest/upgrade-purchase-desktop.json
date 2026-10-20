@@ -1,0 +1,99 @@
+{
+  "runs": [
+    {
+      "index": 1,
+      "parts": 11,
+      "state": {
+        "wave": 1,
+        "kills": 18,
+        "time": 10.74820000000002
+      }
+    },
+    {
+      "index": 2,
+      "parts": 14,
+      "state": {
+        "wave": 1,
+        "kills": 18,
+        "time": 10.848400000000007
+      }
+    },
+    {
+      "index": 3,
+      "parts": 16,
+      "state": {
+        "wave": 1,
+        "kills": 17,
+        "time": 10.648899999999998
+      }
+    },
+    {
+      "index": 4,
+      "parts": 18,
+      "state": {
+        "wave": 1,
+        "kills": 17,
+        "time": 10.631700000000029
+      }
+    },
+    {
+      "index": 5,
+      "parts": 21,
+      "state": {
+        "wave": 1,
+        "kills": 18,
+        "time": 10.831300000000033
+      }
+    },
+    {
+      "index": 6,
+      "parts": 31,
+      "state": {
+        "wave": 1,
+        "kills": 16,
+        "time": 10.58169999999997
+      }
+    }
+  ],
+  "purchase": {
+    "purchasedTrack": "hull",
+    "beforeMeta": {
+      "parts": 31,
+      "levels": {
+        "hull": 0,
+        "weapon": 0,
+        "energy": 0,
+        "gate": 0,
+        "land_armor": 0,
+        "land_resist": 0
+      }
+    },
+    "wheelBefore": {
+      "hidden": false,
+      "text": "×\n車體強\n30\n下次出勤\n武器調\n40\n本局生效\n供能效\n80\n本局生效\n補給介\n90\n本局生效\n裝甲強\n45\n本局生效\n毒抗隔\n50\n本局生效",
+      "enabled": [
+        {
+          "track": "hull",
+          "text": "車體強\n30\n下次出勤"
+        }
+      ]
+    },
+    "afterMeta": {
+      "parts": 1,
+      "levels": {
+        "hull": 1,
+        "weapon": 0,
+        "energy": 0,
+        "gate": 0,
+        "land_armor": 0,
+        "land_resist": 0
+      }
+    },
+    "wheelAfter": {
+      "hidden": false,
+      "text": "×\n車體強\n55\n下次出勤\n武器調\n40\n本局生效\n供能效\n80\n本局生效\n補給介\n90\n本局生效\n裝甲強\n45\n本局生效\n毒抗隔\n50\n本局生效",
+      "enabled": []
+    }
+  },
+  "errors": []
+}

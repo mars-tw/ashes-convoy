@@ -1,0 +1,124 @@
+{
+  "id": "phone-landscape",
+  "width": 844,
+  "height": 390,
+  "coarse": true,
+  "states": [
+    {
+      "label": "active-run-shortcut-open",
+      "shot": "11-phone-landscape-sortie-guard-shortcut-open.png",
+      "mode": "paused",
+      "paused": true,
+      "over": false,
+      "wave": 1,
+      "time": 1.999900000000001,
+      "kills": 2,
+      "sortie": {
+        "text": "出勤\nIGNITE THE CONVOY\n›",
+        "confirm": "",
+        "until": "",
+        "rect": {
+          "x": 12,
+          "y": 318,
+          "width": 588,
+          "height": 62
+        },
+        "visible": true
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "first-click-armed-no-restart",
+      "shot": "11-phone-landscape-sortie-guard-armed.png",
+      "mode": "paused",
+      "paused": true,
+      "over": false,
+      "wave": 1,
+      "time": 1.999900000000001,
+      "kills": 2,
+      "sortie": {
+        "text": "再按一次重開本局\nIGNITE THE CONVOY\n›",
+        "confirm": "1",
+        "until": "1784565314688",
+        "rect": {
+          "x": 12,
+          "y": 316,
+          "width": 588,
+          "height": 62
+        },
+        "visible": true
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "guard-expired-no-restart",
+      "shot": "11-phone-landscape-sortie-guard-expired.png",
+      "mode": "paused",
+      "paused": true,
+      "over": false,
+      "wave": 1,
+      "time": 1.999900000000001,
+      "kills": 2,
+      "sortie": {
+        "text": "出勤\nIGNITE THE CONVOY\n›",
+        "confirm": "",
+        "until": "",
+        "rect": {
+          "x": 12,
+          "y": 316,
+          "width": 588,
+          "height": 62
+        },
+        "visible": true
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "armed-second-time",
+      "shot": "11-phone-landscape-sortie-guard-armed-again.png",
+      "mode": "paused",
+      "paused": true,
+      "over": false,
+      "wave": 1,
+      "time": 1.999900000000001,
+      "kills": 2,
+      "sortie": {
+        "text": "再按一次重開本局\nIGNITE THE CONVOY\n›",
+        "confirm": "1",
+        "until": "1784565320779",
+        "rect": {
+          "x": 12,
+          "y": 318,
+          "width": 588,
+          "height": 62
+        },
+        "visible": true
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "second-click-restarted",
+      "shot": "11-phone-landscape-sortie-guard-restarted.png",
+      "mode": "playing",
+      "paused": false,
+      "over": false,
+      "wave": 1,
+      "time": 0.7667000000000004,
+      "kills": 0,
+      "sortie": {
+        "text": "\n            出勤IGNITE THE CONVOY\n            ›\n          ",
+        "confirm": "",
+        "until": "",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "visible": false
+      },
+      "hiddenWithArea": []
+    }
+  ],
+  "errors": []
+}

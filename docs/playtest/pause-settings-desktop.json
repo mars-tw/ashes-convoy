@@ -1,0 +1,519 @@
+{
+  "attempts": [
+    {
+      "label": "paused",
+      "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n增益：無\n擊殺 3\n零件 2\n暫停\n\n目前進度會保留在本局中。\n\n繼續\n結束本局\n◎\n任務\n★\n成就\n⚙\n設定",
+      "ids": [
+        {
+          "id": "garagePanel",
+          "hidden": true,
+          "ariaHidden": null,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "display": "none",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "hud",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 517,
+            "y": 11,
+            "width": 333,
+            "height": 96
+          },
+          "display": "grid",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "none",
+          "zIndex": "6"
+        },
+        {
+          "id": "pausePanel",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 525,
+            "y": 202,
+            "width": 317,
+            "height": 365
+          },
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "metaDrawer",
+          "hidden": true,
+          "ariaHidden": null,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "display": "none",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "4"
+        },
+        {
+          "id": "settingsPanel",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "display": "grid",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "gameCanvas",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "sortieBtn",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "display": "grid",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "pauseBtn",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 795,
+            "y": 11,
+            "width": 54,
+            "height": 44
+          },
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "aimAssistLevelSelect",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "reducedFlashToggle",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        }
+      ],
+      "shot": "04-desktop-pause-settings-paused.png"
+    },
+    {
+      "label": "settings-opened-from-pause",
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n任務與設定\n關閉\n任務板\n每日｜補給回收\n0/2\n撿取 2 個補給箱 · 獎勵 5 零件\n未完成\n每週｜事件專員\n0/4\n完成 4 次環境事件 · 獎勵 15 零件\n未完成\n設定\n瞄準輔助\n關\n低\n中\n高\n螢幕震動\n減少閃光\n音效\n音量\n低\n中\n高\n出勤拖車\n熹僚機\n戰鬥字幕\n畫面特效\n完整\n精簡\n關閉\n傷害數字\n全部\n僅大額\n關\n效能模式\n自動\n鎖高\n鎖低\n文字大小\n小\n中\n大\n版本 R83.1\n檢查更新\nFPS 23｜品質 自動/low｜原因 FPS 22 低於 30｜cap 53%｜歷史 1.3s FPS 24 低於 30\n存檔管家\n匯出\n匯入\n清除存檔\n切換載具\n◎\n任務\n★\n成就\n⚙\n設定",
+      "ids": [
+        {
+          "id": "garagePanel",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "display": "grid",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "hud",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "display": "none",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "none",
+          "zIndex": "6"
+        },
+        {
+          "id": "pausePanel",
+          "hidden": true,
+          "ariaHidden": null,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "display": "none",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "metaDrawer",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 525,
+            "y": 205,
+            "width": 317,
+            "height": 460
+          },
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "4"
+        },
+        {
+          "id": "settingsPanel",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 542,
+            "y": 278,
+            "width": 283,
+            "height": 780
+          },
+          "display": "grid",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "gameCanvas",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "sortieBtn",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          },
+          "display": "grid",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "pauseBtn",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "aimAssistLevelSelect",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 596,
+            "y": 291,
+            "width": 72,
+            "height": 44
+          },
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "reducedFlashToggle",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 621,
+            "y": 369,
+            "width": 44,
+            "height": 44
+          },
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        }
+      ],
+      "shot": "04-desktop-pause-settings-opened.png"
+    },
+    {
+      "label": "click-aimAssistLevelSelect",
+      "result": "clicked"
+    },
+    {
+      "label": "click-reducedFlashToggle",
+      "result": "clicked"
+    },
+    {
+      "label": "click-closeMetaDrawer",
+      "result": "blocked",
+      "error": "locator.click: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#closeMetaDrawer')\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" aria-label=\"關閉基地面板\" id=\"closeMetaDrawer\">關閉</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m"
+    },
+    {
+      "label": "after-click-attempts",
+      "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n增益：無\n擊殺 3\n零件 2\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n設定已更新。\n出勤\nIGNITE THE CONVOY\n›\n基地\n任務與設定\n關閉\n任務板\n每日｜補給回收\n0/2\n撿取 2 個補給箱 · 獎勵 5 零件\n未完成\n每週｜事件專員\n0/4\n完成 4 次環境事件 · 獎勵 15 零件\n未完成\n設定\n瞄準輔助\n關\n低\n中\n高\n螢幕震動\n減少閃光\n音效\n音量\n低\n中\n高\n出勤拖車\n熹僚機\n戰鬥字幕\n畫面特效\n完整\n精簡\n關閉\n傷害數字\n全部\n僅大額\n關\n效能模式\n自動\n鎖高\n鎖低\n文字大小\n小\n中\n大\n版本 R83.1\n檢查更新\nFPS 27｜品質 自動/low｜原因 FPS 22 低於 30｜cap 53%｜歷史 1.3s FPS 24 低於 30\n存檔管家\n匯出\n匯入\n清除存檔\n切換載具\n暫停\n\n目前進度會保留在本局中。\n\n繼續\n結束本局\n◎\n任務\n★\n成就\n⚙\n設定",
+      "ids": [
+        {
+          "id": "garagePanel",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "display": "grid",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "hud",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 517,
+            "y": 11,
+            "width": 333,
+            "height": 96
+          },
+          "display": "grid",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "none",
+          "zIndex": "6"
+        },
+        {
+          "id": "pausePanel",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 525,
+            "y": 202,
+            "width": 317,
+            "height": 365
+          },
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "metaDrawer",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 525,
+            "y": 205,
+            "width": 317,
+            "height": 460
+          },
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "4"
+        },
+        {
+          "id": "settingsPanel",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 542,
+            "y": 568,
+            "width": 283,
+            "height": 780
+          },
+          "display": "grid",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "gameCanvas",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "sortieBtn",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          },
+          "display": "grid",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "pauseBtn",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 795,
+            "y": 11,
+            "width": 54,
+            "height": 44
+          },
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "aimAssistLevelSelect",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 596,
+            "y": 581,
+            "width": 72,
+            "height": 44
+          },
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        },
+        {
+          "id": "reducedFlashToggle",
+          "hidden": false,
+          "ariaHidden": null,
+          "rect": {
+            "x": 621,
+            "y": 659,
+            "width": 44,
+            "height": 44
+          },
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "pointerEvents": "auto",
+          "zIndex": "auto"
+        }
+      ],
+      "shot": "04-desktop-pause-settings-after-attempts.png"
+    }
+  ],
+  "errors": []
+}

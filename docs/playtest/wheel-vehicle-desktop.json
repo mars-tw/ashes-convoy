@@ -1,0 +1,444 @@
+{
+  "id": "desktop",
+  "width": 1366,
+  "height": 768,
+  "coarse": false,
+  "attempts": [
+    {
+      "label": "before-vehicle-tap",
+      "shot": "06-desktop-vehicle-wheel-before.png",
+      "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n增益：無\n擊殺 1\n零件 2\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "id": "railUpgradeBtn",
+          "tag": "BUTTON",
+          "text": "▲\n升級",
+          "disabled": false,
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railVehicleBtn",
+          "tag": "BUTTON",
+          "text": "▣\n載具",
+          "disabled": false,
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "pauseBtn",
+          "tag": "BUTTON",
+          "text": "暫停",
+          "disabled": false,
+          "rect": {
+            "x": 795,
+            "y": 11,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "id": "railOpsBtn",
+          "tag": "BUTTON",
+          "text": "◎\n任務",
+          "disabled": false,
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railAchievementsBtn",
+          "tag": "BUTTON",
+          "text": "★\n成就",
+          "disabled": false,
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railSettingsBtn",
+          "tag": "BUTTON",
+          "text": "⚙\n設定",
+          "disabled": false,
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "wheel": {
+        "hidden": true,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "pointerEvents": "auto",
+        "display": "none"
+      },
+      "pause": {
+        "hidden": true,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none"
+      },
+      "touchControls": {
+        "className": "touch-controls",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none"
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "after-real-vehicle-tap",
+      "shot": "06-desktop-vehicle-wheel-open.png",
+      "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n增益：無\n擊殺 2\n零件 2\n×\n車體強\n30\n下次出勤\n武器調\n40\n本局生效\n供能效\n80\n本局生效\n補給介\n90\n本局生效\n裝甲強\n45\n本局生效\n毒抗隔\n50\n本局生效\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "id": "railUpgradeBtn",
+          "tag": "BUTTON",
+          "text": "▲\n升級",
+          "disabled": false,
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railVehicleBtn",
+          "tag": "BUTTON",
+          "text": "▣\n載具",
+          "disabled": false,
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "pauseBtn",
+          "tag": "BUTTON",
+          "text": "暫停",
+          "disabled": false,
+          "rect": {
+            "x": 795,
+            "y": 11,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "id": "quickUpgradeCloseBtn",
+          "tag": "BUTTON",
+          "text": "×",
+          "disabled": false,
+          "rect": {
+            "x": 728,
+            "y": 366,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "tag": "BUTTON",
+          "text": "車體強\n30\n下次出勤",
+          "disabled": true,
+          "rect": {
+            "x": 600,
+            "y": 414,
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "",
+          "tag": "BUTTON",
+          "text": "武器調\n40\n本局生效",
+          "disabled": true,
+          "rect": {
+            "x": 688,
+            "y": 414,
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "",
+          "tag": "BUTTON",
+          "text": "供能效\n80\n本局生效",
+          "disabled": true,
+          "rect": {
+            "x": 600,
+            "y": 486,
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "",
+          "tag": "BUTTON",
+          "text": "補給介\n90\n本局生效",
+          "disabled": true,
+          "rect": {
+            "x": 688,
+            "y": 486,
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "",
+          "tag": "BUTTON",
+          "text": "裝甲強\n45\n本局生效",
+          "disabled": true,
+          "rect": {
+            "x": 600,
+            "y": 558,
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "",
+          "tag": "BUTTON",
+          "text": "毒抗隔\n50\n本局生效",
+          "disabled": true,
+          "rect": {
+            "x": 688,
+            "y": 558,
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "railOpsBtn",
+          "tag": "BUTTON",
+          "text": "◎\n任務",
+          "disabled": false,
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railAchievementsBtn",
+          "tag": "BUTTON",
+          "text": "★\n成就",
+          "disabled": false,
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railSettingsBtn",
+          "tag": "BUTTON",
+          "text": "⚙\n設定",
+          "disabled": false,
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "wheel": {
+        "hidden": false,
+        "rect": {
+          "x": 589,
+          "y": 359,
+          "width": 190,
+          "height": 274
+        },
+        "pointerEvents": "auto",
+        "display": "block"
+      },
+      "pause": {
+        "hidden": true,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none"
+      },
+      "touchControls": {
+        "className": "touch-controls",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none"
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "after-real-close",
+      "shot": "06-desktop-vehicle-wheel-closed.png",
+      "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n增益：無\n擊殺 2\n零件 2\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "id": "railUpgradeBtn",
+          "tag": "BUTTON",
+          "text": "▲\n升級",
+          "disabled": false,
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railVehicleBtn",
+          "tag": "BUTTON",
+          "text": "▣\n載具",
+          "disabled": false,
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "pauseBtn",
+          "tag": "BUTTON",
+          "text": "暫停",
+          "disabled": false,
+          "rect": {
+            "x": 795,
+            "y": 11,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "id": "railOpsBtn",
+          "tag": "BUTTON",
+          "text": "◎\n任務",
+          "disabled": false,
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railAchievementsBtn",
+          "tag": "BUTTON",
+          "text": "★\n成就",
+          "disabled": false,
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railSettingsBtn",
+          "tag": "BUTTON",
+          "text": "⚙\n設定",
+          "disabled": false,
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "wheel": {
+        "hidden": true,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "pointerEvents": "auto",
+        "display": "none"
+      },
+      "pause": {
+        "hidden": true,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none"
+      },
+      "touchControls": {
+        "className": "touch-controls",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none"
+      },
+      "hiddenWithArea": []
+    }
+  ],
+  "errors": [],
+  "target": {
+    "canvas": {
+      "x": 506.5625,
+      "y": 1,
+      "width": 352.875,
+      "height": 766
+    },
+    "vehicle": {
+      "x": 97.5,
+      "y": 352,
+      "mode": "playing",
+      "paused": false
+    },
+    "client": {
+      "x": 683,
+      "y": 640
+    }
+  }
+}

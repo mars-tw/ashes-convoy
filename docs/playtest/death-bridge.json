@@ -1,0 +1,83 @@
+{
+  "injections": [
+    {
+      "purpose": "抵達高壓低血陣亡橋段；未直接結算，最後一擊需敵人 active hit",
+      "calls": [
+        "AshesGame.pushWave(10)",
+        "AshesGame.damageVehicle(currentHp + 9)"
+      ],
+      "bridge": {
+        "before": {
+          "wave": 1,
+          "hp": 520,
+          "time": 1.516599999999999
+        },
+        "afterWave": {
+          "wave": 10,
+          "hp": 520,
+          "time": 1.516599999999999
+        },
+        "afterDamage": {
+          "wave": 10,
+          "hp": 1,
+          "time": 1.516599999999999,
+          "mode": "playing"
+        }
+      }
+    }
+  ],
+  "states": [
+    {
+      "label": "normal-run-before-bridge",
+      "state": {
+        "mode": "playing",
+        "paused": false,
+        "over": false,
+        "wave": 1,
+        "time": 1.516599999999999,
+        "hp": 520,
+        "maxHp": 520,
+        "kills": 1,
+        "enemies": 8,
+        "deathContext": null
+      }
+    },
+    {
+      "label": "high-wave-one-hp-bridge",
+      "state": {
+        "mode": "playing",
+        "paused": false,
+        "over": false,
+        "wave": 10,
+        "time": 1.549999999999997,
+        "hp": 1,
+        "maxHp": 520,
+        "kills": 1,
+        "enemies": 8,
+        "deathContext": null
+      }
+    },
+    {
+      "label": "settlement-after-enemy-hit",
+      "state": {
+        "mode": "settlement",
+        "paused": true,
+        "over": true,
+        "wave": 10,
+        "time": 17.49780000000007,
+        "hp": 0,
+        "maxHp": 520,
+        "kills": 8,
+        "enemies": 12,
+        "deathContext": {
+          "type": "enemy",
+          "enemyId": "shambler",
+          "amount": 1,
+          "wave": 10
+        }
+      },
+      "text": "▲\n升級\n▣\n載具\n護航結算\n\n本局獲得 10 廢土零件。新紀錄！\n\n第 0 波\n波次\n8\n擊殺\n0\nBoss\n10\n零件\n+2\n行動零件\n+8\n成就零件\n+0\n里程碑零件\n+0\n波次零件\n+1\n擊殺零件\n+0\nBoss 零件\n+1\n難度加成\n成就解鎖：第一滴黑血（+4 零件）\n成就解鎖：陸地出勤（+4 零件）\n下一成就：首殺 Boss 0/1\n下一里程碑：突破第 3 波 0/3\n下一段通訊：第 1 波\n本局分析\n再拚一局\n回車庫\n◎\n任務\n★\n成就\n⚙\n設定"
+    }
+  ],
+  "errors": []
+}

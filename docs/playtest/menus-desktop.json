@@ -1,0 +1,2918 @@
+[
+  {
+    "id": "baseToggleBtn",
+    "before": {
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "panels": [
+        {
+          "tag": "SECTION",
+          "id": "garagePanel",
+          "className": "panel meta-panel is-illustration",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    "opened": {
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n收合基地\n升級\n載具\n成就\n拖車\n1\n任務/設定\n清存檔\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "收合基地",
+          "rect": {
+            "x": 759,
+            "y": 693,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "upgradeHotspotBtn",
+          "text": "升級",
+          "rect": {
+            "x": 530,
+            "y": 518,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "vehicleHotspotBtn",
+          "text": "載具",
+          "rect": {
+            "x": 687,
+            "y": 518,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "seriesHotspotBtn",
+          "text": "成就",
+          "rect": {
+            "x": 530,
+            "y": 570,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "trailerHotspotBtn",
+          "text": "拖車\n1",
+          "rect": {
+            "x": 687,
+            "y": 570,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "opsHotspotBtn",
+          "text": "任務/設定",
+          "rect": {
+            "x": 530,
+            "y": 622,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "resetOverlayBtn",
+          "text": "清存檔",
+          "rect": {
+            "x": 687,
+            "y": 622,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "panels": [
+        {
+          "tag": "SECTION",
+          "id": "garagePanel",
+          "className": "panel meta-panel is-illustration",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "resetOverlayBtn",
+          "className": "hotspot-btn danger",
+          "rect": {
+            "x": 687,
+            "y": 622,
+            "width": 149,
+            "height": 44
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    "escaped": {
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n收合基地\n升級\n載具\n成就\n拖車\n1\n任務/設定\n清存檔\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "收合基地",
+          "rect": {
+            "x": 759,
+            "y": 693,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "upgradeHotspotBtn",
+          "text": "升級",
+          "rect": {
+            "x": 530,
+            "y": 518,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "vehicleHotspotBtn",
+          "text": "載具",
+          "rect": {
+            "x": 687,
+            "y": 518,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "seriesHotspotBtn",
+          "text": "成就",
+          "rect": {
+            "x": 530,
+            "y": 570,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "trailerHotspotBtn",
+          "text": "拖車\n1",
+          "rect": {
+            "x": 687,
+            "y": 570,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "opsHotspotBtn",
+          "text": "任務/設定",
+          "rect": {
+            "x": 530,
+            "y": 622,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "resetOverlayBtn",
+          "text": "清存檔",
+          "rect": {
+            "x": 687,
+            "y": 622,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "panels": [
+        {
+          "tag": "SECTION",
+          "id": "garagePanel",
+          "className": "panel meta-panel is-illustration",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "resetOverlayBtn",
+          "className": "hotspot-btn danger",
+          "rect": {
+            "x": 687,
+            "y": 622,
+            "width": 149,
+            "height": 44
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    "errors": [],
+    "openShot": "01-desktop-baseToggleBtn-open.png",
+    "escapeShot": "01-desktop-baseToggleBtn-escape.png"
+  },
+  {
+    "id": "railUpgradeBtn",
+    "before": {
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "panels": [
+        {
+          "tag": "SECTION",
+          "id": "garagePanel",
+          "className": "panel meta-panel is-illustration",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    "opened": {
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n升級工坊\n關閉\n升級\n車體強化 Lv.0 / 8\n每級 HP +8%\n30 零件\n武器調校 Lv.0 / 8\n每級基礎傷害 +7%\n40 零件\n供能效率 Lv.0 / 6\n每級射速 +5%\n80 零件\n補給介面 Lv.0 / 5\n每級增益門效果 +4%\n90 零件\n裝甲強化 Lv.0 / 2\n每級護甲 +2\n45 零件\n毒抗隔艙 Lv.0 / 2\n每級承傷 -4%\n50 零件\n清除存檔\n切換載具\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 340,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "closeMetaDrawer",
+          "text": "關閉",
+          "rect": {
+            "x": 770,
+            "y": 222,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "30 零件",
+          "rect": {
+            "x": 744,
+            "y": 318,
+            "width": 69,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "40 零件",
+          "rect": {
+            "x": 744,
+            "y": 392,
+            "width": 69,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "80 零件",
+          "rect": {
+            "x": 744,
+            "y": 466,
+            "width": 69,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "90 零件",
+          "rect": {
+            "x": 744,
+            "y": 540,
+            "width": 69,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "45 零件",
+          "rect": {
+            "x": 744,
+            "y": 614,
+            "width": 69,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "50 零件",
+          "rect": {
+            "x": 744,
+            "y": 688,
+            "width": 69,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "resetBtn",
+          "text": "清除存檔",
+          "rect": {
+            "x": 542,
+            "y": 604,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "selectSkiffBtn",
+          "text": "切換載具",
+          "rect": {
+            "x": 687,
+            "y": 604,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "panels": [
+        {
+          "tag": "SECTION",
+          "id": "garagePanel",
+          "className": "panel meta-panel is-illustration",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        },
+        {
+          "tag": "DIV",
+          "id": "metaDrawer",
+          "className": "meta-drawer",
+          "rect": {
+            "x": 525,
+            "y": 205,
+            "width": 317,
+            "height": 460
+          },
+          "zIndex": "4",
+          "pointerEvents": "auto"
+        },
+        {
+          "tag": "H2",
+          "id": "metaDrawerTitle",
+          "className": "",
+          "rect": {
+            "x": 542,
+            "y": 233,
+            "width": 72,
+            "height": 23
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "closeMetaDrawer",
+          "className": "",
+          "rect": {
+            "x": 770,
+            "y": 222,
+            "width": 54,
+            "height": 44
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    "escaped": {
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 340,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "panels": [
+        {
+          "tag": "SECTION",
+          "id": "garagePanel",
+          "className": "panel meta-panel is-illustration",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    "errors": [],
+    "openShot": "01-desktop-railUpgradeBtn-open.png",
+    "escapeShot": "01-desktop-railUpgradeBtn-escape.png"
+  },
+  {
+    "id": "railVehicleBtn",
+    "before": {
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "panels": [
+        {
+          "tag": "SECTION",
+          "id": "garagePanel",
+          "className": "panel meta-panel is-illustration",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    "opened": {
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n載具棚\n關閉\n載具\n壁爐裝甲車\n陸地 · HP 520 · 護甲 10 · DPS 83.3\n高耐久坦克\n已選\n晨光飛船\n藍圖 0 / 3 | 優先解鎖\n未解鎖：Boss 掉落藍圖碎片，集滿 3 片啟用。\n未解鎖\n優先中\n潮汐方舟\n藍圖 0 / 3 · 擊敗 Boss 取得碎片\n未解鎖：Boss 掉落藍圖碎片，集滿 3 片啟用。\n未解鎖\n設優先\n星窗穿梭艇\n藍圖 0 / 3 · 擊敗 Boss 取得碎片\n未解鎖：Boss 掉落藍圖碎片，集滿 3 片啟用。\n未解鎖\n設優先\n清除存檔\n切換載具\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 410,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "closeMetaDrawer",
+          "text": "關閉",
+          "rect": {
+            "x": 770,
+            "y": 222,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "已選",
+          "rect": {
+            "x": 735,
+            "y": 335,
+            "width": 78,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "未解鎖",
+          "rect": {
+            "x": 735,
+            "y": 431,
+            "width": 78,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "優先中",
+          "rect": {
+            "x": 735,
+            "y": 481,
+            "width": 78,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "未解鎖",
+          "rect": {
+            "x": 735,
+            "y": 571,
+            "width": 78,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "設優先",
+          "rect": {
+            "x": 735,
+            "y": 621,
+            "width": 78,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "未解鎖",
+          "rect": {
+            "x": 735,
+            "y": 719,
+            "width": 78,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "設優先",
+          "rect": {
+            "x": 735,
+            "y": 769,
+            "width": 78,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "resetBtn",
+          "text": "清除存檔",
+          "rect": {
+            "x": 542,
+            "y": 604,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "selectSkiffBtn",
+          "text": "切換載具",
+          "rect": {
+            "x": 687,
+            "y": 604,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "panels": [
+        {
+          "tag": "SECTION",
+          "id": "garagePanel",
+          "className": "panel meta-panel is-illustration",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        },
+        {
+          "tag": "DIV",
+          "id": "metaDrawer",
+          "className": "meta-drawer",
+          "rect": {
+            "x": 525,
+            "y": 205,
+            "width": 317,
+            "height": 460
+          },
+          "zIndex": "4",
+          "pointerEvents": "auto"
+        },
+        {
+          "tag": "H2",
+          "id": "metaDrawerTitle",
+          "className": "",
+          "rect": {
+            "x": 542,
+            "y": 233,
+            "width": 54,
+            "height": 23
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "closeMetaDrawer",
+          "className": "",
+          "rect": {
+            "x": 770,
+            "y": 222,
+            "width": 54,
+            "height": 44
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    "escaped": {
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 410,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "panels": [
+        {
+          "tag": "SECTION",
+          "id": "garagePanel",
+          "className": "panel meta-panel is-illustration",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    "errors": [],
+    "openShot": "01-desktop-railVehicleBtn-open.png",
+    "escapeShot": "01-desktop-railVehicleBtn-escape.png"
+  },
+  {
+    "id": "railOpsBtn",
+    "before": {
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "panels": [
+        {
+          "tag": "SECTION",
+          "id": "garagePanel",
+          "className": "panel meta-panel is-illustration",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    "opened": {
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n任務與設定\n關閉\n任務板\n每日｜事件應對\n0/1\n完成 1 次環境事件 · 獎勵 5 零件\n未完成\n每週｜事件專員\n0/4\n完成 4 次環境事件 · 獎勵 15 零件\n未完成\n設定\n瞄準輔助\n關\n低\n中\n高\n螢幕震動\n減少閃光\n音效\n音量\n低\n中\n高\n出勤拖車\n熹僚機\n戰鬥字幕\n畫面特效\n完整\n精簡\n關閉\n傷害數字\n全部\n僅大額\n關\n效能模式\n自動\n鎖高\n鎖低\n文字大小\n小\n中\n大\n版本 R83.1\n檢查更新\nFPS --｜品質 --｜cap --\n存檔管家\n匯出\n匯入\n清除存檔\n切換載具\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "closeMetaDrawer",
+          "text": "關閉",
+          "rect": {
+            "x": 770,
+            "y": 222,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "未完成",
+          "rect": {
+            "x": 553,
+            "y": 363,
+            "width": 261,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "未完成",
+          "rect": {
+            "x": 553,
+            "y": 481,
+            "width": 261,
+            "height": 44
+          }
+        },
+        {
+          "tag": "SELECT",
+          "id": "aimAssistLevelSelect",
+          "text": "關\n低\n中\n高",
+          "rect": {
+            "x": 596,
+            "y": 581,
+            "width": 72,
+            "height": 44
+          }
+        },
+        {
+          "tag": "INPUT",
+          "id": "screenShakeToggle",
+          "text": "on",
+          "rect": {
+            "x": 766,
+            "y": 581,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "tag": "INPUT",
+          "id": "reducedFlashToggle",
+          "text": "on",
+          "rect": {
+            "x": 621,
+            "y": 659,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "tag": "INPUT",
+          "id": "soundToggle",
+          "text": "on",
+          "rect": {
+            "x": 766,
+            "y": 659,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "tag": "SELECT",
+          "id": "sfxVolumeSelect",
+          "text": "低\n中\n高",
+          "rect": {
+            "x": 596,
+            "y": 737,
+            "width": 72,
+            "height": 44
+          }
+        },
+        {
+          "tag": "INPUT",
+          "id": "showRunTrailerToggle",
+          "text": "on",
+          "rect": {
+            "x": 766,
+            "y": 737,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "tag": "INPUT",
+          "id": "showCompanionToggle",
+          "text": "on",
+          "rect": {
+            "x": 621,
+            "y": 815,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "tag": "INPUT",
+          "id": "showRunBarksToggle",
+          "text": "on",
+          "rect": {
+            "x": 766,
+            "y": 815,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "tag": "SELECT",
+          "id": "fxLevelSelect",
+          "text": "完整\n精簡\n關閉",
+          "rect": {
+            "x": 596,
+            "y": 890,
+            "width": 72,
+            "height": 44
+          }
+        },
+        {
+          "tag": "SELECT",
+          "id": "damageTextDensitySelect",
+          "text": "全部\n僅大額\n關",
+          "rect": {
+            "x": 741,
+            "y": 890,
+            "width": 72,
+            "height": 44
+          }
+        },
+        {
+          "tag": "SELECT",
+          "id": "performanceModeSelect",
+          "text": "自動\n鎖高\n鎖低",
+          "rect": {
+            "x": 596,
+            "y": 962,
+            "width": 72,
+            "height": 44
+          }
+        },
+        {
+          "tag": "SELECT",
+          "id": "fontSizeSelect",
+          "text": "小\n中\n大",
+          "rect": {
+            "x": 741,
+            "y": 962,
+            "width": 72,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "checkUpdateBtn",
+          "text": "檢查更新",
+          "rect": {
+            "x": 590,
+            "y": 1034,
+            "width": 78,
+            "height": 44
+          }
+        },
+        {
+          "tag": "TEXTAREA",
+          "id": "saveCodeBox",
+          "text": "存檔代碼",
+          "rect": {
+            "x": 553,
+            "y": 1184,
+            "width": 261,
+            "height": 76
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "exportSaveBtn",
+          "text": "匯出",
+          "rect": {
+            "x": 553,
+            "y": 1280,
+            "width": 126,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "importSaveBtn",
+          "text": "匯入",
+          "rect": {
+            "x": 687,
+            "y": 1280,
+            "width": 126,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "resetBtn",
+          "text": "清除存檔",
+          "rect": {
+            "x": 542,
+            "y": 604,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "selectSkiffBtn",
+          "text": "切換載具",
+          "rect": {
+            "x": 687,
+            "y": 604,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 305,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "panels": [
+        {
+          "tag": "SECTION",
+          "id": "garagePanel",
+          "className": "panel meta-panel is-illustration",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        },
+        {
+          "tag": "DIV",
+          "id": "metaDrawer",
+          "className": "meta-drawer",
+          "rect": {
+            "x": 525,
+            "y": 205,
+            "width": 317,
+            "height": 460
+          },
+          "zIndex": "4",
+          "pointerEvents": "auto"
+        },
+        {
+          "tag": "H2",
+          "id": "metaDrawerTitle",
+          "className": "",
+          "rect": {
+            "x": 542,
+            "y": 233,
+            "width": 90,
+            "height": 23
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "closeMetaDrawer",
+          "className": "",
+          "rect": {
+            "x": 770,
+            "y": 222,
+            "width": 54,
+            "height": 44
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        },
+        {
+          "tag": "DIV",
+          "id": "settingsPanel",
+          "className": "settings-list",
+          "rect": {
+            "x": 542,
+            "y": 568,
+            "width": 283,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    "escaped": {
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 305,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "panels": [
+        {
+          "tag": "SECTION",
+          "id": "garagePanel",
+          "className": "panel meta-panel is-illustration",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    "errors": [],
+    "openShot": "01-desktop-railOpsBtn-open.png",
+    "escapeShot": "01-desktop-railOpsBtn-escape.png"
+  },
+  {
+    "id": "railAchievementsBtn",
+    "before": {
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "panels": [
+        {
+          "tag": "SECTION",
+          "id": "garagePanel",
+          "className": "panel meta-panel is-illustration",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    "opened": {
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n成就牆\n關閉\n成就牆\n突破第 3 波\n0/3\n最遠抵達第 3 波，建立護航基準。 · 獎勵 6 零件 ＋通訊碎片\n突破第 5 波\n0/5\n最遠抵達第 5 波，證明車隊能撐過首輪高壓。 · 獎勵 10 零件 ＋通訊碎片\n突破第 8 波\n0/8\n最遠抵達第 8 波，足以回收更深處的零件。 · 獎勵 16 零件 ＋通訊碎片\n突破第 12 波\n0/12\n最遠抵達第 12 波，車隊已能處理持續變異潮。 · 獎勵 24 零件 ＋通訊碎片\n突破第 16 波\n0/16\n最遠抵達第 16 波，路線記錄足以支援長程改裝。 · 獎勵 34 零件 ＋通訊碎片\n突破第 20 波\n0/20\n最遠抵達第 20 波，完成末日護航的里程碑。 · 獎勵 50 零件 ＋通訊碎片\n突破第 25 波\n0/25\n最高紀錄達到 25 波，無線電裡的靜電終於被下一段路蓋過。 · 獎勵 60 零件\n深水第 30 波\n0/30\n抵達第 30 波，車隊仍向灰燼深處推進 · 獎勵 80 零件\n深水第 40 波\n0/40\n抵達第 40 波，夜色也攔不住護航火線 · 獎勵 110 零件\n深水第 50 波\n0/50\n抵達第 50 波，殘響之後仍有引擎聲 · 獎勵 150 零件\n深水第 75 波\n0/75\n抵達第 75 波，廢土長夜被砲火鑿開 · 獎勵 220 零件\n深水第 100 波\n0/100\n抵達第 100 波，灰燼盡頭仍有火 · 獎勵 320 零件\n灰喉走廊\n遭遇 0 / 完成 0\n沙塵灌進道路，視野下降；撐過本波，結算零件 +20%\n燈火管制\n遭遇 0 / 完成 0\n車燈收束，視野更窄；撐過本波，結算零件 +8%\n斷錨航道\n遭遇 0 / 完成 0\n亂流推擠敵群，敵速 +15%；撐過本波，結算零件 +12%\n靜電層\n遭遇 0 / 完成 0\n靜電拖慢敵方投射物；撐過本波，結算零件 +8%\n沉錨帶\n遭遇 0 / 完成 0\n暗流牽偏敵群，左右漂移加劇；撐過本波，結算零件 +10%\n鹽霧岸\n遭遇 0 / 完成 0\n鹽霧遮蔽巨影，疾奔屍權重上升、腫囊屍權重下降\n星渣雨\n遭遇 0 / 完成 0\n星渣落入航線，可擊爆障礙拿零件\n殘響帶\n遭遇 0 / 完成 0\n相位怪權重上升；撐過本波，結算零件 +12%\n第一滴黑血\n0/1\n首次擊殺任一喪屍。 · 獎勵 4 零件\n首殺 Boss\n0/1\n首次擊破母巢巨屍。 · 獎勵 8 零件\n第 5 波突破\n0/5\n抵達並結算第 5 波。 · 獎勵 8 零件\n第 10 波突破\n0/10\n抵達並結算第 10 波。 · 獎勵 8 零件\n陸地出勤\n0/1\n用陸地載具完成一次有效出勤。 · 獎勵 4 零件\n天空出勤\n0/1\n用天空載具完成一次有效出勤。 · 獎勵 4 零件\n海面出勤\n0/1\n用海面載具完成一次有效出勤。 · 獎勵 4 零件\n太空出勤\n0/1\n用太空載具完成一次有效出勤。 · 獎勵 4 零件\n百屍清道夫\n0/100\n累積擊殺 100 名喪屍。 · 獎勵 8 零件\n四域車隊\n1/4\n解鎖四台載具。 · 獎勵 8 零件\n沙塵穿越\n0/1\n首次完成沙塵暴事件波。 · 獎勵 3 零件\n亂流穿越\n0/1\n首次完成亂流事件波。 · 獎勵 3 零件\n暗流穿越\n0/1\n首次完成暗流事件波。 · 獎勵 3 零件\n隕石穿越\n0/1\n首次完成隕石雨事件波。 · 獎勵 3 零件\n🎮 阿軒的小遊戲系列\n卡牌對戰\n無盡塔防\n像素農場\n清除存檔\n切換載具\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "closeMetaDrawer",
+          "text": "關閉",
+          "rect": {
+            "x": 770,
+            "y": 222,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "tag": "A",
+          "id": "",
+          "text": "卡牌對戰",
+          "rect": {
+            "x": 542,
+            "y": 3213,
+            "width": 68,
+            "height": 44
+          }
+        },
+        {
+          "tag": "A",
+          "id": "",
+          "text": "無盡塔防",
+          "rect": {
+            "x": 616,
+            "y": 3213,
+            "width": 68,
+            "height": 44
+          }
+        },
+        {
+          "tag": "A",
+          "id": "",
+          "text": "像素農場",
+          "rect": {
+            "x": 690,
+            "y": 3213,
+            "width": 68,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "resetBtn",
+          "text": "清除存檔",
+          "rect": {
+            "x": 542,
+            "y": 604,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "selectSkiffBtn",
+          "text": "切換載具",
+          "rect": {
+            "x": 687,
+            "y": 604,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 375,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "panels": [
+        {
+          "tag": "SECTION",
+          "id": "garagePanel",
+          "className": "panel meta-panel is-illustration",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        },
+        {
+          "tag": "DIV",
+          "id": "metaDrawer",
+          "className": "meta-drawer",
+          "rect": {
+            "x": 525,
+            "y": 205,
+            "width": 317,
+            "height": 460
+          },
+          "zIndex": "4",
+          "pointerEvents": "auto"
+        },
+        {
+          "tag": "H2",
+          "id": "metaDrawerTitle",
+          "className": "",
+          "rect": {
+            "x": 542,
+            "y": 233,
+            "width": 54,
+            "height": 23
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "closeMetaDrawer",
+          "className": "",
+          "rect": {
+            "x": 770,
+            "y": 222,
+            "width": 54,
+            "height": 44
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    "escaped": {
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 375,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "panels": [
+        {
+          "tag": "SECTION",
+          "id": "garagePanel",
+          "className": "panel meta-panel is-illustration",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    "errors": [],
+    "openShot": "01-desktop-railAchievementsBtn-open.png",
+    "escapeShot": "01-desktop-railAchievementsBtn-escape.png"
+  },
+  {
+    "id": "railSettingsBtn",
+    "before": {
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "panels": [
+        {
+          "tag": "SECTION",
+          "id": "garagePanel",
+          "className": "panel meta-panel is-illustration",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    "opened": {
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n任務與設定\n關閉\n任務板\n每日｜事件應對\n0/1\n完成 1 次環境事件 · 獎勵 5 零件\n未完成\n每週｜事件專員\n0/4\n完成 4 次環境事件 · 獎勵 15 零件\n未完成\n設定\n瞄準輔助\n關\n低\n中\n高\n螢幕震動\n減少閃光\n音效\n音量\n低\n中\n高\n出勤拖車\n熹僚機\n戰鬥字幕\n畫面特效\n完整\n精簡\n關閉\n傷害數字\n全部\n僅大額\n關\n效能模式\n自動\n鎖高\n鎖低\n文字大小\n小\n中\n大\n版本 R83.1\n檢查更新\nFPS --｜品質 --｜cap --\n存檔管家\n匯出\n匯入\n清除存檔\n切換載具\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "closeMetaDrawer",
+          "text": "關閉",
+          "rect": {
+            "x": 770,
+            "y": 222,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "未完成",
+          "rect": {
+            "x": 553,
+            "y": 73,
+            "width": 261,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "未完成",
+          "rect": {
+            "x": 553,
+            "y": 191,
+            "width": 261,
+            "height": 44
+          }
+        },
+        {
+          "tag": "SELECT",
+          "id": "aimAssistLevelSelect",
+          "text": "關\n低\n中\n高",
+          "rect": {
+            "x": 596,
+            "y": 291,
+            "width": 72,
+            "height": 44
+          }
+        },
+        {
+          "tag": "INPUT",
+          "id": "screenShakeToggle",
+          "text": "on",
+          "rect": {
+            "x": 766,
+            "y": 291,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "tag": "INPUT",
+          "id": "reducedFlashToggle",
+          "text": "on",
+          "rect": {
+            "x": 621,
+            "y": 369,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "tag": "INPUT",
+          "id": "soundToggle",
+          "text": "on",
+          "rect": {
+            "x": 766,
+            "y": 369,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "tag": "SELECT",
+          "id": "sfxVolumeSelect",
+          "text": "低\n中\n高",
+          "rect": {
+            "x": 596,
+            "y": 447,
+            "width": 72,
+            "height": 44
+          }
+        },
+        {
+          "tag": "INPUT",
+          "id": "showRunTrailerToggle",
+          "text": "on",
+          "rect": {
+            "x": 766,
+            "y": 447,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "tag": "INPUT",
+          "id": "showCompanionToggle",
+          "text": "on",
+          "rect": {
+            "x": 621,
+            "y": 525,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "tag": "INPUT",
+          "id": "showRunBarksToggle",
+          "text": "on",
+          "rect": {
+            "x": 766,
+            "y": 525,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "tag": "SELECT",
+          "id": "fxLevelSelect",
+          "text": "完整\n精簡\n關閉",
+          "rect": {
+            "x": 596,
+            "y": 600,
+            "width": 72,
+            "height": 44
+          }
+        },
+        {
+          "tag": "SELECT",
+          "id": "damageTextDensitySelect",
+          "text": "全部\n僅大額\n關",
+          "rect": {
+            "x": 741,
+            "y": 600,
+            "width": 72,
+            "height": 44
+          }
+        },
+        {
+          "tag": "SELECT",
+          "id": "performanceModeSelect",
+          "text": "自動\n鎖高\n鎖低",
+          "rect": {
+            "x": 596,
+            "y": 672,
+            "width": 72,
+            "height": 44
+          }
+        },
+        {
+          "tag": "SELECT",
+          "id": "fontSizeSelect",
+          "text": "小\n中\n大",
+          "rect": {
+            "x": 741,
+            "y": 672,
+            "width": 72,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "checkUpdateBtn",
+          "text": "檢查更新",
+          "rect": {
+            "x": 590,
+            "y": 744,
+            "width": 78,
+            "height": 44
+          }
+        },
+        {
+          "tag": "TEXTAREA",
+          "id": "saveCodeBox",
+          "text": "存檔代碼",
+          "rect": {
+            "x": 553,
+            "y": 894,
+            "width": 261,
+            "height": 76
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "exportSaveBtn",
+          "text": "匯出",
+          "rect": {
+            "x": 553,
+            "y": 990,
+            "width": 126,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "importSaveBtn",
+          "text": "匯入",
+          "rect": {
+            "x": 687,
+            "y": 990,
+            "width": 126,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "resetBtn",
+          "text": "清除存檔",
+          "rect": {
+            "x": 542,
+            "y": 604,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "selectSkiffBtn",
+          "text": "切換載具",
+          "rect": {
+            "x": 687,
+            "y": 604,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 445,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "panels": [
+        {
+          "tag": "SECTION",
+          "id": "garagePanel",
+          "className": "panel meta-panel is-illustration",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        },
+        {
+          "tag": "DIV",
+          "id": "metaDrawer",
+          "className": "meta-drawer",
+          "rect": {
+            "x": 525,
+            "y": 205,
+            "width": 317,
+            "height": 460
+          },
+          "zIndex": "4",
+          "pointerEvents": "auto"
+        },
+        {
+          "tag": "H2",
+          "id": "metaDrawerTitle",
+          "className": "",
+          "rect": {
+            "x": 542,
+            "y": 233,
+            "width": 90,
+            "height": 23
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "closeMetaDrawer",
+          "className": "",
+          "rect": {
+            "x": 770,
+            "y": 222,
+            "width": 54,
+            "height": 44
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        },
+        {
+          "tag": "DIV",
+          "id": "settingsPanel",
+          "className": "settings-list",
+          "rect": {
+            "x": 542,
+            "y": 278,
+            "width": 283,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    "escaped": {
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 445,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "panels": [
+        {
+          "tag": "SECTION",
+          "id": "garagePanel",
+          "className": "panel meta-panel is-illustration",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          },
+          "zIndex": "auto",
+          "pointerEvents": "auto"
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    "errors": [],
+    "openShot": "01-desktop-railSettingsBtn-open.png",
+    "escapeShot": "01-desktop-railSettingsBtn-escape.png"
+  }
+]

@@ -1,0 +1,156 @@
+{
+  "states": [
+    {
+      "label": "portrait-before-rotation",
+      "text": "壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n增益：無\n擊殺 1\n零件 2\n衝\n技\n彈",
+      "state": {
+        "mode": "playing",
+        "paused": false,
+        "wave": 1,
+        "time": 1.4833000000000003,
+        "hp": 520,
+        "kills": 1
+      },
+      "canvas": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "display": "block",
+        "className": ""
+      },
+      "touch": {
+        "x": 14,
+        "y": 718,
+        "width": 362,
+        "height": 112,
+        "display": "grid",
+        "className": "touch-controls is-visible"
+      },
+      "hiddenWithArea": [],
+      "shot": "15-phone-portrait-before-rotation.png"
+    },
+    {
+      "label": "landscape-after-rotation-still-interactive",
+      "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n增益：無\n擊殺 3\n零件 2\n壁爐\n壁爐：「繫好。今天也把火帶回來。」 熹：「我把後門鎖好了。」\n衝\n技\n彈\n◎\n任務\n★\n成就\n⚙\n設定",
+      "state": {
+        "mode": "playing",
+        "paused": false,
+        "wave": 1,
+        "time": 3.2498999999999967,
+        "hp": 520,
+        "kills": 3
+      },
+      "canvas": {
+        "x": 333,
+        "y": 1,
+        "width": 178,
+        "height": 388,
+        "display": "block",
+        "className": ""
+      },
+      "touch": {
+        "x": 14,
+        "y": 264,
+        "width": 816,
+        "height": 112,
+        "display": "grid",
+        "className": "touch-controls is-visible"
+      },
+      "hiddenWithArea": [],
+      "shot": "15-phone-landscape-after-rotation.png"
+    },
+    {
+      "label": "portrait-restored",
+      "text": "壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n增益：無\n擊殺 3\n零件 2\n壁爐\n壁爐：「繫好。今天也把火帶回來。」 熹：「我把後門鎖好了。」\n衝\n技\n彈",
+      "state": {
+        "mode": "playing",
+        "paused": false,
+        "wave": 1,
+        "time": 4.566400000000002,
+        "hp": 520,
+        "kills": 3
+      },
+      "canvas": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "display": "block",
+        "className": ""
+      },
+      "touch": {
+        "x": 14,
+        "y": 718,
+        "width": 362,
+        "height": 112,
+        "display": "grid",
+        "className": "touch-controls is-visible"
+      },
+      "hiddenWithArea": [],
+      "shot": "15-phone-portrait-restored.png"
+    },
+    {
+      "label": "offline-run-continues",
+      "text": "壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n增益：無\n擊殺 9\n零件 2\n衝\n技\n彈",
+      "state": {
+        "mode": "playing",
+        "paused": false,
+        "wave": 1,
+        "time": 6.799700000000025,
+        "hp": 520,
+        "kills": 9
+      },
+      "canvas": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "display": "block",
+        "className": ""
+      },
+      "touch": {
+        "x": 14,
+        "y": 718,
+        "width": 362,
+        "height": 112,
+        "display": "grid",
+        "className": "touch-controls is-visible"
+      },
+      "hiddenWithArea": [],
+      "shot": "15-phone-portrait-offline.png"
+    },
+    {
+      "label": "online-return-continues",
+      "text": "壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n增益：無\n擊殺 15\n零件 2\n衝\n技\n彈",
+      "state": {
+        "mode": "playing",
+        "paused": false,
+        "wave": 1,
+        "time": 8.349600000000033,
+        "hp": 520,
+        "kills": 15
+      },
+      "canvas": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "display": "block",
+        "className": ""
+      },
+      "touch": {
+        "x": 14,
+        "y": 718,
+        "width": 362,
+        "height": 112,
+        "display": "grid",
+        "className": "touch-controls is-visible"
+      },
+      "hiddenWithArea": [],
+      "shot": "15-phone-portrait-online-return.png"
+    }
+  ],
+  "errors": [],
+  "requestFailures": []
+}

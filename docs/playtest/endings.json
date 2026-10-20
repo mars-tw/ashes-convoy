@@ -1,0 +1,778 @@
+{
+  "evacuation": [
+    {
+      "label": "before-manual-evacuation",
+      "shot": "08-desktop-evac-before.png",
+      "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 2 波\n暫停\n增益：射速 x1.25\n擊殺 24\n零件 10\n灰喉走廊\n沙牆壓低視野，車燈只能照見下一個影子。 壁爐：「聽見哭聲就別停。」 目標：撐過本波\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "pauseBtn",
+          "text": "暫停",
+          "rect": {
+            "x": 795,
+            "y": 11,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "state": {
+        "mode": "playing",
+        "paused": false,
+        "over": false,
+        "wave": 2,
+        "time": 15.314100000000069,
+        "hp": 520,
+        "maxHp": 520,
+        "kills": 24,
+        "deathContext": null
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "manual-evacuation-settlement",
+      "shot": "08-desktop-evac-settlement.png",
+      "text": "▲\n升級\n▣\n載具\n護航結算\n\n本局獲得 18 廢土零件。新紀錄！\n\n第 1 波\n波次\n24\n擊殺\n0\nBoss\n18\n零件\n+10\n行動零件\n+8\n成就零件\n+0\n里程碑零件\n+4\n波次零件\n+4\n擊殺零件\n+0\nBoss 零件\n+2\n事件零件\n+0\n難度加成\n成就解鎖：第一滴黑血（+4 零件）\n成就解鎖：陸地出勤（+4 零件）\n下一成就：首殺 Boss 0/1\n下一里程碑：突破第 3 波 1/3\n下一段通訊：第 3 波\n本局分析\n再拚一局\n回車庫\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "runAnalysisToggleBtn",
+          "text": "本局分析",
+          "rect": {
+            "x": 542,
+            "y": 632,
+            "width": 283,
+            "height": 44
+          }
+        },
+        {
+          "id": "againBtn",
+          "text": "再拚一局",
+          "rect": {
+            "x": 542,
+            "y": 688,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "id": "garageBtn",
+          "text": "回車庫",
+          "rect": {
+            "x": 687,
+            "y": 688,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "state": {
+        "mode": "settlement",
+        "paused": true,
+        "over": true,
+        "wave": 2,
+        "time": 15.964100000000073,
+        "hp": 520,
+        "maxHp": 520,
+        "kills": 24,
+        "deathContext": null
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "evac-analysis-open",
+      "shot": "08-desktop-evac-analysis-open.png",
+      "text": "▲\n升級\n▣\n載具\n護航結算\n\n本局獲得 18 廢土零件。新紀錄！\n\n第 1 波\n波次\n24\n擊殺\n0\nBoss\n18\n零件\n+10\n行動零件\n+8\n成就零件\n+0\n里程碑零件\n+4\n波次零件\n+4\n擊殺零件\n+0\nBoss 零件\n+2\n事件零件\n+0\n難度加成\n成就解鎖：第一滴黑血（+4 零件）\n成就解鎖：陸地出勤（+4 零件）\n下一成就：首殺 Boss 0/1\n下一里程碑：突破第 3 波 1/3\n下一段通訊：第 3 波\n收合分析\n死前5秒\n死前 5 秒無受傷記錄\n受傷\nBoss 0% / 小怪 0% / 爆裂 0%\n事件\n灰喉走廊 遭遇 1 / 完成 0，事件收益 +2\n補給\n補給箱 0 個，零件 +0，本局無補給效果\n變種\n本局無變種擊殺\n傷害\n主要傷害來源：壁爐裝甲車 90%，平均 31/秒，峰值 66/秒\n比較\n上局比較：尚無上一局資料\n再拚一局\n回車庫\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "runAnalysisToggleBtn",
+          "text": "收合分析",
+          "rect": {
+            "x": 542,
+            "y": 632,
+            "width": 283,
+            "height": 44
+          }
+        },
+        {
+          "id": "againBtn",
+          "text": "再拚一局",
+          "rect": {
+            "x": 542,
+            "y": 1027,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "id": "garageBtn",
+          "text": "回車庫",
+          "rect": {
+            "x": 687,
+            "y": 1027,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "state": {
+        "mode": "settlement",
+        "paused": true,
+        "over": true,
+        "wave": 2,
+        "time": 15.964100000000073,
+        "hp": 520,
+        "maxHp": 520,
+        "kills": 24,
+        "deathContext": null
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "evac-analysis-closed",
+      "shot": "08-desktop-evac-analysis-closed.png",
+      "text": "▲\n升級\n▣\n載具\n護航結算\n\n本局獲得 18 廢土零件。新紀錄！\n\n第 1 波\n波次\n24\n擊殺\n0\nBoss\n18\n零件\n+10\n行動零件\n+8\n成就零件\n+0\n里程碑零件\n+4\n波次零件\n+4\n擊殺零件\n+0\nBoss 零件\n+2\n事件零件\n+0\n難度加成\n成就解鎖：第一滴黑血（+4 零件）\n成就解鎖：陸地出勤（+4 零件）\n下一成就：首殺 Boss 0/1\n下一里程碑：突破第 3 波 1/3\n下一段通訊：第 3 波\n本局分析\n再拚一局\n回車庫\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "runAnalysisToggleBtn",
+          "text": "本局分析",
+          "rect": {
+            "x": 542,
+            "y": 632,
+            "width": 283,
+            "height": 44
+          }
+        },
+        {
+          "id": "againBtn",
+          "text": "再拚一局",
+          "rect": {
+            "x": 542,
+            "y": 688,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "id": "garageBtn",
+          "text": "回車庫",
+          "rect": {
+            "x": 687,
+            "y": 688,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "state": {
+        "mode": "settlement",
+        "paused": true,
+        "over": true,
+        "wave": 2,
+        "time": 15.964100000000073,
+        "hp": 520,
+        "maxHp": 520,
+        "kills": 24,
+        "deathContext": null
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "again-started-new-run",
+      "shot": "08-desktop-again-started.png",
+      "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n增益：無\n擊殺 0\n零件 0\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "pauseBtn",
+          "text": "暫停",
+          "rect": {
+            "x": 795,
+            "y": 11,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "state": {
+        "mode": "playing",
+        "paused": false,
+        "over": false,
+        "wave": 1,
+        "time": 0.6665999999999986,
+        "hp": 520,
+        "maxHp": 520,
+        "kills": 0,
+        "deathContext": null
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "garage-returned",
+      "shot": "08-desktop-garage-returned.png",
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n18\n物資\n6\n最遠\n1\n擊殺\n24\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "state": {
+        "mode": "settlement",
+        "paused": true,
+        "over": true,
+        "wave": 1,
+        "time": 1.3499000000000019,
+        "hp": 520,
+        "maxHp": 520,
+        "kills": 0,
+        "deathContext": null
+      },
+      "hiddenWithArea": []
+    }
+  ],
+  "death": [
+    {
+      "label": "after-low-hp-bridge-injection",
+      "shot": "08-desktop-death-low-hp-bridge.png",
+      "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 30 / 520\n第 1 波\n暫停\n擊殺 19\n零件 3\n熹\n熹：「壁爐？你聲音……又在抖。」\n← 彈道 +1 ｜ 射速 +25% →\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "pauseBtn",
+          "text": "暫停",
+          "rect": {
+            "x": 795,
+            "y": 11,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "state": {
+        "mode": "playing",
+        "paused": false,
+        "over": false,
+        "wave": 1,
+        "time": 11.01530000000001,
+        "hp": 30,
+        "maxHp": 520,
+        "kills": 19,
+        "deathContext": null
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "death-timeout-state",
+      "shot": "08-desktop-death-timeout.png",
+      "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 123 / 520\n第 4 波\n暫停\n增益：追蹤 Lv1 · 彈道 +2\n擊殺 76\n零件 29\n事件收束\n沙聲退開，輪痕還在。\n補給箱\n按 1-5 快選或點擊領取；戰鬥不中斷\n1. 射速補給\n15% 裝填加速\n10 秒\n2. 火力補給\n20% 傷害加成\n10 秒\n3. 維修補給\n8% 立即維修\n立即生效\n4. 零件補給\n零件 +3\n本局結算列入補給收益\n5. 護盾補給\n12% 護盾\n立即加到護盾上限\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "pauseBtn",
+          "text": "暫停",
+          "rect": {
+            "x": 795,
+            "y": 11,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "1. 射速補給\n15% 裝填加速\n10 秒",
+          "rect": {
+            "x": 527,
+            "y": 186,
+            "width": 99,
+            "height": 88
+          }
+        },
+        {
+          "id": "",
+          "text": "2. 火力補給\n20% 傷害加成\n10 秒",
+          "rect": {
+            "x": 634,
+            "y": 186,
+            "width": 99,
+            "height": 88
+          }
+        },
+        {
+          "id": "",
+          "text": "3. 維修補給\n8% 立即維修\n立即生效",
+          "rect": {
+            "x": 740,
+            "y": 186,
+            "width": 99,
+            "height": 88
+          }
+        },
+        {
+          "id": "",
+          "text": "4. 零件補給\n零件 +3\n本局結算列入補給收益",
+          "rect": {
+            "x": 527,
+            "y": 282,
+            "width": 99,
+            "height": 85
+          }
+        },
+        {
+          "id": "",
+          "text": "5. 護盾補給\n12% 護盾\n立即加到護盾上限",
+          "rect": {
+            "x": 634,
+            "y": 282,
+            "width": 99,
+            "height": 85
+          }
+        },
+        {
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "state": {
+        "mode": "playing",
+        "paused": false,
+        "over": false,
+        "wave": 4,
+        "time": 91.10099999999778,
+        "hp": 123,
+        "maxHp": 520,
+        "kills": 76,
+        "deathContext": null
+      },
+      "hiddenWithArea": []
+    }
+  ],
+  "errors": [
+    "death settlement wait: locator.waitFor: Timeout 90000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#settlementPanel') to be visible\u001b[22m\n\u001b[2m    170 × locator resolved to hidden <section hidden=\"\" class=\"panel\" id=\"settlementPanel\">…</section>\u001b[22m\n"
+  ],
+  "injection": {
+    "purpose": "將 HP 壓到低血量，最後一擊仍等待敵人主動攻擊",
+    "method": "AshesGame.damageVehicle(500)",
+    "before": {
+      "hp": 520,
+      "maxHp": 520,
+      "wave": 1,
+      "time": 10.96530000000001
+    },
+    "after": {
+      "hp": 30,
+      "maxHp": 520,
+      "wave": 1,
+      "time": 11.01530000000001,
+      "mode": "playing"
+    }
+  }
+}

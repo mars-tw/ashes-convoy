@@ -1,0 +1,888 @@
+{
+  "viewport": "1366x768",
+  "events": [
+    {
+      "atMs": 2774,
+      "label": "base-ready",
+      "shot": "03-desktop-base-ready.png",
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "canvas": [
+        {
+          "id": "gameCanvas",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          }
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    {
+      "atMs": 5092,
+      "label": "after-one-sortie-click",
+      "shot": "03-desktop-after-one-sortie-click.png",
+      "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n增益：無\n擊殺 0\n零件 0\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "pauseBtn",
+          "text": "暫停",
+          "rect": {
+            "x": 795,
+            "y": 11,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "canvas": [
+        {
+          "id": "gameCanvas",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          }
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    {
+      "atMs": 19743,
+      "label": "combat-early",
+      "shot": "03-desktop-combat-early.png",
+      "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n擊殺 18\n零件 3\n← 彈道 +1 ｜ 射速 +25% →\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "pauseBtn",
+          "text": "暫停",
+          "rect": {
+            "x": 795,
+            "y": 11,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "canvas": [
+        {
+          "id": "gameCanvas",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          }
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    {
+      "atMs": 30955,
+      "label": "pause-open",
+      "shot": "03-desktop-pause-open.png",
+      "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 2 波\n暫停\n增益：裂片 Lv1 · 彈道 +1\n擊殺 27\n零件 8\n暫停\n\n目前進度會保留在本局中。\n\n繼續\n結束本局\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "pauseBtn",
+          "text": "暫停",
+          "rect": {
+            "x": 795,
+            "y": 11,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "resumeBtn",
+          "text": "繼續",
+          "rect": {
+            "x": 542,
+            "y": 278,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "quitBtn",
+          "text": "結束本局",
+          "rect": {
+            "x": 687,
+            "y": 278,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "canvas": [
+        {
+          "id": "gameCanvas",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          }
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    {
+      "atMs": 31923,
+      "label": "pause-control-count",
+      "count": 8
+    },
+    {
+      "atMs": 39221,
+      "label": "settings-during-active-run",
+      "shot": "03-desktop-settings-during-active-run.png",
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n任務與設定\n關閉\n任務板\n每日｜補給回收\n0/2\n撿取 2 個補給箱 · 獎勵 5 零件\n未完成\n每週｜事件專員\n0/4\n完成 4 次環境事件 · 獎勵 15 零件\n未完成\n設定\n瞄準輔助\n關\n低\n中\n高\n螢幕震動\n減少閃光\n音效\n音量\n低\n中\n高\n出勤拖車\n熹僚機\n戰鬥字幕\n畫面特效\n完整\n精簡\n關閉\n傷害數字\n全部\n僅大額\n關\n效能模式\n自動\n鎖高\n鎖低\n文字大小\n小\n中\n大\n版本 R83.1\n檢查更新\nFPS 21｜品質 自動/low｜原因 FPS 20 低於 30｜cap 53%｜歷史 1.4s FPS 22 低於 30\n存檔管家\n匯出\n匯入\n清除存檔\n切換載具\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "closeMetaDrawer",
+          "text": "關閉",
+          "rect": {
+            "x": 770,
+            "y": 222,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "未完成",
+          "rect": {
+            "x": 553,
+            "y": 73,
+            "width": 261,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "未完成",
+          "rect": {
+            "x": 553,
+            "y": 191,
+            "width": 261,
+            "height": 44
+          }
+        },
+        {
+          "tag": "SELECT",
+          "id": "aimAssistLevelSelect",
+          "text": "關\n低\n中\n高",
+          "rect": {
+            "x": 596,
+            "y": 291,
+            "width": 72,
+            "height": 44
+          }
+        },
+        {
+          "tag": "INPUT",
+          "id": "screenShakeToggle",
+          "text": "on",
+          "rect": {
+            "x": 766,
+            "y": 291,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "tag": "INPUT",
+          "id": "reducedFlashToggle",
+          "text": "on",
+          "rect": {
+            "x": 621,
+            "y": 369,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "tag": "INPUT",
+          "id": "soundToggle",
+          "text": "on",
+          "rect": {
+            "x": 766,
+            "y": 369,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "tag": "SELECT",
+          "id": "sfxVolumeSelect",
+          "text": "低\n中\n高",
+          "rect": {
+            "x": 596,
+            "y": 447,
+            "width": 72,
+            "height": 44
+          }
+        },
+        {
+          "tag": "INPUT",
+          "id": "showRunTrailerToggle",
+          "text": "on",
+          "rect": {
+            "x": 766,
+            "y": 447,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "tag": "INPUT",
+          "id": "showCompanionToggle",
+          "text": "on",
+          "rect": {
+            "x": 621,
+            "y": 525,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "tag": "INPUT",
+          "id": "showRunBarksToggle",
+          "text": "on",
+          "rect": {
+            "x": 766,
+            "y": 525,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "tag": "SELECT",
+          "id": "fxLevelSelect",
+          "text": "完整\n精簡\n關閉",
+          "rect": {
+            "x": 596,
+            "y": 600,
+            "width": 72,
+            "height": 44
+          }
+        },
+        {
+          "tag": "SELECT",
+          "id": "damageTextDensitySelect",
+          "text": "全部\n僅大額\n關",
+          "rect": {
+            "x": 741,
+            "y": 600,
+            "width": 72,
+            "height": 44
+          }
+        },
+        {
+          "tag": "SELECT",
+          "id": "performanceModeSelect",
+          "text": "自動\n鎖高\n鎖低",
+          "rect": {
+            "x": 596,
+            "y": 672,
+            "width": 72,
+            "height": 44
+          }
+        },
+        {
+          "tag": "SELECT",
+          "id": "fontSizeSelect",
+          "text": "小\n中\n大",
+          "rect": {
+            "x": 741,
+            "y": 672,
+            "width": 72,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "checkUpdateBtn",
+          "text": "檢查更新",
+          "rect": {
+            "x": 590,
+            "y": 744,
+            "width": 78,
+            "height": 44
+          }
+        },
+        {
+          "tag": "TEXTAREA",
+          "id": "saveCodeBox",
+          "text": "存檔代碼",
+          "rect": {
+            "x": 553,
+            "y": 908,
+            "width": 261,
+            "height": 76
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "exportSaveBtn",
+          "text": "匯出",
+          "rect": {
+            "x": 553,
+            "y": 1004,
+            "width": 126,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "importSaveBtn",
+          "text": "匯入",
+          "rect": {
+            "x": 687,
+            "y": 1004,
+            "width": 126,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "resetBtn",
+          "text": "清除存檔",
+          "rect": {
+            "x": 542,
+            "y": 604,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "selectSkiffBtn",
+          "text": "切換載具",
+          "rect": {
+            "x": 687,
+            "y": 604,
+            "width": 137,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 445,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "canvas": [
+        {
+          "id": "gameCanvas",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          }
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    {
+      "atMs": 51562,
+      "label": "after-supply-hotkeys",
+      "shot": "03-desktop-after-supply-hotkeys.png",
+      "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 2 波\n暫停\n增益：裂片 Lv1 · 火力 x1.35 · 彈道 +1\n擊殺 34\n零件 9\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "pauseBtn",
+          "text": "暫停",
+          "rect": {
+            "x": 795,
+            "y": 11,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "canvas": [
+        {
+          "id": "gameCanvas",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          }
+        }
+      ],
+      "hiddenWithArea": []
+    },
+    {
+      "atMs": 86628,
+      "label": "combat-late",
+      "shot": "03-desktop-combat-late.png",
+      "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 3 波\n暫停\n增益：雷射 Lv1 · 超載 1 · 火力 x1.35 · 彈道 +1\n擊殺 59\n零件 17\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "pauseBtn",
+          "text": "暫停",
+          "rect": {
+            "x": 795,
+            "y": 11,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "canvas": [
+        {
+          "id": "gameCanvas",
+          "rect": {
+            "x": 507,
+            "y": 1,
+            "width": 353,
+            "height": 766
+          }
+        }
+      ],
+      "hiddenWithArea": []
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,102 @@
+{
+  "id": "phone-landscape",
+  "width": 844,
+  "height": 390,
+  "before": {
+    "text": "ASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\n›\n基地",
+    "controls": [
+      {
+        "tag": "BUTTON",
+        "id": "sortieBtn",
+        "text": "出勤\n›",
+        "rect": {
+          "x": 340,
+          "y": 318,
+          "width": 72,
+          "height": 62
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "baseToggleBtn",
+        "text": "基地",
+        "rect": {
+          "x": 420,
+          "y": 318,
+          "width": 84,
+          "height": 62
+        }
+      }
+    ],
+    "canvas": [
+      {
+        "id": "gameCanvas",
+        "rect": {
+          "x": 332,
+          "y": 0,
+          "width": 180,
+          "height": 390
+        }
+      }
+    ],
+    "visibleIds": [
+      "app",
+      "battleStage",
+      "gameCanvas",
+      "garagePanel",
+      "garageMeta",
+      "startPartsValue",
+      "startGoodsValue",
+      "startWaveValue",
+      "startKillsValue",
+      "shelterImage",
+      "hotspotLayer",
+      "sortieBtn",
+      "baseToggleBtn"
+    ],
+    "hiddenWithArea": []
+  },
+  "afterFirst": {
+    "text": "壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n增益：無\n擊殺 0\n零件 0",
+    "controls": [
+      {
+        "tag": "BUTTON",
+        "id": "pauseBtn",
+        "text": "暫停",
+        "rect": {
+          "x": 478,
+          "y": 39,
+          "width": 44,
+          "height": 44
+        }
+      }
+    ],
+    "canvas": [
+      {
+        "id": "gameCanvas",
+        "rect": {
+          "x": 332,
+          "y": 0,
+          "width": 180,
+          "height": 390
+        }
+      }
+    ],
+    "visibleIds": [
+      "app",
+      "battleStage",
+      "gameCanvas",
+      "hud",
+      "hudVehicle",
+      "hudHpText",
+      "hpBar",
+      "hudWave",
+      "pauseBtn",
+      "hudMods",
+      "hudKills",
+      "hudParts"
+    ],
+    "hiddenWithArea": []
+  },
+  "errors": []
+}

@@ -1,0 +1,107 @@
+{
+  "id": "phone-portrait",
+  "width": 390,
+  "height": 844,
+  "coarse": true,
+  "status": 200,
+  "domContentLoadedMs": 19311,
+  "loadMs": 19802,
+  "firstInteractionMs": 19884,
+  "bootMs": 19291,
+  "shot": "shots/00-phone-portrait-boot.png",
+  "errors": [],
+  "snapshot": {
+    "title": "灰燼護航",
+    "bodyText": "ASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地",
+    "interactive": [
+      {
+        "tag": "BUTTON",
+        "id": "sortieBtn",
+        "text": "出勤\nIGNITE THE CONVOY\n›",
+        "disabled": false,
+        "rect": {
+          "x": 12,
+          "y": 772,
+          "width": 259,
+          "height": 62
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "baseToggleBtn",
+        "text": "基地",
+        "disabled": false,
+        "rect": {
+          "x": 279,
+          "y": 772,
+          "width": 99,
+          "height": 62
+        }
+      }
+    ],
+    "canvas": [
+      {
+        "id": "gameCanvas",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 844
+        }
+      }
+    ],
+    "hiddenWithArea": [],
+    "perf": {
+      "name": "http://127.0.0.1:8000/",
+      "entryType": "navigation",
+      "startTime": 0,
+      "duration": 19795.89999961853,
+      "initiatorType": "navigation",
+      "deliveryType": "",
+      "nextHopProtocol": "http/1.0",
+      "renderBlockingStatus": "non-blocking",
+      "contentType": "text/html",
+      "contentEncoding": "",
+      "workerStart": 0,
+      "workerRouterEvaluationStart": 0,
+      "workerCacheLookupStart": 0,
+      "workerMatchedSourceType": "",
+      "workerFinalSourceType": "",
+      "redirectStart": 0,
+      "redirectEnd": 0,
+      "fetchStart": 0.2999997138977051,
+      "domainLookupStart": 10135.89999961853,
+      "domainLookupEnd": 10138.39999961853,
+      "connectStart": 10138.39999961853,
+      "secureConnectionStart": 0,
+      "connectEnd": 10140.299999713898,
+      "requestStart": 10140.5,
+      "responseStart": 10144.799999713898,
+      "firstInterimResponseStart": 0,
+      "finalResponseHeadersStart": 10144.799999713898,
+      "responseEnd": 10146,
+      "transferSize": 83698,
+      "encodedBodySize": 83398,
+      "decodedBodySize": 83398,
+      "responseStatus": 200,
+      "serverTiming": [],
+      "unloadEventStart": 0,
+      "unloadEventEnd": 0,
+      "domInteractive": 19105.699999809265,
+      "domContentLoadedEventStart": 19105.699999809265,
+      "domContentLoadedEventEnd": 19301,
+      "domComplete": 19795.89999961853,
+      "loadEventStart": 19795.89999961853,
+      "loadEventEnd": 19795.89999961853,
+      "type": "navigate",
+      "redirectCount": 0,
+      "activationStart": 0,
+      "criticalCHRestart": 0,
+      "notRestoredReasons": null,
+      "confidence": {
+        "randomizedTriggerRate": 0.4994798,
+        "value": "high"
+      }
+    }
+  }
+}

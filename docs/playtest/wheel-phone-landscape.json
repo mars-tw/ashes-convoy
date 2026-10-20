@@ -1,0 +1,32 @@
+{
+  "id": "phone-landscape",
+  "width": 844,
+  "height": 390,
+  "attempts": [
+    {
+      "label": "battle-before-wheel",
+      "shot": "05-phone-landscape-wheel-before.png",
+      "text": "壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n增益：無\n擊殺 1\n零件 2",
+      "controls": [
+        {
+          "id": "pauseBtn",
+          "tag": "BUTTON",
+          "text": "暫停",
+          "rect": {
+            "x": 478,
+            "y": 39,
+            "width": 44,
+            "height": 44
+          }
+        }
+      ],
+      "named": [],
+      "hiddenWithArea": []
+    },
+    {
+      "label": "upgrade-control-unreachable",
+      "result": "railUpgradeBtn not visible"
+    }
+  ],
+  "errors": []
+}

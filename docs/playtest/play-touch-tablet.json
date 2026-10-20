@@ -1,0 +1,1130 @@
+{
+  "id": "tablet",
+  "width": 768,
+  "height": 1024,
+  "steps": 8,
+  "supplyHandled": true,
+  "eventCaptured": true,
+  "wheelHandled": true,
+  "events": [
+    {
+      "label": "base-ready",
+      "shot": "07-tablet-base-ready.png",
+      "text": "ASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地",
+      "controls": [
+        {
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 159,
+            "y": 952,
+            "width": 320,
+            "height": 62
+          }
+        },
+        {
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 487,
+            "y": 952,
+            "width": 121,
+            "height": 62
+          }
+        }
+      ],
+      "canvas": {
+        "id": "gameCanvas",
+        "hidden": false,
+        "className": "",
+        "rect": {
+          "x": 147,
+          "y": 0,
+          "width": 473,
+          "height": 1024
+        },
+        "display": "block",
+        "pointerEvents": "auto"
+      },
+      "touch": {
+        "id": "touchControls",
+        "hidden": false,
+        "className": "touch-controls",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "auto"
+      },
+      "supply": {
+        "id": "supplyChoiceOverlay",
+        "hidden": true,
+        "className": "supply-choice-overlay",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "none"
+      },
+      "eventBanner": {
+        "id": "eventBanner",
+        "hidden": true,
+        "className": "event-banner",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "none"
+      },
+      "wheel": {
+        "id": "quickUpgradeWheel",
+        "hidden": true,
+        "className": "quick-upgrade-wheel",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "auto"
+      },
+      "pause": {
+        "id": "pausePanel",
+        "hidden": true,
+        "className": "panel pause-panel",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "auto"
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "battle-start",
+      "shot": "07-tablet-battle-start.png",
+      "text": "壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n增益：無\n擊殺 0\n零件 0\n衝\n技\n彈",
+      "controls": [
+        {
+          "id": "pauseBtn",
+          "text": "暫停",
+          "rect": {
+            "x": 557,
+            "y": 10,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "id": "touchBoostBtn",
+          "text": "衝",
+          "rect": {
+            "x": 433,
+            "y": 958,
+            "width": 52,
+            "height": 52
+          }
+        },
+        {
+          "id": "touchSkillBtn",
+          "text": "技",
+          "rect": {
+            "x": 494,
+            "y": 958,
+            "width": 52,
+            "height": 52
+          }
+        },
+        {
+          "id": "touchWeaponBtn",
+          "text": "彈",
+          "rect": {
+            "x": 555,
+            "y": 958,
+            "width": 52,
+            "height": 52
+          }
+        }
+      ],
+      "canvas": {
+        "id": "gameCanvas",
+        "hidden": false,
+        "className": "",
+        "rect": {
+          "x": 147,
+          "y": 0,
+          "width": 473,
+          "height": 1024
+        },
+        "display": "block",
+        "pointerEvents": "auto"
+      },
+      "touch": {
+        "id": "touchControls",
+        "hidden": false,
+        "className": "touch-controls is-visible",
+        "rect": {
+          "x": 161,
+          "y": 898,
+          "width": 445,
+          "height": 112
+        },
+        "display": "grid",
+        "pointerEvents": "none"
+      },
+      "supply": {
+        "id": "supplyChoiceOverlay",
+        "hidden": true,
+        "className": "supply-choice-overlay",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "none"
+      },
+      "eventBanner": {
+        "id": "eventBanner",
+        "hidden": true,
+        "className": "event-banner",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "none"
+      },
+      "wheel": {
+        "id": "quickUpgradeWheel",
+        "hidden": true,
+        "className": "quick-upgrade-wheel",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "auto"
+      },
+      "pause": {
+        "id": "pausePanel",
+        "hidden": true,
+        "className": "panel pause-panel",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "auto"
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "environment-event-banner",
+      "shot": "07-tablet-environment-event.png",
+      "text": "壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n增益：無\n擊殺 3\n零件 2\n壁爐\n壁爐：「繫好。今天也把火帶回來。」 熹：「我把後門鎖好了。」\n衝\n技\n彈",
+      "controls": [
+        {
+          "id": "pauseBtn",
+          "text": "暫停",
+          "rect": {
+            "x": 557,
+            "y": 10,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "id": "touchBoostBtn",
+          "text": "衝",
+          "rect": {
+            "x": 433,
+            "y": 958,
+            "width": 52,
+            "height": 52
+          }
+        },
+        {
+          "id": "touchSkillBtn",
+          "text": "技",
+          "rect": {
+            "x": 494,
+            "y": 958,
+            "width": 52,
+            "height": 52
+          }
+        },
+        {
+          "id": "touchWeaponBtn",
+          "text": "彈",
+          "rect": {
+            "x": 555,
+            "y": 958,
+            "width": 52,
+            "height": 52
+          }
+        }
+      ],
+      "canvas": {
+        "id": "gameCanvas",
+        "hidden": false,
+        "className": "",
+        "rect": {
+          "x": 147,
+          "y": 0,
+          "width": 473,
+          "height": 1024
+        },
+        "display": "block",
+        "pointerEvents": "auto"
+      },
+      "touch": {
+        "id": "touchControls",
+        "hidden": false,
+        "className": "touch-controls is-visible",
+        "rect": {
+          "x": 161,
+          "y": 898,
+          "width": 445,
+          "height": 112
+        },
+        "display": "grid",
+        "pointerEvents": "none"
+      },
+      "supply": {
+        "id": "supplyChoiceOverlay",
+        "hidden": true,
+        "className": "supply-choice-overlay",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "none"
+      },
+      "eventBanner": {
+        "id": "eventBanner",
+        "hidden": false,
+        "className": "event-banner",
+        "rect": {
+          "x": 165,
+          "y": 96,
+          "width": 437,
+          "height": 55
+        },
+        "display": "block",
+        "pointerEvents": "none"
+      },
+      "wheel": {
+        "id": "quickUpgradeWheel",
+        "hidden": true,
+        "className": "quick-upgrade-wheel",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "auto"
+      },
+      "pause": {
+        "id": "pausePanel",
+        "hidden": true,
+        "className": "panel pause-panel",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "auto"
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "wheel-open-by-vehicle-tap",
+      "shot": "07-tablet-wheel-open.png",
+      "text": "壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n增益：無\n擊殺 16\n零件 2\n×\n車體強\n30\n下次出勤\n武器調\n40\n本局生效\n供能效\n80\n本局生效\n補給介\n90\n本局生效\n裝甲強\n45\n本局生效\n毒抗隔\n50\n本局生效",
+      "controls": [
+        {
+          "id": "pauseBtn",
+          "text": "暫停",
+          "rect": {
+            "x": 557,
+            "y": 10,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "id": "quickUpgradeCloseBtn",
+          "text": "×",
+          "rect": {
+            "x": 327,
+            "y": 579,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "車體強\n30\n下次出勤",
+          "rect": {
+            "x": 199,
+            "y": 627,
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "",
+          "text": "武器調\n40\n本局生效",
+          "rect": {
+            "x": 287,
+            "y": 627,
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "",
+          "text": "供能效\n80\n本局生效",
+          "rect": {
+            "x": 199,
+            "y": 699,
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "",
+          "text": "補給介\n90\n本局生效",
+          "rect": {
+            "x": 287,
+            "y": 699,
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "",
+          "text": "裝甲強\n45\n本局生效",
+          "rect": {
+            "x": 199,
+            "y": 771,
+            "width": 80,
+            "height": 64
+          }
+        },
+        {
+          "id": "",
+          "text": "毒抗隔\n50\n本局生效",
+          "rect": {
+            "x": 287,
+            "y": 771,
+            "width": 80,
+            "height": 64
+          }
+        }
+      ],
+      "canvas": {
+        "id": "gameCanvas",
+        "hidden": false,
+        "className": "",
+        "rect": {
+          "x": 147,
+          "y": 0,
+          "width": 473,
+          "height": 1024
+        },
+        "display": "block",
+        "pointerEvents": "auto"
+      },
+      "touch": {
+        "id": "touchControls",
+        "hidden": false,
+        "className": "touch-controls",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "auto"
+      },
+      "supply": {
+        "id": "supplyChoiceOverlay",
+        "hidden": true,
+        "className": "supply-choice-overlay",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "none"
+      },
+      "eventBanner": {
+        "id": "eventBanner",
+        "hidden": true,
+        "className": "event-banner",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "none"
+      },
+      "wheel": {
+        "id": "quickUpgradeWheel",
+        "hidden": false,
+        "className": "quick-upgrade-wheel",
+        "rect": {
+          "x": 188,
+          "y": 572,
+          "width": 190,
+          "height": 274
+        },
+        "display": "block",
+        "pointerEvents": "auto"
+      },
+      "pause": {
+        "id": "pausePanel",
+        "hidden": true,
+        "className": "panel pause-panel",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "auto"
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "battle-mid",
+      "shot": "07-tablet-battle-mid.png",
+      "text": "壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n擊殺 21\n零件 3\n增益門逼近\n← 彈道 ｜ 射速 →\n← 彈道 +1 ｜ 射速 +25% →\n衝\n技\n彈",
+      "controls": [
+        {
+          "id": "pauseBtn",
+          "text": "暫停",
+          "rect": {
+            "x": 557,
+            "y": 10,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "id": "touchBoostBtn",
+          "text": "衝",
+          "rect": {
+            "x": 433,
+            "y": 958,
+            "width": 52,
+            "height": 52
+          }
+        },
+        {
+          "id": "touchSkillBtn",
+          "text": "技",
+          "rect": {
+            "x": 494,
+            "y": 958,
+            "width": 52,
+            "height": 52
+          }
+        },
+        {
+          "id": "touchWeaponBtn",
+          "text": "彈",
+          "rect": {
+            "x": 555,
+            "y": 958,
+            "width": 52,
+            "height": 52
+          }
+        }
+      ],
+      "canvas": {
+        "id": "gameCanvas",
+        "hidden": false,
+        "className": "",
+        "rect": {
+          "x": 147,
+          "y": 0,
+          "width": 473,
+          "height": 1024
+        },
+        "display": "block",
+        "pointerEvents": "auto"
+      },
+      "touch": {
+        "id": "touchControls",
+        "hidden": false,
+        "className": "touch-controls is-visible",
+        "rect": {
+          "x": 161,
+          "y": 898,
+          "width": 445,
+          "height": 112
+        },
+        "display": "grid",
+        "pointerEvents": "none"
+      },
+      "supply": {
+        "id": "supplyChoiceOverlay",
+        "hidden": true,
+        "className": "supply-choice-overlay",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "none"
+      },
+      "eventBanner": {
+        "id": "eventBanner",
+        "hidden": false,
+        "className": "event-banner",
+        "rect": {
+          "x": 165,
+          "y": 96,
+          "width": 437,
+          "height": 55
+        },
+        "display": "block",
+        "pointerEvents": "none"
+      },
+      "wheel": {
+        "id": "quickUpgradeWheel",
+        "hidden": true,
+        "className": "quick-upgrade-wheel",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "auto"
+      },
+      "pause": {
+        "id": "pausePanel",
+        "hidden": true,
+        "className": "panel pause-panel",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "auto"
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "pause-open",
+      "shot": "07-tablet-pause-open.png",
+      "text": "壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n擊殺 22\n零件 3\n增益門逼近\n← 彈道 ｜ 射速 →\n← 彈道 +1 ｜ 射速 +25% →\n暫停\n\n目前進度會保留在本局中。\n\n繼續\n結束本局",
+      "controls": [
+        {
+          "id": "pauseBtn",
+          "text": "暫停",
+          "rect": {
+            "x": 557,
+            "y": 10,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "id": "resumeBtn",
+          "text": "繼續",
+          "rect": {
+            "x": 182,
+            "y": 342,
+            "width": 198,
+            "height": 44
+          }
+        },
+        {
+          "id": "quitBtn",
+          "text": "結束本局",
+          "rect": {
+            "x": 388,
+            "y": 342,
+            "width": 198,
+            "height": 44
+          }
+        }
+      ],
+      "canvas": {
+        "id": "gameCanvas",
+        "hidden": false,
+        "className": "",
+        "rect": {
+          "x": 147,
+          "y": 0,
+          "width": 473,
+          "height": 1024
+        },
+        "display": "block",
+        "pointerEvents": "auto"
+      },
+      "touch": {
+        "id": "touchControls",
+        "hidden": false,
+        "className": "touch-controls",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "auto"
+      },
+      "supply": {
+        "id": "supplyChoiceOverlay",
+        "hidden": true,
+        "className": "supply-choice-overlay",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "none"
+      },
+      "eventBanner": {
+        "id": "eventBanner",
+        "hidden": false,
+        "className": "event-banner",
+        "rect": {
+          "x": 165,
+          "y": 96,
+          "width": 437,
+          "height": 55
+        },
+        "display": "block",
+        "pointerEvents": "none"
+      },
+      "wheel": {
+        "id": "quickUpgradeWheel",
+        "hidden": true,
+        "className": "quick-upgrade-wheel",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "auto"
+      },
+      "pause": {
+        "id": "pausePanel",
+        "hidden": false,
+        "className": "panel pause-panel",
+        "rect": {
+          "x": 165,
+          "y": 265,
+          "width": 437,
+          "height": 494
+        },
+        "display": "block",
+        "pointerEvents": "auto"
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "supply-choice-visible",
+      "shot": "07-tablet-supply-choice.png",
+      "text": "壁爐裝甲車\nHP 520 / 520\n第 2 波\n暫停\n增益：雷射 Lv1 · 射速 x1.25\n擊殺 24\n零件 8\n補給箱\n點一下領取；戰鬥不中斷\n1. 射速補給\n15% 裝填加速\n10 秒\n2. 火力補給\n20% 傷害加成\n10 秒\n3. 維修補給\n8% 立即維修\n立即生效\n已滿 → 溢出：分數 +80\n4. 零件補給\n零件 +3\n本局結算列入補給收益\n5. 護盾補給\n12% 護盾\n立即加到護盾上限\n衝\n技\n彈",
+      "controls": [
+        {
+          "id": "pauseBtn",
+          "text": "暫停",
+          "rect": {
+            "x": 557,
+            "y": 10,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "1. 射速補給\n15% 裝填加速\n10 秒",
+          "rect": {
+            "x": 167,
+            "y": 185,
+            "width": 139,
+            "height": 110
+          }
+        },
+        {
+          "id": "",
+          "text": "2. 火力補給\n20% 傷害加成\n10 秒",
+          "rect": {
+            "x": 314,
+            "y": 185,
+            "width": 139,
+            "height": 110
+          }
+        },
+        {
+          "id": "",
+          "text": "3. 維修補給\n8% 立即維修\n立即生效\n已滿 → 溢出：分數 +80",
+          "rect": {
+            "x": 462,
+            "y": 185,
+            "width": 139,
+            "height": 110
+          }
+        },
+        {
+          "id": "",
+          "text": "4. 零件補給\n零件 +3\n本局結算列入補給收益",
+          "rect": {
+            "x": 167,
+            "y": 303,
+            "width": 139,
+            "height": 72
+          }
+        },
+        {
+          "id": "",
+          "text": "5. 護盾補給\n12% 護盾\n立即加到護盾上限",
+          "rect": {
+            "x": 314,
+            "y": 303,
+            "width": 139,
+            "height": 72
+          }
+        },
+        {
+          "id": "touchBoostBtn",
+          "text": "衝",
+          "rect": {
+            "x": 433,
+            "y": 958,
+            "width": 52,
+            "height": 52
+          }
+        },
+        {
+          "id": "touchSkillBtn",
+          "text": "技",
+          "rect": {
+            "x": 494,
+            "y": 958,
+            "width": 52,
+            "height": 52
+          }
+        },
+        {
+          "id": "touchWeaponBtn",
+          "text": "彈",
+          "rect": {
+            "x": 555,
+            "y": 958,
+            "width": 52,
+            "height": 52
+          }
+        }
+      ],
+      "canvas": {
+        "id": "gameCanvas",
+        "hidden": false,
+        "className": "",
+        "rect": {
+          "x": 147,
+          "y": 0,
+          "width": 473,
+          "height": 1024
+        },
+        "display": "block",
+        "pointerEvents": "auto"
+      },
+      "touch": {
+        "id": "touchControls",
+        "hidden": false,
+        "className": "touch-controls is-visible",
+        "rect": {
+          "x": 161,
+          "y": 898,
+          "width": 445,
+          "height": 112
+        },
+        "display": "grid",
+        "pointerEvents": "none"
+      },
+      "supply": {
+        "id": "supplyChoiceOverlay",
+        "hidden": false,
+        "className": "supply-choice-overlay",
+        "rect": {
+          "x": 157,
+          "y": 132,
+          "width": 453,
+          "height": 253
+        },
+        "display": "block",
+        "pointerEvents": "none"
+      },
+      "eventBanner": {
+        "id": "eventBanner",
+        "hidden": true,
+        "className": "event-banner",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "none"
+      },
+      "wheel": {
+        "id": "quickUpgradeWheel",
+        "hidden": true,
+        "className": "quick-upgrade-wheel",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "auto"
+      },
+      "pause": {
+        "id": "pausePanel",
+        "hidden": true,
+        "className": "panel pause-panel",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "auto"
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "battle-late",
+      "shot": "07-tablet-battle-late.png",
+      "text": "壁爐裝甲車\nHP 520 / 520\n第 2 波\n暫停\n增益：雷射 Lv1 · 超載 1 · 射速 x1.25\n擊殺 26\n零件 8\n補給箱\n點一下領取；戰鬥不中斷\n1. 射速補給\n15% 裝填加速\n10 秒\n2. 火力補給\n20% 傷害加成\n10 秒\n3. 維修補給\n8% 立即維修\n立即生效\n已滿 → 溢出：分數 +80\n4. 零件補給\n零件 +3\n本局結算列入補給收益\n5. 護盾補給\n12% 護盾\n立即加到護盾上限\n衝\n技\n彈",
+      "controls": [
+        {
+          "id": "pauseBtn",
+          "text": "暫停",
+          "rect": {
+            "x": 557,
+            "y": 10,
+            "width": 54,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "1. 射速補給\n15% 裝填加速\n10 秒",
+          "rect": {
+            "x": 167,
+            "y": 185,
+            "width": 139,
+            "height": 110
+          }
+        },
+        {
+          "id": "",
+          "text": "2. 火力補給\n20% 傷害加成\n10 秒",
+          "rect": {
+            "x": 314,
+            "y": 185,
+            "width": 139,
+            "height": 110
+          }
+        },
+        {
+          "id": "",
+          "text": "3. 維修補給\n8% 立即維修\n立即生效\n已滿 → 溢出：分數 +80",
+          "rect": {
+            "x": 462,
+            "y": 185,
+            "width": 139,
+            "height": 110
+          }
+        },
+        {
+          "id": "",
+          "text": "4. 零件補給\n零件 +3\n本局結算列入補給收益",
+          "rect": {
+            "x": 167,
+            "y": 303,
+            "width": 139,
+            "height": 72
+          }
+        },
+        {
+          "id": "",
+          "text": "5. 護盾補給\n12% 護盾\n立即加到護盾上限",
+          "rect": {
+            "x": 314,
+            "y": 303,
+            "width": 139,
+            "height": 72
+          }
+        },
+        {
+          "id": "touchBoostBtn",
+          "text": "衝",
+          "rect": {
+            "x": 433,
+            "y": 958,
+            "width": 52,
+            "height": 52
+          }
+        },
+        {
+          "id": "touchSkillBtn",
+          "text": "技",
+          "rect": {
+            "x": 494,
+            "y": 958,
+            "width": 52,
+            "height": 52
+          }
+        },
+        {
+          "id": "touchWeaponBtn",
+          "text": "彈",
+          "rect": {
+            "x": 555,
+            "y": 958,
+            "width": 52,
+            "height": 52
+          }
+        }
+      ],
+      "canvas": {
+        "id": "gameCanvas",
+        "hidden": false,
+        "className": "",
+        "rect": {
+          "x": 147,
+          "y": 0,
+          "width": 473,
+          "height": 1024
+        },
+        "display": "block",
+        "pointerEvents": "auto"
+      },
+      "touch": {
+        "id": "touchControls",
+        "hidden": false,
+        "className": "touch-controls is-visible",
+        "rect": {
+          "x": 161,
+          "y": 898,
+          "width": 445,
+          "height": 112
+        },
+        "display": "grid",
+        "pointerEvents": "none"
+      },
+      "supply": {
+        "id": "supplyChoiceOverlay",
+        "hidden": false,
+        "className": "supply-choice-overlay",
+        "rect": {
+          "x": 157,
+          "y": 132,
+          "width": 453,
+          "height": 253
+        },
+        "display": "block",
+        "pointerEvents": "none"
+      },
+      "eventBanner": {
+        "id": "eventBanner",
+        "hidden": true,
+        "className": "event-banner",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "none"
+      },
+      "wheel": {
+        "id": "quickUpgradeWheel",
+        "hidden": true,
+        "className": "quick-upgrade-wheel",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "auto"
+      },
+      "pause": {
+        "id": "pausePanel",
+        "hidden": true,
+        "className": "panel pause-panel",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "pointerEvents": "auto"
+      },
+      "hiddenWithArea": []
+    }
+  ],
+  "errors": []
+}

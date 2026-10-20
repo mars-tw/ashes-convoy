@@ -1,0 +1,222 @@
+{
+  "id": "desktop",
+  "width": 1366,
+  "height": 768,
+  "before": {
+    "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+    "controls": [
+      {
+        "tag": "BUTTON",
+        "id": "railUpgradeBtn",
+        "text": "▲\n升級",
+        "rect": {
+          "x": 435,
+          "y": 342,
+          "width": 58,
+          "height": 58
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "railVehicleBtn",
+        "text": "▣\n載具",
+        "rect": {
+          "x": 435,
+          "y": 412,
+          "width": 58,
+          "height": 58
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "sortieBtn",
+        "text": "出勤\nIGNITE THE CONVOY\n›",
+        "rect": {
+          "x": 519,
+          "y": 695,
+          "width": 233,
+          "height": 62
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "baseToggleBtn",
+        "text": "基地",
+        "rect": {
+          "x": 759,
+          "y": 695,
+          "width": 88,
+          "height": 62
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "railOpsBtn",
+        "text": "◎\n任務",
+        "rect": {
+          "x": 873,
+          "y": 307,
+          "width": 58,
+          "height": 58
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "railAchievementsBtn",
+        "text": "★\n成就",
+        "rect": {
+          "x": 873,
+          "y": 377,
+          "width": 58,
+          "height": 58
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "railSettingsBtn",
+        "text": "⚙\n設定",
+        "rect": {
+          "x": 873,
+          "y": 447,
+          "width": 58,
+          "height": 58
+        }
+      }
+    ],
+    "canvas": [
+      {
+        "id": "gameCanvas",
+        "rect": {
+          "x": 507,
+          "y": 1,
+          "width": 353,
+          "height": 766
+        }
+      }
+    ],
+    "visibleIds": [
+      "app",
+      "railUpgradeBtn",
+      "railVehicleBtn",
+      "battleStage",
+      "gameCanvas",
+      "garagePanel",
+      "garageMeta",
+      "startPartsValue",
+      "startGoodsValue",
+      "startWaveValue",
+      "startKillsValue",
+      "shelterImage",
+      "hotspotLayer",
+      "sortieBtn",
+      "baseToggleBtn",
+      "railOpsBtn",
+      "railAchievementsBtn",
+      "railSettingsBtn"
+    ],
+    "hiddenWithArea": []
+  },
+  "afterFirst": {
+    "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n增益：無\n擊殺 0\n零件 0\n◎\n任務\n★\n成就\n⚙\n設定",
+    "controls": [
+      {
+        "tag": "BUTTON",
+        "id": "railUpgradeBtn",
+        "text": "▲\n升級",
+        "rect": {
+          "x": 435,
+          "y": 342,
+          "width": 58,
+          "height": 58
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "railVehicleBtn",
+        "text": "▣\n載具",
+        "rect": {
+          "x": 435,
+          "y": 412,
+          "width": 58,
+          "height": 58
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "pauseBtn",
+        "text": "暫停",
+        "rect": {
+          "x": 795,
+          "y": 11,
+          "width": 54,
+          "height": 44
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "railOpsBtn",
+        "text": "◎\n任務",
+        "rect": {
+          "x": 873,
+          "y": 307,
+          "width": 58,
+          "height": 58
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "railAchievementsBtn",
+        "text": "★\n成就",
+        "rect": {
+          "x": 873,
+          "y": 377,
+          "width": 58,
+          "height": 58
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "railSettingsBtn",
+        "text": "⚙\n設定",
+        "rect": {
+          "x": 873,
+          "y": 447,
+          "width": 58,
+          "height": 58
+        }
+      }
+    ],
+    "canvas": [
+      {
+        "id": "gameCanvas",
+        "rect": {
+          "x": 507,
+          "y": 1,
+          "width": 353,
+          "height": 766
+        }
+      }
+    ],
+    "visibleIds": [
+      "app",
+      "railUpgradeBtn",
+      "railVehicleBtn",
+      "battleStage",
+      "gameCanvas",
+      "hud",
+      "hudVehicle",
+      "hudHpText",
+      "hpBar",
+      "hudWave",
+      "pauseBtn",
+      "hudMods",
+      "hudKills",
+      "hudParts",
+      "railOpsBtn",
+      "railAchievementsBtn",
+      "railSettingsBtn"
+    ],
+    "hiddenWithArea": []
+  },
+  "errors": []
+}

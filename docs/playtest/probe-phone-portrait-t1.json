@@ -1,0 +1,107 @@
+{
+  "id": "phone-portrait",
+  "width": 390,
+  "height": 844,
+  "coarse": true,
+  "status": 200,
+  "domContentLoadedMs": 423,
+  "loadMs": 813,
+  "firstInteractionMs": 868,
+  "bootMs": 402,
+  "shot": "shots/00-phone-portrait-boot-t1.png",
+  "errors": [],
+  "snapshot": {
+    "title": "灰燼護航",
+    "bodyText": "ASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地",
+    "interactive": [
+      {
+        "tag": "BUTTON",
+        "id": "sortieBtn",
+        "text": "出勤\nIGNITE THE CONVOY\n›",
+        "disabled": false,
+        "rect": {
+          "x": 12,
+          "y": 772,
+          "width": 259,
+          "height": 62
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "baseToggleBtn",
+        "text": "基地",
+        "disabled": false,
+        "rect": {
+          "x": 279,
+          "y": 772,
+          "width": 99,
+          "height": 62
+        }
+      }
+    ],
+    "canvas": [
+      {
+        "id": "gameCanvas",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 844
+        }
+      }
+    ],
+    "hiddenWithArea": [],
+    "perf": {
+      "name": "http://127.0.0.1:8000/",
+      "entryType": "navigation",
+      "startTime": 0,
+      "duration": 807.2000002861023,
+      "initiatorType": "navigation",
+      "deliveryType": "",
+      "nextHopProtocol": "http/1.0",
+      "renderBlockingStatus": "non-blocking",
+      "contentType": "text/html",
+      "contentEncoding": "",
+      "workerStart": 0,
+      "workerRouterEvaluationStart": 0,
+      "workerCacheLookupStart": 0,
+      "workerMatchedSourceType": "",
+      "workerFinalSourceType": "",
+      "redirectStart": 0,
+      "redirectEnd": 0,
+      "fetchStart": 0.3000001907348633,
+      "domainLookupStart": 1.3000001907348633,
+      "domainLookupEnd": 3.0999999046325684,
+      "connectStart": 3.0999999046325684,
+      "secureConnectionStart": 0,
+      "connectEnd": 4.099999904632568,
+      "requestStart": 4.300000190734863,
+      "responseStart": 5.900000095367432,
+      "firstInterimResponseStart": 0,
+      "finalResponseHeadersStart": 5.900000095367432,
+      "responseEnd": 7.700000286102295,
+      "transferSize": 83698,
+      "encodedBodySize": 83398,
+      "decodedBodySize": 83398,
+      "responseStatus": 200,
+      "serverTiming": [],
+      "unloadEventStart": 0,
+      "unloadEventEnd": 0,
+      "domInteractive": 206.59999990463257,
+      "domContentLoadedEventStart": 206.59999990463257,
+      "domContentLoadedEventEnd": 410.30000019073486,
+      "domComplete": 807.2000002861023,
+      "loadEventStart": 807.2000002861023,
+      "loadEventEnd": 807.2000002861023,
+      "type": "navigate",
+      "redirectCount": 0,
+      "activationStart": 0,
+      "criticalCHRestart": 0,
+      "notRestoredReasons": null,
+      "confidence": {
+        "randomizedTriggerRate": 0.4994798,
+        "value": "high"
+      }
+    }
+  }
+}

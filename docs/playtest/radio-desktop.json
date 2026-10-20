@@ -1,0 +1,1458 @@
+{
+  "id": "desktop",
+  "width": 1366,
+  "height": 768,
+  "coarse": false,
+  "states": [
+    {
+      "label": "base-expanded",
+      "shot": "10-desktop-base-expanded.png",
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n收合基地\n升級\n載具\n成就\n拖車\n1\n任務/設定\n清存檔\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "id": "baseToggleBtn",
+          "text": "收合基地",
+          "rect": {
+            "x": 759,
+            "y": 693,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "id": "upgradeHotspotBtn",
+          "text": "升級",
+          "rect": {
+            "x": 530,
+            "y": 518,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "id": "vehicleHotspotBtn",
+          "text": "載具",
+          "rect": {
+            "x": 687,
+            "y": 518,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "id": "seriesHotspotBtn",
+          "text": "成就",
+          "rect": {
+            "x": 530,
+            "y": 570,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "id": "trailerHotspotBtn",
+          "text": "拖車\n1",
+          "rect": {
+            "x": 687,
+            "y": 570,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "id": "opsHotspotBtn",
+          "text": "任務/設定",
+          "rect": {
+            "x": 530,
+            "y": 622,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "id": "resetOverlayBtn",
+          "text": "清存檔",
+          "rect": {
+            "x": 687,
+            "y": 622,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "trailer": {
+        "id": "trailerOverlay",
+        "hidden": true,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "overflow": "hidden",
+        "pointerEvents": "auto"
+      },
+      "story": {
+        "id": "storyLogSection",
+        "hidden": true,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "overflow": "hidden",
+        "pointerEvents": "auto"
+      },
+      "room": {
+        "id": "trailerRoomCanvas",
+        "hidden": false,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "block",
+        "overflow": "clip",
+        "pointerEvents": "auto"
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "trailer-room-open",
+      "shot": "10-desktop-trailer-room-open.png",
+      "text": "▲\n升級\n▣\n載具\n拖車少女房間\n\n熹：喂……有人嗎？這台車，後面的門是壞的。\n\n無線電日誌\n關閉\n拾荒物資 0\n佈置拾荒家具即可強化車體\n左牆層架\n空位\n右牆掛件\n空位\n窗台\n空位\n床邊\n空位\n左地面\n空位\n右地面\n空位\n工作桌\n空位\n天花板\n空位\n物資層架 · 生存物資罐頭、水瓶與繩索整理在手邊，逃生艙開始像個能活下去的地方。 車體 HP +0.6%\n8 拾荒物資\n太陽能收音機 · 生存物資回收太陽能板接上舊收音機，讓火控節奏更穩。 射擊間隔 -0.8%\n12 拾荒物資\n修補串燈 · 生存物資低耗電暖光串燈，夜間維修時少犯錯。 承受傷害 -0.4%\n14 拾荒物資\n水耕菜架 · 溫室生態水耕番茄與生菜補充長途出勤的體力。 車體 HP +0.8%\n18 拾荒物資\n濾水罐組 · 溫室生態玻璃罐、砂石與活性碳組成的小型循環水站。 承受傷害 -0.5%\n24 拾荒物資\n折疊工坊 · 工坊機械格紋桌布上堆著電路板、工具與半拆彈匣。 武器傷害 +1.2%\n28 拾荒物資\n藍圖釘板 · 工坊機械牆上釘著地圖、剪刀膠帶與載具管線草圖。 射擊間隔 -1.2%\n32 拾荒物資\n回收電池箱 · 車隊維修拆自廢車的電池並聯，替武器穩壓供電。 武器傷害 +0.8%\n38 拾荒物資\n野戰急救箱 · 生存物資止血帶、消毒棉與臨時縫合包塞在鐵箱裡，撞擊後比較不慌。 承受傷害 -0.4%\n12 拾荒物資\n菌菇培養架 · 溫室生態密封玻璃盒裡養著夜光菌絲，替長途出勤補上乾糧與濕度。 射擊間隔 -1%\n20 拾荒物資\n彈藥重裝台 · 工坊機械壓彈器、量杯與拆開的彈匣固定在桌面，讓火控補彈更順。 射擊間隔 -1%\n30 拾荒物資\n焊補工具箱 · 車隊維修小型焊槍、焊條與補強片排在耐熱布上，車體破口能當場封住。 車體 HP +0.8%\n34 拾荒物資\n熹的蠟筆畫 · 生存物資釘在牆上的小畫，車後拖著一串亮點，像灰裡還沒熄的火。 承受傷害 -0.4%\n10 拾荒物資\n窗邊望遠鏡 · 溫室生態黃銅鏡筒朝著裂開的夜空，熹說她會幫忙找下一條路。 車體 HP +0.8%\n30 拾荒物資\n磨損相框 · 工坊機械褪色拍立得裡，一大一小兩個影子靠在拖車門邊，像終於有人等門開。 射擊間隔 -1%\n18 拾荒物資\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "storyLogBtn",
+          "text": "無線電日誌",
+          "rect": {
+            "x": 702,
+            "y": 317,
+            "width": 82,
+            "height": 44
+          }
+        },
+        {
+          "id": "closeTrailerRoomBtn",
+          "text": "關閉",
+          "rect": {
+            "x": 790,
+            "y": 317,
+            "width": 46,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "8 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 959,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "12 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1047,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "14 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1135,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "18 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1215,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "24 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1295,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "28 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1383,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "32 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1471,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "38 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1559,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "12 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1647,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "20 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1735,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "30 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1823,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "34 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1911,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "10 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1999,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "30 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 2087,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "18 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 2175,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "trailer": {
+        "id": "trailerOverlay",
+        "hidden": false,
+        "rect": {
+          "x": 507,
+          "y": 1,
+          "width": 353,
+          "height": 766
+        },
+        "display": "grid",
+        "overflow": "hidden",
+        "pointerEvents": "auto"
+      },
+      "story": {
+        "id": "storyLogSection",
+        "hidden": true,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "overflow": "hidden",
+        "pointerEvents": "auto"
+      },
+      "room": {
+        "id": "trailerRoomCanvas",
+        "hidden": false,
+        "rect": {
+          "x": 518,
+          "y": 12,
+          "width": 331,
+          "height": 281
+        },
+        "display": "block",
+        "overflow": "clip",
+        "pointerEvents": "auto"
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "radio-log-open",
+      "shot": "10-desktop-radio-log-open.png",
+      "text": "▲\n升級\n▣\n載具\n拖車少女房間\n\n熹：喂……有人嗎？這台車，後面的門是壞的。\n\n收合日誌\n關閉\n拾荒物資 0\n佈置拾荒家具即可強化車體\n序章 · 空罐與火種\n\n旁白\n無線電是撿來的，只剩一個頻道還活著。\n\n熹\n喂……有人嗎？這台車，後面的門是壞的。\n\n壁爐\n別怕。門我焊死了，喪屍進不來。你先睡，天亮我們就走。\n\n熹\n你叫什麼？\n\n壁爐\n呼號叫我『壁爐』就好。有火的地方，就不算太冷。\n\n第一個晚上｜第 1 波\n她終於開口｜第 3 波\n拼起來的家具｜佈置 1 件家具\n爐火與灰燼｜第 5 波\n藍圖上的遠方｜解鎖 2 台載具\n巨屍的影子｜擊倒 1 隻 Boss\n拖車就是家｜佈置 4 件家具\n更深的路｜第 8 波\n風暴之間｜第 12 波\n群星的方向｜第 16 波\n結局 · 不熄的光｜第 20 波\n左牆層架\n空位\n右牆掛件\n空位\n窗台\n空位\n床邊\n空位\n左地面\n空位\n右地面\n空位\n工作桌\n空位\n天花板\n空位\n物資層架 · 生存物資罐頭、水瓶與繩索整理在手邊，逃生艙開始像個能活下去的地方。 車體 HP +0.6%\n8 拾荒物資\n太陽能收音機 · 生存物資回收太陽能板接上舊收音機，讓火控節奏更穩。 射擊間隔 -0.8%\n12 拾荒物資\n修補串燈 · 生存物資低耗電暖光串燈，夜間維修時少犯錯。 承受傷害 -0.4%\n14 拾荒物資\n水耕菜架 · 溫室生態水耕番茄與生菜補充長途出勤的體力。 車體 HP +0.8%\n18 拾荒物資\n濾水罐組 · 溫室生態玻璃罐、砂石與活性碳組成的小型循環水站。 承受傷害 -0.5%\n24 拾荒物資\n折疊工坊 · 工坊機械格紋桌布上堆著電路板、工具與半拆彈匣。 武器傷害 +1.2%\n28 拾荒物資\n藍圖釘板 · 工坊機械牆上釘著地圖、剪刀膠帶與載具管線草圖。 射擊間隔 -1.2%\n32 拾荒物資\n回收電池箱 · 車隊維修拆自廢車的電池並聯，替武器穩壓供電。 武器傷害 +0.8%\n38 拾荒物資\n野戰急救箱 · 生存物資止血帶、消毒棉與臨時縫合包塞在鐵箱裡，撞擊後比較不慌。 承受傷害 -0.4%\n12 拾荒物資\n菌菇培養架 · 溫室生態密封玻璃盒裡養著夜光菌絲，替長途出勤補上乾糧與濕度。 射擊間隔 -1%\n20 拾荒物資\n彈藥重裝台 · 工坊機械壓彈器、量杯與拆開的彈匣固定在桌面，讓火控補彈更順。 射擊間隔 -1%\n30 拾荒物資\n焊補工具箱 · 車隊維修小型焊槍、焊條與補強片排在耐熱布上，車體破口能當場封住。 車體 HP +0.8%\n34 拾荒物資\n熹的蠟筆畫 · 生存物資釘在牆上的小畫，車後拖著一串亮點，像灰裡還沒熄的火。 承受傷害 -0.4%\n10 拾荒物資\n窗邊望遠鏡 · 溫室生態黃銅鏡筒朝著裂開的夜空，熹說她會幫忙找下一條路。 車體 HP +0.8%\n30 拾荒物資\n磨損相框 · 工坊機械褪色拍立得裡，一大一小兩個影子靠在拖車門邊，像終於有人等門開。 射擊間隔 -1%\n18 拾荒物資\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n已讀取 1 則無線電通訊\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "storyLogBtn",
+          "text": "收合日誌",
+          "rect": {
+            "x": 714,
+            "y": 317,
+            "width": 70,
+            "height": 44
+          }
+        },
+        {
+          "id": "closeTrailerRoomBtn",
+          "text": "關閉",
+          "rect": {
+            "x": 790,
+            "y": 317,
+            "width": 46,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "8 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1159,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "12 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1247,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "14 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1335,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "18 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1415,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "24 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1495,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "28 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1583,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "32 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1671,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "38 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1759,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "12 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1847,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "20 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1935,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "30 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 2023,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "34 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 2111,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "10 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 2199,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "30 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 2287,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "18 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 2375,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "trailer": {
+        "id": "trailerOverlay",
+        "hidden": false,
+        "rect": {
+          "x": 507,
+          "y": 1,
+          "width": 353,
+          "height": 766
+        },
+        "display": "grid",
+        "overflow": "hidden",
+        "pointerEvents": "auto"
+      },
+      "story": {
+        "id": "storyLogSection",
+        "hidden": false,
+        "rect": {
+          "x": 530,
+          "y": 413,
+          "width": 307,
+          "height": 190
+        },
+        "display": "grid",
+        "overflow": "hidden",
+        "pointerEvents": "auto"
+      },
+      "room": {
+        "id": "trailerRoomCanvas",
+        "hidden": false,
+        "rect": {
+          "x": 518,
+          "y": 12,
+          "width": 331,
+          "height": 281
+        },
+        "display": "block",
+        "overflow": "clip",
+        "pointerEvents": "auto"
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "radio-log-closed",
+      "shot": "10-desktop-radio-log-closed.png",
+      "text": "▲\n升級\n▣\n載具\n拖車少女房間\n\n熹：喂……有人嗎？這台車，後面的門是壞的。\n\n無線電日誌\n關閉\n拾荒物資 0\n佈置拾荒家具即可強化車體\n左牆層架\n空位\n右牆掛件\n空位\n窗台\n空位\n床邊\n空位\n左地面\n空位\n右地面\n空位\n工作桌\n空位\n天花板\n空位\n物資層架 · 生存物資罐頭、水瓶與繩索整理在手邊，逃生艙開始像個能活下去的地方。 車體 HP +0.6%\n8 拾荒物資\n太陽能收音機 · 生存物資回收太陽能板接上舊收音機，讓火控節奏更穩。 射擊間隔 -0.8%\n12 拾荒物資\n修補串燈 · 生存物資低耗電暖光串燈，夜間維修時少犯錯。 承受傷害 -0.4%\n14 拾荒物資\n水耕菜架 · 溫室生態水耕番茄與生菜補充長途出勤的體力。 車體 HP +0.8%\n18 拾荒物資\n濾水罐組 · 溫室生態玻璃罐、砂石與活性碳組成的小型循環水站。 承受傷害 -0.5%\n24 拾荒物資\n折疊工坊 · 工坊機械格紋桌布上堆著電路板、工具與半拆彈匣。 武器傷害 +1.2%\n28 拾荒物資\n藍圖釘板 · 工坊機械牆上釘著地圖、剪刀膠帶與載具管線草圖。 射擊間隔 -1.2%\n32 拾荒物資\n回收電池箱 · 車隊維修拆自廢車的電池並聯，替武器穩壓供電。 武器傷害 +0.8%\n38 拾荒物資\n野戰急救箱 · 生存物資止血帶、消毒棉與臨時縫合包塞在鐵箱裡，撞擊後比較不慌。 承受傷害 -0.4%\n12 拾荒物資\n菌菇培養架 · 溫室生態密封玻璃盒裡養著夜光菌絲，替長途出勤補上乾糧與濕度。 射擊間隔 -1%\n20 拾荒物資\n彈藥重裝台 · 工坊機械壓彈器、量杯與拆開的彈匣固定在桌面，讓火控補彈更順。 射擊間隔 -1%\n30 拾荒物資\n焊補工具箱 · 車隊維修小型焊槍、焊條與補強片排在耐熱布上，車體破口能當場封住。 車體 HP +0.8%\n34 拾荒物資\n熹的蠟筆畫 · 生存物資釘在牆上的小畫，車後拖著一串亮點，像灰裡還沒熄的火。 承受傷害 -0.4%\n10 拾荒物資\n窗邊望遠鏡 · 溫室生態黃銅鏡筒朝著裂開的夜空，熹說她會幫忙找下一條路。 車體 HP +0.8%\n30 拾荒物資\n磨損相框 · 工坊機械褪色拍立得裡，一大一小兩個影子靠在拖車門邊，像終於有人等門開。 射擊間隔 -1%\n18 拾荒物資\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n已讀取 1 則無線電通訊\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "storyLogBtn",
+          "text": "無線電日誌",
+          "rect": {
+            "x": 702,
+            "y": 317,
+            "width": 82,
+            "height": 44
+          }
+        },
+        {
+          "id": "closeTrailerRoomBtn",
+          "text": "關閉",
+          "rect": {
+            "x": 790,
+            "y": 317,
+            "width": 46,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "8 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 959,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "12 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1047,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "14 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1135,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "18 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1215,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "24 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1295,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "28 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1383,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "32 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1471,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "38 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1559,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "12 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1647,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "20 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1735,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "30 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1823,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "34 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1911,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "10 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 1999,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "30 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 2087,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "",
+          "text": "18 拾荒物資",
+          "rect": {
+            "x": 738,
+            "y": 2175,
+            "width": 86,
+            "height": 44
+          }
+        },
+        {
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "trailer": {
+        "id": "trailerOverlay",
+        "hidden": false,
+        "rect": {
+          "x": 507,
+          "y": 1,
+          "width": 353,
+          "height": 766
+        },
+        "display": "grid",
+        "overflow": "hidden",
+        "pointerEvents": "auto"
+      },
+      "story": {
+        "id": "storyLogSection",
+        "hidden": true,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "overflow": "hidden",
+        "pointerEvents": "auto"
+      },
+      "room": {
+        "id": "trailerRoomCanvas",
+        "hidden": false,
+        "rect": {
+          "x": 518,
+          "y": 12,
+          "width": 331,
+          "height": 281
+        },
+        "display": "block",
+        "overflow": "clip",
+        "pointerEvents": "auto"
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "trailer-room-closed",
+      "shot": "10-desktop-trailer-room-closed.png",
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n已讀取 1 則無線電通訊\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 695,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "trailer": {
+        "id": "trailerOverlay",
+        "hidden": true,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "overflow": "hidden",
+        "pointerEvents": "auto"
+      },
+      "story": {
+        "id": "storyLogSection",
+        "hidden": true,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "overflow": "hidden",
+        "pointerEvents": "auto"
+      },
+      "room": {
+        "id": "trailerRoomCanvas",
+        "hidden": false,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "block",
+        "overflow": "clip",
+        "pointerEvents": "auto"
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "base-expanded-again",
+      "shot": "10-desktop-base-expanded-again.png",
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n已讀取 1 則無線電通訊\n出勤\nIGNITE THE CONVOY\n›\n收合基地\n升級\n載具\n成就\n拖車\n任務/設定\n清存檔\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "id": "baseToggleBtn",
+          "text": "收合基地",
+          "rect": {
+            "x": 759,
+            "y": 693,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "id": "upgradeHotspotBtn",
+          "text": "升級",
+          "rect": {
+            "x": 530,
+            "y": 518,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "id": "vehicleHotspotBtn",
+          "text": "載具",
+          "rect": {
+            "x": 687,
+            "y": 518,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "id": "seriesHotspotBtn",
+          "text": "成就",
+          "rect": {
+            "x": 530,
+            "y": 570,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "id": "trailerHotspotBtn",
+          "text": "拖車",
+          "rect": {
+            "x": 687,
+            "y": 570,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "id": "opsHotspotBtn",
+          "text": "任務/設定",
+          "rect": {
+            "x": 530,
+            "y": 622,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "id": "resetOverlayBtn",
+          "text": "清存檔",
+          "rect": {
+            "x": 687,
+            "y": 622,
+            "width": 149,
+            "height": 44
+          }
+        },
+        {
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "trailer": {
+        "id": "trailerOverlay",
+        "hidden": true,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "overflow": "hidden",
+        "pointerEvents": "auto"
+      },
+      "story": {
+        "id": "storyLogSection",
+        "hidden": true,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "overflow": "hidden",
+        "pointerEvents": "auto"
+      },
+      "room": {
+        "id": "trailerRoomCanvas",
+        "hidden": false,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "block",
+        "overflow": "clip",
+        "pointerEvents": "auto"
+      },
+      "hiddenWithArea": []
+    },
+    {
+      "label": "base-collapsed",
+      "shot": "10-desktop-base-collapsed.png",
+      "text": "▲\n升級\n▣\n載具\n\nASHES CONVOY\n\n灰燼護航\nR83.1\n零件\n0\n物資\n0\n最遠\n0\n擊殺\n0\n已讀取 1 則無線電通訊\n出勤\nIGNITE THE CONVOY\n›\n基地\n◎\n任務\n★\n成就\n⚙\n設定",
+      "controls": [
+        {
+          "id": "railUpgradeBtn",
+          "text": "▲\n升級",
+          "rect": {
+            "x": 435,
+            "y": 342,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railVehicleBtn",
+          "text": "▣\n載具",
+          "rect": {
+            "x": 435,
+            "y": 412,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "sortieBtn",
+          "text": "出勤\nIGNITE THE CONVOY\n›",
+          "rect": {
+            "x": 519,
+            "y": 695,
+            "width": 233,
+            "height": 62
+          }
+        },
+        {
+          "id": "baseToggleBtn",
+          "text": "基地",
+          "rect": {
+            "x": 759,
+            "y": 693,
+            "width": 88,
+            "height": 62
+          }
+        },
+        {
+          "id": "railOpsBtn",
+          "text": "◎\n任務",
+          "rect": {
+            "x": 873,
+            "y": 307,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railAchievementsBtn",
+          "text": "★\n成就",
+          "rect": {
+            "x": 873,
+            "y": 377,
+            "width": 58,
+            "height": 58
+          }
+        },
+        {
+          "id": "railSettingsBtn",
+          "text": "⚙\n設定",
+          "rect": {
+            "x": 873,
+            "y": 447,
+            "width": 58,
+            "height": 58
+          }
+        }
+      ],
+      "trailer": {
+        "id": "trailerOverlay",
+        "hidden": true,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "overflow": "hidden",
+        "pointerEvents": "auto"
+      },
+      "story": {
+        "id": "storyLogSection",
+        "hidden": true,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "none",
+        "overflow": "hidden",
+        "pointerEvents": "auto"
+      },
+      "room": {
+        "id": "trailerRoomCanvas",
+        "hidden": false,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "display": "block",
+        "overflow": "clip",
+        "pointerEvents": "auto"
+      },
+      "hiddenWithArea": []
+    }
+  ],
+  "errors": []
+}

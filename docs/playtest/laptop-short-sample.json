@@ -1,0 +1,81 @@
+{
+  "states": [
+    {
+      "label": "battle-start",
+      "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n增益：無\n擊殺 0\n零件 0\n◎\n任務\n★\n成就\n⚙\n設定",
+      "state": {
+        "mode": "playing",
+        "wave": 1,
+        "time": 0.6498999999999999,
+        "hp": 520,
+        "kills": 0
+      },
+      "canvas": {
+        "x": 545,
+        "y": 1,
+        "width": 275,
+        "height": 598
+      },
+      "hiddenWithArea": [],
+      "shot": "14-laptop-short-battle-start.png"
+    },
+    {
+      "label": "battle-mid",
+      "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n擊殺 18\n零件 3\n增益門逼近\n← 彈道 ｜ 射速 →\n← 彈道 +1 ｜ 射速 +25% →\n◎\n任務\n★\n成就\n⚙\n設定",
+      "state": {
+        "mode": "playing",
+        "wave": 1,
+        "time": 12.532800000000021,
+        "hp": 520,
+        "kills": 18
+      },
+      "canvas": {
+        "x": 545,
+        "y": 1,
+        "width": 275,
+        "height": 598
+      },
+      "hiddenWithArea": [],
+      "shot": "14-laptop-short-battle-mid.png"
+    },
+    {
+      "label": "pause-open",
+      "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n擊殺 20\n零件 3\n增益門逼近\n← 彈道 ｜ 射速 →\n← 彈道 +1 ｜ 射速 +25% →\n暫停\n\n目前進度會保留在本局中。\n\n繼續\n結束本局\n◎\n任務\n★\n成就\n⚙\n設定",
+      "state": {
+        "mode": "paused",
+        "wave": 1,
+        "time": 13.349400000000022,
+        "hp": 520,
+        "kills": 20
+      },
+      "canvas": {
+        "x": 545,
+        "y": 1,
+        "width": 275,
+        "height": 598
+      },
+      "hiddenWithArea": [],
+      "shot": "14-laptop-short-pause-open.png"
+    },
+    {
+      "label": "resumed",
+      "text": "▲\n升級\n▣\n載具\n壁爐裝甲車\nHP 520 / 520\n第 1 波\n暫停\n擊殺 21\n零件 3\n← 彈道 +1 ｜ 射速 +25% →\n◎\n任務\n★\n成就\n⚙\n設定",
+      "state": {
+        "mode": "playing",
+        "wave": 1,
+        "time": 13.632800000000026,
+        "hp": 520,
+        "kills": 21
+      },
+      "canvas": {
+        "x": 545,
+        "y": 1,
+        "width": 275,
+        "height": 598
+      },
+      "hiddenWithArea": [],
+      "shot": "14-laptop-short-resumed.png"
+    }
+  ],
+  "errors": []
+}
